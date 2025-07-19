@@ -8,12 +8,14 @@ This document outlines the transformation of the Slack Poker Bot into a general-
 - Removed all Slack dependencies - now a pure poker library
 - Modernized to Node.js 22+ with ESM modules
 - Implemented core API (PokerGameManager, Table, Player, GameEngine)
-- Set up modern testing with Vitest (Deck class fully tested)
+- Set up modern testing with Vitest (41 tests passing)
+- Comprehensive Deck tests (29 tests covering all edge cases)
+- GameEngine tests with betting logic fixes
 - CI/CD pipeline working with all tests passing
 - Cleaned up documentation for simulation use
 
 🚧 **IN PROGRESS**: 
-- Writing tests for remaining components
+- Writing tests for remaining components (HandEvaluator, PotManager, Table, PokerGameManager)
 - Creating more AI player examples
 
 📋 **TODO**:

@@ -51,7 +51,7 @@ git commit -m "message"
 - **Node Version**: 22.17.0 (required)
 - **Framework**: Pure poker library with no platform dependencies
 - **Game Logic**: Clean event-driven architecture
-- **Testing**: Vitest configured, comprehensive Deck tests written
+- **Testing**: Vitest configured, 41 tests passing (Deck & GameEngine)
 - **Build**: esbuild configured for ESM and CJS output
 - **CI/CD**: GitHub Actions running on Node.js 22 - all tests passing!
 - **Language**: Pure JavaScript (no TypeScript)
@@ -198,11 +198,13 @@ describe('PokerTable', () => {
    - Set up CI/CD pipeline (all tests passing!)
    - Create GitHub issues for tracking
    - Remove all Slack-specific code - pure poker library
-   - Write comprehensive Deck tests with Fisher-Yates verification
+   - Write comprehensive Deck tests (29 tests covering all edge cases)
+   - Fix GameEngine betting round logic and tests
+   - Remove coverage requirements from CI
    - Clean up POKER-RULES.md for simulation use
 
 2. **In Progress** 🚧:
-   - Write tests for remaining core components
+   - Write tests for remaining core components (HandEvaluator, PotManager, Table, PokerGameManager)
    - Create more example player implementations
 
 3. **Next Phase**:
