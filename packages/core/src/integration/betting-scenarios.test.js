@@ -540,4 +540,159 @@ describe('Betting Scenarios', () => {
       table.close();
     });
   });
+
+  describe('4-player scenarios', () => {
+    it('should handle UTG raising and everyone folding', async () => {
+      const table = manager.createTable({
+        blinds: { small: 10, big: 20 },
+        minBuyIn: 1000,
+        maxBuyIn: 1000,
+        minPlayers: 4,
+      });
+
+      // Track results
+      let gameStarted = false;
+      let handEnded = false;
+      let winnerId = null;
+      let winnerAmount = 0;
+      let dealerButton = -1;
+      let captureActions = true;
+      const actions = [];
+
+      // Set up event listeners
+      table.on('game:started', () => {
+        gameStarted = true;
+      });
+
+      table.on('player:action', ({ playerId, action, amount }) => {
+        if (captureActions) {
+          actions.push({ playerId, action, amount });
+        }
+      });
+
+      // Create position-aware players for 4-player game
+      class FourPlayerPositionAware extends Player {
+        constructor(config) {
+          super(config);
+          this.position = null;
+        }
+
+        getAction(gameState) {
+          const myState = gameState.players[this.id];
+          const toCall = gameState.currentBet - myState.bet;
+
+          // UTG raises to 60
+          if (this.position === 'utg' && gameState.currentBet === 20) {
+            return {
+              playerId: this.id,
+              action: Action.RAISE,
+              amount: 60,
+              timestamp: Date.now(),
+            };
+          }
+
+          // Everyone else folds to raises
+          if (toCall > 0 && gameState.currentBet > 20) {
+            return {
+              playerId: this.id,
+              action: Action.FOLD,
+              timestamp: Date.now(),
+            };
+          }
+
+          // Call blinds if needed
+          if (toCall > 0) {
+            return {
+              playerId: this.id,
+              action: Action.CALL,
+              amount: toCall,
+              timestamp: Date.now(),
+            };
+          }
+
+          return {
+            playerId: this.id,
+            action: Action.CHECK,
+            timestamp: Date.now(),
+          };
+        }
+      }
+
+      // Create 4 players
+      const players = [
+        new FourPlayerPositionAware({ name: 'Player 1' }),
+        new FourPlayerPositionAware({ name: 'Player 2' }),
+        new FourPlayerPositionAware({ name: 'Player 3' }),
+        new FourPlayerPositionAware({ name: 'Player 4' }),
+      ];
+
+      // Set up remaining event listeners
+      table.on('hand:started', ({ dealerButton: db }) => {
+        dealerButton = db;
+        
+        // In 4-player game:
+        // Dealer button = position db
+        // UTG = (db + 3) % 4 (acts first pre-flop)
+        // SB = (db + 1) % 4
+        // BB = (db + 2) % 4
+        const utgPos = (db + 3) % 4;
+        const sbPos = (db + 1) % 4;
+        const bbPos = (db + 2) % 4;
+
+        players[utgPos].position = 'utg';
+        players[db].position = 'button';
+        players[sbPos].position = 'sb';
+        players[bbPos].position = 'bb';
+      });
+
+      table.on('hand:ended', ({ winners }) => {
+        if (!handEnded) {
+          handEnded = true;
+          captureActions = false;
+          if (winners && winners.length > 0) {
+            winnerId = winners[0].playerId;
+            winnerAmount = winners[0].amount;
+          }
+          setTimeout(() => table.close(), 10);
+        }
+      });
+
+      // Add players
+      players.forEach(p => table.addPlayer(p));
+
+      // Wait a bit for auto-start
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Wait for game to complete
+      await vi.waitFor(() => gameStarted, { 
+        timeout: 2000,
+        interval: 50 
+      });
+      await vi.waitFor(() => dealerButton >= 0, { 
+        timeout: 3000,
+        interval: 50 
+      });
+      await vi.waitFor(() => handEnded, { timeout: 5000 });
+
+      // Find UTG player
+      const utgPos = (dealerButton + 3) % 4;
+      const utgPlayer = players[utgPos];
+
+      // Verify results
+      expect(winnerId).toBe(utgPlayer.id);
+      expect(winnerAmount).toBe(90); // UTG's $60 + SB $10 + BB $20
+
+      // Verify action sequence
+      const raiseAction = actions.find(a => a.action === Action.RAISE);
+      expect(raiseAction).toBeDefined();
+      expect(raiseAction.amount).toBe(60);
+      expect(raiseAction.playerId).toBe(utgPlayer.id);
+
+      // Should have 3 folds
+      const foldActions = actions.filter(a => a.action === Action.FOLD);
+      expect(foldActions).toHaveLength(3);
+
+      table.close();
+    });
+  });
 });
