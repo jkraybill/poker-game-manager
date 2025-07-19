@@ -105,11 +105,13 @@ export class GameEngine extends EventEmitter {
    */
   postBlinds() {
     const activePlayers = this.players.filter(p => p.state === PlayerState.ACTIVE);
-    if (activePlayers.length < 2) return;
+    if (activePlayers.length < 2) {
+return;
+}
     
     // Find small blind position
-    let sbIndex = this.getNextActivePlayerIndex(this.dealerButtonIndex);
-    let bbIndex = this.getNextActivePlayerIndex(sbIndex);
+    const sbIndex = this.getNextActivePlayerIndex(this.dealerButtonIndex);
+    const bbIndex = this.getNextActivePlayerIndex(sbIndex);
     
     const sbPlayer = this.players[sbIndex];
     const bbPlayer = this.players[bbIndex];
@@ -171,7 +173,7 @@ export class GameEngine extends EventEmitter {
     try {
       // Get action from player with timeout
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), this.config.timeout)
+        setTimeout(() => reject(new Error('Timeout')), this.config.timeout),
       );
       
       const action = await Promise.race([
@@ -233,7 +235,7 @@ export class GameEngine extends EventEmitter {
     
     // Check if only one player remains
     const activePlayers = this.players.filter(p => 
-      p.state === PlayerState.ACTIVE || p.state === PlayerState.ALL_IN
+      p.state === PlayerState.ACTIVE || p.state === PlayerState.ALL_IN,
     );
     
     if (activePlayers.length === 1) {
@@ -432,7 +434,7 @@ export class GameEngine extends EventEmitter {
     this.phase = GamePhase.SHOWDOWN;
     
     const activePlayers = this.players.filter(p => 
-      p.state === PlayerState.ACTIVE || p.state === PlayerState.ALL_IN
+      p.state === PlayerState.ACTIVE || p.state === PlayerState.ALL_IN,
     );
     
     // Evaluate hands

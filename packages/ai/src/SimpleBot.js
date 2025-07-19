@@ -95,7 +95,9 @@ export class SimpleBot extends Player {
     const myState = gameState.players[this.id];
     const callAmount = gameState.currentBet - myState.bet;
     
-    if (callAmount === 0) return 1;
+    if (callAmount === 0) {
+return 1;
+}
     
     return gameState.pot / (gameState.pot + callAmount);
   }

@@ -8,16 +8,15 @@
   "type": "module",
   "scripts": {
     "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:types",
-    "build:esm": "esbuild src/index.js --bundle --platform=node --format=esm --outfile=dist/index.mjs",
-    "build:cjs": "esbuild src/index.js --bundle --platform=node --format=cjs --outfile=dist/index.js",
+    "build:esm": "esbuild packages/core/src/index.js --bundle --platform=node --format=esm --outfile=dist/index.mjs",
+    "build:cjs": "esbuild packages/core/src/index.js --bundle --platform=node --format=cjs --outfile=dist/index.js",
     "build:types": "tsc --emitDeclarationOnly --declaration --outDir dist",
     "clean": "rm -rf dist",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --run --coverage",
-    "lint": "eslint src --ext .js,.ts",
-    "format": "prettier --write \"src/**/*.{js,ts,json,md}\"",
-    "dev": "node src/main.js",
+    "lint": "eslint packages/core/src packages/ai/src --ext .js,.ts",
+    "format": "prettier --write \"packages/**/*.{js,ts,json,md}\"",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [

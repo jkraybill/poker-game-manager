@@ -124,7 +124,7 @@ export class PotManager {
     // Distribute each pot
     for (const pot of this.pots) {
       const eligibleWinners = winners.filter(w => 
-        pot.eligiblePlayers.includes(w.playerData)
+        pot.eligiblePlayers.includes(w.playerData),
       );
 
       if (eligibleWinners.length > 0) {

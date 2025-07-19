@@ -16,7 +16,6 @@ export class HandEvaluator {
     // Get all possible 5-card combinations
     const combinations = this.getCombinations(cards, 5);
     let bestHand = null;
-    let bestRank = 0;
 
     for (const combo of combinations) {
       const hand = this.evaluateFiveCards(combo);
@@ -32,12 +31,16 @@ export class HandEvaluator {
    * Find winners from an array of player hands
    */
   static findWinners(playerHands) {
-    if (playerHands.length === 0) return [];
-    if (playerHands.length === 1) return playerHands;
+    if (playerHands.length === 0) {
+return [];
+}
+    if (playerHands.length === 1) {
+return playerHands;
+}
 
     // Sort hands by strength (descending)
     const sorted = [...playerHands].sort((a, b) => 
-      this.compareHands(b.hand, a.hand)
+      this.compareHands(b.hand, a.hand),
     );
 
     // Find all players with the best hand (could be ties)
@@ -113,13 +116,21 @@ export class HandEvaluator {
    * Returns: 1 if hand1 wins, -1 if hand2 wins, 0 if tie
    */
   static compareHands(hand1, hand2) {
-    if (hand1.rank > hand2.rank) return 1;
-    if (hand1.rank < hand2.rank) return -1;
+    if (hand1.rank > hand2.rank) {
+return 1;
+}
+    if (hand1.rank < hand2.rank) {
+return -1;
+}
 
     // Compare kickers
     for (let i = 0; i < Math.min(hand1.kickers.length, hand2.kickers.length); i++) {
-      if (hand1.kickers[i] > hand2.kickers[i]) return 1;
-      if (hand1.kickers[i] < hand2.kickers[i]) return -1;
+      if (hand1.kickers[i] > hand2.kickers[i]) {
+return 1;
+}
+      if (hand1.kickers[i] < hand2.kickers[i]) {
+return -1;
+}
     }
 
     return 0;
@@ -153,7 +164,7 @@ export class HandEvaluator {
    */
   static sortByRank(cards) {
     return [...cards].sort((a, b) => 
-      this.getRankValue(b.rank) - this.getRankValue(a.rank)
+      this.getRankValue(b.rank) - this.getRankValue(a.rank),
     );
   }
 
@@ -233,7 +244,7 @@ export class HandEvaluator {
   static getRankValue(rank) {
     const values = {
       '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7,
-      '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14
+      '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14,
     };
     return values[rank];
   }
@@ -258,7 +269,7 @@ export class HandEvaluator {
     const cardNames = {
       14: 'Ace', 13: 'King', 12: 'Queen', 11: 'Jack',
       10: 'Ten', 9: 'Nine', 8: 'Eight', 7: 'Seven',
-      6: 'Six', 5: 'Five', 4: 'Four', 3: 'Three', 2: 'Two'
+      6: 'Six', 5: 'Five', 4: 'Four', 3: 'Three', 2: 'Two',
     };
 
     let description = rankNames[rank];

@@ -177,7 +177,7 @@ export class Table extends EventEmitter {
    */
   getNextAvailableSeat() {
     const occupiedSeats = new Set(
-      Array.from(this.players.values()).map(p => p.seatNumber)
+      Array.from(this.players.values()).map(p => p.seatNumber),
     );
     
     for (let i = 1; i <= this.config.maxPlayers; i++) {

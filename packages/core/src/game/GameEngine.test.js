@@ -85,7 +85,7 @@ describe('GameEngine', () => {
         expect.arrayContaining([
           expect.objectContaining({ rank: expect.any(String) }),
           expect.objectContaining({ rank: expect.any(String) }),
-        ])
+        ]),
       );
     });
 
@@ -148,7 +148,7 @@ describe('GameEngine', () => {
       const currentPlayer = mockPlayers[gameEngine.currentPlayerIndex];
       // Make getAction take longer than timeout
       currentPlayer.player.getAction.mockImplementation(() => 
-        new Promise(resolve => setTimeout(resolve, 2000))
+        new Promise(resolve => setTimeout(resolve, 2000)),
       );
 
       const actionSpy = vi.fn();
@@ -165,7 +165,7 @@ describe('GameEngine', () => {
   });
 
   describe('betting rounds', () => {
-    it('should progress through all betting rounds', async () => {
+    it('should progress through all betting rounds', () => {
       const communityCardsSpy = vi.fn();
       gameEngine.on('cards:community', communityCardsSpy);
 
@@ -213,7 +213,7 @@ describe('GameEngine', () => {
         expect.objectContaining({
           winners: ['player3'],
           finalChips: expect.any(Object),
-        })
+        }),
       );
     });
   });
