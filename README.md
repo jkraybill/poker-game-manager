@@ -6,10 +6,10 @@
 I'm working on the Poker Game Manager project. This is a high-performance, pure poker library for Node.js with multi-table support and event-driven architecture.
 
 Please read these files in order:
-1. CLAUDE.md - Technical guide and development workflow
-2. ABOUT-JK.md - Working style and communication preferences  
-3. REFACTORING_PLAN.md - Project transformation roadmap
-4. src/texas-holdem.js - Core game logic implementation
+1. SESSION_CONTEXT.md - Current state and immediate tasks
+2. CLAUDE.md - Technical guide and development workflow
+3. ABOUT-JK.md - Working style and communication preferences (if needed)
+4. REFACTORING_PLAN.md - Project transformation roadmap (if needed)
 
 Key context:
 - Pure JavaScript (no TypeScript), Node.js 22+ required

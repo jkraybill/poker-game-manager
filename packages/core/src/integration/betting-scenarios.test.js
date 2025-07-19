@@ -44,6 +44,7 @@ describe('Betting Scenarios', () => {
         minBuyIn: 1000,
         maxBuyIn: 1000,
         minPlayers: 2,
+        dealerButton: 0,
       });
 
       const sbPlayer = new AlwaysFoldPlayer({ name: 'SB/Button' });
@@ -103,6 +104,7 @@ describe('Betting Scenarios', () => {
         blinds: { small: 10, big: 20 },
         minBuyIn: 1000,
         maxBuyIn: 1000,
+        dealerButton: 0,
       });
 
       // Track results
@@ -259,6 +261,7 @@ describe('Betting Scenarios', () => {
         blinds: { small: 10, big: 20 },
         minBuyIn: 1000,
         maxBuyIn: 1000,
+        dealerButton: 0,
       });
 
       // Track results
@@ -331,6 +334,7 @@ describe('Betting Scenarios', () => {
         minBuyIn: 1000,
         maxBuyIn: 1000,
         minPlayers: 4,
+        dealerButton: 0,
       });
 
       // Track results
@@ -484,6 +488,7 @@ describe('Betting Scenarios', () => {
         minBuyIn: 1000,
         maxBuyIn: 1000,
         minPlayers: 4,
+        dealerButton: 0,
       });
 
       // Track results
@@ -711,6 +716,7 @@ describe('Betting Scenarios', () => {
         minBuyIn: 200,
         maxBuyIn: 1000,
         minPlayers: 4,
+        dealerButton: 0,
       });
 
       // Track results
@@ -879,6 +885,7 @@ describe('Betting Scenarios', () => {
         minBuyIn: 1000,
         maxBuyIn: 1000,
         minPlayers: 4,
+        dealerButton: 0,
       });
 
       // Track results
@@ -1040,6 +1047,7 @@ describe('Betting Scenarios', () => {
         minBuyIn: 1000,
         maxBuyIn: 1000,
         minPlayers: 4,
+        dealerButton: 0,
       });
 
       // Track results
@@ -1272,6 +1280,7 @@ describe('Betting Scenarios', () => {
         minBuyIn: 1000,
         maxBuyIn: 1000,
         minPlayers: 5,
+        dealerButton: 0,
       });
 
       // Track results
@@ -1443,12 +1452,13 @@ describe('Betting Scenarios', () => {
       table.close();
     });
 
-    it.skip('should handle multi-way pot with various stack sizes', async () => {
+    it.skip('should handle multi-way pot with various stack sizes - BUG: winner gets 0 chips', async () => {
       const table = manager.createTable({
         blinds: { small: 10, big: 20 },
         minBuyIn: 200,
         maxBuyIn: 1500,
         minPlayers: 5,
+        dealerButton: 0,
       });
 
       // Track results
@@ -1633,6 +1643,7 @@ describe('Betting Scenarios', () => {
         minBuyIn: 100,
         maxBuyIn: 1000,
         minPlayers: 5,
+        dealerButton: 0,
       });
 
       // Track results
@@ -1805,7 +1816,7 @@ describe('Betting Scenarios', () => {
       table.close();
     });
 
-    it.skip('should handle SB squeeze play after raise and call - WORKING with lastAction', async () => {
+    it('should handle SB squeeze play after raise and call - WORKING with lastAction', async () => {
       // This test now works with lastAction data! The squeeze play logic correctly detects
       // when there's been a raise and a call. However, the test is flaky due to position
       // assignment randomness affecting whether all conditions align.
@@ -1814,6 +1825,7 @@ describe('Betting Scenarios', () => {
         minBuyIn: 500,
         maxBuyIn: 1000,
         minPlayers: 5,
+        dealerButton: 0,
       });
 
       // Track results
@@ -1933,12 +1945,18 @@ describe('Betting Scenarios', () => {
       }
 
       // Create 5 players with different stacks
+      // With dealerButton=0, positions will be:
+      // Player 0: Button (800 chips)
+      // Player 1: SB (600 chips)  
+      // Player 2: BB (700 chips)
+      // Player 3: UTG (1000 chips)
+      // Player 4: MP (900 chips)
       const players = [
+        new SqueezePlayPlayer({ name: 'Button Player', chips: 800 }),
+        new SqueezePlayPlayer({ name: 'SB Player', chips: 600 }),
+        new SqueezePlayPlayer({ name: 'BB Player', chips: 700 }),
         new SqueezePlayPlayer({ name: 'UTG Player', chips: 1000 }),
         new SqueezePlayPlayer({ name: 'MP Player', chips: 900 }),
-        new SqueezePlayPlayer({ name: 'Button Player', chips: 800 }),
-        new SqueezePlayPlayer({ name: 'BB Player', chips: 700 }),
-        new SqueezePlayPlayer({ name: 'SB Player', chips: 600 }),
       ];
 
       // Override addPlayer to set specific chip amounts
@@ -2005,6 +2023,7 @@ describe('Betting Scenarios', () => {
         minBuyIn: 1000,
         maxBuyIn: 1000,
         minPlayers: 5,
+        dealerButton: 0,
       });
 
       // Track results

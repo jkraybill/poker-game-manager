@@ -3,10 +3,10 @@
 ## Session Preparation
 
 **First read:**
-1. This file (CLAUDE.md)
-2. ABOUT-JK.md for communication style
-3. REFACTORING_PLAN.md for transformation roadmap
-4. src/texas-holdem.js to understand core game logic
+1. SESSION_CONTEXT.md for immediate context
+2. This file (CLAUDE.md) for detailed guidance
+3. ABOUT-JK.md for communication style (if needed)
+4. REFACTORING_PLAN.md for transformation roadmap (if needed)
 
 ## JK's Shorthand Commands
 

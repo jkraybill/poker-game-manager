@@ -68,6 +68,7 @@ describe('3-player: Button raises, blinds fold', () => {
       blinds: { small: 10, big: 20 },
       minBuyIn: 1000,
       maxBuyIn: 1000,
+      dealerButton: 0,
     });
 
     // Create three players that can adapt their strategy

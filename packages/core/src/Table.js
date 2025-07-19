@@ -132,6 +132,7 @@ export class Table extends EventEmitter {
         })),
         blinds: this.config.blinds,
         timeout: this.config.timeout,
+        dealerButton: this.config.dealerButton,
       });
 
       // Forward specific game events we care about

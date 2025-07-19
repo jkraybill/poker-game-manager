@@ -125,6 +125,7 @@ describe('3-player: Button raises, BB calls, then folds to flop bet', () => {
       blinds: { small: 10, big: 20 },
       minBuyIn: 1000,
       maxBuyIn: 1000,
+      dealerButton: 0,
     });
 
     // Create three phase-aware players

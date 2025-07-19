@@ -25,7 +25,9 @@ export class GameEngine extends EventEmitter {
     this.deck = null;
     this.potManager = null;
     this.currentPlayerIndex = 0;
-    this.dealerButtonIndex = Math.floor(Math.random() * this.players.length);
+    this.dealerButtonIndex = config.dealerButton !== undefined 
+      ? config.dealerButton 
+      : Math.floor(Math.random() * this.players.length);
     this.roundBets = new Map();
     this.playerHands = new Map();
     this.lastBettor = null;
