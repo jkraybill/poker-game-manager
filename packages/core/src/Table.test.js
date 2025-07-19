@@ -7,7 +7,7 @@ const createMockPlayer = (id, name) => ({
   id,
   name,
   receivePrivateCards: vi.fn(),
-  requestAction: vi.fn((validActions, timeout) => {
+  requestAction: vi.fn(() => {
     // Return a check action by default
     return Promise.resolve({ name: 'check' });
   }),
@@ -17,15 +17,6 @@ const createMockPlayer = (id, name) => ({
 
 describe('Table', () => {
   let table;
-  const defaultConfig = {
-    variant: 'texas-holdem',
-    maxPlayers: 9,
-    minPlayers: 2,
-    blinds: { small: 10, big: 20 },
-    minBuyIn: 1000,
-    maxBuyIn: 10000,
-    timeout: 30000,
-  };
 
   beforeEach(() => {
     table = new Table();

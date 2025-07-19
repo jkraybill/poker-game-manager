@@ -8,16 +8,24 @@ const card = (rank, suit) => ({
   suit,
   toString() {
     return `${this.rank}${this.suit}`;
-  }
+  },
 });
 
 describe('HandEvaluator', () => {
   describe('cardToPokersolverFormat', () => {
     it('should convert card format correctly', () => {
-      const card1 = { rank: 'A', suit: 's', toString() { return `${this.rank}${this.suit}`; } };
-      const card2 = { rank: 'T', suit: 'h', toString() { return `${this.rank}${this.suit}`; } };
-      const card3 = { rank: 'K', suit: 'd', toString() { return `${this.rank}${this.suit}`; } };
-      const card4 = { rank: '2', suit: 'c', toString() { return `${this.rank}${this.suit}`; } };
+      const card1 = { rank: 'A', suit: 's', toString() {
+ return `${this.rank}${this.suit}`; 
+} };
+      const card2 = { rank: 'T', suit: 'h', toString() {
+ return `${this.rank}${this.suit}`; 
+} };
+      const card3 = { rank: 'K', suit: 'd', toString() {
+ return `${this.rank}${this.suit}`; 
+} };
+      const card4 = { rank: '2', suit: 'c', toString() {
+ return `${this.rank}${this.suit}`; 
+} };
       
       expect(HandEvaluator.cardToPokersolverFormat(card1)).toBe('As');
       expect(HandEvaluator.cardToPokersolverFormat(card2)).toBe('Th'); // Pokersolver uses T for 10
@@ -32,7 +40,7 @@ describe('HandEvaluator', () => {
         card('A', 's'),
         card('K', 's'),
         card('Q', 's'),
-        card('J', 's')
+        card('J', 's'),
       ];
       expect(() => HandEvaluator.evaluate(cards)).toThrow('Need at least 5 cards to evaluate');
     });
@@ -45,7 +53,7 @@ describe('HandEvaluator', () => {
         card('J', 's'),
         card('T', 's'),
         card('2', 'h'),
-        card('3', 'd')
+        card('3', 'd'),
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.ROYAL_FLUSH);
@@ -59,7 +67,7 @@ describe('HandEvaluator', () => {
         card('6', 'h'),
         card('5', 'h'),
         card('A', 'c'),
-        card('K', 'd')
+        card('K', 'd'),
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.STRAIGHT_FLUSH);
@@ -71,7 +79,7 @@ describe('HandEvaluator', () => {
         card('A', 'h'),
         card('A', 'd'),
         card('A', 'c'),
-        card('K', 's')
+        card('K', 's'),
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.FOUR_OF_A_KIND);
@@ -83,7 +91,7 @@ describe('HandEvaluator', () => {
         card('A', 'h'),
         card('A', 'd'),
         card('K', 'c'),
-        card('K', 's')
+        card('K', 's'),
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.FULL_HOUSE);
@@ -95,7 +103,7 @@ describe('HandEvaluator', () => {
         card('T', 's'),
         card('7', 's'),
         card('4', 's'),
-        card('2', 's')
+        card('2', 's'),
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.FLUSH);
@@ -107,7 +115,7 @@ describe('HandEvaluator', () => {
         card('8', 's'),
         card('7', 'd'),
         card('6', 'c'),
-        card('5', 'h')
+        card('5', 'h'),
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.STRAIGHT);
@@ -119,7 +127,7 @@ describe('HandEvaluator', () => {
         card('2', 's'),
         card('3', 'd'),
         card('4', 'c'),
-        card('5', 'h')
+        card('5', 'h'),
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.STRAIGHT);
@@ -131,7 +139,7 @@ describe('HandEvaluator', () => {
         card('A', 'h'),
         card('A', 'd'),
         card('K', 'c'),
-        card('Q', 's')
+        card('Q', 's'),
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.THREE_OF_A_KIND);
@@ -143,7 +151,7 @@ describe('HandEvaluator', () => {
         card('A', 'h'),
         card('K', 'd'),
         card('K', 'c'),
-        card('Q', 's')
+        card('Q', 's'),
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.TWO_PAIR);
@@ -155,7 +163,7 @@ describe('HandEvaluator', () => {
         card('A', 'h'),
         card('K', 'd'),
         card('Q', 'c'),
-        card('J', 's')
+        card('J', 's'),
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.PAIR);
@@ -167,7 +175,7 @@ describe('HandEvaluator', () => {
         card('K', 'h'),
         card('Q', 'd'),
         card('J', 'c'),
-        card('9', 's')
+        card('9', 's'),
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.HIGH_CARD);
@@ -183,7 +191,7 @@ describe('HandEvaluator', () => {
         card('K', 'c'),
         card('K', 's'),
         card('2', 'h'),
-        card('3', 'd')
+        card('3', 'd'),
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.FULL_HOUSE);
@@ -204,9 +212,9 @@ describe('HandEvaluator', () => {
           card('K', 's'),
           card('Q', 's'),
           card('J', 's'),
-          card('T', 's')
+          card('T', 's'),
         ],
-        hand: {}
+        hand: {},
       }];
       const winners = HandEvaluator.findWinners(playerHands);
       expect(winners).toHaveLength(1);
@@ -222,8 +230,8 @@ describe('HandEvaluator', () => {
             card('A', 'h'),
             card('K', 'd'),
             card('K', 'c'),
-            card('Q', 's')
-          ]
+            card('Q', 's'),
+          ],
         },
         {
           playerData: { player: { id: 'player2' } },
@@ -232,9 +240,9 @@ describe('HandEvaluator', () => {
             card('J', 'h'),
             card('T', 'd'),
             card('T', 'c'),
-            card('9', 's')
-          ]
-        }
+            card('9', 's'),
+          ],
+        },
       ];
       const winners = HandEvaluator.findWinners(playerHands);
       expect(winners).toHaveLength(1);
@@ -250,8 +258,8 @@ describe('HandEvaluator', () => {
             card('K', 'h'),
             card('Q', 'd'),
             card('J', 'c'),
-            card('T', 's')
-          ]
+            card('T', 's'),
+          ],
         },
         {
           playerData: { player: { id: 'player2' } },
@@ -260,9 +268,9 @@ describe('HandEvaluator', () => {
             card('K', 's'),
             card('Q', 'c'),
             card('J', 'd'),
-            card('T', 'h')
-          ]
-        }
+            card('T', 'h'),
+          ],
+        },
       ];
       const winners = HandEvaluator.findWinners(playerHands);
       expect(winners).toHaveLength(2);
@@ -278,8 +286,8 @@ describe('HandEvaluator', () => {
           card('A', 'h'),
           card('K', 'd'),
           card('K', 'c'),
-          card('Q', 's')
-        ]
+          card('Q', 's'),
+        ],
       };
       const hand2 = {
         cards: [
@@ -287,8 +295,8 @@ describe('HandEvaluator', () => {
           card('J', 'h'),
           card('T', 'd'),
           card('T', 'c'),
-          card('9', 's')
-        ]
+          card('9', 's'),
+        ],
       };
       expect(HandEvaluator.compareHands(hand1, hand2)).toBe(1);
     });
@@ -300,8 +308,8 @@ describe('HandEvaluator', () => {
           card('J', 'h'),
           card('T', 'd'),
           card('T', 'c'),
-          card('9', 's')
-        ]
+          card('9', 's'),
+        ],
       };
       const hand2 = {
         cards: [
@@ -309,8 +317,8 @@ describe('HandEvaluator', () => {
           card('A', 'h'),
           card('K', 'd'),
           card('K', 'c'),
-          card('Q', 's')
-        ]
+          card('Q', 's'),
+        ],
       };
       expect(HandEvaluator.compareHands(hand1, hand2)).toBe(-1);
     });
@@ -322,8 +330,8 @@ describe('HandEvaluator', () => {
           card('K', 'h'),
           card('Q', 'd'),
           card('J', 'c'),
-          card('T', 's')
-        ]
+          card('T', 's'),
+        ],
       };
       const hand2 = {
         cards: [
@@ -331,8 +339,8 @@ describe('HandEvaluator', () => {
           card('K', 's'),
           card('Q', 'c'),
           card('J', 'd'),
-          card('T', 'h')
-        ]
+          card('T', 'h'),
+        ],
       };
       expect(HandEvaluator.compareHands(hand1, hand2)).toBe(0);
     });

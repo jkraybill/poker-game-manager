@@ -287,7 +287,7 @@ describe('PotManager', () => {
       
       // Only Player 1 wins (has best hand)
       const winners = [
-        { playerData: players[0] }
+        { playerData: players[0] },
       ];
       
       const payouts = potManager.calculatePayouts(winners);

@@ -311,7 +311,7 @@ describe('Deck', () => {
       // Reset deck and verify the card is back to original
       deck.reset();
       const foundCard = deck.cards.find(c => 
-        c.rank === originalRank && c.suit === originalSuit
+        c.rank === originalRank && c.suit === originalSuit,
       );
       
       expect(foundCard).toBeDefined();

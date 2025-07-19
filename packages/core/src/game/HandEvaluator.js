@@ -31,7 +31,7 @@ export class HandEvaluator {
       'full house': HandRank.FULL_HOUSE,
       'four of a kind': HandRank.FOUR_OF_A_KIND,
       'straight flush': HandRank.STRAIGHT_FLUSH,
-      'royal flush': HandRank.ROYAL_FLUSH
+      'royal flush': HandRank.ROYAL_FLUSH,
     };
     return rankMap[rank.toLowerCase()] || HandRank.HIGH_CARD;
   }
@@ -75,10 +75,10 @@ export class HandEvaluator {
           suit,
           toString() {
             return `${rank}${suit}`;
-          }
+          },
         };
       }),
-      description: solved.descr
+      description: solved.descr,
     };
   }
 
@@ -102,7 +102,7 @@ export class HandEvaluator {
       const solved = Hand.solve(pokersolverCards);
       return {
         original: ph,
-        solved
+        solved,
       };
     });
 
@@ -128,11 +128,11 @@ export class HandEvaluator {
                 suit,
                 toString() {
                   return `${rank}${suit}`;
-                }
+                },
               };
             }),
-            description: winner.solved.descr
-          }
+            description: winner.solved.descr,
+          },
         };
         winners.push(winnerData);
       }
@@ -170,7 +170,7 @@ export class HandEvaluator {
   static getRankValue(rank) {
     const values = {
       '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7,
-      '8': 8, '9': 9, '10': 10, 'T': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14
+      '8': 8, '9': 9, '10': 10, 'T': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14,
     };
     return values[rank] || values[rank.toUpperCase()] || 0;
   }
