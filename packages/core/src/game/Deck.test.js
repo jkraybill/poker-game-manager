@@ -257,4 +257,179 @@ describe('Deck', () => {
       }
     });
   });
+
+  describe('performance and reliability', () => {
+    it('should handle many consecutive operations without degradation', () => {
+      const startTime = Date.now();
+      
+      // Perform many operations
+      for (let i = 0; i < 1000; i++) {
+        deck.reset();
+        deck.shuffle();
+        
+        // Draw and verify some cards
+        const drawn = [];
+        for (let j = 0; j < 5; j++) {
+          drawn.push(deck.draw());
+        }
+        
+        expect(deck.getRemaining()).toBe(47);
+        expect(drawn).toHaveLength(5);
+      }
+      
+      const elapsed = Date.now() - startTime;
+      // Should complete in reasonable time (less than 1 second)
+      expect(elapsed).toBeLessThan(1000);
+    });
+    
+    it('should maintain performance for shuffle operation', () => {
+      const iterations = 10000;
+      const startTime = Date.now();
+      
+      for (let i = 0; i < iterations; i++) {
+        deck.shuffle();
+      }
+      
+      const elapsed = Date.now() - startTime;
+      const avgTime = elapsed / iterations;
+      
+      // Average shuffle should be very fast (less than 0.1ms)
+      expect(avgTime).toBeLessThan(0.1);
+    });
+  });
+
+  describe('card immutability and state consistency', () => {
+    it('should not allow modification of drawn cards to affect deck', () => {
+      const drawnCard = deck.draw();
+      const originalRank = drawnCard.rank;
+      const originalSuit = drawnCard.suit;
+      
+      // Try to modify the drawn card
+      drawnCard.rank = 'MODIFIED';
+      drawnCard.suit = 'MODIFIED';
+      
+      // Reset deck and verify the card is back to original
+      deck.reset();
+      const foundCard = deck.cards.find(c => 
+        c.rank === originalRank && c.suit === originalSuit
+      );
+      
+      expect(foundCard).toBeDefined();
+      expect(foundCard.rank).toBe(originalRank);
+      expect(foundCard.suit).toBe(originalSuit);
+    });
+    
+    it('should handle complex operation sequences', () => {
+      // Complex sequence: shuffle, draw some, shuffle again, draw more, reset
+      deck.shuffle();
+      
+      const firstDraw = [];
+      for (let i = 0; i < 10; i++) {
+        firstDraw.push(deck.draw().toString());
+      }
+      expect(deck.getRemaining()).toBe(42);
+      
+      deck.shuffle(); // Shuffle remaining 42 cards
+      
+      const secondDraw = [];
+      for (let i = 0; i < 10; i++) {
+        secondDraw.push(deck.draw().toString());
+      }
+      expect(deck.getRemaining()).toBe(32);
+      
+      deck.reset();
+      expect(deck.getRemaining()).toBe(52);
+      
+      // Verify all cards are back
+      const allCards = deck.cards.map(c => c.toString());
+      for (const card of firstDraw.concat(secondDraw)) {
+        expect(allCards).toContain(card);
+      }
+    });
+  });
+
+  describe('advanced shuffle verification', () => {
+    it('should show no correlation between consecutive cards', () => {
+      // Test that knowing one card doesn't help predict the next
+      const pairCounts = {};
+      const iterations = 10000;
+      
+      for (let i = 0; i < iterations; i++) {
+        deck.reset();
+        deck.shuffle();
+        
+        // Look at first two cards
+        const first = deck.cards[0].toString();
+        const second = deck.cards[1].toString();
+        const pair = `${first}-${second}`;
+        
+        pairCounts[pair] = (pairCounts[pair] || 0) + 1;
+      }
+      
+      // With 52 cards, there are 52*51 = 2652 possible pairs
+      // Each should appear roughly iterations/2652 times
+      const expectedCount = iterations / 2652;
+      
+      // Check a sample of pairs
+      const pairValues = Object.values(pairCounts);
+      const maxCount = Math.max(...pairValues);
+      
+      // Statistical check: with 10k iterations, max should be reasonable
+      // Using 5x expected as upper bound (very generous for randomness)
+      expect(maxCount).toBeLessThan(expectedCount * 5);
+      
+      // Verify we're seeing a good variety of pairs (at least 1000 different pairs)
+      expect(Object.keys(pairCounts).length).toBeGreaterThan(1000);
+    });
+  });
+
+  describe('additional edge cases', () => {
+    it('should handle rapid reset and shuffle operations', () => {
+      // Rapid operations shouldn't cause issues
+      for (let i = 0; i < 100; i++) {
+        deck.reset();
+        deck.shuffle();
+        deck.reset();
+      }
+      
+      expect(deck.getRemaining()).toBe(52);
+      expect(deck.cards).toHaveLength(52);
+    });
+    
+    it('should maintain unique card references after reset', () => {
+      const card1 = deck.draw();
+      const remaining1 = deck.getRemaining();
+      
+      deck.reset();
+      
+      const card2 = deck.draw();
+      const remaining2 = deck.getRemaining();
+      
+      // Same position should give same card value but different object
+      expect(card1.toString()).toBe(card2.toString());
+      expect(card1).not.toBe(card2); // Different object references
+      expect(remaining1).toBe(remaining2);
+    });
+    
+    it('should properly handle drawing all cards then shuffling', () => {
+      // Draw all cards
+      const drawnCards = [];
+      while (deck.getRemaining() > 0) {
+        drawnCards.push(deck.draw());
+      }
+      
+      expect(drawnCards).toHaveLength(52);
+      expect(deck.getRemaining()).toBe(0);
+      
+      // Shuffling empty deck should work
+      expect(() => deck.shuffle()).not.toThrow();
+      
+      // But drawing should still fail
+      expect(() => deck.draw()).toThrow('Cannot draw from empty deck');
+      
+      // Reset should restore everything
+      deck.reset();
+      expect(deck.getRemaining()).toBe(52);
+    });
+  });
 });
