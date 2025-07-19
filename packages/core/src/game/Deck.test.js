@@ -235,7 +235,7 @@ describe('Deck', () => {
       // This test verifies the algorithm produces uniform distribution
       // by checking card positions over multiple shuffles
       const positionCounts = {};
-      const iterations = 1000;
+      const iterations = 100000;
       const testCard = 'As'; // Ace of spades
       
       for (let i = 0; i < iterations; i++) {
@@ -248,7 +248,7 @@ describe('Deck', () => {
       
       // Each position should have roughly equal probability (1/52)
       const expectedCount = iterations / 52;
-      const tolerance = expectedCount * 0.5; // 50% tolerance for statistical variance
+      const tolerance = expectedCount * 0.2; // 20% tolerance for statistical variance
       
       for (let pos = 0; pos < 52; pos++) {
         const count = positionCounts[pos] || 0;
