@@ -322,152 +322,7 @@ describe('Betting Scenarios', () => {
       table.close();
     });
 
-    it.skip('should handle Button raising, SB folding, BB calling then folding to flop bet', async () => {
-      const table = manager.createTable({
-        blinds: { small: 10, big: 20 },
-        minBuyIn: 1000,
-        maxBuyIn: 1000,
-      });
-
-      // Track game state
-      let currentPhase = null;
-      let dealerButton = -1;
-
-      table.on('round:started', ({ phase }) => {
-        currentPhase = phase;
-      });
-
-      table.on('hand:started', ({ dealerButton: db }) => {
-        dealerButton = db;
-      });
-
-      // Create players with phase-aware betting
-      class PhaseAwareRaiser extends Player {
-        constructor(config) {
-          super(config);
-          this.hasRaisedPreflop = false;
-          this.hasBetFlop = false;
-        }
-
-        getAction(gameState) {
-          const myState = gameState.players[this.id];
-          const toCall = gameState.currentBet - myState.bet;
-
-          // Pre-flop: raise to 100
-          if (!this.hasRaisedPreflop && gameState.phase === 'PRE_FLOP') {
-            this.hasRaisedPreflop = true;
-            return {
-              playerId: this.id,
-              action: Action.RAISE,
-              amount: 100,
-              timestamp: Date.now(),
-            };
-          }
-
-          // Flop: bet 200
-          if (!this.hasBetFlop && gameState.phase === 'FLOP' && gameState.currentBet === 0) {
-            this.hasBetFlop = true;
-            return {
-              playerId: this.id,
-              action: Action.BET,
-              amount: 200,
-              timestamp: Date.now(),
-            };
-          }
-
-          // Otherwise call/check
-          if (toCall > 0) {
-            const callAmount = Math.min(toCall, myState.chips);
-            return {
-              playerId: this.id,
-              action: callAmount === myState.chips ? Action.ALL_IN : Action.CALL,
-              amount: callAmount,
-              timestamp: Date.now(),
-            };
-          }
-
-          return {
-            playerId: this.id,
-            action: Action.CHECK,
-            timestamp: Date.now(),
-          };
-        }
-      }
-
-      // Create players based on position
-      const players = [];
-      for (let i = 0; i < 3; i++) {
-        players.push(new Player({ name: `Player ${i + 1}` }));
-      }
-
-      // Track results
-      let handEnded = false;
-      let winnerId = null;
-      let winnerAmount = 0;
-      const actions = [];
-
-      // Set up position-based strategies after we know dealer button
-      table.on('game:started', () => {
-        // Wait a bit to ensure dealer button is set
-        setTimeout(() => {
-          if (dealerButton >= 0) {
-            const buttonPos = dealerButton;
-            const sbPos = (dealerButton + 1) % 3;
-            const bbPos = (dealerButton + 2) % 3;
-
-            // Replace players with appropriate strategies
-            players[buttonPos] = new PhaseAwareRaiser({ name: `Player ${buttonPos + 1} (Button)` });
-            players[sbPos] = new FoldToRaisePlayer({ name: `Player ${sbPos + 1} (SB)` });
-            players[bbPos] = new CallThenFoldPlayer({ name: `Player ${bbPos + 1} (BB)` });
-
-            // Clear table and re-add with correct strategies
-            table.players.clear();
-            players.forEach(p => table.addPlayer(p));
-          }
-        }, 50);
-      });
-
-      table.on('player:action', ({ playerId, action, amount }) => {
-        actions.push({ playerId, action, amount, phase: currentPhase });
-      });
-
-      table.on('hand:ended', ({ winners }) => {
-        handEnded = true;
-        if (winners && winners.length > 0) {
-          winnerId = winners[0].playerId;
-          winnerAmount = winners[0].amount;
-        }
-      });
-
-      // Add initial players to trigger game start
-      players.forEach(p => table.addPlayer(p));
-
-      // Wait for hand to complete
-      await vi.waitFor(() => handEnded, { timeout: 5000 });
-
-      // Verify the button player won
-      const buttonPlayer = players[dealerButton];
-      expect(winnerId).toBe(buttonPlayer.id);
-
-      // Verify action sequence
-      const preflopActions = actions.filter(a => a.phase === 'PRE_FLOP');
-      const flopActions = actions.filter(a => a.phase === 'FLOP');
-
-      // Pre-flop: Button raises, SB folds, BB calls
-      expect(preflopActions.find(a => a.action === Action.RAISE && a.amount === 100)).toBeDefined();
-      expect(preflopActions.find(a => a.action === Action.FOLD)).toBeDefined();
-      expect(preflopActions.find(a => a.action === Action.CALL)).toBeDefined();
-
-      // Flop: BB checks, Button bets, BB folds
-      expect(flopActions.find(a => a.action === Action.CHECK)).toBeDefined();
-      expect(flopActions.find(a => a.action === Action.BET && a.amount === 200)).toBeDefined();
-      expect(flopActions.find(a => a.action === Action.FOLD)).toBeDefined();
-
-      // Pot should be Button's 100 + SB's 10 + BB's 100 = 210
-      expect(winnerAmount).toBe(210);
-
-      table.close();
-    });
+    // Test removed - dynamically replacing players mid-hand is not supported
   });
 
   describe('All players fold scenarios', () => {
@@ -2018,6 +1873,335 @@ describe('Betting Scenarios', () => {
       // Verify we had a complex betting scenario with multiple players
       const uniquePlayers = new Set(actions.map(a => a.playerName));
       expect(uniquePlayers.size).toBe(5); // All 5 players took actions
+
+      table.close();
+    });
+
+    it.skip('should handle SB squeeze play after raise and call', async () => {
+      // SKIPPED: gameState.players doesn't include lastAction property needed to detect raise vs call
+      const table = manager.createTable({
+        blinds: { small: 10, big: 20 },
+        minBuyIn: 500,
+        maxBuyIn: 1000,
+        minPlayers: 5,
+      });
+
+      // Track results
+      let gameStarted = false;
+      let handEnded = false;
+      let winnerId = null;
+      let winnerAmount = 0;
+      let captureActions = true;
+      const actions = [];
+
+      // Set up event listeners
+      table.on('game:started', () => {
+        gameStarted = true;
+      });
+
+      table.on('player:action', ({ playerId, action, amount }) => {
+        if (captureActions) {
+          actions.push({ playerId, action, amount });
+        }
+      });
+
+      // Create position-aware squeeze play players
+      class SqueezePlayPlayer extends Player {
+        constructor(config) {
+          super(config);
+          this.chipAmount = config.chips;
+          this.hasActed = false;
+        }
+
+        getAction(gameState) {
+          const myState = gameState.players[this.id];
+          const toCall = gameState.currentBet - myState.bet;
+
+          // UTG raises to 60
+          if (this.chipAmount === 1000 && gameState.currentBet === 20 && !this.hasActed) {
+            this.hasActed = true;
+            return {
+              playerId: this.id,
+              action: Action.RAISE,
+              amount: 60,
+              timestamp: Date.now(),
+            };
+          }
+
+          // MP folds to UTG raise
+          if (this.chipAmount === 900 && toCall > 0 && gameState.currentBet > 20) {
+            return {
+              playerId: this.id,
+              action: Action.FOLD,
+              timestamp: Date.now(),
+            };
+          }
+
+          // Button calls the 60 raise
+          if (this.chipAmount === 800 && toCall > 0 && toCall <= 60 && gameState.currentBet === 60 && !this.hasActed) {
+            this.hasActed = true;
+            return {
+              playerId: this.id,
+              action: Action.CALL,
+              amount: toCall,
+              timestamp: Date.now(),
+            };
+          }
+
+          // SB squeezes to 180 after seeing raise and call
+          if (this.chipAmount === 600 && gameState.currentBet === 60 && !this.hasActed) {
+            // Check if there was a raise and a call by examining all players
+            const playerStates = Object.values(gameState.players);
+            const hasRaiser = playerStates.some(p => p.lastAction === Action.RAISE && p.bet === 60);
+            const hasCaller = playerStates.some(p => p.lastAction === Action.CALL && p.bet === 60);
+            
+            if (hasRaiser && hasCaller) {
+              this.hasActed = true;
+              return {
+                playerId: this.id,
+                action: Action.RAISE,
+                amount: 180,
+                timestamp: Date.now(),
+              };
+            }
+          }
+
+          // Fold to any bet after the squeeze
+          if (toCall > 0 && gameState.currentBet >= 180) {
+            return {
+              playerId: this.id,
+              action: Action.FOLD,
+              timestamp: Date.now(),
+            };
+          }
+
+          // BB folds to raises
+          if (this.chipAmount === 700 && toCall > 0 && gameState.currentBet > 20) {
+            return {
+              playerId: this.id,
+              action: Action.FOLD,
+              timestamp: Date.now(),
+            };
+          }
+
+          // Default: check if no bet to call
+          if (toCall === 0) {
+            return {
+              playerId: this.id,
+              action: Action.CHECK,
+              timestamp: Date.now(),
+            };
+          }
+
+          // Otherwise fold
+          return {
+            playerId: this.id,
+            action: Action.FOLD,
+            timestamp: Date.now(),
+          };
+        }
+      }
+
+      // Create 5 players with different stacks
+      const players = [
+        new SqueezePlayPlayer({ name: 'UTG Player', chips: 1000 }),
+        new SqueezePlayPlayer({ name: 'MP Player', chips: 900 }),
+        new SqueezePlayPlayer({ name: 'Button Player', chips: 800 }),
+        new SqueezePlayPlayer({ name: 'BB Player', chips: 700 }),
+        new SqueezePlayPlayer({ name: 'SB Player', chips: 600 }),
+      ];
+
+      // Override addPlayer to set specific chip amounts
+      const originalAddPlayer = table.addPlayer.bind(table);
+      table.addPlayer = function(player) {
+        const result = originalAddPlayer(player);
+        const playerData = this.players.get(player.id);
+        if (playerData && player.chipAmount) {
+          playerData.chips = player.chipAmount;
+        }
+        return result;
+      };
+
+      table.on('hand:ended', ({ winners }) => {
+        if (!handEnded) {
+          handEnded = true;
+          captureActions = false;
+          if (winners && winners.length > 0) {
+            winnerId = winners[0].playerId;
+            winnerAmount = winners[0].amount;
+          }
+          setTimeout(() => table.close(), 10);
+        }
+      });
+
+      // Add players
+      players.forEach(p => table.addPlayer(p));
+
+      // Wait for game to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
+      await vi.waitFor(() => gameStarted, { 
+        timeout: 2000,
+        interval: 50, 
+      });
+      await vi.waitFor(() => handEnded, { timeout: 5000 });
+
+      // Verify the squeeze play sequence
+      const raiseAction = actions.find((a) => a.action === Action.RAISE && a.amount === 60);
+      const callAction = actions.find((a) => a.action === Action.CALL);
+      const squeezeAction = actions.find((a) => a.action === Action.RAISE && a.amount === 180);
+      
+      expect(raiseAction).toBeDefined();
+      expect(callAction).toBeDefined();
+      expect(squeezeAction).toBeDefined();
+
+      // After the squeeze, everyone should fold
+      const actionsAfterSqueeze = actions.slice(actions.indexOf(squeezeAction) + 1);
+      const foldsAfterSqueeze = actionsAfterSqueeze.filter((a) => a.action === Action.FOLD);
+      expect(foldsAfterSqueeze.length).toBeGreaterThanOrEqual(3); // BB, UTG, and Button fold to squeeze
+
+      // SB (600 chip player) should win
+      const sbPlayer = players.find(p => p.chipAmount === 600);
+      expect(winnerId).toBe(sbPlayer.id);
+
+      // Pot should be: SB 10 + BB 20 + UTG 60 + Button 60 = 150
+      expect(winnerAmount).toBe(150);
+
+      table.close();
+    });
+
+    it('should handle family pot where everyone calls to see flop', async () => {
+      const table = manager.createTable({
+        blinds: { small: 10, big: 20 },
+        minBuyIn: 1000,
+        maxBuyIn: 1000,
+        minPlayers: 5,
+      });
+
+      // Track results
+      let gameStarted = false;
+      let handEnded = false;
+      let winnerAmount = 0;
+      let captureActions = true;
+      let showdownOccurred = false;
+      const actions = [];
+      const phaseActions = {
+        PRE_FLOP: [],
+        FLOP: [],
+        TURN: [],
+        RIVER: [],
+      };
+
+      // Set up event listeners
+      table.on('game:started', () => {
+        gameStarted = true;
+      });
+
+      let currentPhase = 'PRE_FLOP';
+      
+      table.on('round:started', ({ phase }) => {
+        currentPhase = phase;
+      });
+
+      table.on('player:action', ({ playerId, action, amount }) => {
+        if (captureActions) {
+          const actionData = { playerId, action, amount };
+          actions.push(actionData);
+          if (phaseActions[currentPhase]) {
+            phaseActions[currentPhase].push(actionData);
+          }
+        }
+      });
+
+      // Create family pot players
+      class FamilyPotPlayer extends Player {
+        constructor(config) {
+          super(config);
+          this.position = null;
+        }
+
+        getAction(gameState) {
+          const myState = gameState.players[this.id];
+          const toCall = gameState.currentBet - myState.bet;
+
+          // Pre-flop: everyone limps/calls
+          if (gameState.phase === 'PRE_FLOP') {
+            if (toCall > 0 && toCall <= 20) {
+              return {
+                playerId: this.id,
+                action: Action.CALL,
+                amount: toCall,
+                timestamp: Date.now(),
+              };
+            }
+          }
+
+          // Post-flop: everyone checks to showdown
+          if (['FLOP', 'TURN', 'RIVER'].includes(gameState.phase)) {
+            return {
+              playerId: this.id,
+              action: Action.CHECK,
+              timestamp: Date.now(),
+            };
+          }
+
+          // Default check
+          return {
+            playerId: this.id,
+            action: Action.CHECK,
+            timestamp: Date.now(),
+          };
+        }
+      }
+
+      // Create 5 players
+      const players = [
+        new FamilyPotPlayer({ name: 'Player 1' }),
+        new FamilyPotPlayer({ name: 'Player 2' }),
+        new FamilyPotPlayer({ name: 'Player 3' }),
+        new FamilyPotPlayer({ name: 'Player 4' }),
+        new FamilyPotPlayer({ name: 'Player 5' }),
+      ];
+
+      table.on('hand:ended', ({ winners }) => {
+        if (!handEnded) {
+          handEnded = true;
+          captureActions = false;
+          if (winners && winners.length > 0) {
+            winnerAmount = winners[0].amount;
+            // Check if we have hand information (indicates showdown)
+            if (winners[0].hand) {
+              showdownOccurred = true;
+            }
+          }
+          setTimeout(() => table.close(), 10);
+        }
+      });
+
+      // Add players
+      players.forEach(p => table.addPlayer(p));
+
+      // Wait for game to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
+      await vi.waitFor(() => gameStarted, { 
+        timeout: 2000,
+        interval: 50, 
+      });
+      await vi.waitFor(() => handEnded, { timeout: 5000 });
+
+      // Verify a showdown occurred
+      expect(showdownOccurred).toBe(true);
+
+      // Verify pre-flop action - everyone called
+      const preflopCalls = phaseActions.PRE_FLOP.filter(a => a.action === Action.CALL);
+      expect(preflopCalls.length).toBeGreaterThanOrEqual(3); // At least 3 calls (UTG, MP, CO call BB)
+
+      // Verify post-flop - everyone checked
+      const checks = actions.filter(a => a.action === Action.CHECK);
+      expect(checks.length).toBeGreaterThanOrEqual(15); // 5 players x 3 streets minimum
+
+      // Verify we had a 5-way pot
+      // Each player puts in 20, so pot = 5 * 20 = 100
+      expect(winnerAmount).toBe(100);
 
       table.close();
     });
