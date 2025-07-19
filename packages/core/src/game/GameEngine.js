@@ -68,6 +68,7 @@ export class GameEngine extends EventEmitter {
       playerData.state = playerData.chips > 0 ? PlayerState.ACTIVE : PlayerState.SITTING_OUT;
       playerData.bet = 0;
       playerData.hasActed = false;
+      playerData.lastAction = null;
     }
     
     // Deal hole cards
@@ -152,6 +153,7 @@ return;
     for (const player of this.players) {
       if (player.state === PlayerState.ACTIVE || player.state === PlayerState.ALL_IN) {
         player.hasActed = false;
+        player.lastAction = null; // Reset last action for new round
         // Only reset bets if not in pre-flop (blinds already posted)
         if (this.phase !== GamePhase.PRE_FLOP) {
           player.bet = 0;
@@ -207,6 +209,9 @@ return;
    * Handle a player action
    */
   handlePlayerAction(playerData, action) {
+    // Store the player's last action
+    playerData.lastAction = action.action;
+    
     this.emit('player:action', {
       playerId: playerData.player.id,
       action: action.action,
@@ -594,6 +599,7 @@ return;
         bet: playerData.bet,
         state: playerData.state,
         hasActed: playerData.hasActed,
+        lastAction: playerData.lastAction,
       };
     }
     
