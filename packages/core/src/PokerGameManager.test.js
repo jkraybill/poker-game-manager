@@ -4,12 +4,6 @@ import { Table } from './Table.js';
 
 // Mock the Table class
 vi.mock('./Table.js', () => {
-  const EventEmitter = vi.fn(() => ({
-    on: vi.fn(),
-    emit: vi.fn(),
-    removeAllListeners: vi.fn(),
-  }));
-  
   return {
     Table: vi.fn((config) => {
       const tableId = config?.id || 'mock-table-id';
