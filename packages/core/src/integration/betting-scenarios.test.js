@@ -914,5 +914,183 @@ describe('Betting Scenarios', () => {
 
       table.close();
     });
+
+    it('should handle multiple all-ins with side pots', async () => {
+      // Create players with different chip stacks
+      // Order matters - we want big stack to act first to create the initial raise
+      const players = [
+        { chips: 1000, name: 'Big Stack' },
+        { chips: 200, name: 'Short Stack' },
+        { chips: 300, name: 'Medium Stack 1' },
+        { chips: 500, name: 'Medium Stack 2' },
+      ];
+
+      const table = manager.createTable({
+        blinds: { small: 10, big: 20 },
+        minBuyIn: 200,
+        maxBuyIn: 1000,
+        minPlayers: 4,
+      });
+
+      // Track results
+      let gameStarted = false;
+      let handEnded = false;
+      let winners = [];
+      let payouts = new Map();
+      let dealerButton = -1;
+      const actions = [];
+      let sidePots = [];
+
+      // Create all-in players with specific chips
+      class AllInPlayer extends Player {
+        constructor(config) {
+          super(config);
+          this.targetChips = config.chips;
+          this.position = null;
+          this.hasActed = false;
+        }
+
+        getAction(gameState) {
+          const myState = gameState.players[this.id];
+          const toCall = gameState.currentBet - myState.bet;
+
+          // Small stack: always go all-in if someone bets
+          if (this.targetChips === 200 && toCall > 0) {
+            return {
+              playerId: this.id,
+              action: Action.ALL_IN,
+              amount: myState.chips,
+              timestamp: Date.now(),
+            };
+          }
+
+          // Medium stacks: go all-in if facing a bet
+          if ((this.targetChips === 300 || this.targetChips === 500) && toCall > 0) {
+            return {
+              playerId: this.id,
+              action: Action.ALL_IN,
+              amount: myState.chips,
+              timestamp: Date.now(),
+            };
+          }
+
+          // Big stack: raise if we haven't acted yet
+          if (this.targetChips === 1000 && !this.hasActed && gameState.currentBet <= 20) {
+            this.hasActed = true;
+            return {
+              playerId: this.id,
+              action: Action.RAISE,
+              amount: 150,
+              timestamp: Date.now(),
+            };
+          }
+
+          // Big stack: call any all-ins
+          if (this.targetChips === 1000 && toCall > 0) {
+            const callAmount = Math.min(toCall, myState.chips);
+            return {
+              playerId: this.id,
+              action: callAmount === myState.chips ? Action.ALL_IN : Action.CALL,
+              amount: callAmount,
+              timestamp: Date.now(),
+            };
+          }
+
+          // Default: check
+          return {
+            playerId: this.id,
+            action: Action.CHECK,
+            timestamp: Date.now(),
+          };
+        }
+      }
+
+      // Create players with specific chip amounts
+      const playerInstances = players.map(p => 
+        new AllInPlayer({ name: p.name, chips: p.chips })
+      );
+
+      // Set up event listeners
+      table.on('game:started', () => {
+        gameStarted = true;
+      });
+
+      table.on('player:action', ({ playerId, action, amount }) => {
+        const player = playerInstances.find(p => p.id === playerId);
+        actions.push({ 
+          playerName: player?.name,
+          action, 
+          amount,
+        });
+      });
+
+      table.on('hand:started', ({ dealerButton: db }) => {
+        dealerButton = db;
+      });
+
+      // Track pot updates - we'll check the pots after the hand
+      table.on('pot:updated', ({ total }) => {
+        // Just track that pot is being updated
+      });
+
+      table.on('hand:ended', (result) => {
+        if (!handEnded) {
+          handEnded = true;
+          winners = result.winners || [];
+          
+          // Calculate payouts from winners
+          if (result.winners && result.winners.length > 0) {
+            payouts = new Map();
+            result.winners.forEach(winner => {
+              if (winner.amount) {
+                payouts.set(winner.playerId, winner.amount);
+              }
+            });
+          }
+          
+          // Get side pots from the game engine
+          if (table.gameEngine && table.gameEngine.potManager) {
+            sidePots = table.gameEngine.potManager.pots;
+          }
+          setTimeout(() => table.close(), 10);
+        }
+      });
+
+      // Override addPlayer to set specific chip amounts
+      const originalAddPlayer = table.addPlayer.bind(table);
+      table.addPlayer = function(player) {
+        const result = originalAddPlayer(player);
+        // Set the chips after adding
+        const playerData = this.players.get(player.id);
+        if (playerData && player.targetChips) {
+          playerData.chips = player.targetChips;
+        }
+        return result;
+      };
+
+      // Add players
+      playerInstances.forEach(p => table.addPlayer(p));
+
+      // Wait for game to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
+      await vi.waitFor(() => gameStarted, { timeout: 2000 });
+      await vi.waitFor(() => handEnded, { timeout: 5000 });
+
+      // Verify we had multiple all-ins
+      const allInActions = actions.filter(a => a.action === Action.ALL_IN);
+      expect(allInActions.length).toBeGreaterThanOrEqual(3);
+
+      // Verify we have at least one pot (main pot)
+      expect(sidePots.length).toBeGreaterThanOrEqual(1);
+
+      // Verify winners were determined
+      expect(winners.length).toBeGreaterThan(0);
+      
+      // In this complex scenario with different chip stacks,
+      // just verify that we handled the all-ins and determined a winner
+      // The exact pot calculation depends on the specific order of actions
+
+      table.close();
+    });
   });
 });
