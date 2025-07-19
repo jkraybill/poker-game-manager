@@ -62,8 +62,8 @@ export class GameEngine extends EventEmitter {
     this.playerHands.clear();
     
     // Initialize pot manager
-    const activePlayers = this.players.filter(p => p.chips > 0);
-    this.potManager = new PotManager(activePlayers, this.config.smallBlind);
+    // Use all players, not just active ones, to maintain consistent object references
+    this.potManager = new PotManager(this.players, this.config.smallBlind);
     
     // Reset player states
     for (const playerData of this.players) {
