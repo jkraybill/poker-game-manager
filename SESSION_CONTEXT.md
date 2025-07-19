@@ -2,13 +2,16 @@
 
 ## Current Sprint Focus
 - **Active Issues**: [6 open issues](https://github.com/jkraybill/poker-game-manager/issues)
-  - #5: Complete betting scenarios for 6-8 players (in progress)
-  - #7-10: Productivity improvements (SESSION_CONTEXT.md, TESTING_GUIDE.md, test utilities, flaky tests)
+  - #11: 🐛 CRITICAL BUG - Pot distribution (winner gets 0 chips)
+  - #9: Extract common test utilities
+  - #8: TESTING_GUIDE.md (created, close when verified)
+  - #5: Complete betting scenarios for 6-8 players
+  - #3-4: Core API design, multi-table support (future)
 - **Test Status**: 168 passing, 1 skipped (CI green ✅)
 - **Next Tasks**: 
-  1. Create TESTING_GUIDE.md
-  2. Extract test utilities
-  3. Continue 6-8 player betting scenarios
+  1. Fix pot distribution bug (#11) - CRITICAL
+  2. Extract test utilities (#9)
+  3. Continue 6-8 player betting scenarios (#5)
 
 ## Quick Commands
 ```bash
@@ -36,11 +39,17 @@ flush # Commit/push changes
 ```
 
 ## Recent Changes (2025-07-19)
-- ✅ Implemented lastAction tracking in GameEngine (Issue #6)
 - ✅ Fixed flaky tests with deterministic dealer button (Issue #10)
+- ✅ Created SESSION_CONTEXT.md for faster startup (Issue #7)
+- ✅ Created TESTING_GUIDE.md for test development (Issue #8)
+- ✅ Implemented lastAction tracking in GameEngine (Issue #6)
 - ✅ Added betting scenarios for 4-5 players (10 new tests)
-- ✅ Enhanced Player API to expose lastAction for strategies
-- ⚠️ Found pot distribution bug (winner gets 0 chips in some cases)
+- 🐛 Discovered critical pot distribution bug (Issue #11)
+- ✅ Enhanced documentation for future Claude productivity:
+  - Added common pitfalls section to CLAUDE.md
+  - Created TROUBLESHOOTING.md with 10 common issues
+  - Updated README.md with better quick start
+  - Documented pot distribution bug prominently
 
 ## Known Issues
 1. **Pot Distribution Bug**: Multi-way pot test shows winner receiving 0 chips despite pot having chips
@@ -101,3 +110,4 @@ class PositionPlayer extends Player {
 - Use TodoWrite tool to track progress
 - Update this file at session end
 - Check GitHub issues for context
+- See TROUBLESHOOTING.md for common issues

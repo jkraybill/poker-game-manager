@@ -6,15 +6,17 @@
 I'm working on the Poker Game Manager project. This is a high-performance, pure poker library for Node.js with multi-table support and event-driven architecture.
 
 Please read these files in order:
-1. SESSION_CONTEXT.md - Current state and immediate tasks
+1. SESSION_CONTEXT.md - Current state and immediate tasks (5-10 min startup)
 2. CLAUDE.md - Technical guide and development workflow
 3. ABOUT-JK.md - Working style and communication preferences (if needed)
 4. REFACTORING_PLAN.md - Project transformation roadmap (if needed)
+5. TESTING_GUIDE.md - For test development (if working on tests)
 
 Key context:
 - Pure JavaScript (no TypeScript), Node.js 22+ required
 - Event-driven architecture with clean player interfaces
-- 159 tests passing, all core components implemented
+- 168 tests passing (1 skipped), all core components implemented
+- 🐛 CRITICAL BUG: Pot distribution (Issue #11) - winner gets 0 chips
 - Working on AI players and tournament support
 - Use TodoWrite tool frequently to track tasks
 - Run tests with `npm test`, lint with `npm run lint`
@@ -22,6 +24,7 @@ Key context:
 - JK's commands: go! (continue), go? (ask then continue), ?? (questions), flush (commit/push)
 
 GitHub repo: https://github.com/jkraybill/poker-game-manager
+Open issues: https://github.com/jkraybill/poker-game-manager/issues
 ```
 
 ---
@@ -33,12 +36,13 @@ A high-performance, pure poker game management library for Node.js. Handles tour
 - **Infrastructure**: ✅ Modern build tools configured (ESLint, Prettier, Vitest)
 - **CI/CD**: ✅ GitHub Actions pipeline for Node.js 22 (all tests passing!)
 - **Core API**: ✅ Foundation implemented (PokerGameManager, Table, Player, GameEngine)
-- **Tests**: ✅ Comprehensive test suite (169 tests passing - all core components covered)
+- **Tests**: ✅ Comprehensive test suite (168 passing, 1 skipped - all core components covered)
 - **Integration Tests**: ✅ Multi-player betting scenarios (2-5 players) fully tested
 - **Hand Evaluation**: ✅ Integrated pokersolver library for robust hand evaluation
 - **Player API**: ✅ Enhanced with lastAction tracking for advanced strategies
 - **Active Work**: Ready for AI player implementations and tournament support
-- **GitHub Issues**: [6 issues tracking progress](https://github.com/jkraybill/poker-game-manager/issues)
+- **Known Issues**: 🐛 [Pot distribution bug (#11)](https://github.com/jkraybill/poker-game-manager/issues/11) - CRITICAL
+- **GitHub Issues**: [6 open issues tracking progress](https://github.com/jkraybill/poker-game-manager/issues)
 
 ## Documentation
 
@@ -53,24 +57,47 @@ A high-performance, pure poker game management library for Node.js. Handles tour
 
 ## Quick Start
 
+### Installation
 ```bash
-# Install dependencies
-npm install
+# Clone the repository
+git clone https://github.com/jkraybill/poker-game-manager.git
+cd poker-game-manager
 
+# Install dependencies (requires Node.js 22+)
+npm install
+```
+
+### Development Commands
+```bash
 # Run tests (runs once and exits)
 npm test
 
-# Run tests in watch mode
+# Run tests in watch mode (re-runs on file changes)
 npm run test:watch
 
-# Run tests with coverage
+# Run tests with coverage report
 npm run test:coverage
 
-# Run linting
-npm run lint
+# Check code quality
+npm run lint              # ESLint check
+npm run format           # Prettier format
 
-# Build library
-npm run build
+# Build library for distribution
+npm run build            # Creates dist/ folder
+npm run clean            # Remove build artifacts
+```
+
+### Quick Test Commands
+```bash
+# Run specific test file
+npm test -- betting-scenarios
+npm test -- GameEngine
+
+# Run single test by name
+npm test -- -t "should handle SB folding"
+
+# Debug failing tests
+npm test -- --reporter=verbose
 ```
 
 ## Project Structure

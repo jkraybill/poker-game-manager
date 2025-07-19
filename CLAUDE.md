@@ -1,5 +1,25 @@
 # Claude Technical Guide - Poker Game Manager
 
+## Quick Reference Card
+```bash
+# Essential commands
+npm test                    # Run all tests
+npm test -- betting-scenarios  # Specific test file
+npm run lint && npm run format && npm test  # Pre-commit check
+git status && git diff      # Check changes
+git add -A && git commit -m "message" && git push origin master  # Commit & push
+
+# Debugging
+npm test -- --reporter=verbose  # Verbose output
+npm test -- -t "test name"      # Run specific test
+
+# JK shortcuts
+go!   # Continue with best judgment
+go?   # Ask questions then continue
+??    # Ask clarifying questions
+flush # Commit/push changes
+```
+
 ## Session Preparation
 
 **First read:**
@@ -7,6 +27,7 @@
 2. This file (CLAUDE.md) for detailed guidance
 3. ABOUT-JK.md for communication style (if needed)
 4. REFACTORING_PLAN.md for transformation roadmap (if needed)
+5. TROUBLESHOOTING.md for common issues (if debugging)
 
 ## JK's Shorthand Commands
 
@@ -296,6 +317,55 @@ Use for:
 ### Memory Management
 The project uses sequential-thinking MCP for tracking architectural decisions and planning complex refactoring tasks.
 
+## Common Pitfalls & Solutions
+
+### 1. Flaky Test Failures
+**Problem**: Tests fail randomly due to dealer button position
+**Solution**: Always use `dealerButton: 0` in test tables:
+```javascript
+const table = manager.createTable({
+  blinds: { small: 10, big: 20 },
+  dealerButton: 0,  // CRITICAL for deterministic tests
+});
+```
+
+### 2. Event Name Confusion
+**Problem**: `hand:complete` vs `hand:ended` events
+**Solution**: Use `hand:ended` - Table maps `hand:complete` to `hand:ended` for backward compatibility
+
+### 3. Position Order in Tests
+**Problem**: Player positions don't match expectations
+**Solution**: With `dealerButton: 0`, positions are:
+- 2 players: Player 0 = SB/Button, Player 1 = BB
+- 3 players: Player 0 = Button, Player 1 = SB, Player 2 = BB
+- 4+ players: Player 0 = Button, then SB, BB, UTG, MP, CO...
+
+### 4. Race Conditions in Tests
+**Problem**: Tests interfere with each other when run together
+**Solution**: 
+- Use event capture control flags
+- Clean up tables in afterEach
+- Don't share player instances between tests
+
+### 5. ESLint Errors Breaking CI
+**Problem**: CI fails on minor linting issues
+**Solution**: Always run before committing:
+```bash
+npm run lint
+npm run format
+npm test
+```
+
+### 6. Card Format Issues
+**Problem**: Using '10' instead of 'T' for tens
+**Solution**: Use pokersolver notation - 'T' for 10:
+```javascript
+// Correct
+const cards = ['As', 'Th', '2c'];  // Ace spades, Ten hearts, Two clubs
+// Wrong
+const cards = ['As', '10h', '2c'];
+```
+
 ## Session Continuity
 
 When resuming work:
@@ -312,6 +382,40 @@ Key files to check:
 - `/REFACTORING_PLAN.md` - Transformation roadmap
 - `/POKER-RULES.md` - Simulation-focused poker rules
 - GitHub Issues [#1-#6](https://github.com/jkraybill/poker-game-manager/issues)
+
+## Known Bugs
+
+### 🐛 CRITICAL: Pot Distribution Bug (Issue #11)
+**Problem**: Winner receives 0 chips despite pot having chips
+**Symptoms**: 
+- Pot shows correct amount (e.g., 180 chips)
+- Winner array shows 0 amount
+- Affects multi-way pots with various stack sizes
+**Workaround**: Test is currently skipped
+**Location**: `/packages/core/src/game/PotManager.js` - `distributePots()` method
+
+## Troubleshooting Guide
+
+### Test Timeout Issues
+```bash
+# If tests hang, check:
+1. Players returning valid actions with timestamp
+2. minPlayers set correctly on table
+3. No infinite loops in player logic
+```
+
+### Module Import Errors
+```bash
+# Ensure using .js extensions in imports:
+import { Player } from './Player.js';  # Correct
+import { Player } from './Player';     # Wrong
+```
+
+### CI Pipeline Failures
+```bash
+# Before pushing, always run:
+npm run lint && npm run format && npm test
+```
 
 ## Recent Implementation Details
 
