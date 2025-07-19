@@ -47,19 +47,20 @@ git commit -m "message"
 
 ## Architecture Overview
 
-### Current State (Legacy)
-- **Node Version**: 0.12.7 (2015 era)
-- **Framework**: Slack bot using slack-client
-- **Game Logic**: RxJS-based state management
-- **Testing**: Mocha + Chai + Sinon
-- **Build**: Gulp + Babel 5
+### Current State (Transitioning)
+- **Node Version**: 22.17.0 (required)
+- **Framework**: Migrating from Slack bot to platform-agnostic library
+- **Game Logic**: Preserving RxJS-based state management
+- **Testing**: Vitest configured, migrating from Mocha/Chai
+- **Build**: esbuild configured for ESM and CJS output
+- **CI/CD**: GitHub Actions running on Node.js 22
 
-### Target State (Modern)
-- **Node Version**: 20+ with ESM modules
-- **Framework**: Platform-agnostic library
-- **Game Logic**: Event-driven with adapters
-- **Testing**: Vitest with coverage
-- **Build**: esbuild for performance
+### Implemented Components
+- **PokerGameManager**: Multi-table management with event forwarding
+- **Table**: Game table with player management and auto-flow
+- **Player/PlayerAdapter**: Base classes for platform integration
+- **Type System**: Complete enums and JSDoc types
+- **Infrastructure**: ESLint, Prettier, TypeScript, Vitest all configured
 
 ### Key Patterns
 
@@ -186,19 +187,27 @@ describe('PokerTable', () => {
 
 ## Current Priorities
 
-1. **Immediate Tasks**:
-   - Set up modern build tooling
-   - Create adapter interfaces
-   - Extract core game logic
-   - Migrate to modern Node.js
+1. **Completed Tasks** ✅:
+   - Set up modern build tooling (ESLint, Prettier, TypeScript, Vitest)
+   - Create adapter interfaces (PlayerAdapter base class)
+   - Design core API (PokerGameManager, Table, Player)
+   - Configure for Node.js 22
+   - Set up CI/CD pipeline
+   - Create GitHub issues for tracking
 
-2. **Next Phase**:
-   - Implement multi-table support
-   - Create example adapters
+2. **In Progress** 🚧:
+   - Extract GameEngine from texas-holdem.js
+   - Abstract Slack-specific code
+   - Create event definitions
+   - Write initial tests
+
+3. **Next Phase**:
+   - Implement SlackAdapter preserving current functionality
+   - Create example adapters (CLI, WebSocket)
    - Enhance AI framework
-   - Write comprehensive docs
+   - Add multi-table stress tests
 
-3. **Future Enhancements**:
+4. **Future Enhancements**:
    - Tournament support
    - More poker variants
    - Advanced AI strategies
@@ -270,11 +279,30 @@ The project uses sequential-thinking MCP for tracking architectural decisions an
 
 When resuming work:
 1. Check README.md for latest status
-2. Review any uncommitted changes
-3. Run tests to verify state
-4. Continue from TODO list
+2. Review GitHub issues for current tasks
+3. Check any uncommitted changes with `git status`
+4. Run tests to verify state
+5. Continue from TODO list
 
 Key files to check:
-- `/src/texas-holdem.js` - Core game logic
+- `/src/texas-holdem.js` - Core game logic to extract
 - `/src/bot.js` - Current Slack integration
+- `/packages/core/src/` - New library implementation
 - `/REFACTORING_PLAN.md` - Transformation roadmap
+- GitHub Issues [#1-#4](https://github.com/jkraybill/slack-poker-bot/issues)
+
+## Recent Implementation Details
+
+### File Locations
+- **Core API**: `/packages/core/src/`
+  - `index.js` - Main exports
+  - `PokerGameManager.js` - Multi-table manager
+  - `Table.js` - Individual table management
+  - `Player.js` - Base player class
+  - `adapters/PlayerAdapter.js` - Adapter base class
+  - `types/index.js` - All type definitions
+
+### GitHub Integration
+- Issues are being used to track all major work items
+- Progress updates posted as comments
+- Using MCP GitHub tools for issue management

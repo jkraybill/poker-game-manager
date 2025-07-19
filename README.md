@@ -4,25 +4,38 @@ A high-performance, general-purpose poker game management library for Node.js wi
 
 ## Current Status
 
+- **Infrastructure**: ✅ Modern build tools configured (ESLint, Prettier, TypeScript, Vitest)
+- **CI/CD**: ✅ GitHub Actions pipeline for Node.js 22
+- **Core API**: 🚧 Foundation implemented (PokerGameManager, Table, Player, Adapters)
 - **Tests**: ⚠️ Legacy tests exist (Mocha/Chai) - migration to Vitest pending
-- **Build**: ⚠️ Transitioning from Node 0.12.7 to Node 20+
-- **Active Work**: Refactoring Slack bot into platform-agnostic library
-- **Priority**: Core abstraction and modernization
+- **Active Work**: Implementing GameEngine and abstracting Slack dependencies
+- **GitHub Issues**: [4 issues tracking progress](https://github.com/jkraybill/slack-poker-bot/issues)
+
+## Requirements
+
+- Node.js >= 22.0.0
+- npm >= 10.0.0
 
 ## Quick Start
 
 ```bash
-# Install dependencies (after modernization)
+# Install dependencies
 npm install
 
 # Run tests
 npm test
 
-# Development
-npm run dev
+# Run linting
+npm run lint
+
+# Type checking
+npm run typecheck
 
 # Build library
 npm run build
+
+# Development (Note: JK runs this separately)
+npm run dev
 ```
 
 ## Project Structure
@@ -53,11 +66,17 @@ Future structure:
 ## Session Memory
 
 ### Latest Session (2025-07-19)
-- Created comprehensive refactoring plan
-- Modernized package.json (Node 0.12.7 → 20+)
-- Established architecture for adapter pattern
-- Identified core game logic preservation strategy
-- Set up MCP tools: sequential-thinking for planning
+- ✅ Created comprehensive refactoring plan (REFACTORING_PLAN.md)
+- ✅ Modernized package.json (Node 0.12.7 → 22+)
+- ✅ Set up modern infrastructure (ESLint, Prettier, TypeScript, Vitest)
+- ✅ Implemented core API foundation:
+  - PokerGameManager for multi-table management
+  - Table class with event-driven architecture
+  - Player and PlayerAdapter base classes
+  - Comprehensive type definitions
+- ✅ Created GitHub issues for tracking (#1-#4)
+- ✅ Set up CI/CD with GitHub Actions
+- 🚧 Next: Extract GameEngine from texas-holdem.js
 
 ### Key Decisions
 - Preserve excellent RxJS-based game flow in texas-holdem.js
