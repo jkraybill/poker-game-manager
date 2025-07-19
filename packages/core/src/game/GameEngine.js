@@ -137,7 +137,10 @@ return;
     for (const player of this.players) {
       if (player.state === PlayerState.ACTIVE) {
         player.hasActed = false;
-        player.bet = 0;
+        // Only reset bets if not in pre-flop (blinds already posted)
+        if (this.phase !== GamePhase.PRE_FLOP) {
+          player.bet = 0;
+        }
       }
     }
     

@@ -107,6 +107,12 @@ describe('GameEngine', () => {
 
   describe('player actions', () => {
     beforeEach(() => {
+      // Reset all mocks before each test
+      mockPlayers.forEach(mp => {
+        mp.player.getAction.mockReset();
+        mp.player.receivePrivateCards.mockReset();
+        mp.player.receiveMessage.mockReset();
+      });
       gameEngine.start();
     });
 
@@ -131,17 +137,43 @@ describe('GameEngine', () => {
     });
 
     it('should handle check action when valid', async () => {
-      // Set up scenario where check is valid (no current bet)
-      gameEngine.currentPlayerIndex = 1; // Big blind
-      const currentPlayer = mockPlayers[1];
-      currentPlayer.player.getAction.mockResolvedValue({
+      // In a simpler test, just verify that check works when current bet matches player bet
+      // Skip to a state where everyone has acted and it's time for someone to check
+      
+      // Find the big blind player
+      const sbIndex = gameEngine.getNextActivePlayerIndex(gameEngine.dealerButtonIndex);
+      const bbIndex = gameEngine.getNextActivePlayerIndex(sbIndex);
+      const bbPlayer = gameEngine.players[bbIndex];
+      
+      // Manually set up the state where everyone has matched the big blind
+      gameEngine.players.forEach((player, index) => {
+        if (index !== bbIndex) {
+          player.bet = 20; // Everyone has called to big blind
+          player.hasActed = true;
+          player.chips = 980;
+        }
+      });
+      
+      // Set current player to big blind who can check
+      gameEngine.currentPlayerIndex = bbIndex;
+      bbPlayer.hasActed = false;
+      
+      const actionSpy = vi.fn();
+      gameEngine.on('player:action', actionSpy);
+      
+      bbPlayer.player.getAction.mockResolvedValue({
         action: Action.CHECK,
-        playerId: currentPlayer.player.id,
+        playerId: bbPlayer.player.id,
       });
 
       await gameEngine.promptNextPlayer();
 
-      expect(currentPlayer.state).toBe(PlayerState.ACTIVE);
+      expect(bbPlayer.state).toBe(PlayerState.ACTIVE);
+      expect(actionSpy).toHaveBeenCalledWith({
+        playerId: bbPlayer.player.id,
+        action: Action.CHECK,
+        amount: undefined,
+      });
     });
 
     it('should handle timeout by folding', async () => {
