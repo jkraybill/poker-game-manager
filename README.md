@@ -12,6 +12,12 @@ A high-performance, pure poker game management library for Node.js. Handles tour
 - **Active Work**: Ready for AI player implementations and tournament support
 - **GitHub Issues**: [4 issues tracking progress](https://github.com/jkraybill/poker-game-manager/issues)
 
+## Documentation
+
+- [Integration Guide](./INTEGRATION.md) - How to implement players and use the library
+- [API Reference](./packages/core/src/types/index.js) - Type definitions and interfaces
+- [Examples](./examples/) - Sample implementations
+
 ## Requirements
 
 - Node.js >= 22.0.0

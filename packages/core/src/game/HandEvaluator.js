@@ -1,4 +1,5 @@
-import { Hand } from 'pokersolver';
+import pkg from 'pokersolver';
+const { Hand } = pkg;
 import { HandRank } from '../types/index.js';
 
 /**
