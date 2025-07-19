@@ -33,11 +33,12 @@ A high-performance, pure poker game management library for Node.js. Handles tour
 - **Infrastructure**: ✅ Modern build tools configured (ESLint, Prettier, Vitest)
 - **CI/CD**: ✅ GitHub Actions pipeline for Node.js 22 (all tests passing!)
 - **Core API**: ✅ Foundation implemented (PokerGameManager, Table, Player, GameEngine)
-- **Tests**: ✅ Comprehensive test suite (159 tests passing - all core components covered)
-- **Integration Tests**: ✅ Multi-player betting scenarios fully tested
+- **Tests**: ✅ Comprehensive test suite (169 tests passing - all core components covered)
+- **Integration Tests**: ✅ Multi-player betting scenarios (2-5 players) fully tested
 - **Hand Evaluation**: ✅ Integrated pokersolver library for robust hand evaluation
+- **Player API**: ✅ Enhanced with lastAction tracking for advanced strategies
 - **Active Work**: Ready for AI player implementations and tournament support
-- **GitHub Issues**: [4 issues tracking progress](https://github.com/jkraybill/poker-game-manager/issues)
+- **GitHub Issues**: [6 issues tracking progress](https://github.com/jkraybill/poker-game-manager/issues)
 
 ## Documentation
 

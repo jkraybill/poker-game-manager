@@ -51,7 +51,7 @@ git commit -m "message"
 - **Node Version**: 22.17.0 (required)
 - **Framework**: Pure poker library with no platform dependencies
 - **Game Logic**: Clean event-driven architecture
-- **Testing**: Vitest configured, 159 tests passing (all core components covered)
+- **Testing**: Vitest configured, 169 tests passing (all core components covered)
 - **Build**: esbuild configured for ESM and CJS output
 - **CI/CD**: GitHub Actions running on Node.js 22 - all tests passing!
 - **Language**: Pure JavaScript (no TypeScript)
@@ -67,7 +67,7 @@ git commit -m "message"
 - **PotManager**: Betting, pot calculations, and side pot management
 - **Type System**: Complete enums and JSDoc types
 - **Infrastructure**: ESLint, Prettier, Vitest all configured
-- **Tests**: Comprehensive test suite for all core components (159 tests)
+- **Tests**: Comprehensive test suite for all core components (169 tests)
 
 ### Key Patterns
 
@@ -75,7 +75,7 @@ git commit -m "message"
 ```javascript
 // Any player implementation must provide these methods
 interface Player {
-  requestAction(validActions, timeout): Promise<Action>
+  getAction(gameState): Promise<Action>  // Enhanced with lastAction data
   receivePrivateCards(cards): void
   receivePublicCards(cards): void
   receiveGameUpdate(update): void
@@ -209,17 +209,20 @@ describe('PokerTable', () => {
    - Clean up POKER-RULES.md for simulation use
    - Replace custom HandEvaluator with pokersolver library
    - Standardize card format to use pokersolver notation (T for 10)
-   - Write comprehensive tests for all core components (159 tests total)
+   - Write comprehensive tests for all core components (169 tests total)
    - Create integration tests for multi-player betting scenarios
    - Fix race conditions and test isolation issues
    - Resolve all ESLint errors for CI compliance
+   - Implement betting scenario tests for 4-5 players (10 tests added)
+   - Enhanced Player API with lastAction tracking (GitHub Issue #6)
 
 2. **In Progress** 🚧:
    - Create example player implementations
    - Add tournament management support
 
 3. **Next Phase**:
-   - Complete betting scenario tests for 4-8 players
+   - Complete betting scenario tests for 6-8 players (GitHub Issue #5)
+   - Fix flaky tests (squeeze play, multi-way pot) with deterministic dealer button
    - Add tournament management
    - Create example player implementations
    - Add performance benchmarks
@@ -308,7 +311,7 @@ Key files to check:
 - `/packages/ai/src/` - AI player implementations
 - `/REFACTORING_PLAN.md` - Transformation roadmap
 - `/POKER-RULES.md` - Simulation-focused poker rules
-- GitHub Issues [#1-#4](https://github.com/jkraybill/poker-game-manager/issues)
+- GitHub Issues [#1-#6](https://github.com/jkraybill/poker-game-manager/issues)
 
 ## Recent Implementation Details
 
@@ -325,3 +328,32 @@ Key files to check:
 - Issues are being used to track all major work items
 - Progress updates posted as comments
 - Using MCP GitHub tools for issue management
+
+### Player API Enhancement (Session 2025-07-19)
+The GameEngine now tracks `lastAction` for each player, exposing it through `gameState.players[id].lastAction`:
+```javascript
+// In GameEngine.handlePlayerAction()
+playerData.lastAction = action.action;  // Stores Action enum value
+
+// In GameEngine.buildGameState()
+players[playerData.player.id] = {
+  id: playerData.player.id,
+  chips: playerData.chips,
+  bet: playerData.bet,
+  state: playerData.state,
+  hasActed: playerData.hasActed,
+  lastAction: playerData.lastAction,  // Now available to players
+};
+```
+
+This enables advanced player strategies like squeeze plays:
+```javascript
+getAction(gameState) {
+  const raisers = Object.values(gameState.players)
+    .filter(p => p.lastAction === Action.RAISE);
+  
+  if (raisers.length === 1 && callers.length >= 1) {
+    // Squeeze play opportunity!
+    return { action: Action.RAISE, amount: gameState.currentBet * 3 };
+  }
+}
