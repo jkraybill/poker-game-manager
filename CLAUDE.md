@@ -304,7 +304,7 @@ Key files to check:
 - `/packages/ai/src/` - AI player implementations
 - `/REFACTORING_PLAN.md` - Transformation roadmap
 - `/POKER-RULES.md` - Simulation-focused poker rules
-- GitHub Issues [#1-#4](https://github.com/jkraybill/slack-poker-bot/issues)
+- GitHub Issues [#1-#4](https://github.com/jkraybill/poker-game-manager/issues)
 
 ## Recent Implementation Details
 

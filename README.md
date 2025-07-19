@@ -10,7 +10,7 @@ A high-performance, pure poker game management library for Node.js. Handles tour
 - **Tests**: ✅ Comprehensive test suite (122 tests passing - all core components covered)
 - **Hand Evaluation**: ✅ Integrated pokersolver library for robust hand evaluation
 - **Active Work**: Ready for AI player implementations and tournament support
-- **GitHub Issues**: [4 issues tracking progress](https://github.com/jkraybill/slack-poker-bot/issues)
+- **GitHub Issues**: [4 issues tracking progress](https://github.com/jkraybill/poker-game-manager/issues)
 
 ## Requirements
 
@@ -42,7 +42,7 @@ npm run build
 ## Project Structure
 
 ```
-slack-poker-bot/                    # (to be renamed poker-game-manager)
+poker-game-manager/
 ├── src/                           # Core source code
 │   ├── main.js                   # Current entry point (Slack bot)
 │   ├── bot.js                    # Slack integration layer

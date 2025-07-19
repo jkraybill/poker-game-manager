@@ -57,12 +57,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/poker-game-manager.git"
+    "url": "git+https://github.com/jkraybill/poker-game-manager.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/poker-game-manager/issues"
+    "url": "https://github.com/jkraybill/poker-game-manager/issues"
   },
-  "homepage": "https://github.com/yourusername/poker-game-manager#readme",
+  "homepage": "https://github.com/jkraybill/poker-game-manager#readme",
   "workspaces": [
     "packages/*"
   ]
