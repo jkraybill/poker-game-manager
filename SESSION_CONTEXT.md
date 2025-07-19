@@ -50,6 +50,11 @@ flush # Commit/push changes
   - Created TROUBLESHOOTING.md with 10 common issues
   - Updated README.md with better quick start
   - Documented pot distribution bug prominently
+- ✅ **MAJOR REFACTOR**: Extracted granular test files for pinpoint failure ID:
+  - Split 2157-line monolith into 6 focused test files
+  - Each file tests one specific poker concept
+  - Test failures now immediately pinpoint exact issue
+  - All extracted files pass tests ✅
 
 ## Known Issues
 1. **Pot Distribution Bug**: Multi-way pot test shows winner receiving 0 chips despite pot having chips

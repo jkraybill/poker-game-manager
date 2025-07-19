@@ -43,8 +43,9 @@ describe('4-Player UTG Button Showdown', () => {
     let winnerAmount = 0;
     let dealerButton = -1;
     let captureActions = true;
-    let showdownOccurred = false;
-    let winnerHand = null;
+    // Note: showdown detection and hand tracking for future enhancement
+    // let showdownOccurred = false;
+    // let winnerHand = null;
     const actions = [];
     const phaseActions = {
       PRE_FLOP: [],
@@ -180,14 +181,14 @@ describe('4-Player UTG Button Showdown', () => {
       players[bbPos].position = 'bb';
     });
 
-    table.on('hand:ended', ({ winners, showdown }) => {
+    table.on('hand:ended', ({ winners }) => {
       if (!handEnded) {
         handEnded = true;
         captureActions = false;
-        showdownOccurred = showdown || false; // Handle undefined
+        // showdownOccurred = showdown || false; // Handle undefined
         if (winners && winners.length > 0) {
           winnerAmount = winners[0].amount;
-          winnerHand = winners[0].hand;
+          // winnerHand = winners[0].hand;
         }
         setTimeout(() => table.close(), 10);
       }

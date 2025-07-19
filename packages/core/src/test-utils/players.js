@@ -6,7 +6,7 @@
  */
 
 import { Player } from '../Player.js';
-import { Action, PlayerState } from '../types/index.js';
+import { Action } from '../types/index.js';
 
 /**
  * Base class for strategic test players with position awareness
@@ -26,9 +26,10 @@ export class StrategicPlayer extends Player {
     const myState = gameState.players[this.id];
     const toCall = gameState.currentBet - myState.bet;
     
-    if (this.debug) {
-      console.log(`[${this.name}] Position: ${this.position}, Chips: ${myState.chips}, To Call: ${toCall}, Phase: ${gameState.phase}`);
-    }
+    // Debug logging available but disabled for tests
+    // if (this.debug) {
+    //   console.log(`[${this.name}] Position: ${this.position}, Chips: ${myState.chips}, To Call: ${toCall}, Phase: ${gameState.phase}`);
+    // }
 
     // Always include required fields
     const baseAction = {
@@ -71,11 +72,13 @@ export const STRATEGIES = {
     if (position === 'button' && gameState.currentBet <= gameState.blinds.big) {
       return { action: Action.RAISE, amount: gameState.blinds.big * 3 };
     }
-    if (toCall > 0) return { action: Action.FOLD };
+    if (toCall > 0) {
+      return { action: Action.FOLD };
+    }
     return { action: Action.CHECK };
   },
 
-  blindDefense: ({ position, gameState, toCall, myState }) => {
+  blindDefense: ({ position, gameState, toCall }) => {
     const isBigBlind = position === 'bb';
     const isSmallBlind = position === 'sb';
     const potOdds = toCall / (gameState.pot + toCall);
@@ -86,7 +89,9 @@ export const STRATEGIES = {
     if (isSmallBlind && toCall <= gameState.blinds.big && potOdds < 0.25) {
       return { action: Action.CALL, amount: toCall };
     }
-    if (toCall > 0) return { action: Action.FOLD };
+    if (toCall > 0) {
+      return { action: Action.FOLD };
+    }
     return { action: Action.CHECK };
   },
 
@@ -97,7 +102,9 @@ export const STRATEGIES = {
     if (hasRaiser && !myState.hasActed && toCall > 0) {
       return { action: Action.RAISE, amount: toCall * 3 };
     }
-    if (toCall > 0) return { action: Action.CALL, amount: toCall };
+    if (toCall > 0) {
+return { action: Action.CALL, amount: toCall };
+}
     return { action: Action.CHECK };
   },
 
@@ -109,7 +116,9 @@ export const STRATEGIES = {
     if (hasRaiser && hasCaller && ['sb', 'bb'].includes(position)) {
       return { action: Action.RAISE, amount: gameState.currentBet * 4 };
     }
-    if (toCall > 0) return { action: Action.FOLD };
+    if (toCall > 0) {
+      return { action: Action.FOLD };
+    }
     return { action: Action.CHECK };
   },
 
@@ -118,7 +127,9 @@ export const STRATEGIES = {
     if (myState.chips <= myState.bet * 10) {
       return { action: Action.ALL_IN, amount: myState.chips };
     }
-    if (toCall > 0) return { action: Action.FOLD };
+    if (toCall > 0) {
+      return { action: Action.FOLD };
+    }
     return { action: Action.CHECK };
   },
 
@@ -127,7 +138,9 @@ export const STRATEGIES = {
     if (myState.chips <= bigBlind * 15) {
       return { action: Action.ALL_IN, amount: myState.chips };
     }
-    if (gameState.currentBet > 0) return { action: Action.FOLD };
+    if (gameState.currentBet > 0) {
+return { action: Action.FOLD };
+}
     return { action: Action.CHECK };
   },
 
@@ -142,7 +155,9 @@ export const STRATEGIES = {
     if (toCall > gameState.blinds.big * 2) {
       return { action: Action.FOLD };
     }
-    if (toCall > 0) return { action: Action.CALL, amount: toCall };
+    if (toCall > 0) {
+return { action: Action.CALL, amount: toCall };
+}
     return { action: Action.CHECK };
   },
 
@@ -156,7 +171,9 @@ export const STRATEGIES = {
       player.hasBetTurn = true;
       return { action: Action.BET, amount: gameState.pot * 0.75 };
     }
-    if (gameState.currentBet > 0) return { action: Action.FOLD };
+    if (gameState.currentBet > 0) {
+return { action: Action.FOLD };
+}
     return { action: Action.CHECK };
   },
 
@@ -165,12 +182,18 @@ export const STRATEGIES = {
     const random = Math.random();
     
     if (toCall > 0) {
-      if (random < 0.7) return { action: Action.CALL, amount: toCall };
-      if (random < 0.9) return { action: Action.RAISE, amount: toCall * 2.5 };
+      if (random < 0.7) {
+return { action: Action.CALL, amount: toCall };
+}
+      if (random < 0.9) {
+return { action: Action.RAISE, amount: toCall * 2.5 };
+}
       return { action: Action.FOLD };
     }
     
-    if (random < 0.75) return { action: Action.CHECK };
+    if (random < 0.75) {
+return { action: Action.CHECK };
+}
     return { action: Action.BET, amount: gameState.pot * 0.66 };
   },
 };
@@ -209,8 +232,12 @@ export const PLAYER_TYPES = {
   rock: (name) => new StrategicPlayer({
     name,
     strategy: ({ toCall, gameState }) => {
-      if (toCall > gameState.blinds.big * 4) return { action: Action.FOLD };
-      if (toCall > 0) return { action: Action.CALL, amount: toCall };
+      if (toCall > gameState.blinds.big * 4) {
+return { action: Action.FOLD };
+}
+      if (toCall > 0) {
+return { action: Action.CALL, amount: toCall };
+}
       return { action: Action.CHECK };
     },
     style: 'tight-passive',
