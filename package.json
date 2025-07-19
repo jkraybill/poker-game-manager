@@ -34,8 +34,7 @@
   },
   "dependencies": {
     "eventemitter3": "^5.0.1",
-    "nanoid": "^5.0.4",
-    "pokersolver": "^2.1.4"
+    "nanoid": "^5.0.4"
   },
   "devDependencies": {
     "@types/node": "^20.10.5",
@@ -69,5 +68,8 @@
   "bugs": {
     "url": "https://github.com/yourusername/poker-game-manager/issues"
   },
-  "homepage": "https://github.com/yourusername/poker-game-manager#readme"
+  "homepage": "https://github.com/yourusername/poker-game-manager#readme",
+  "workspaces": [
+    "packages/*"
+  ]
 }

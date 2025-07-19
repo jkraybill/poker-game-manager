@@ -1,0 +1,19 @@
+{
+  "name": "@poker-manager/ai",
+  "version": "0.1.0",
+  "description": "AI player implementations for the poker game manager",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@poker-manager/core": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "^1.1.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
