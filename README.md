@@ -14,7 +14,7 @@ Please read these files in order:
 Key context:
 - Pure JavaScript (no TypeScript), Node.js 22+ required
 - Event-driven architecture with clean player interfaces
-- 122 tests passing, all core components implemented
+- 159 tests passing, all core components implemented
 - Working on AI players and tournament support
 - Use TodoWrite tool frequently to track tasks
 - Run tests with `npm test`, lint with `npm run lint`
@@ -33,7 +33,8 @@ A high-performance, pure poker game management library for Node.js. Handles tour
 - **Infrastructure**: ✅ Modern build tools configured (ESLint, Prettier, Vitest)
 - **CI/CD**: ✅ GitHub Actions pipeline for Node.js 22 (all tests passing!)
 - **Core API**: ✅ Foundation implemented (PokerGameManager, Table, Player, GameEngine)
-- **Tests**: ✅ Comprehensive test suite (122 tests passing - all core components covered)
+- **Tests**: ✅ Comprehensive test suite (159 tests passing - all core components covered)
+- **Integration Tests**: ✅ Multi-player betting scenarios fully tested
 - **Hand Evaluation**: ✅ Integrated pokersolver library for robust hand evaluation
 - **Active Work**: Ready for AI player implementations and tournament support
 - **GitHub Issues**: [4 issues tracking progress](https://github.com/jkraybill/poker-game-manager/issues)
@@ -98,7 +99,24 @@ Future structure:
 
 ## Session Memory
 
-### Latest Session (2025-07-19)
+### Latest Session (2025-07-19 Afternoon)
+- ✅ Created comprehensive integration tests for betting scenarios:
+  - 2-player heads-up: SB folds to BB
+  - 3-player: Button raises, blinds fold
+  - 3-player: Button raises, BB calls, then folds to flop bet
+  - 3-player: All players fold to big blind
+- ✅ Fixed race conditions in test suite:
+  - Resolved position-based timing issues
+  - Added proper event capture control
+  - Fixed test isolation when running multiple integration tests
+- ✅ Fixed all ESLint errors for CI compliance:
+  - Removed async from methods without await
+  - Cleaned up unused variables
+  - Added missing trailing commas
+- ✅ All 159 tests passing (up from 122)
+- ✅ CI/CD pipeline fully green
+
+### Previous Session (2025-07-19 Morning)
 - ✅ Fixed GameEngine betting round logic bug (pre-flop bet reset issue)
 - ✅ Fixed failing check action test in GameEngine
 - ✅ Removed coverage requirements from CI (simplified pipeline)
@@ -120,8 +138,6 @@ Future structure:
   - Player management and waiting lists
   - Game lifecycle management
   - Event forwarding
-- ✅ All 122 tests passing (GameEngine, Deck, HandEvaluator, PotManager, Table)
-- ✅ CI/CD pipeline fully green
 
 ### Previous Session
 - ✅ Created comprehensive refactoring plan (REFACTORING_PLAN.md)

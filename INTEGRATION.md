@@ -47,7 +47,7 @@ class MyPlayer extends Player {
     this.strategy = config.strategy || 'default';
   }
 
-  async getAction(gameState) {
+  getAction(gameState) {
     // gameState contains:
     // - phase: current game phase (PRE_FLOP, FLOP, TURN, RIVER)
     // - communityCards: cards on the board
@@ -137,7 +137,7 @@ import { PokerGameManager, Player, Action } from '@poker-manager/core';
 
 // Player that always folds
 class FoldingPlayer extends Player {
-  async getAction(gameState) {
+  getAction(gameState) {
     const myState = gameState.players[this.id];
     const toCall = gameState.currentBet - myState.bet;
     
@@ -160,7 +160,7 @@ class FoldingPlayer extends Player {
 
 // Player that always calls
 class CallingPlayer extends Player {
-  async getAction(gameState) {
+  getAction(gameState) {
     const myState = gameState.players[this.id];
     const toCall = gameState.currentBet - myState.bet;
     
@@ -185,7 +185,7 @@ class CallingPlayer extends Player {
 
 // Player that always raises half the pot
 class AggressivePlayer extends Player {
-  async getAction(gameState) {
+  getAction(gameState) {
     const myState = gameState.players[this.id];
     const toCall = gameState.currentBet - myState.bet;
     const potSize = gameState.pot;

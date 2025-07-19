@@ -51,7 +51,7 @@ git commit -m "message"
 - **Node Version**: 22.17.0 (required)
 - **Framework**: Pure poker library with no platform dependencies
 - **Game Logic**: Clean event-driven architecture
-- **Testing**: Vitest configured, 122 tests passing (all core components covered)
+- **Testing**: Vitest configured, 159 tests passing (all core components covered)
 - **Build**: esbuild configured for ESM and CJS output
 - **CI/CD**: GitHub Actions running on Node.js 22 - all tests passing!
 - **Language**: Pure JavaScript (no TypeScript)
@@ -67,7 +67,7 @@ git commit -m "message"
 - **PotManager**: Betting, pot calculations, and side pot management
 - **Type System**: Complete enums and JSDoc types
 - **Infrastructure**: ESLint, Prettier, Vitest all configured
-- **Tests**: Comprehensive test suite for all core components (122 tests)
+- **Tests**: Comprehensive test suite for all core components (159 tests)
 
 ### Key Patterns
 
@@ -209,13 +209,17 @@ describe('PokerTable', () => {
    - Clean up POKER-RULES.md for simulation use
    - Replace custom HandEvaluator with pokersolver library
    - Standardize card format to use pokersolver notation (T for 10)
-   - Write comprehensive tests for all core components (122 tests total)
+   - Write comprehensive tests for all core components (159 tests total)
+   - Create integration tests for multi-player betting scenarios
+   - Fix race conditions and test isolation issues
+   - Resolve all ESLint errors for CI compliance
 
 2. **In Progress** 🚧:
    - Create example player implementations
    - Add tournament management support
 
 3. **Next Phase**:
+   - Complete betting scenario tests for 4-8 players
    - Add tournament management
    - Create example player implementations
    - Add performance benchmarks
