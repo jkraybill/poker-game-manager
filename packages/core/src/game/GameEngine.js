@@ -109,9 +109,18 @@ export class GameEngine extends EventEmitter {
 return;
 }
     
-    // Find small blind position
-    const sbIndex = this.getNextActivePlayerIndex(this.dealerButtonIndex);
-    const bbIndex = this.getNextActivePlayerIndex(sbIndex);
+    let sbIndex, bbIndex;
+    
+    // Special handling for heads-up play
+    if (activePlayers.length === 2) {
+      // In heads-up, the dealer/button is the small blind
+      sbIndex = this.dealerButtonIndex;
+      bbIndex = this.getNextActivePlayerIndex(sbIndex);
+    } else {
+      // Normal blind positions for 3+ players
+      sbIndex = this.getNextActivePlayerIndex(this.dealerButtonIndex);
+      bbIndex = this.getNextActivePlayerIndex(sbIndex);
+    }
     
     const sbPlayer = this.players[sbIndex];
     const bbPlayer = this.players[bbIndex];
@@ -125,8 +134,14 @@ return;
     // Big blind has option
     bbPlayer.hasOption = true;
     
-    // Set current player (UTG in preflop)
-    this.currentPlayerIndex = this.getNextActivePlayerIndex(bbIndex);
+    // Set current player
+    if (activePlayers.length === 2) {
+      // In heads-up, small blind (button) acts first pre-flop
+      this.currentPlayerIndex = sbIndex;
+    } else {
+      // Normal: UTG acts first (player after BB)
+      this.currentPlayerIndex = this.getNextActivePlayerIndex(bbIndex);
+    }
   }
 
   /**
@@ -242,6 +257,27 @@ return;
     );
     
     if (activePlayers.length === 1) {
+      // Last player wins the pot
+      const winnersData = activePlayers.map(p => ({ playerData: p }));
+      const payouts = this.potManager.calculatePayouts(winnersData);
+      this.distributeWinnings(payouts);
+      
+      // Build winners array with amounts
+      const winners = [];
+      for (const [playerData, amount] of payouts) {
+        winners.push({
+          playerId: playerData.player.id,
+          hand: 'Won by fold',
+          cards: this.playerHands.get(playerData.player.id) || [],
+          amount,
+        });
+      }
+      
+      this.emit('hand:complete', {
+        winners,
+        board: this.board,
+      });
+      
       this.endHand(activePlayers);
     }
   }
@@ -454,14 +490,23 @@ return;
     
     // Determine winners
     const winners = HandEvaluator.findWinners(playerHands);
-    this.distributeWinnings(winners);
+    const payouts = this.potManager.calculatePayouts(winners);
+    this.distributeWinnings(payouts);
+    
+    // Build winners array with amounts
+    const winnersWithAmounts = [];
+    for (const winner of winners) {
+      const amount = Array.from(payouts).find(([pd]) => pd === winner.playerData)?.[1] || 0;
+      winnersWithAmounts.push({
+        playerId: winner.playerData.player.id,
+        hand: winner.hand,
+        cards: winner.cards,
+        amount,
+      });
+    }
     
     this.emit('hand:complete', {
-      winners: winners.map(w => ({
-        playerId: w.playerData.player.id,
-        hand: w.hand,
-        cards: w.cards,
-      })),
+      winners: winnersWithAmounts,
       board: this.board,
     });
     
@@ -496,9 +541,7 @@ return;
   /**
    * Distribute winnings to winners
    */
-  distributeWinnings(winners) {
-    const payouts = this.potManager.calculatePayouts(winners);
-    
+  distributeWinnings(payouts) {
     for (const [playerData, amount] of payouts) {
       playerData.chips += amount;
       
