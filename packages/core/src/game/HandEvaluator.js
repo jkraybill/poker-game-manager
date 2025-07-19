@@ -1,9 +1,48 @@
+import { Hand } from 'pokersolver';
 import { HandRank } from '../types/index.js';
 
 /**
- * Evaluates and compares poker hands
+ * Evaluates and compares poker hands using pokersolver library
  */
 export class HandEvaluator {
+  /**
+   * Convert our card format to pokersolver format
+   * @param {Object} card - Card with {rank, suit}
+   * @returns {string} Card in pokersolver format (e.g., 'As', '2h')
+   */
+  static cardToPokersolverFormat(card) {
+    const suitMap = {
+      'spades': 's',
+      'hearts': 'h',
+      'diamonds': 'd',
+      'clubs': 'c'
+    };
+    // Pokersolver uses 'T' for 10
+    const rank = card.rank === '10' ? 'T' : card.rank;
+    return `${rank}${suitMap[card.suit]}`;
+  }
+
+  /**
+   * Convert pokersolver hand rank to our HandRank enum
+   * @param {string} rank - Pokersolver rank name
+   * @returns {number} Our HandRank enum value
+   */
+  static mapPokersolverRank(rank) {
+    const rankMap = {
+      'high card': HandRank.HIGH_CARD,
+      'pair': HandRank.PAIR,
+      'two pair': HandRank.TWO_PAIR,
+      'three of a kind': HandRank.THREE_OF_A_KIND,
+      'straight': HandRank.STRAIGHT,
+      'flush': HandRank.FLUSH,
+      'full house': HandRank.FULL_HOUSE,
+      'four of a kind': HandRank.FOUR_OF_A_KIND,
+      'straight flush': HandRank.STRAIGHT_FLUSH,
+      'royal flush': HandRank.ROYAL_FLUSH
+    };
+    return rankMap[rank.toLowerCase()] || HandRank.HIGH_CARD;
+  }
+
   /**
    * Evaluate a poker hand (hole cards + community cards)
    * Returns the best 5-card hand
@@ -13,18 +52,37 @@ export class HandEvaluator {
       throw new Error('Need at least 5 cards to evaluate');
     }
 
-    // Get all possible 5-card combinations
-    const combinations = this.getCombinations(cards, 5);
-    let bestHand = null;
-
-    for (const combo of combinations) {
-      const hand = this.evaluateFiveCards(combo);
-      if (!bestHand || this.compareHands(hand, bestHand) > 0) {
-        bestHand = hand;
-      }
-    }
-
-    return bestHand;
+    // Convert cards to pokersolver format
+    const pokersolverCards = cards.map(card => this.cardToPokersolverFormat(card));
+    
+    // Use pokersolver to evaluate the hand
+    const solved = Hand.solve(pokersolverCards);
+    
+    // Debug: log what pokersolver returns
+    // console.log('Pokersolver result:', { name: solved.name, descr: solved.descr });
+    
+    // Special case: pokersolver calls royal flush a "Straight Flush" with descr "Royal Flush"
+    const isRoyalFlush = solved.name === 'Straight Flush' && solved.descr === 'Royal Flush';
+    const mappedRank = isRoyalFlush ? HandRank.ROYAL_FLUSH : this.mapPokersolverRank(solved.name);
+    
+    // Convert back to our format
+    return {
+      rank: mappedRank,
+      kickers: solved.cards.map(card => {
+        // Extract rank value from pokersolver card
+        const rank = card.value;
+        return this.getRankValue(rank);
+      }),
+      cards: solved.cards.slice(0, 5).map(card => {
+        // Convert back to our card format
+        const rank = card.value;
+        const suit = card.suit === 's' ? 'spades' : 
+                     card.suit === 'h' ? 'hearts' :
+                     card.suit === 'd' ? 'diamonds' : 'clubs';
+        return { rank, suit };
+      }),
+      description: solved.descr
+    };
   }
 
   /**
@@ -32,26 +90,50 @@ export class HandEvaluator {
    */
   static findWinners(playerHands) {
     if (playerHands.length === 0) {
-return [];
-}
+      return [];
+    }
     if (playerHands.length === 1) {
-return playerHands;
-}
+      return playerHands;
+    }
 
-    // Sort hands by strength (descending)
-    const sorted = [...playerHands].sort((a, b) => 
-      this.compareHands(b.hand, a.hand),
-    );
+    // Convert all hands to pokersolver format
+    const solvedHands = playerHands.map(ph => {
+      // The playerHands array has objects with: playerData, hand, cards
+      // We need to combine hole cards with board cards
+      const allCards = ph.cards;
+      const pokersolverCards = allCards.map(card => this.cardToPokersolverFormat(card));
+      const solved = Hand.solve(pokersolverCards);
+      return {
+        original: ph,
+        solved
+      };
+    });
 
-    // Find all players with the best hand (could be ties)
-    const winners = [sorted[0]];
-    const bestHand = sorted[0].hand;
-
-    for (let i = 1; i < sorted.length; i++) {
-      if (this.compareHands(sorted[i].hand, bestHand) === 0) {
-        winners.push(sorted[i]);
-      } else {
-        break;
+    // Use pokersolver to find winners
+    const winningHands = Hand.winners(solvedHands.map(sh => sh.solved));
+    
+    // Map back to our player hands
+    const winners = [];
+    for (const winningHand of winningHands) {
+      const winner = solvedHands.find(sh => sh.solved === winningHand);
+      if (winner) {
+        // Return the original player hand structure with updated hand info
+        const winnerData = {
+          ...winner.original,
+          hand: {
+            rank: this.mapPokersolverRank(winner.solved.name),
+            kickers: winner.solved.cards.map(card => this.getRankValue(card.value)),
+            cards: winner.solved.cards.slice(0, 5).map(card => {
+              const rank = card.value;
+              const suit = card.suit === 's' ? 'spades' : 
+                           card.suit === 'h' ? 'hearts' :
+                           card.suit === 'd' ? 'diamonds' : 'clubs';
+              return { rank, suit };
+            }),
+            description: winner.solved.descr
+          }
+        };
+        winners.push(winnerData);
       }
     }
 
@@ -59,239 +141,36 @@ return playerHands;
   }
 
   /**
-   * Evaluate a 5-card hand
-   */
-  static evaluateFiveCards(cards) {
-    const sorted = this.sortByRank(cards);
-    const flush = this.isFlush(cards);
-    const straight = this.isStraight(sorted);
-    const groups = this.groupByRank(cards);
-    const counts = Object.values(groups).map(g => g.length).sort((a, b) => b - a);
-
-    let rank, kickers;
-
-    if (straight && flush) {
-      rank = sorted[0].rank === 'A' && sorted[1].rank === '5' 
-        ? HandRank.STRAIGHT_FLUSH 
-        : sorted[0].rank === 'A' 
-          ? HandRank.ROYAL_FLUSH 
-          : HandRank.STRAIGHT_FLUSH;
-      kickers = [this.getRankValue(sorted[0].rank)];
-    } else if (counts[0] === 4) {
-      rank = HandRank.FOUR_OF_A_KIND;
-      kickers = this.getKickersForGroups(groups, [4, 1]);
-    } else if (counts[0] === 3 && counts[1] === 2) {
-      rank = HandRank.FULL_HOUSE;
-      kickers = this.getKickersForGroups(groups, [3, 2]);
-    } else if (flush) {
-      rank = HandRank.FLUSH;
-      kickers = sorted.slice(0, 5).map(c => this.getRankValue(c.rank));
-    } else if (straight) {
-      rank = HandRank.STRAIGHT;
-      kickers = [this.getRankValue(sorted[0].rank)];
-    } else if (counts[0] === 3) {
-      rank = HandRank.THREE_OF_A_KIND;
-      kickers = this.getKickersForGroups(groups, [3, 1, 1]);
-    } else if (counts[0] === 2 && counts[1] === 2) {
-      rank = HandRank.TWO_PAIR;
-      kickers = this.getKickersForGroups(groups, [2, 2, 1]);
-    } else if (counts[0] === 2) {
-      rank = HandRank.PAIR;
-      kickers = this.getKickersForGroups(groups, [2, 1, 1, 1]);
-    } else {
-      rank = HandRank.HIGH_CARD;
-      kickers = sorted.slice(0, 5).map(c => this.getRankValue(c.rank));
-    }
-
-    return {
-      rank,
-      kickers,
-      cards: cards.slice(0, 5),
-      description: this.getHandDescription(rank, kickers),
-    };
-  }
-
-  /**
    * Compare two hands
    * Returns: 1 if hand1 wins, -1 if hand2 wins, 0 if tie
    */
   static compareHands(hand1, hand2) {
-    if (hand1.rank > hand2.rank) {
-return 1;
-}
-    if (hand1.rank < hand2.rank) {
-return -1;
-}
-
-    // Compare kickers
-    for (let i = 0; i < Math.min(hand1.kickers.length, hand2.kickers.length); i++) {
-      if (hand1.kickers[i] > hand2.kickers[i]) {
-return 1;
-}
-      if (hand1.kickers[i] < hand2.kickers[i]) {
-return -1;
-}
+    // Convert to pokersolver format and compare
+    const cards1 = hand1.cards.map(card => this.cardToPokersolverFormat(card));
+    const cards2 = hand2.cards.map(card => this.cardToPokersolverFormat(card));
+    
+    const solved1 = Hand.solve(cards1);
+    const solved2 = Hand.solve(cards2);
+    
+    const winners = Hand.winners([solved1, solved2]);
+    
+    if (winners.includes(solved1) && winners.includes(solved2)) {
+      return 0; // Tie
+    } else if (winners.includes(solved1)) {
+      return 1; // Hand1 wins
+    } else {
+      return -1; // Hand2 wins
     }
-
-    return 0;
   }
 
   /**
-   * Get all combinations of k items from array
-   */
-  static getCombinations(arr, k) {
-    const combinations = [];
-    
-    function combine(start, combo) {
-      if (combo.length === k) {
-        combinations.push([...combo]);
-        return;
-      }
-      
-      for (let i = start; i < arr.length; i++) {
-        combo.push(arr[i]);
-        combine(i + 1, combo);
-        combo.pop();
-      }
-    }
-    
-    combine(0, []);
-    return combinations;
-  }
-
-  /**
-   * Sort cards by rank (high to low)
-   */
-  static sortByRank(cards) {
-    return [...cards].sort((a, b) => 
-      this.getRankValue(b.rank) - this.getRankValue(a.rank),
-    );
-  }
-
-  /**
-   * Check if cards form a flush
-   */
-  static isFlush(cards) {
-    const suit = cards[0].suit;
-    return cards.every(c => c.suit === suit);
-  }
-
-  /**
-   * Check if sorted cards form a straight
-   */
-  static isStraight(sorted) {
-    const values = sorted.map(c => this.getRankValue(c.rank));
-    
-    // Check for regular straight
-    for (let i = 0; i < values.length - 1; i++) {
-      if (values[i] - values[i + 1] !== 1) {
-        // Check for A-2-3-4-5 straight
-        if (i === 0 && values[0] === 14 && values[1] === 5) {
-          continue;
-        }
-        return false;
-      }
-    }
-    
-    return true;
-  }
-
-  /**
-   * Group cards by rank
-   */
-  static groupByRank(cards) {
-    const groups = {};
-    
-    for (const card of cards) {
-      const rank = card.rank;
-      if (!groups[rank]) {
-        groups[rank] = [];
-      }
-      groups[rank].push(card);
-    }
-    
-    return groups;
-  }
-
-  /**
-   * Get kickers for grouped cards
-   */
-  static getKickersForGroups(groups, pattern) {
-    const kickers = [];
-    const sortedGroups = Object.entries(groups)
-      .sort((a, b) => {
-        // Sort by group size first, then by rank
-        if (b[1].length !== a[1].length) {
-          return b[1].length - a[1].length;
-        }
-        return this.getRankValue(b[0]) - this.getRankValue(a[0]);
-      });
-
-    for (const count of pattern) {
-      const group = sortedGroups.find(g => g[1].length === count);
-      if (group) {
-        kickers.push(this.getRankValue(group[0]));
-        sortedGroups.splice(sortedGroups.indexOf(group), 1);
-      }
-    }
-
-    return kickers;
-  }
-
-  /**
-   * Get numeric value for rank
+   * Get numeric value for rank (for compatibility)
    */
   static getRankValue(rank) {
     const values = {
       '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7,
-      '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14,
+      '8': 8, '9': 9, '10': 10, 'T': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14
     };
-    return values[rank];
-  }
-
-  /**
-   * Get description for hand
-   */
-  static getHandDescription(rank, kickers) {
-    const rankNames = {
-      1: 'High Card',
-      2: 'Pair',
-      3: 'Two Pair',
-      4: 'Three of a Kind',
-      5: 'Straight',
-      6: 'Flush',
-      7: 'Full House',
-      8: 'Four of a Kind',
-      9: 'Straight Flush',
-      10: 'Royal Flush',
-    };
-
-    const cardNames = {
-      14: 'Ace', 13: 'King', 12: 'Queen', 11: 'Jack',
-      10: 'Ten', 9: 'Nine', 8: 'Eight', 7: 'Seven',
-      6: 'Six', 5: 'Five', 4: 'Four', 3: 'Three', 2: 'Two',
-    };
-
-    let description = rankNames[rank];
-
-    switch (rank) {
-      case HandRank.PAIR:
-      case HandRank.THREE_OF_A_KIND:
-      case HandRank.FOUR_OF_A_KIND:
-        description = `${description} of ${cardNames[kickers[0]]}s`;
-        break;
-      case HandRank.TWO_PAIR:
-        description = `${description}, ${cardNames[kickers[0]]}s and ${cardNames[kickers[1]]}s`;
-        break;
-      case HandRank.FULL_HOUSE:
-        description = `${description}, ${cardNames[kickers[0]]}s full of ${cardNames[kickers[1]]}s`;
-        break;
-      case HandRank.STRAIGHT:
-      case HandRank.STRAIGHT_FLUSH:
-        description = `${description}, ${cardNames[kickers[0]]} high`;
-        break;
-    }
-
-    return description;
+    return values[rank] || values[rank.toUpperCase()] || 0;
   }
 }

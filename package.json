@@ -32,7 +32,8 @@
   },
   "dependencies": {
     "eventemitter3": "^5.0.1",
-    "nanoid": "^5.0.4"
+    "nanoid": "^5.0.4",
+    "pokersolver": "^2.1.4"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^2.1.8",
