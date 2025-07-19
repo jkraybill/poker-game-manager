@@ -136,9 +136,9 @@ export class Table extends EventEmitter {
 
       // Forward specific game events we care about
       const eventsToForward = [
-        'game:started', 'hand:started', 'cards:dealt', 'action:requested',
-        'action:performed', 'player:action', 'pot:updated', 'round:ended',
-        'hand:complete', 'chips:awarded',
+        'game:started', 'hand:started', 'cards:dealt', 'cards:community',
+        'action:requested', 'action:performed', 'player:action', 'pot:updated',
+        'round:ended', 'hand:complete', 'chips:awarded',
       ];
       
       eventsToForward.forEach(eventName => {

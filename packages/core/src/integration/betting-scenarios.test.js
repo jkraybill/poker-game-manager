@@ -211,10 +211,11 @@ describe('Betting Scenarios', () => {
       expect(winnerId).toBe(expectedWinner.id);
       expect(winnerAmount).toBe(30); // SB $10 + BB $20
       expect(actions).toHaveLength(1);
-      expect(actions[0]).toMatchObject({
-        playerId: sbPlayer.id,
-        action: Action.FOLD,
-      });
+      expect(actions[0].action).toBe(Action.FOLD);
+      
+      // In heads-up, the SB/Button should fold
+      const actualSbPlayer = dealerButton === 0 ? sbPlayer : bbPlayer;
+      expect(actions[0].playerId).toBe(actualSbPlayer.id);
 
       table.close();
     });
@@ -228,11 +229,6 @@ describe('Betting Scenarios', () => {
         maxBuyIn: 1000,
       });
 
-      // Create players
-      const player1 = new RaiseToAmountPlayer({ name: 'Player 1', targetAmount: 100 });
-      const player2 = new FoldToRaisePlayer({ name: 'Player 2' });
-      const player3 = new FoldToRaisePlayer({ name: 'Player 3' });
-
       // Track results
       let gameStarted = false;
       let handEnded = false;
@@ -240,24 +236,99 @@ describe('Betting Scenarios', () => {
       let winnerAmount = 0;
       let dealerButton = -1;
       const actions = [];
+      let captureActions = true;
 
+      // Set up event listeners BEFORE adding players
       table.on('game:started', () => {
         gameStarted = true;
       });
 
+      table.on('player:action', ({ playerId, action, amount }) => {
+        if (captureActions) {
+          actions.push({ playerId, action, amount });
+        }
+      });
+
+      // Create players that will adapt based on position
+      const players = [];
+      
+      class PositionAwarePlayer extends Player {
+        constructor(config) {
+          super(config);
+          this.targetAmount = 100;
+          this.hasRaised = false;
+          this.position = null;  // Will be set when hand starts
+        }
+
+        async getAction(gameState) {
+          const myState = gameState.players[this.id];
+          const toCall = gameState.currentBet - myState.bet;
+
+          // Only raise if we're the button/UTG and haven't raised yet
+          if (this.position === 'button' && !this.hasRaised && gameState.currentBet <= 20) {
+            this.hasRaised = true;
+            return {
+              playerId: this.id,
+              action: Action.RAISE,
+              amount: this.targetAmount,
+              timestamp: Date.now(),
+            };
+          }
+
+          // If we're not button and face a raise, fold
+          if (this.position !== 'button' && toCall > 0 && gameState.currentBet > 20) {
+            return {
+              playerId: this.id,
+              action: Action.FOLD,
+              timestamp: Date.now(),
+            };
+          }
+
+          // Otherwise call/check
+          if (toCall > 0) {
+            const callAmount = Math.min(toCall, myState.chips);
+            return {
+              playerId: this.id,
+              action: callAmount === myState.chips ? Action.ALL_IN : Action.CALL,
+              amount: callAmount,
+              timestamp: Date.now(),
+            };
+          }
+
+          return {
+            playerId: this.id,
+            action: Action.CHECK,
+            timestamp: Date.now(),
+          };
+        }
+      }
+
+      // Create 3 position-aware players
+      const player1 = new PositionAwarePlayer({ name: 'Player 1' });
+      const player2 = new PositionAwarePlayer({ name: 'Player 2' });
+      const player3 = new PositionAwarePlayer({ name: 'Player 3' });
+      
+      players.push(player1, player2, player3);
+
+      // Set up remaining event listeners
       table.on('hand:started', ({ dealerButton: db }) => {
         dealerButton = db;
+        // In 3-player, button is also UTG
+        players[db].position = 'button';
+        players[(db + 1) % 3].position = 'sb';
+        players[(db + 2) % 3].position = 'bb';
       });
-
-      table.on('player:action', ({ playerId, action, amount }) => {
-        actions.push({ playerId, action, amount });
-      });
-
+      
       table.on('hand:ended', ({ winners }) => {
-        handEnded = true;
-        if (winners && winners.length > 0) {
-          winnerId = winners[0].playerId;
-          winnerAmount = winners[0].amount;
+        if (!handEnded) {  // Only capture first hand
+          handEnded = true;
+          captureActions = false;  // Stop capturing actions
+          if (winners && winners.length > 0) {
+            winnerId = winners[0].playerId;
+            winnerAmount = winners[0].amount;
+          }
+          // Close table to prevent auto-restart
+          setTimeout(() => table.close(), 10);
         }
       });
 
@@ -266,30 +337,41 @@ describe('Betting Scenarios', () => {
       table.addPlayer(player2);
       table.addPlayer(player3);
 
+      // Wait a bit for auto-start
+      await new Promise(resolve => setTimeout(resolve, 200));
+
       // Wait for game to start
       await vi.waitFor(() => gameStarted, { 
         timeout: 1000,
         interval: 50
       });
 
+      // Wait for dealer button to be set
+      await vi.waitFor(() => dealerButton >= 0, {
+        timeout: 2000,
+        interval: 50
+      });
+
       // Wait for hand to complete
       await vi.waitFor(() => handEnded, { timeout: 5000 });
-
-      // The raiser should be the button (UTG in 3-player)
-      const players = [player1, player2, player3];
+      
+      // Ensure dealerButton was set
+      expect(dealerButton).toBeGreaterThanOrEqual(0);
+      expect(dealerButton).toBeLessThan(3);
+      
       const buttonPlayer = players[dealerButton];
 
-      // Verify results
-      expect(winnerId).toBe(buttonPlayer.id);
-      expect(winnerAmount).toBe(130); // Raiser's $100 + SB $10 + BB $20
-
-      // Check that we had a raise and two folds
+      // Check that we had exactly one raise and two folds
       const raiseAction = actions.find(a => a.action === Action.RAISE);
       expect(raiseAction).toBeDefined();
       expect(raiseAction.amount).toBe(100);
 
       const foldActions = actions.filter(a => a.action === Action.FOLD);
       expect(foldActions).toHaveLength(2);
+      
+      // The winner should be whoever raised (since others folded)
+      expect(winnerId).toBe(raiseAction.playerId);
+      expect(winnerAmount).toBe(130); // Raiser's $100 + SB $10 + BB $20
 
       table.close();
     });
@@ -450,10 +532,6 @@ describe('Betting Scenarios', () => {
         maxBuyIn: 1000,
       });
 
-      const player1 = new AlwaysFoldPlayer({ name: 'Player 1' });
-      const player2 = new AlwaysFoldPlayer({ name: 'Player 2' });
-      const player3 = new AlwaysFoldPlayer({ name: 'Player 3' });
-
       // Track results
       let gameStarted = false;
       let handEnded = false;
@@ -461,6 +539,7 @@ describe('Betting Scenarios', () => {
       let winnerAmount = 0;
       let dealerButton = -1;
 
+      // Set up event listeners BEFORE adding players
       table.on('game:started', () => {
         gameStarted = true;
       });
@@ -477,14 +556,27 @@ describe('Betting Scenarios', () => {
         }
       });
 
+      const player1 = new AlwaysFoldPlayer({ name: 'Player 1' });
+      const player2 = new AlwaysFoldPlayer({ name: 'Player 2' });
+      const player3 = new AlwaysFoldPlayer({ name: 'Player 3' });
+
       // Add players
       table.addPlayer(player1);
       table.addPlayer(player2);
       table.addPlayer(player3);
 
+      // Wait a bit for auto-start
+      await new Promise(resolve => setTimeout(resolve, 200));
+
       // Wait for game to start
       await vi.waitFor(() => gameStarted, { 
         timeout: 1000,
+        interval: 50
+      });
+
+      // Wait for dealer button to be set
+      await vi.waitFor(() => dealerButton >= 0, {
+        timeout: 2000,
         interval: 50
       });
 

@@ -150,7 +150,7 @@ return;
   startBettingRound() {
     // Reset round state
     for (const player of this.players) {
-      if (player.state === PlayerState.ACTIVE) {
+      if (player.state === PlayerState.ACTIVE || player.state === PlayerState.ALL_IN) {
         player.hasActed = false;
         // Only reset bets if not in pre-flop (blinds already posted)
         if (this.phase !== GamePhase.PRE_FLOP) {
@@ -171,12 +171,6 @@ return;
     
     if (!currentPlayer || currentPlayer.state !== PlayerState.ACTIVE) {
       this.moveToNextActivePlayer();
-      return;
-    }
-    
-    // Check if betting round is complete
-    if (this.isBettingRoundComplete()) {
-      this.endBettingRound();
       return;
     }
     
@@ -239,10 +233,15 @@ return;
     }
     
     playerData.hasActed = true;
-    this.moveToNextActivePlayer();
     
-    // Continue to next player
-    this.promptNextPlayer();
+    // Check if betting round is complete after this action
+    if (this.isBettingRoundComplete()) {
+      this.endBettingRound();
+    } else {
+      // Continue to next player
+      this.moveToNextActivePlayer();
+      this.promptNextPlayer();
+    }
   }
 
   /**
@@ -349,7 +348,10 @@ return;
    * Get current bet amount
    */
   getCurrentBet() {
-    return Math.max(...this.players.map(p => p.bet), 0);
+    const activePlayers = this.players.filter(p => 
+      p.state === PlayerState.ACTIVE || p.state === PlayerState.ALL_IN
+    );
+    return Math.max(...activePlayers.map(p => p.bet), 0);
   }
 
   /**
@@ -390,12 +392,11 @@ return;
   endBettingRound() {
     this.potManager.endBettingRound();
     
-    // Reset bets for next round
+    // Clear option flags
     for (const player of this.players) {
-      player.bet = 0;
-      player.hasActed = false;
       player.hasOption = false;
     }
+    
     
     // Progress to next phase
     switch (this.phase) {
