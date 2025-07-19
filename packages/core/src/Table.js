@@ -60,7 +60,12 @@ export class Table extends EventEmitter {
 
     // Check if we can start a game
     if (this.players.size >= this.config.minPlayers && this.state === TableState.WAITING) {
-      this.tryStartGame();
+      // Delay start to allow more players to join
+      setTimeout(() => {
+        if (this.state === TableState.WAITING) {
+          this.tryStartGame();
+        }
+      }, 100);
     }
 
     return true;
@@ -115,9 +120,13 @@ export class Table extends EventEmitter {
 
     try {
       // Initialize game engine
+      // Sort players by seat number to ensure correct position order
+      const sortedPlayers = Array.from(this.players.values())
+        .sort((a, b) => a.seatNumber - b.seatNumber);
+      
       this.gameEngine = new GameEngine({
         variant: this.config.variant,
-        players: Array.from(this.players.values()).map(playerData => ({
+        players: sortedPlayers.map(playerData => ({
           player: playerData.player,
           chips: playerData.chips,
         })),
@@ -128,12 +137,15 @@ export class Table extends EventEmitter {
       // Forward specific game events we care about
       const eventsToForward = [
         'game:started', 'hand:started', 'cards:dealt', 'action:requested',
-        'action:performed', 'pot:updated', 'round:ended', 'hand:ended',
+        'action:performed', 'player:action', 'pot:updated', 'round:ended',
+        'hand:complete', 'chips:awarded',
       ];
       
       eventsToForward.forEach(eventName => {
         this.gameEngine.on(eventName, (data) => {
-          this.emit(eventName, {
+          // Map hand:complete to hand:ended for backward compatibility
+          const emitEventName = eventName === 'hand:complete' ? 'hand:ended' : eventName;
+          this.emit(emitEventName, {
             ...data,
             tableId: this.id,
             gameNumber: this.gameCount,

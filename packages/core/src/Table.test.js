@@ -132,7 +132,7 @@ describe('Table', () => {
       expect(table.players.get('player3').seatNumber).toBe(3);
     });
 
-    it('should start game when minimum players reached', () => {
+    it('should start game when minimum players reached', async () => {
       const startSpy = vi.fn();
       table.on('game:started', startSpy);
       
@@ -140,6 +140,9 @@ describe('Table', () => {
       expect(startSpy).not.toHaveBeenCalled();
       
       table.addPlayer(createMockPlayer('player2', 'Player 2'));
+      
+      // Wait for auto-start delay (100ms)
+      await new Promise(resolve => setTimeout(resolve, 150));
       
       // Game should have started (even if it ended quickly)
       expect(table.gameCount).toBe(1);
