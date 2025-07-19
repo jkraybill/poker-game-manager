@@ -4,19 +4,17 @@
   "description": "A general-purpose poker game manager library with support for multiple platforms and AI players",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:types",
+    "build": "npm run clean && npm run build:esm && npm run build:cjs",
     "build:esm": "esbuild packages/core/src/index.js --bundle --platform=node --format=esm --outfile=dist/index.mjs",
     "build:cjs": "esbuild packages/core/src/index.js --bundle --platform=node --format=cjs --outfile=dist/index.js",
-    "build:types": "tsc --emitDeclarationOnly --declaration --outDir dist",
     "clean": "rm -rf dist",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --run --coverage",
-    "lint": "eslint packages/core/src packages/ai/src --ext .js,.ts",
-    "format": "prettier --write \"packages/**/*.{js,ts,json,md}\""
+    "lint": "eslint packages/core/src packages/ai/src --ext .js",
+    "format": "prettier --write \"packages/**/*.{js,json,md}\""
   },
   "keywords": [
     "poker",
@@ -36,23 +34,18 @@
     "nanoid": "^5.0.4"
   },
   "devDependencies": {
-    "@types/node": "^20.10.5",
-    "@typescript-eslint/eslint-plugin": "^6.15.0",
-    "@typescript-eslint/parser": "^6.15.0",
     "@vitest/coverage-v8": "^2.1.8",
     "esbuild": "^0.25.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.29.1",
     "prettier": "^3.1.1",
-    "typescript": "^5.3.3",
     "vitest": "^2.1.8"
   },
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     }
   },
   "files": [
