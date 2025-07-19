@@ -3,12 +3,10 @@
 ## Communication Style
 
 ### Shorthand Commands
-- **go!** - Take action immediately, be bold, maximum agency mode
-- **go?** - Asking permission or unsure about next steps  
-- **??** - Something seems off, needs clarification
-- **flush** - Too much output, be more concise
-- **rflush** - Be EXTREMELY concise (answers under 20 words)
-- **rel** - Relax restrictions, okay to be verbose when needed
+- **go!** - Continue using your best judgment; ask questions as needed to maximize the chances of work being what JK wants
+- **go?** - Ask one or more clarifying questions, then go!
+- **??** - Ask one or more clarifying questions
+- **flush** - Commit and/or push any changes that are not propagated to remote
 
 ### Direct Communication
 - Get straight to the point

@@ -8,6 +8,13 @@
 3. REFACTORING_PLAN.md for transformation roadmap
 4. src/texas-holdem.js to understand core game logic
 
+## JK's Shorthand Commands
+
+- **go!** - Continue using your best judgment; ask questions as needed to maximize the chances of work being what JK wants
+- **go?** - Ask one or more clarifying questions, then go!
+- **??** - Ask one or more clarifying questions
+- **flush** - Commit and/or push any changes that are not propagated to remote
+
 ## Development Commands
 
 ### What Claude CAN Run
