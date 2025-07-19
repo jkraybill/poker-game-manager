@@ -1,0 +1,233 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { GameEngine } from './GameEngine.js';
+import { Action, PlayerState } from '../types/index.js';
+
+describe('GameEngine', () => {
+  let gameEngine;
+  let mockPlayers;
+
+  beforeEach(() => {
+    // Create mock players
+    mockPlayers = [
+      {
+        player: {
+          id: 'player1',
+          name: 'Alice',
+          getAction: vi.fn(),
+          receivePrivateCards: vi.fn(),
+          receiveMessage: vi.fn(),
+        },
+        chips: 1000,
+        state: PlayerState.ACTIVE,
+      },
+      {
+        player: {
+          id: 'player2', 
+          name: 'Bob',
+          getAction: vi.fn(),
+          receivePrivateCards: vi.fn(),
+          receiveMessage: vi.fn(),
+        },
+        chips: 1000,
+        state: PlayerState.ACTIVE,
+      },
+      {
+        player: {
+          id: 'player3',
+          name: 'Charlie',
+          getAction: vi.fn(),
+          receivePrivateCards: vi.fn(),
+          receiveMessage: vi.fn(),
+        },
+        chips: 1000,
+        state: PlayerState.ACTIVE,
+      },
+    ];
+
+    gameEngine = new GameEngine({
+      players: mockPlayers,
+      blinds: { small: 10, big: 20 },
+      timeout: 1000,
+    });
+  });
+
+  describe('initialization', () => {
+    it('should initialize with correct defaults', () => {
+      expect(gameEngine.config.smallBlind).toBe(10);
+      expect(gameEngine.config.bigBlind).toBe(20);
+      expect(gameEngine.players).toHaveLength(3);
+      expect(gameEngine.phase).toBe('WAITING');
+    });
+
+    it('should set random dealer button', () => {
+      expect(gameEngine.dealerButtonIndex).toBeGreaterThanOrEqual(0);
+      expect(gameEngine.dealerButtonIndex).toBeLessThan(3);
+    });
+  });
+
+  describe('start()', () => {
+    it('should start a new hand', () => {
+      const handStartedSpy = vi.fn();
+      gameEngine.on('hand:started', handStartedSpy);
+
+      gameEngine.start();
+
+      expect(handStartedSpy).toHaveBeenCalledWith({
+        players: ['player1', 'player2', 'player3'],
+        dealerButton: gameEngine.dealerButtonIndex,
+      });
+    });
+
+    it('should deal hole cards to all players', () => {
+      gameEngine.start();
+
+      expect(mockPlayers[0].player.receivePrivateCards).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ rank: expect.any(String) }),
+          expect.objectContaining({ rank: expect.any(String) }),
+        ])
+      );
+    });
+
+    it('should post blinds', () => {
+      const potUpdatedSpy = vi.fn();
+      gameEngine.on('pot:updated', potUpdatedSpy);
+
+      gameEngine.start();
+
+      // Should have two pot updates for small and big blind
+      expect(potUpdatedSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it('should throw error if game already in progress', () => {
+      gameEngine.start();
+      expect(() => gameEngine.start()).toThrow('Game already in progress');
+    });
+  });
+
+  describe('player actions', () => {
+    beforeEach(() => {
+      gameEngine.start();
+    });
+
+    it('should handle fold action', async () => {
+      const currentPlayer = mockPlayers[gameEngine.currentPlayerIndex];
+      currentPlayer.player.getAction.mockResolvedValue({
+        action: Action.FOLD,
+        playerId: currentPlayer.player.id,
+      });
+
+      const actionSpy = vi.fn();
+      gameEngine.on('player:action', actionSpy);
+
+      // Trigger next player prompt
+      await gameEngine.promptNextPlayer();
+
+      expect(actionSpy).toHaveBeenCalledWith({
+        playerId: currentPlayer.player.id,
+        action: Action.FOLD,
+        amount: undefined,
+      });
+    });
+
+    it('should handle check action when valid', async () => {
+      // Set up scenario where check is valid (no current bet)
+      gameEngine.currentPlayerIndex = 1; // Big blind
+      const currentPlayer = mockPlayers[1];
+      currentPlayer.player.getAction.mockResolvedValue({
+        action: Action.CHECK,
+        playerId: currentPlayer.player.id,
+      });
+
+      await gameEngine.promptNextPlayer();
+
+      expect(currentPlayer.state).toBe(PlayerState.ACTIVE);
+    });
+
+    it('should handle timeout by folding', async () => {
+      const currentPlayer = mockPlayers[gameEngine.currentPlayerIndex];
+      // Make getAction take longer than timeout
+      currentPlayer.player.getAction.mockImplementation(() => 
+        new Promise(resolve => setTimeout(resolve, 2000))
+      );
+
+      const actionSpy = vi.fn();
+      gameEngine.on('player:action', actionSpy);
+
+      await gameEngine.promptNextPlayer();
+
+      expect(actionSpy).toHaveBeenCalledWith({
+        playerId: currentPlayer.player.id,
+        action: Action.FOLD,
+        amount: undefined,
+      });
+    });
+  });
+
+  describe('betting rounds', () => {
+    it('should progress through all betting rounds', async () => {
+      const communityCardsSpy = vi.fn();
+      gameEngine.on('cards:community', communityCardsSpy);
+
+      // Mock all players to check/call
+      mockPlayers.forEach(player => {
+        player.player.getAction.mockResolvedValue({
+          action: Action.CHECK,
+          playerId: player.player.id,
+        });
+      });
+
+      gameEngine.start();
+
+      // Simulate betting round completion
+      for (let i = 0; i < 3; i++) {
+        gameEngine.players[i].hasActed = true;
+        gameEngine.players[i].bet = gameEngine.getCurrentBet();
+      }
+      gameEngine.endBettingRound();
+
+      // Should deal flop (3 cards)
+      expect(communityCardsSpy).toHaveBeenCalledWith({
+        cards: expect.arrayContaining([
+          expect.objectContaining({ rank: expect.any(String) }),
+          expect.objectContaining({ rank: expect.any(String) }),
+          expect.objectContaining({ rank: expect.any(String) }),
+        ]),
+        phase: 'FLOP',
+      });
+    });
+  });
+
+  describe('hand completion', () => {
+    it('should end hand when only one player remains', () => {
+      const handCompleteSpy = vi.fn();
+      gameEngine.on('game:ended', handCompleteSpy);
+
+      gameEngine.start();
+
+      // Fold all but one player
+      gameEngine.handleFold(mockPlayers[0]);
+      gameEngine.handleFold(mockPlayers[1]);
+
+      expect(handCompleteSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          winners: ['player3'],
+          finalChips: expect.any(Object),
+        })
+      );
+    });
+  });
+
+  describe('abort()', () => {
+    it('should abort the game', () => {
+      const abortSpy = vi.fn();
+      gameEngine.on('game:aborted', abortSpy);
+
+      gameEngine.start();
+      gameEngine.abort();
+
+      expect(gameEngine.phase).toBe('ENDED');
+      expect(abortSpy).toHaveBeenCalled();
+    });
+  });
+});
