@@ -158,7 +158,9 @@ describe('6-Player Poker Scenarios', () => {
 
     // Wait for completion
     await vi.waitFor(() => gameStarted || gameError, { timeout: 2000 });
-    if (gameError) throw gameError;
+    if (gameError) {
+throw gameError;
+}
     await vi.waitFor(() => handEnded, { timeout: 5000 });
 
     // Verify the aggressive action sequence
