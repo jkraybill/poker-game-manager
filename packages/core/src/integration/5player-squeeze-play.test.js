@@ -185,7 +185,7 @@ describe('5-Player Squeeze Play', () => {
     ];
 
     const players = playerConfigs.map(config => 
-      new SqueezePlayPlayer(config)
+      new SqueezePlayPlayer(config),
     );
 
     // Override addPlayer to set specific chip amounts

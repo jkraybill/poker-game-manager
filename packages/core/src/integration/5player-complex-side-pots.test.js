@@ -130,7 +130,7 @@ describe('5-Player Complex Side Pots', () => {
     ];
 
     const players = playerConfigs.map(config => 
-      new MultiStackPlayer(config)
+      new MultiStackPlayer(config),
     );
 
     // Set up event listeners

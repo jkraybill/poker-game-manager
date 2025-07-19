@@ -130,7 +130,7 @@ describe('4-Player Multiple All-In Side Pots', () => {
     ];
 
     const players = playerConfigs.map(config => 
-      new StackSizePlayer(config)
+      new StackSizePlayer(config),
     );
 
     // Set up event listeners
