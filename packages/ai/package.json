@@ -8,7 +8,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@poker-manager/core": "workspace:*"
+    "@poker-manager/core": "file:../core"
   },
   "devDependencies": {
     "vitest": "^1.1.0"
