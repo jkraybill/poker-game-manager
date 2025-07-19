@@ -5,7 +5,7 @@ import { Action } from '../types/index.js';
 
 // Test player implementations
 class AlwaysFoldPlayer extends Player {
-  async getAction(gameState) {
+  getAction(gameState) {
     const myState = gameState.players[this.id];
     const toCall = gameState.currentBet - myState.bet;
 
@@ -25,59 +25,8 @@ class AlwaysFoldPlayer extends Player {
   }
 }
 
-class RaiseToAmountPlayer extends Player {
-  constructor(config) {
-    super(config);
-    this.targetAmount = config.targetAmount || 100;
-    this.hasRaised = false;
-  }
-
-  async getAction(gameState) {
-    const myState = gameState.players[this.id];
-    const toCall = gameState.currentBet - myState.bet;
-
-    // Raise once to target amount
-    if (!this.hasRaised && gameState.currentBet <= 20) {
-      this.hasRaised = true;
-      
-      if (this.targetAmount > myState.chips) {
-        return {
-          playerId: this.id,
-          action: Action.ALL_IN,
-          amount: myState.chips,
-          timestamp: Date.now(),
-        };
-      }
-      
-      return {
-        playerId: this.id,
-        action: Action.RAISE,
-        amount: this.targetAmount,
-        timestamp: Date.now(),
-      };
-    }
-
-    // Otherwise call/check
-    if (toCall > 0) {
-      const callAmount = Math.min(toCall, myState.chips);
-      return {
-        playerId: this.id,
-        action: callAmount === myState.chips ? Action.ALL_IN : Action.CALL,
-        amount: callAmount,
-        timestamp: Date.now(),
-      };
-    }
-
-    return {
-      playerId: this.id,
-      action: Action.CHECK,
-      timestamp: Date.now(),
-    };
-  }
-}
-
 class FoldToRaisePlayer extends Player {
-  async getAction(gameState) {
+  getAction(gameState) {
     const myState = gameState.players[this.id];
     const toCall = gameState.currentBet - myState.bet;
 
@@ -115,7 +64,7 @@ class CallThenFoldPlayer extends Player {
     this.hasCalled = false;
   }
 
-  async getAction(gameState) {
+  getAction(gameState) {
     const myState = gameState.players[this.id];
     const toCall = gameState.currentBet - myState.bet;
 
@@ -204,7 +153,6 @@ describe('Betting Scenarios', () => {
 
       // In heads-up, if dealerButton is 0, then player at position 0 is SB/Button
       // and player at position 1 is BB
-      const players = [sbPlayer, bbPlayer];
       const expectedWinner = dealerButton === 0 ? bbPlayer : sbPlayer;
 
       // Verify results
@@ -260,7 +208,7 @@ describe('Betting Scenarios', () => {
           this.position = null;  // Will be set when hand starts
         }
 
-        async getAction(gameState) {
+        getAction(gameState) {
           const myState = gameState.players[this.id];
           const toCall = gameState.currentBet - myState.bet;
 
@@ -343,13 +291,13 @@ describe('Betting Scenarios', () => {
       // Wait for game to start
       await vi.waitFor(() => gameStarted, { 
         timeout: 1000,
-        interval: 50
+        interval: 50,
       });
 
       // Wait for dealer button to be set
       await vi.waitFor(() => dealerButton >= 0, {
         timeout: 2000,
-        interval: 50
+        interval: 50,
       });
 
       // Wait for hand to complete
@@ -358,8 +306,6 @@ describe('Betting Scenarios', () => {
       // Ensure dealerButton was set
       expect(dealerButton).toBeGreaterThanOrEqual(0);
       expect(dealerButton).toBeLessThan(3);
-      
-      const buttonPlayer = players[dealerButton];
 
       // Check that we had exactly one raise and two folds
       const raiseAction = actions.find(a => a.action === Action.RAISE);
@@ -403,7 +349,7 @@ describe('Betting Scenarios', () => {
           this.hasBetFlop = false;
         }
 
-        async getAction(gameState) {
+        getAction(gameState) {
           const myState = gameState.players[this.id];
           const toCall = gameState.currentBet - myState.bet;
 
@@ -571,13 +517,13 @@ describe('Betting Scenarios', () => {
       // Wait for game to start
       await vi.waitFor(() => gameStarted, { 
         timeout: 1000,
-        interval: 50
+        interval: 50,
       });
 
       // Wait for dealer button to be set
       await vi.waitFor(() => dealerButton >= 0, {
         timeout: 2000,
-        interval: 50
+        interval: 50,
       });
 
       // Wait for hand to complete

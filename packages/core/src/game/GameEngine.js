@@ -349,7 +349,7 @@ return;
    */
   getCurrentBet() {
     const activePlayers = this.players.filter(p => 
-      p.state === PlayerState.ACTIVE || p.state === PlayerState.ALL_IN
+      p.state === PlayerState.ACTIVE || p.state === PlayerState.ALL_IN,
     );
     return Math.max(...activePlayers.map(p => p.bet), 0);
   }

@@ -11,7 +11,7 @@ class PositionalRaisePlayer extends Player {
     this.targetAmount = config.targetAmount || 100;
   }
 
-  async getAction(gameState) {
+  getAction(gameState) {
     const myState = gameState.players[this.id];
     const toCall = gameState.currentBet - myState.bet;
 
@@ -74,17 +74,16 @@ describe('3-player: Button raises, blinds fold', () => {
     const players = [
       new PositionalRaisePlayer({ name: 'Player 1', targetAmount: 100 }),
       new PositionalRaisePlayer({ name: 'Player 2', targetAmount: 100 }),
-      new PositionalRaisePlayer({ name: 'Player 3', targetAmount: 100 })
+      new PositionalRaisePlayer({ name: 'Player 3', targetAmount: 100 }),
     ];
 
     // Track game state
-    let dealerButtonPos = -1;
     let buttonPlayer = null;
     const actions = [];
     const positions = {};
 
     table.on('hand:started', ({ dealerButton }) => {
-      dealerButtonPos = dealerButton;
+      const dealerButtonPos = dealerButton;
       
       // Determine positions and mark the button player
       const sbPos = (dealerButton + 1) % 3;
@@ -99,7 +98,7 @@ describe('3-player: Button raises, blinds fold', () => {
         p.isButton = (idx === dealerButton);
       });
       
-      buttonPlayer = players[dealerButton];
+      buttonPlayer = players[dealerButtonPos];
     });
 
     table.on('player:action', ({ playerId, action, amount }) => {
@@ -110,7 +109,7 @@ describe('3-player: Button raises, blinds fold', () => {
         playerName: player?.name, 
         position: positions[pos], 
         action, 
-        amount 
+        amount, 
       });
     });
 

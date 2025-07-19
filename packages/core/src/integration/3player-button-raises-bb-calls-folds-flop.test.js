@@ -14,7 +14,7 @@ class PhaseAwarePlayer extends Player {
     this.hasBetFlop = false;
   }
 
-  async getAction(gameState) {
+  getAction(gameState) {
     const myState = gameState.players[this.id];
     const toCall = gameState.currentBet - myState.bet;
 
@@ -131,19 +131,16 @@ describe('3-player: Button raises, BB calls, then folds to flop bet', () => {
     const players = [
       new PhaseAwarePlayer({ name: 'Player 1' }),
       new PhaseAwarePlayer({ name: 'Player 2' }),
-      new PhaseAwarePlayer({ name: 'Player 3' })
+      new PhaseAwarePlayer({ name: 'Player 3' }),
     ];
 
     // Track game state
-    let dealerButtonPos = -1;
     let buttonPlayer = null;
-    let bbPlayer = null;
     const actions = [];
     const positions = {};
     let currentPhase = null;
-    let potSize = 0;
 
-    table.on('cards:community', ({ phase, cards }) => {
+    table.on('cards:community', ({ phase }) => {
       currentPhase = phase;
     });
     
@@ -151,12 +148,9 @@ describe('3-player: Button raises, BB calls, then folds to flop bet', () => {
       currentPhase = GamePhase.PRE_FLOP;
     });
 
-    table.on('pot:updated', ({ total }) => {
-      potSize = total;
-    });
 
     table.on('hand:started', ({ dealerButton }) => {
-      dealerButtonPos = dealerButton;
+      const dealerButtonPos = dealerButton;
       
       // Determine positions and assign roles
       const sbPos = (dealerButton + 1) % 3;
@@ -172,8 +166,7 @@ describe('3-player: Button raises, BB calls, then folds to flop bet', () => {
         p.isBB = (idx === bbPos);
       });
       
-      buttonPlayer = players[dealerButton];
-      bbPlayer = players[bbPos];
+      buttonPlayer = players[dealerButtonPos];
     });
 
     table.on('player:action', ({ playerId, action, amount }) => {
@@ -185,7 +178,7 @@ describe('3-player: Button raises, BB calls, then folds to flop bet', () => {
         position: positions[pos], 
         action, 
         amount,
-        phase: currentPhase
+        phase: currentPhase,
       };
       actions.push(actionData);
     });
