@@ -1,80 +1,111 @@
-## Slack Poker Bot [![Build Status](https://travis-ci.org/CharlieHess/slack-poker-bot.png)](https://travis-ci.org/CharlieHess/slack-poker-bot)
+# Poker Game Manager 🃏
 
-A bot that turns Slack into a legitimate Texas Hold'em client. Start a game in any channel or private group with 2-10 players. PokerBot will deal hands, direct message players with their hole cards, query players for their action, determine the winning hand, and handle the pot.
+A high-performance, general-purpose poker game management library for Node.js with multi-platform support, AI players, and comprehensive game state management.
 
-![](https://s3.amazonaws.com/f.cl.ly/items/3w3k222T0A1o2e0d033Q/Image%202015-09-01%20at%2011.41.33%20PM.png)
-![](https://s3.amazonaws.com/f.cl.ly/items/2a073W0Q1Y2N0O2U1i3p/Image%202015-09-01%20at%2011.39.28%20PM.png)
+## Current Status
 
-See it [in action](https://www.youtube.com/watch?v=Joku-PKUObE).
+- **Tests**: ⚠️ Legacy tests exist (Mocha/Chai) - migration to Vitest pending
+- **Build**: ⚠️ Transitioning from Node 0.12.7 to Node 20+
+- **Active Work**: Refactoring Slack bot into platform-agnostic library
+- **Priority**: Core abstraction and modernization
 
-## Getting Started
-1. Create a new [bot integration](https://my.slack.com/services/new/bot)
-1. Follow the steps to deploy the bot to Heroku or run it locally
-1. Once the bot is running, start a game with: `@<your-bot-name>: deal`
+## Quick Start
 
-#### One-Click Heroku
-Click this button:
+```bash
+# Install dependencies (after modernization)
+npm install
 
-[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
+# Run tests
+npm test
 
-#### Manual Heroku
-1. Install [Heroku toolbelt](https://devcenter.heroku.com/articles/getting-started-with-nodejs#set-up)
-1. Create a new bot integration (as above)
-1. `heroku create`
-1. `heroku config:set SLACK_POKER_BOT_TOKEN=[Your API token]`
-1. `git push heroku master`
+# Development
+npm run dev
 
-#### To Run Locally
-1. Create a `token.txt` file and paste your API token there
-1. `npm install`
-1. `node src/main.js`
-
-## Directions
-* To start a game, `@<your-bot-name>: deal`.
-* To end a game, `@<your-bot-name>: quit game`. The game will end once the current hand finishes.
-Note that any player can end a game at any time with this command, so Be Honorable™.
-* To configure some bot options, `@<your-bot-name>: config <name-of-option>=<value>`. The supported options are:
-```
-timeout: Sets the duration (in seconds) before a player times out. 
-Set to 0 to specify no timeout.
-```
-So, to start a game without any player timeout, say:
-```
-@<your-bot-name>: config timeout=0
-@<your-bot-name>: deal
+# Build library
+npm run build
 ```
 
-Check the open issues for some planned enhancements.
+## Project Structure
 
-### AI Players
-Although this client was built for managing human players in a Slack channel, it has some support for AI players. To add a bot player:
+```
+slack-poker-bot/                    # (to be renamed poker-game-manager)
+├── src/                           # Core source code
+│   ├── main.js                   # Current entry point (Slack bot)
+│   ├── bot.js                    # Slack integration layer
+│   ├── texas-holdem.js           # Core game logic (preserve this!)
+│   ├── player-interaction.js     # Player action handling
+│   ├── pot-manager.js            # Betting and pot logic
+│   └── [other game modules]
+├── tests/                         # Existing Mocha tests
+├── ai/                           # AI player implementations
+├── resources/                     # Card images
+├── REFACTORING_PLAN.md          # Detailed transformation roadmap
+├── CLAUDE.md                     # Technical guidance for Claude
+└── ABOUT-JK.md                   # JK's working style
 
-1. Add a bot class under the `ai/` folder
-1. Implement `getAction`, which is called whenever it is the bot's turn
-1. Modify the `addBotPlayers` method in `src/bot.js` to add your bot to every game
+Future structure:
+├── packages/
+│   ├── core/                     # Platform-agnostic game engine
+│   ├── adapters/                 # Platform integrations
+│   └── ai/                       # AI player framework
+```
 
-### Test All The Things
-To run tests, simply do:
+## Session Memory
 
-1. `gulp`
+### Latest Session (2025-07-19)
+- Created comprehensive refactoring plan
+- Modernized package.json (Node 0.12.7 → 20+)
+- Established architecture for adapter pattern
+- Identified core game logic preservation strategy
+- Set up MCP tools: sequential-thinking for planning
 
-The tests produce legible output that matches what users in Slack would see. This is the same test suite that is run on each pull request. This is very helpful when diagnosing a logic bug:
-![](https://s3.amazonaws.com/f.cl.ly/items/2L0Y2Y3d3g0i1x171n2V/Image%202015-09-08%20at%207.00.40%20PM.png)
+### Key Decisions
+- Preserve excellent RxJS-based game flow in texas-holdem.js
+- Use adapter pattern for platform independence
+- Target modern Node.js with ESM modules
+- Implement multi-table support from ground up
+- Focus on clean, event-driven API
 
-### Dependencies
-* [NodeJS Slack Client](https://github.com/slackhq/node-slack-client)
-`node-slack-client` abstracts the basics of a Slack bot, including authentication, getting messages from players, and posting messages or attachments to the channel.
+## Architecture Vision
 
-* [RxJS](https://github.com/Reactive-Extensions/RxJS)
-The majority of this client is written using `RxJS`. It simplifies many of the complex player polling interactions, that would otherwise be Death By Timers, into very legible code.
+```javascript
+// Clean, intuitive API
+const manager = new PokerGameManager();
+const table = manager.createTable({
+  variant: 'texas-holdem',
+  blinds: { small: 10, big: 20 }
+});
 
-* [Imgur](https://github.com/kaimallea/node-imgur) / [Lightweight Image Processor](https://github.com/EyalAr/lwip)
-Each card is a separate image, and board images are created on the fly by pasting several cards onto a single canvas (with the help of  `lwip`). The resulting image is than uploaded to `imgur`, which gives us a single URL that can be passed as an attachment to the Slack API. This route was chosen to avoid uploading 318,505,200 images to the cloud, and allows us to modify the card assets easily.
+// Platform agnostic
+table.addPlayer(new SlackAdapter(slackUser));
+table.addPlayer(new WebSocketAdapter(wsConnection));
+table.addPlayer(new AIPlayer('aggressive'));
 
-* [Poker Evaluator](https://github.com/chenosaurus/poker-evaluator)
-`poker-evaluator` is used for evaluating the winning hand when it comes time to show down. Here it has been extended to calculate the best 5-card hand from any 7-card hand.
+// Event-driven
+table.on('game:ended', (result) => {
+  console.log(`Winner: ${result.winner.name}`);
+});
+```
 
-* [MochaJS](http://mochajs.org/)
-Most of the tricky client logic is backed up by tests, which were written using `MochaJS`.
+## Links
 
-* [Vector Playing Cards](https://code.google.com/p/vector-playing-cards/)
+- [Technical Guide](./CLAUDE.md) - Development workflow and conventions
+- [JK's Working Style](./ABOUT-JK.md) - Communication preferences
+- [Refactoring Plan](./REFACTORING_PLAN.md) - Detailed transformation roadmap
+
+## Original Slack Bot
+
+This project started as a Slack bot for playing Texas Hold'em. The bot responds to `@poker deal` commands and manages games within Slack channels. See git history for original implementation.
+
+## Performance Goals
+
+- Sub-10ms action processing
+- Support 1000+ concurrent tables
+- Memory-efficient game state management
+- Zero blocking operations in game loop
+
+## MCP Integration
+
+Using MCP tools for enhanced development:
+- `sequential-thinking`: Architecture planning and decision tracking
+- `github`: Version control and collaboration (when needed)

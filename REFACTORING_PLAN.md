@@ -1,0 +1,224 @@
+# Poker Game Manager - Refactoring Plan
+
+## Overview
+This document outlines the transformation of the Slack Poker Bot into a general-purpose poker game manager library that can be used in any poker project with support for human and computer players.
+
+## Goals
+1. **Decouple from Slack** - Abstract all Slack-specific code into adapters
+2. **Modernize** - Update to Node.js 20+ and modern JavaScript patterns
+3. **Library Design** - Create a reusable npm package with clean APIs
+4. **Multi-table Support** - Allow multiple simultaneous games
+5. **Extensibility** - Support different poker variants and AI players
+6. **Testing** - Comprehensive test coverage with modern testing tools
+
+## Architecture Design
+
+### Core Components
+
+#### 1. Game Manager (Main Library Interface)
+```javascript
+class PokerGameManager {
+  createTable(config) // Returns Table instance
+  getTables() // Returns all active tables
+  getTable(tableId) // Returns specific table
+}
+```
+
+#### 2. Table
+```javascript
+class Table {
+  constructor(config) // Game variant, blind structure, etc.
+  addPlayer(player) // Add human or AI player
+  removePlayer(playerId)
+  startGame()
+  on(event, handler) // Event-driven architecture
+}
+```
+
+#### 3. Player Interface
+```javascript
+interface Player {
+  id: string
+  name: string
+  chips: number
+  getAction(gameState): Promise<Action>
+  receivePrivateCards(cards): Promise<void>
+  receiveMessage(message): Promise<void>
+}
+```
+
+#### 4. Adapter Pattern for Different Platforms
+```javascript
+// Base adapter
+class PlayerAdapter {
+  async getAction(gameState) { /* override */ }
+  async receivePrivateCards(cards) { /* override */ }
+  async receiveMessage(message) { /* override */ }
+}
+
+// Example implementations
+class SlackPlayerAdapter extends PlayerAdapter { }
+class WebSocketPlayerAdapter extends PlayerAdapter { }
+class CLIPlayerAdapter extends PlayerAdapter { }
+class AIPlayerAdapter extends PlayerAdapter { }
+```
+
+### Events Architecture
+The library will emit events for all game state changes:
+- `game:started`
+- `round:started` (preflop, flop, turn, river)
+- `player:action` (check, bet, raise, fold, all-in)
+- `cards:dealt`
+- `pot:updated`
+- `game:ended`
+- `player:joined`
+- `player:left`
+
+## Implementation Phases
+
+### Phase 1: Core Refactoring
+1. **Extract Interfaces**
+   - Create `IPlayer`, `IGameObserver`, `IMessageHandler` interfaces
+   - Define event types and game state structures
+
+2. **Separate Game Logic**
+   - Move pure game logic to `@poker-manager/core`
+   - Remove all Slack dependencies from core logic
+   - Preserve existing RxJS patterns where beneficial
+
+3. **Modernize Codebase**
+   - Convert to ES modules
+   - Use async/await instead of callbacks
+   - TypeScript for better type safety (optional but recommended)
+
+### Phase 2: Multi-table Support
+1. **Table Management**
+   - Create `TableManager` class
+   - Implement table creation/destruction
+   - Add table ID to all events and state
+
+2. **Player Session Management**
+   - Allow players to join multiple tables
+   - Track player state per table
+
+### Phase 3: Platform Adapters
+1. **Slack Adapter** (preserve existing functionality)
+   - Implement `SlackPlayerAdapter`
+   - Maintain backward compatibility
+
+2. **Example Adapters**
+   - CLI adapter for terminal play
+   - WebSocket adapter for web applications
+   - REST API adapter for HTTP-based clients
+
+### Phase 4: Enhanced Features
+1. **AI Framework**
+   - Enhance existing AI bot framework
+   - Add more sophisticated AI strategies
+   - Allow custom AI implementations
+
+2. **Game Variants**
+   - Abstract Texas Hold'em rules
+   - Add support for Omaha, Stud, etc.
+
+3. **Tournament Support**
+   - Multi-table tournaments
+   - Sit-and-go support
+   - Blind level management
+
+## Technical Modernization
+
+### Dependencies Update
+- Node.js: 0.12.7 → 20.x
+- RxJS: 2.5.2 → 7.x (or consider removing)
+- Replace `lwip` with `sharp` or `canvas`
+- Update test framework to Jest or Vitest
+- Add ESLint and Prettier
+
+### Build System
+- Replace Gulp with npm scripts
+- Add bundling with Rollup or esbuild
+- Configure for both CommonJS and ESM output
+
+### Project Structure
+```
+poker-game-manager/
+├── packages/
+│   ├── core/          # Core game logic
+│   ├── adapters/      # Platform adapters
+│   │   ├── slack/
+│   │   ├── cli/
+│   │   └── websocket/
+│   ├── ai/            # AI player implementations
+│   └── utils/         # Shared utilities
+├── examples/          # Example implementations
+├── docs/              # API documentation
+└── tests/             # Integration tests
+```
+
+## Migration Strategy
+
+1. **Create new repository structure** without breaking existing code
+2. **Incrementally refactor** modules starting with least coupled
+3. **Maintain backward compatibility** during transition
+4. **Run existing tests** throughout refactoring
+5. **Add new tests** for refactored components
+6. **Create migration guide** for existing users
+
+## API Examples
+
+### Creating a Game
+```javascript
+import { PokerGameManager, TexasHoldem } from '@poker-manager/core';
+import { WebSocketAdapter } from '@poker-manager/adapters';
+
+const manager = new PokerGameManager();
+const table = manager.createTable({
+  variant: TexasHoldem,
+  blinds: { small: 10, big: 20 },
+  maxPlayers: 9
+});
+
+// Add players
+table.addPlayer(new WebSocketAdapter(socket, playerInfo));
+table.addPlayer(new AIPlayer('aggressive'));
+
+// Start game
+table.startGame();
+
+// Listen to events
+table.on('game:ended', (result) => {
+  console.log('Winner:', result.winner);
+});
+```
+
+### Implementing a Custom Adapter
+```javascript
+class CustomAdapter extends PlayerAdapter {
+  async getAction(gameState) {
+    // Get player input from your platform
+    const action = await this.promptUser(gameState);
+    return action;
+  }
+  
+  async receivePrivateCards(cards) {
+    // Send hole cards to player
+    await this.sendPrivateMessage(`Your cards: ${cards}`);
+  }
+}
+```
+
+## Timeline Estimate
+- Phase 1 (Core Refactoring): 2-3 weeks
+- Phase 2 (Multi-table): 1 week
+- Phase 3 (Adapters): 2 weeks
+- Phase 4 (Enhanced Features): 2-3 weeks
+- Documentation & Testing: Ongoing
+
+## Success Criteria
+- All existing tests pass after refactoring
+- Clean separation between game logic and platform code
+- Multiple example implementations working
+- Comprehensive API documentation
+- Published as npm package
+- Performance benchmarks show no regression
