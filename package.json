@@ -16,8 +16,7 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --run --coverage",
     "lint": "eslint packages/core/src packages/ai/src --ext .js,.ts",
-    "format": "prettier --write \"packages/**/*.{js,ts,json,md}\"",
-    "typecheck": "tsc --noEmit"
+    "format": "prettier --write \"packages/**/*.{js,ts,json,md}\""
   },
   "keywords": [
     "poker",
