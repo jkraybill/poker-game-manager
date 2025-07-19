@@ -3,7 +3,7 @@
 ## Communication Style
 
 ### Shorthand Commands
-- **go!** - Continue using your best judgment; ask questions as needed to maximize the chances of work being what JK wants
+- **go!** - Continue with best judgment, ask questions as needed, use sequential-thinking MCP, log status and tasks into GitHub issues to track progress
 - **go?** - Ask one or more clarifying questions, then go!
 - **??** - Ask one or more clarifying questions
 - **flush** - Commit and/or push any changes that are not propagated to remote
