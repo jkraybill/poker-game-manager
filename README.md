@@ -7,8 +7,9 @@ A high-performance, pure poker game management library for Node.js. Handles tour
 - **Infrastructure**: ✅ Modern build tools configured (ESLint, Prettier, Vitest)
 - **CI/CD**: ✅ GitHub Actions pipeline for Node.js 22 (all tests passing!)
 - **Core API**: ✅ Foundation implemented (PokerGameManager, Table, Player, GameEngine)
-- **Tests**: ✅ Growing test suite (41 tests passing - Deck and GameEngine covered)
-- **Active Work**: Expanding test coverage for all core components
+- **Tests**: ✅ Comprehensive test suite (122 tests passing - all core components covered)
+- **Hand Evaluation**: ✅ Integrated pokersolver library for robust hand evaluation
+- **Active Work**: Ready for AI player implementations and tournament support
 - **GitHub Issues**: [4 issues tracking progress](https://github.com/jkraybill/slack-poker-bot/issues)
 
 ## Requirements
@@ -75,7 +76,19 @@ Future structure:
   - Complex operation sequences
   - Statistical shuffle verification
   - Additional edge case handling
-- ✅ All 41 tests passing (29 Deck tests, 12 GameEngine tests)
+- ✅ Replaced custom HandEvaluator with pokersolver library:
+  - Reduced code from 297 lines to 162 lines
+  - Improved reliability with battle-tested library
+  - Standardized card format to use pokersolver notation (T instead of 10)
+- ✅ Written comprehensive tests for PotManager (32 tests):
+  - Side pot calculations
+  - Multi-way all-in scenarios
+  - Pot distribution logic
+- ✅ Written comprehensive tests for Table class (28 tests):
+  - Player management and waiting lists
+  - Game lifecycle management
+  - Event forwarding
+- ✅ All 122 tests passing (GameEngine, Deck, HandEvaluator, PotManager, Table)
 - ✅ CI/CD pipeline fully green
 
 ### Previous Session

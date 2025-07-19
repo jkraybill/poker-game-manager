@@ -42,53 +42,56 @@ export class PotManager {
    * Create side pots for all-in players
    */
   createSidePots() {
-    const allInPlayers = this.players
-      .filter(p => p.state === 'ALL_IN')
-      .sort((a, b) => {
-        const aContrib = this.getTotalContribution(a);
-        const bContrib = this.getTotalContribution(b);
-        return aContrib - bContrib;
-      });
-
-    for (const allInPlayer of allInPlayers) {
-      const allInAmount = this.getTotalContribution(allInPlayer);
+    // Only create side pots if we have contributions
+    if (this.currentPot.contributions.size === 0) {
+      return;
+    }
+    
+    // Get all contributions for current pot
+    const playerContributions = [];
+    for (const [player, amount] of this.currentPot.contributions) {
+      playerContributions.push({ player, amount });
+    }
+    
+    // Sort by contribution amount
+    playerContributions.sort((a, b) => a.amount - b.amount);
+    
+    // Clear pots to rebuild
+    this.pots = [];
+    let previousAmount = 0;
+    
+    for (let i = 0; i < playerContributions.length; i++) {
+      const currentAmount = playerContributions[i].amount;
+      const eligibleCount = playerContributions.length - i;
       
-      if (allInAmount > 0) {
-        this.createSidePot(allInAmount);
+      if (currentAmount > previousAmount) {
+        // Create a pot for the difference
+        const pot = {
+          amount: (currentAmount - previousAmount) * eligibleCount,
+          eligiblePlayers: [],
+          contributions: new Map(),
+        };
+        
+        // All players who contributed at least up to the current pot amount are eligible
+        for (let j = 0; j < playerContributions.length; j++) {
+          if (playerContributions[j].amount >= currentAmount) {
+            pot.eligiblePlayers.push(playerContributions[j].player);
+            const contrib = currentAmount - previousAmount;
+            pot.contributions.set(playerContributions[j].player, contrib);
+          }
+        }
+        
+        this.pots.push(pot);
+        previousAmount = currentAmount;
       }
     }
-  }
-
-  /**
-   * Create a side pot at the specified amount
-   */
-  createSidePot(maxAmount) {
-    const newPot = {
-      amount: 0,
-      eligiblePlayers: [],
-      contributions: new Map(),
-    };
-
-    // Move contributions up to maxAmount to the current pot
-    for (const [player, contribution] of this.currentPot.contributions) {
-      const transferAmount = Math.min(contribution, maxAmount);
-      const remaining = contribution - transferAmount;
-
-      if (transferAmount > 0) {
-        this.currentPot.eligiblePlayers.push(player);
-      }
-
-      if (remaining > 0) {
-        newPot.contributions.set(player, remaining);
-        newPot.amount += remaining;
-        this.currentPot.contributions.set(player, transferAmount);
-      }
-    }
-
-    // Only create new pot if it has contributions
-    if (newPot.amount > 0) {
-      this.pots.push(newPot);
-      this.currentPot = newPot;
+    
+    // If no pots were created, keep the original pot
+    if (this.pots.length === 0) {
+      this.pots = [this.currentPot];
+    } else {
+      // Set current pot to the last pot
+      this.currentPot = this.pots[this.pots.length - 1];
     }
   }
 

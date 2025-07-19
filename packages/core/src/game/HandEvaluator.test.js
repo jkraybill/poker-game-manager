@@ -2,36 +2,50 @@ import { describe, it, expect } from 'vitest';
 import { HandEvaluator } from './HandEvaluator.js';
 import { HandRank } from '../types/index.js';
 
+// Helper to create card objects
+const card = (rank, suit) => ({
+  rank,
+  suit,
+  toString() {
+    return `${this.rank}${this.suit}`;
+  }
+});
+
 describe('HandEvaluator', () => {
   describe('cardToPokersolverFormat', () => {
     it('should convert card format correctly', () => {
-      expect(HandEvaluator.cardToPokersolverFormat({ rank: 'A', suit: 'spades' })).toBe('As');
-      expect(HandEvaluator.cardToPokersolverFormat({ rank: '10', suit: 'hearts' })).toBe('Th'); // Pokersolver uses T for 10
-      expect(HandEvaluator.cardToPokersolverFormat({ rank: 'K', suit: 'diamonds' })).toBe('Kd');
-      expect(HandEvaluator.cardToPokersolverFormat({ rank: '2', suit: 'clubs' })).toBe('2c');
+      const card1 = { rank: 'A', suit: 's', toString() { return `${this.rank}${this.suit}`; } };
+      const card2 = { rank: 'T', suit: 'h', toString() { return `${this.rank}${this.suit}`; } };
+      const card3 = { rank: 'K', suit: 'd', toString() { return `${this.rank}${this.suit}`; } };
+      const card4 = { rank: '2', suit: 'c', toString() { return `${this.rank}${this.suit}`; } };
+      
+      expect(HandEvaluator.cardToPokersolverFormat(card1)).toBe('As');
+      expect(HandEvaluator.cardToPokersolverFormat(card2)).toBe('Th'); // Pokersolver uses T for 10
+      expect(HandEvaluator.cardToPokersolverFormat(card3)).toBe('Kd');
+      expect(HandEvaluator.cardToPokersolverFormat(card4)).toBe('2c');
     });
   });
 
   describe('evaluate', () => {
     it('should throw error with less than 5 cards', () => {
       const cards = [
-        { rank: 'A', suit: 'spades' },
-        { rank: 'K', suit: 'spades' },
-        { rank: 'Q', suit: 'spades' },
-        { rank: 'J', suit: 'spades' }
+        card('A', 's'),
+        card('K', 's'),
+        card('Q', 's'),
+        card('J', 's')
       ];
       expect(() => HandEvaluator.evaluate(cards)).toThrow('Need at least 5 cards to evaluate');
     });
 
     it('should detect royal flush', () => {
       const cards = [
-        { rank: 'A', suit: 'spades' },
-        { rank: 'K', suit: 'spades' },
-        { rank: 'Q', suit: 'spades' },
-        { rank: 'J', suit: 'spades' },
-        { rank: '10', suit: 'spades' },
-        { rank: '2', suit: 'hearts' },
-        { rank: '3', suit: 'diamonds' }
+        card('A', 's'),
+        card('K', 's'),
+        card('Q', 's'),
+        card('J', 's'),
+        card('T', 's'),
+        card('2', 'h'),
+        card('3', 'd')
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.ROYAL_FLUSH);
@@ -39,13 +53,13 @@ describe('HandEvaluator', () => {
 
     it('should detect straight flush', () => {
       const cards = [
-        { rank: '9', suit: 'hearts' },
-        { rank: '8', suit: 'hearts' },
-        { rank: '7', suit: 'hearts' },
-        { rank: '6', suit: 'hearts' },
-        { rank: '5', suit: 'hearts' },
-        { rank: 'A', suit: 'clubs' },
-        { rank: 'K', suit: 'diamonds' }
+        card('9', 'h'),
+        card('8', 'h'),
+        card('7', 'h'),
+        card('6', 'h'),
+        card('5', 'h'),
+        card('A', 'c'),
+        card('K', 'd')
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.STRAIGHT_FLUSH);
@@ -53,11 +67,11 @@ describe('HandEvaluator', () => {
 
     it('should detect four of a kind', () => {
       const cards = [
-        { rank: 'A', suit: 'spades' },
-        { rank: 'A', suit: 'hearts' },
-        { rank: 'A', suit: 'diamonds' },
-        { rank: 'A', suit: 'clubs' },
-        { rank: 'K', suit: 'spades' }
+        card('A', 's'),
+        card('A', 'h'),
+        card('A', 'd'),
+        card('A', 'c'),
+        card('K', 's')
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.FOUR_OF_A_KIND);
@@ -65,11 +79,11 @@ describe('HandEvaluator', () => {
 
     it('should detect full house', () => {
       const cards = [
-        { rank: 'A', suit: 'spades' },
-        { rank: 'A', suit: 'hearts' },
-        { rank: 'A', suit: 'diamonds' },
-        { rank: 'K', suit: 'clubs' },
-        { rank: 'K', suit: 'spades' }
+        card('A', 's'),
+        card('A', 'h'),
+        card('A', 'd'),
+        card('K', 'c'),
+        card('K', 's')
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.FULL_HOUSE);
@@ -77,11 +91,11 @@ describe('HandEvaluator', () => {
 
     it('should detect flush', () => {
       const cards = [
-        { rank: 'A', suit: 'spades' },
-        { rank: '10', suit: 'spades' },
-        { rank: '7', suit: 'spades' },
-        { rank: '4', suit: 'spades' },
-        { rank: '2', suit: 'spades' }
+        card('A', 's'),
+        card('T', 's'),
+        card('7', 's'),
+        card('4', 's'),
+        card('2', 's')
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.FLUSH);
@@ -89,11 +103,11 @@ describe('HandEvaluator', () => {
 
     it('should detect straight', () => {
       const cards = [
-        { rank: '9', suit: 'hearts' },
-        { rank: '8', suit: 'spades' },
-        { rank: '7', suit: 'diamonds' },
-        { rank: '6', suit: 'clubs' },
-        { rank: '5', suit: 'hearts' }
+        card('9', 'h'),
+        card('8', 's'),
+        card('7', 'd'),
+        card('6', 'c'),
+        card('5', 'h')
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.STRAIGHT);
@@ -101,11 +115,11 @@ describe('HandEvaluator', () => {
 
     it('should detect wheel straight (A-2-3-4-5)', () => {
       const cards = [
-        { rank: 'A', suit: 'hearts' },
-        { rank: '2', suit: 'spades' },
-        { rank: '3', suit: 'diamonds' },
-        { rank: '4', suit: 'clubs' },
-        { rank: '5', suit: 'hearts' }
+        card('A', 'h'),
+        card('2', 's'),
+        card('3', 'd'),
+        card('4', 'c'),
+        card('5', 'h')
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.STRAIGHT);
@@ -113,11 +127,11 @@ describe('HandEvaluator', () => {
 
     it('should detect three of a kind', () => {
       const cards = [
-        { rank: 'A', suit: 'spades' },
-        { rank: 'A', suit: 'hearts' },
-        { rank: 'A', suit: 'diamonds' },
-        { rank: 'K', suit: 'clubs' },
-        { rank: 'Q', suit: 'spades' }
+        card('A', 's'),
+        card('A', 'h'),
+        card('A', 'd'),
+        card('K', 'c'),
+        card('Q', 's')
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.THREE_OF_A_KIND);
@@ -125,11 +139,11 @@ describe('HandEvaluator', () => {
 
     it('should detect two pair', () => {
       const cards = [
-        { rank: 'A', suit: 'spades' },
-        { rank: 'A', suit: 'hearts' },
-        { rank: 'K', suit: 'diamonds' },
-        { rank: 'K', suit: 'clubs' },
-        { rank: 'Q', suit: 'spades' }
+        card('A', 's'),
+        card('A', 'h'),
+        card('K', 'd'),
+        card('K', 'c'),
+        card('Q', 's')
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.TWO_PAIR);
@@ -137,11 +151,11 @@ describe('HandEvaluator', () => {
 
     it('should detect one pair', () => {
       const cards = [
-        { rank: 'A', suit: 'spades' },
-        { rank: 'A', suit: 'hearts' },
-        { rank: 'K', suit: 'diamonds' },
-        { rank: 'Q', suit: 'clubs' },
-        { rank: 'J', suit: 'spades' }
+        card('A', 's'),
+        card('A', 'h'),
+        card('K', 'd'),
+        card('Q', 'c'),
+        card('J', 's')
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.PAIR);
@@ -149,11 +163,11 @@ describe('HandEvaluator', () => {
 
     it('should detect high card', () => {
       const cards = [
-        { rank: 'A', suit: 'spades' },
-        { rank: 'K', suit: 'hearts' },
-        { rank: 'Q', suit: 'diamonds' },
-        { rank: 'J', suit: 'clubs' },
-        { rank: '9', suit: 'spades' }
+        card('A', 's'),
+        card('K', 'h'),
+        card('Q', 'd'),
+        card('J', 'c'),
+        card('9', 's')
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.HIGH_CARD);
@@ -162,14 +176,14 @@ describe('HandEvaluator', () => {
     it('should return best 5-card hand from 7 cards', () => {
       const cards = [
         // Hole cards
-        { rank: 'A', suit: 'spades' },
-        { rank: 'A', suit: 'hearts' },
+        card('A', 's'),
+        card('A', 'h'),
         // Board
-        { rank: 'A', suit: 'diamonds' },
-        { rank: 'K', suit: 'clubs' },
-        { rank: 'K', suit: 'spades' },
-        { rank: '2', suit: 'hearts' },
-        { rank: '3', suit: 'diamonds' }
+        card('A', 'd'),
+        card('K', 'c'),
+        card('K', 's'),
+        card('2', 'h'),
+        card('3', 'd')
       ];
       const result = HandEvaluator.evaluate(cards);
       expect(result.rank).toBe(HandRank.FULL_HOUSE);
@@ -186,11 +200,11 @@ describe('HandEvaluator', () => {
       const playerHands = [{
         playerData: { player: { id: 'player1' } },
         cards: [
-          { rank: 'A', suit: 'spades' },
-          { rank: 'K', suit: 'spades' },
-          { rank: 'Q', suit: 'spades' },
-          { rank: 'J', suit: 'spades' },
-          { rank: '10', suit: 'spades' }
+          card('A', 's'),
+          card('K', 's'),
+          card('Q', 's'),
+          card('J', 's'),
+          card('T', 's')
         ],
         hand: {}
       }];
@@ -204,21 +218,21 @@ describe('HandEvaluator', () => {
         {
           playerData: { player: { id: 'player1' } },
           cards: [
-            { rank: 'A', suit: 'spades' },
-            { rank: 'A', suit: 'hearts' },
-            { rank: 'K', suit: 'diamonds' },
-            { rank: 'K', suit: 'clubs' },
-            { rank: 'Q', suit: 'spades' }
+            card('A', 's'),
+            card('A', 'h'),
+            card('K', 'd'),
+            card('K', 'c'),
+            card('Q', 's')
           ]
         },
         {
           playerData: { player: { id: 'player2' } },
           cards: [
-            { rank: 'J', suit: 'spades' },
-            { rank: 'J', suit: 'hearts' },
-            { rank: '10', suit: 'diamonds' },
-            { rank: '10', suit: 'clubs' },
-            { rank: '9', suit: 'spades' }
+            card('J', 's'),
+            card('J', 'h'),
+            card('T', 'd'),
+            card('T', 'c'),
+            card('9', 's')
           ]
         }
       ];
@@ -232,21 +246,21 @@ describe('HandEvaluator', () => {
         {
           playerData: { player: { id: 'player1' } },
           cards: [
-            { rank: 'A', suit: 'spades' },
-            { rank: 'K', suit: 'hearts' },
-            { rank: 'Q', suit: 'diamonds' },
-            { rank: 'J', suit: 'clubs' },
-            { rank: '10', suit: 'spades' }
+            card('A', 's'),
+            card('K', 'h'),
+            card('Q', 'd'),
+            card('J', 'c'),
+            card('T', 's')
           ]
         },
         {
           playerData: { player: { id: 'player2' } },
           cards: [
-            { rank: 'A', suit: 'hearts' },
-            { rank: 'K', suit: 'spades' },
-            { rank: 'Q', suit: 'clubs' },
-            { rank: 'J', suit: 'diamonds' },
-            { rank: '10', suit: 'hearts' }
+            card('A', 'h'),
+            card('K', 's'),
+            card('Q', 'c'),
+            card('J', 'd'),
+            card('T', 'h')
           ]
         }
       ];
@@ -260,20 +274,20 @@ describe('HandEvaluator', () => {
     it('should return 1 when hand1 wins', () => {
       const hand1 = {
         cards: [
-          { rank: 'A', suit: 'spades' },
-          { rank: 'A', suit: 'hearts' },
-          { rank: 'K', suit: 'diamonds' },
-          { rank: 'K', suit: 'clubs' },
-          { rank: 'Q', suit: 'spades' }
+          card('A', 's'),
+          card('A', 'h'),
+          card('K', 'd'),
+          card('K', 'c'),
+          card('Q', 's')
         ]
       };
       const hand2 = {
         cards: [
-          { rank: 'J', suit: 'spades' },
-          { rank: 'J', suit: 'hearts' },
-          { rank: '10', suit: 'diamonds' },
-          { rank: '10', suit: 'clubs' },
-          { rank: '9', suit: 'spades' }
+          card('J', 's'),
+          card('J', 'h'),
+          card('T', 'd'),
+          card('T', 'c'),
+          card('9', 's')
         ]
       };
       expect(HandEvaluator.compareHands(hand1, hand2)).toBe(1);
@@ -282,20 +296,20 @@ describe('HandEvaluator', () => {
     it('should return -1 when hand2 wins', () => {
       const hand1 = {
         cards: [
-          { rank: 'J', suit: 'spades' },
-          { rank: 'J', suit: 'hearts' },
-          { rank: '10', suit: 'diamonds' },
-          { rank: '10', suit: 'clubs' },
-          { rank: '9', suit: 'spades' }
+          card('J', 's'),
+          card('J', 'h'),
+          card('T', 'd'),
+          card('T', 'c'),
+          card('9', 's')
         ]
       };
       const hand2 = {
         cards: [
-          { rank: 'A', suit: 'spades' },
-          { rank: 'A', suit: 'hearts' },
-          { rank: 'K', suit: 'diamonds' },
-          { rank: 'K', suit: 'clubs' },
-          { rank: 'Q', suit: 'spades' }
+          card('A', 's'),
+          card('A', 'h'),
+          card('K', 'd'),
+          card('K', 'c'),
+          card('Q', 's')
         ]
       };
       expect(HandEvaluator.compareHands(hand1, hand2)).toBe(-1);
@@ -304,20 +318,20 @@ describe('HandEvaluator', () => {
     it('should return 0 for tie', () => {
       const hand1 = {
         cards: [
-          { rank: 'A', suit: 'spades' },
-          { rank: 'K', suit: 'hearts' },
-          { rank: 'Q', suit: 'diamonds' },
-          { rank: 'J', suit: 'clubs' },
-          { rank: '10', suit: 'spades' }
+          card('A', 's'),
+          card('K', 'h'),
+          card('Q', 'd'),
+          card('J', 'c'),
+          card('T', 's')
         ]
       };
       const hand2 = {
         cards: [
-          { rank: 'A', suit: 'hearts' },
-          { rank: 'K', suit: 'spades' },
-          { rank: 'Q', suit: 'clubs' },
-          { rank: 'J', suit: 'diamonds' },
-          { rank: '10', suit: 'hearts' }
+          card('A', 'h'),
+          card('K', 's'),
+          card('Q', 'c'),
+          card('J', 'd'),
+          card('T', 'h')
         ]
       };
       expect(HandEvaluator.compareHands(hand1, hand2)).toBe(0);

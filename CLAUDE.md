@@ -51,19 +51,23 @@ git commit -m "message"
 - **Node Version**: 22.17.0 (required)
 - **Framework**: Pure poker library with no platform dependencies
 - **Game Logic**: Clean event-driven architecture
-- **Testing**: Vitest configured, 41 tests passing (Deck & GameEngine)
+- **Testing**: Vitest configured, 122 tests passing (all core components covered)
 - **Build**: esbuild configured for ESM and CJS output
 - **CI/CD**: GitHub Actions running on Node.js 22 - all tests passing!
 - **Language**: Pure JavaScript (no TypeScript)
+- **Dependencies**: pokersolver library for hand evaluation
 
 ### Implemented Components
 - **PokerGameManager**: Multi-table management with event forwarding
 - **Table**: Game table with player management and auto-flow
 - **Player**: Simple interface for player implementations
 - **GameEngine**: Complete poker game logic (Texas Hold'em)
+- **Deck**: Card management with Fisher-Yates shuffle
+- **HandEvaluator**: Poker hand evaluation using pokersolver library
+- **PotManager**: Betting, pot calculations, and side pot management
 - **Type System**: Complete enums and JSDoc types
 - **Infrastructure**: ESLint, Prettier, Vitest all configured
-- **Tests**: Comprehensive Deck class tests with Fisher-Yates verification
+- **Tests**: Comprehensive test suite for all core components (122 tests)
 
 ### Key Patterns
 
@@ -71,9 +75,10 @@ git commit -m "message"
 ```javascript
 // Any player implementation must provide these methods
 interface Player {
-  getAction(gameState): Promise<Action>
-  receivePrivateCards(cards): Promise<void>
-  receiveMessage(message): Promise<void>
+  requestAction(validActions, timeout): Promise<Action>
+  receivePrivateCards(cards): void
+  receivePublicCards(cards): void
+  receiveGameUpdate(update): void
 }
 ```
 
@@ -202,10 +207,13 @@ describe('PokerTable', () => {
    - Fix GameEngine betting round logic and tests
    - Remove coverage requirements from CI
    - Clean up POKER-RULES.md for simulation use
+   - Replace custom HandEvaluator with pokersolver library
+   - Standardize card format to use pokersolver notation (T for 10)
+   - Write comprehensive tests for all core components (122 tests total)
 
 2. **In Progress** 🚧:
-   - Write tests for remaining core components (HandEvaluator, PotManager, Table, PokerGameManager)
-   - Create more example player implementations
+   - Create example player implementations
+   - Add tournament management support
 
 3. **Next Phase**:
    - Add tournament management

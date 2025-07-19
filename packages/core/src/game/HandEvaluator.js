@@ -6,20 +6,13 @@ import { HandRank } from '../types/index.js';
  */
 export class HandEvaluator {
   /**
-   * Convert our card format to pokersolver format
+   * Convert our card to pokersolver format
+   * Since we now use pokersolver format natively, just return toString()
    * @param {Object} card - Card with {rank, suit}
    * @returns {string} Card in pokersolver format (e.g., 'As', '2h')
    */
   static cardToPokersolverFormat(card) {
-    const suitMap = {
-      'spades': 's',
-      'hearts': 'h',
-      'diamonds': 'd',
-      'clubs': 'c'
-    };
-    // Pokersolver uses 'T' for 10
-    const rank = card.rank === '10' ? 'T' : card.rank;
-    return `${rank}${suitMap[card.suit]}`;
+    return card.toString();
   }
 
   /**
@@ -76,10 +69,14 @@ export class HandEvaluator {
       cards: solved.cards.slice(0, 5).map(card => {
         // Convert back to our card format
         const rank = card.value;
-        const suit = card.suit === 's' ? 'spades' : 
-                     card.suit === 'h' ? 'hearts' :
-                     card.suit === 'd' ? 'diamonds' : 'clubs';
-        return { rank, suit };
+        const suit = card.suit;
+        return { 
+          rank, 
+          suit,
+          toString() {
+            return `${rank}${suit}`;
+          }
+        };
       }),
       description: solved.descr
     };
@@ -125,10 +122,14 @@ export class HandEvaluator {
             kickers: winner.solved.cards.map(card => this.getRankValue(card.value)),
             cards: winner.solved.cards.slice(0, 5).map(card => {
               const rank = card.value;
-              const suit = card.suit === 's' ? 'spades' : 
-                           card.suit === 'h' ? 'hearts' :
-                           card.suit === 'd' ? 'diamonds' : 'clubs';
-              return { rank, suit };
+              const suit = card.suit;
+              return { 
+                rank, 
+                suit,
+                toString() {
+                  return `${rank}${suit}`;
+                }
+              };
             }),
             description: winner.solved.descr
           }

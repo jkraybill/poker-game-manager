@@ -12,8 +12,8 @@ export class Deck {
    */
   reset() {
     this.cards = [];
-    const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
-    const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+    const suits = ['h', 'd', 'c', 's']; // Use pokersolver format
+    const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A']; // T instead of 10
     
     for (const suit of suits) {
       for (const rank of ranks) {
@@ -21,7 +21,7 @@ export class Deck {
           rank,
           suit,
           toString() {
-            return `${rank}${suit[0]}`;
+            return `${rank}${suit}`;
           },
         });
       }

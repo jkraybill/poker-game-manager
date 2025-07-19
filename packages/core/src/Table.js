@@ -113,34 +113,54 @@ export class Table extends EventEmitter {
     this.state = TableState.IN_PROGRESS;
     this.gameCount++;
 
-    // Initialize game engine
-    this.gameEngine = new GameEngine({
-      variant: this.config.variant,
-      players: Array.from(this.players.values()),
-      blinds: this.config.blinds,
-      timeout: this.config.timeout,
-    });
+    try {
+      // Initialize game engine
+      this.gameEngine = new GameEngine({
+        variant: this.config.variant,
+        players: Array.from(this.players.values()).map(playerData => ({
+          player: playerData.player,
+          chips: playerData.chips,
+        })),
+        blinds: this.config.blinds,
+        timeout: this.config.timeout,
+      });
 
-    // Forward game events
-    this.gameEngine.on('*', (eventName, data) => {
-      this.emit(eventName, {
-        ...data,
+      // Forward specific game events we care about
+      const eventsToForward = [
+        'game:started', 'hand:started', 'cards:dealt', 'action:requested',
+        'action:performed', 'pot:updated', 'round:ended', 'hand:ended'
+      ];
+      
+      eventsToForward.forEach(eventName => {
+        this.gameEngine.on(eventName, (data) => {
+          this.emit(eventName, {
+            ...data,
+            tableId: this.id,
+            gameNumber: this.gameCount,
+          });
+        });
+      });
+
+      this.gameEngine.on('game:ended', (result) => {
+        this.handleGameEnd(result);
+      });
+
+      this.emit('game:started', {
         tableId: this.id,
         gameNumber: this.gameCount,
+        players: Array.from(this.players.keys()),
       });
-    });
 
-    this.gameEngine.on('game:ended', (result) => {
-      this.handleGameEnd(result);
-    });
-
-    this.emit('game:started', {
-      tableId: this.id,
-      gameNumber: this.gameCount,
-      players: Array.from(this.players.keys()),
-    });
-
-    this.gameEngine.start();
+      this.gameEngine.start();
+    } catch (error) {
+      // If game fails to start, revert state
+      this.state = TableState.WAITING;
+      this.gameEngine = null;
+      this.emit('game:error', { 
+        tableId: this.id,
+        error: error.message,
+      });
+    }
   }
 
   /**
@@ -187,6 +207,20 @@ export class Table extends EventEmitter {
     }
     
     throw new Error('No available seats');
+  }
+
+  /**
+   * End the current game
+   */
+  endGame(reason) {
+    if (this.gameEngine) {
+      this.gameEngine.abort();
+    }
+    this.state = TableState.WAITING;
+    this.emit('game:ended', { 
+      tableId: this.id,
+      reason,
+    });
   }
 
   /**

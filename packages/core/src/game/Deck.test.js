@@ -14,8 +14,8 @@ describe('Deck', () => {
     });
 
     it('should create cards with all combinations of suits and ranks', () => {
-      const expectedSuits = ['hearts', 'diamonds', 'clubs', 'spades'];
-      const expectedRanks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+      const expectedSuits = ['h', 'd', 'c', 's'];
+      const expectedRanks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
       
       const cards = [...deck.cards];
       expect(cards).toHaveLength(52);
@@ -51,14 +51,14 @@ describe('Deck', () => {
 
     it('should create cards with correct toString() method', () => {
       const card = deck.cards[0];
-      expect(card.toString()).toBe(`${card.rank}${card.suit[0]}`);
+      expect(card.toString()).toBe(`${card.rank}${card.suit}`);
       
       // Test specific cards
-      const aceOfSpades = deck.cards.find(c => c.rank === 'A' && c.suit === 'spades');
+      const aceOfSpades = deck.cards.find(c => c.rank === 'A' && c.suit === 's');
       expect(aceOfSpades.toString()).toBe('As');
       
-      const tenOfHearts = deck.cards.find(c => c.rank === '10' && c.suit === 'hearts');
-      expect(tenOfHearts.toString()).toBe('10h');
+      const tenOfHearts = deck.cards.find(c => c.rank === 'T' && c.suit === 'h');
+      expect(tenOfHearts.toString()).toBe('Th');
     });
   });
 
