@@ -25,7 +25,7 @@
 ### Code Philosophy  
 - **Elegance over cleverness** - Readable, maintainable code
 - **Performance-conscious** - Every millisecond counts in game loops
-- **Type safety** - Use TypeScript features when helpful
+- **Clear code** - Self-documenting JavaScript with JSDoc comments
 - **No premature optimization** - But design for performance from the start
 
 ### Testing Approach

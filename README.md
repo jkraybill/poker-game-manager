@@ -4,11 +4,11 @@ A high-performance, pure poker game management library for Node.js. Handles tour
 
 ## Current Status
 
-- **Infrastructure**: ✅ Modern build tools configured (ESLint, Prettier, TypeScript, Vitest)
-- **CI/CD**: ✅ GitHub Actions pipeline for Node.js 22
+- **Infrastructure**: ✅ Modern build tools configured (ESLint, Prettier, Vitest)
+- **CI/CD**: ✅ GitHub Actions pipeline for Node.js 22 (all tests passing!)
 - **Core API**: ✅ Foundation implemented (PokerGameManager, Table, Player, GameEngine)
-- **Tests**: 🚧 Writing tests for core components
-- **Active Work**: Removing all Slack dependencies to create pure poker library
+- **Tests**: ✅ Comprehensive test suite started (Deck class fully tested)
+- **Active Work**: Pure poker library - all Slack dependencies removed
 - **GitHub Issues**: [4 issues tracking progress](https://github.com/jkraybill/slack-poker-bot/issues)
 
 ## Requirements
@@ -22,20 +22,20 @@ A high-performance, pure poker game management library for Node.js. Handles tour
 # Install dependencies
 npm install
 
-# Run tests
+# Run tests (runs once and exits)
 npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
 
 # Run linting
 npm run lint
 
-# Type checking
-npm run typecheck
-
 # Build library
 npm run build
-
-# Development (Note: JK runs this separately)
-npm run dev
 ```
 
 ## Project Structure
@@ -68,22 +68,27 @@ Future structure:
 ### Latest Session (2025-07-19)
 - ✅ Created comprehensive refactoring plan (REFACTORING_PLAN.md)
 - ✅ Modernized package.json (Node 0.12.7 → 22+)
-- ✅ Set up modern infrastructure (ESLint, Prettier, TypeScript, Vitest)
+- ✅ Set up modern infrastructure (ESLint, Prettier, Vitest)
 - ✅ Implemented core API foundation:
   - PokerGameManager for multi-table management
   - Table class with event-driven architecture
-  - Player and PlayerAdapter base classes
-  - Comprehensive type definitions
+  - Player base class (simplified from adapter pattern)
+  - GameEngine, Deck, HandEvaluator, PotManager
 - ✅ Created GitHub issues for tracking (#1-#4)
 - ✅ Set up CI/CD with GitHub Actions
-- 🚧 Next: Extract GameEngine from texas-holdem.js
+- ✅ Removed all Slack dependencies - now a pure poker library
+- ✅ Created comprehensive test suite for Deck class
+- ✅ Fixed all CI failures - build is green!
+- ✅ Cleaned up POKER-RULES.md for simulation use
+- ✅ Removed TypeScript configuration (pure JavaScript project)
 
 ### Key Decisions
-- Preserve excellent RxJS-based game flow in texas-holdem.js
-- Use adapter pattern for platform independence
+- Created pure poker library (no platform dependencies)
+- Simple player interface pattern (not adapter pattern)
 - Target modern Node.js with ESM modules
 - Implement multi-table support from ground up
 - Focus on clean, event-driven API
+- Pure JavaScript (no TypeScript)
 
 ## Architecture Vision
 

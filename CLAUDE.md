@@ -20,13 +20,13 @@
 ### What Claude CAN Run
 ```bash
 # Testing
-npm test                    # Run all tests
+npm test                    # Run all tests (runs once and exits)
+npm run test:watch         # Run tests in watch mode
 npm run test:coverage      # Run tests with coverage
 
 # Linting & Formatting
 npm run lint              # ESLint check
 npm run format            # Prettier format
-npm run typecheck         # TypeScript type checking
 
 # Building
 npm run build             # Build library for distribution
@@ -51,9 +51,10 @@ git commit -m "message"
 - **Node Version**: 22.17.0 (required)
 - **Framework**: Pure poker library with no platform dependencies
 - **Game Logic**: Clean event-driven architecture
-- **Testing**: Vitest configured, writing new tests
+- **Testing**: Vitest configured, comprehensive Deck tests written
 - **Build**: esbuild configured for ESM and CJS output
-- **CI/CD**: GitHub Actions running on Node.js 22
+- **CI/CD**: GitHub Actions running on Node.js 22 - all tests passing!
+- **Language**: Pure JavaScript (no TypeScript)
 
 ### Implemented Components
 - **PokerGameManager**: Multi-table management with event forwarding
@@ -61,7 +62,8 @@ git commit -m "message"
 - **Player**: Simple interface for player implementations
 - **GameEngine**: Complete poker game logic (Texas Hold'em)
 - **Type System**: Complete enums and JSDoc types
-- **Infrastructure**: ESLint, Prettier, TypeScript, Vitest all configured
+- **Infrastructure**: ESLint, Prettier, Vitest all configured
+- **Tests**: Comprehensive Deck class tests with Fisher-Yates verification
 
 ### Key Patterns
 
@@ -189,17 +191,19 @@ describe('PokerTable', () => {
 ## Current Priorities
 
 1. **Completed Tasks** ✅:
-   - Set up modern build tooling (ESLint, Prettier, TypeScript, Vitest)
+   - Set up modern build tooling (ESLint, Prettier, Vitest)
    - Design core API (PokerGameManager, Table, Player)
    - Implement GameEngine with complete poker logic
    - Configure for Node.js 22
-   - Set up CI/CD pipeline
+   - Set up CI/CD pipeline (all tests passing!)
    - Create GitHub issues for tracking
+   - Remove all Slack-specific code - pure poker library
+   - Write comprehensive Deck tests with Fisher-Yates verification
+   - Clean up POKER-RULES.md for simulation use
 
 2. **In Progress** 🚧:
-   - Remove all Slack-specific code
-   - Write comprehensive tests
-   - Clean up legacy dependencies
+   - Write tests for remaining core components
+   - Create more example player implementations
 
 3. **Next Phase**:
    - Add tournament management
@@ -223,11 +227,11 @@ The existing game flow in texas-holdem.js uses RxJS elegantly for:
 
 We'll modernize to RxJS 7 but preserve the patterns.
 
-### Why Adapter Pattern?
+### Why Simple Player Interface?
 - Clean separation of concerns
-- Easy to add new platforms
+- Any implementation can connect
 - Testable in isolation
-- Future-proof architecture
+- No platform dependencies
 
 ### Why Event-Driven?
 - Natural fit for game state changes
@@ -285,10 +289,11 @@ When resuming work:
 5. Continue from TODO list
 
 Key files to check:
-- `/src/texas-holdem.js` - Core game logic to extract
-- `/src/bot.js` - Current Slack integration
-- `/packages/core/src/` - New library implementation
+- `/packages/core/src/` - Main library implementation
+- `/packages/core/src/game/` - Game logic components
+- `/packages/ai/src/` - AI player implementations
 - `/REFACTORING_PLAN.md` - Transformation roadmap
+- `/POKER-RULES.md` - Simulation-focused poker rules
 - GitHub Issues [#1-#4](https://github.com/jkraybill/slack-poker-bot/issues)
 
 ## Recent Implementation Details
