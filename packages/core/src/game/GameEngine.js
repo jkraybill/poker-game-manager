@@ -504,9 +504,13 @@ return;
     // Build winners array with amounts
     const winnersWithAmounts = [];
     for (const winner of winners) {
-      const amount = Array.from(payouts).find(([pd]) => pd === winner.playerData)?.[1] || 0;
+      const amount = Array.from(payouts).find(([pd]) => {
+        const pdId = pd.player ? pd.player.id : pd.id;
+        const winnerId = winner.playerData.player ? winner.playerData.player.id : winner.playerData.id;
+        return pdId === winnerId;
+      })?.[1] || 0;
       winnersWithAmounts.push({
-        playerId: winner.playerData.player.id,
+        playerId: winner.playerData.player ? winner.playerData.player.id : winner.playerData.id,
         hand: winner.hand,
         cards: winner.cards,
         amount,

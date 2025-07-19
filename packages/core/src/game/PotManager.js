@@ -127,7 +127,12 @@ export class PotManager {
     // Distribute each pot
     for (const pot of this.pots) {
       const eligibleWinners = winners.filter(w => 
-        pot.eligiblePlayers.includes(w.playerData),
+        pot.eligiblePlayers.some(ep => {
+          // Handle both simple player objects and complex playerData objects
+          const epId = ep.player ? ep.player.id : ep.id;
+          const winnerPlayerId = w.playerData.player ? w.playerData.player.id : w.playerData.id;
+          return epId === winnerPlayerId;
+        }),
       );
 
       if (eligibleWinners.length > 0) {
