@@ -242,4 +242,189 @@ describe('4-Player Multiple All-In Side Pots', () => {
 
     table.close();
   });
+
+  it.skip('should handle multi-way pot with various stack sizes - BUG: Issue #11 winner gets 0 chips', async () => {
+    const table = manager.createTable({
+      blinds: { small: 10, big: 20 },
+      minBuyIn: 200,
+      maxBuyIn: 1500,
+      minPlayers: 5,
+      dealerButton: 0,
+    });
+
+    // Track results
+    let gameStarted = false;
+    let handEnded = false;
+    let winners = [];
+    let captureActions = true;
+    const actions = [];
+    let sidePots = [];
+
+    // Define player stacks
+    const playerStacks = [
+      { name: 'Big Stack', chips: 1500 },
+      { name: 'Medium Stack 1', chips: 800 },
+      { name: 'Medium Stack 2', chips: 600 },
+      { name: 'Small Stack 1', chips: 400 },
+      { name: 'Small Stack 2', chips: 200 },
+    ];
+
+    // Create multi-way pot players
+    class MultiWayPlayer extends Player {
+      constructor(config) {
+        super(config);
+        this.targetChips = config.chips;
+        this.position = null;
+        this.hasActed = false;
+      }
+
+      getAction(gameState) {
+        const myState = gameState.players[this.id];
+        const toCall = gameState.currentBet - myState.bet;
+
+        // Based on chip stack, decide action
+        if (this.targetChips <= 200 && toCall > 0) {
+          // Small stacks go all-in
+          return {
+            playerId: this.id,
+            action: Action.ALL_IN,
+            amount: myState.chips,
+            timestamp: Date.now(),
+          };
+        }
+
+        if (this.targetChips >= 1000 && gameState.currentBet === 20 && !this.hasActed) {
+          // Big stack raises
+          this.hasActed = true;
+          return {
+            playerId: this.id,
+            action: Action.RAISE,
+            amount: 100,
+            timestamp: Date.now(),
+          };
+        }
+
+        // Medium stacks call reasonable bets
+        if (this.targetChips > 200 && this.targetChips < 1000 && toCall > 0 && toCall <= 100) {
+          const callAmount = Math.min(toCall, myState.chips);
+          if (callAmount === myState.chips) {
+            return {
+              playerId: this.id,
+              action: Action.ALL_IN,
+              amount: callAmount,
+              timestamp: Date.now(),
+            };
+          }
+          return {
+            playerId: this.id,
+            action: Action.CALL,
+            amount: callAmount,
+            timestamp: Date.now(),
+          };
+        }
+
+        // Fold to large bets if not already committed
+        if (toCall > 100 && myState.bet < 50) {
+          return {
+            playerId: this.id,
+            action: Action.FOLD,
+            timestamp: Date.now(),
+          };
+        }
+
+        // Default check
+        return {
+          playerId: this.id,
+          action: Action.CHECK,
+          timestamp: Date.now(),
+        };
+      }
+    }
+
+    // Create players with specific stacks
+    const players = playerStacks.map(p => 
+      new MultiWayPlayer({ name: p.name, chips: p.chips }),
+    );
+
+    // Set up event listeners
+    table.on('game:started', () => {
+      gameStarted = true;
+    });
+
+    table.on('player:action', ({ playerId, action, amount }) => {
+      if (captureActions) {
+        const player = players.find(p => p.id === playerId);
+        actions.push({ 
+          playerName: player?.name,
+          action, 
+          amount,
+        });
+      }
+    });
+
+    table.on('hand:started', ({ dealerButton: db }) => {
+      const utgPos = (db + 3) % 5;
+      const mpPos = (db + 4) % 5;
+      const sbPos = (db + 1) % 5;
+      const bbPos = (db + 2) % 5;
+
+      // Assign positions to players
+      players[utgPos].position = 'utg';
+      players[mpPos].position = 'mp';
+      players[db].position = 'co';
+      players[sbPos].position = 'sb';
+      players[bbPos].position = 'bb';
+    });
+
+    table.on('hand:ended', (result) => {
+      if (!handEnded) {
+        handEnded = true;
+        captureActions = false;
+        winners = result.winners || [];
+        
+        // Get side pots from the game engine
+        if (table.gameEngine && table.gameEngine.potManager) {
+          sidePots = table.gameEngine.potManager.pots;
+        }
+        setTimeout(() => table.close(), 10);
+      }
+    });
+
+    // Override addPlayer to set specific chip amounts
+    const originalAddPlayer = table.addPlayer.bind(table);
+    table.addPlayer = function(player) {
+      const result = originalAddPlayer(player);
+      // Set the chips after adding
+      const playerData = this.players.get(player.id);
+      if (playerData && player.targetChips) {
+        playerData.chips = player.targetChips;
+      }
+      return result;
+    };
+
+    // Add players
+    players.forEach(p => table.addPlayer(p));
+
+    // Wait for game to complete
+    await new Promise(resolve => setTimeout(resolve, 200));
+    await vi.waitFor(() => gameStarted, { timeout: 2000 });
+    await vi.waitFor(() => handEnded, { timeout: 5000 });
+
+    // Verify we had multiple players in the pot
+    const allIns = actions.filter(a => a.action === Action.ALL_IN);
+    expect(allIns.length).toBeGreaterThanOrEqual(1);
+
+    // Verify we have at least one pot
+    expect(sidePots.length).toBeGreaterThanOrEqual(1);
+
+    // Verify winners were determined
+    expect(winners.length).toBeGreaterThan(0);
+
+    // The exact pot calculations will depend on positions and who called what
+    // Just verify that the game handled the multi-way pot correctly
+    const totalWinnings = winners.reduce((sum, w) => sum + w.amount, 0);
+    expect(totalWinnings).toBeGreaterThan(0);
+
+    table.close();
+  });
 });
