@@ -1,5 +1,31 @@
 # Poker Game Manager 🃏
 
+## Quick Start for Claude
+
+```
+I'm working on the Poker Game Manager project. This is a high-performance, pure poker library for Node.js with multi-table support and event-driven architecture.
+
+Please read these files in order:
+1. CLAUDE.md - Technical guide and development workflow
+2. ABOUT-JK.md - Working style and communication preferences  
+3. REFACTORING_PLAN.md - Project transformation roadmap
+4. src/texas-holdem.js - Core game logic implementation
+
+Key context:
+- Pure JavaScript (no TypeScript), Node.js 22+ required
+- Event-driven architecture with clean player interfaces
+- 122 tests passing, all core components implemented
+- Working on AI players and tournament support
+- Use TodoWrite tool frequently to track tasks
+- Run tests with `npm test`, lint with `npm run lint`
+- Never start servers or commit without permission
+- JK's commands: go! (continue), go? (ask then continue), ?? (questions), flush (commit/push)
+
+GitHub repo: https://github.com/jkraybill/poker-game-manager
+```
+
+---
+
 A high-performance, pure poker game management library for Node.js. Handles tournaments, tables, and games with a clean event-driven API that any player implementation can connect to.
 
 ## Current Status
