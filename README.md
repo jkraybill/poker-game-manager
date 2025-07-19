@@ -1,14 +1,14 @@
 # Poker Game Manager 🃏
 
-A high-performance, general-purpose poker game management library for Node.js with multi-platform support, AI players, and comprehensive game state management.
+A high-performance, pure poker game management library for Node.js. Handles tournaments, tables, and games with a clean event-driven API that any player implementation can connect to.
 
 ## Current Status
 
 - **Infrastructure**: ✅ Modern build tools configured (ESLint, Prettier, TypeScript, Vitest)
 - **CI/CD**: ✅ GitHub Actions pipeline for Node.js 22
-- **Core API**: 🚧 Foundation implemented (PokerGameManager, Table, Player, Adapters)
-- **Tests**: ⚠️ Legacy tests exist (Mocha/Chai) - migration to Vitest pending
-- **Active Work**: Implementing GameEngine and abstracting Slack dependencies
+- **Core API**: ✅ Foundation implemented (PokerGameManager, Table, Player, GameEngine)
+- **Tests**: 🚧 Writing tests for core components
+- **Active Work**: Removing all Slack dependencies to create pure poker library
 - **GitHub Issues**: [4 issues tracking progress](https://github.com/jkraybill/slack-poker-bot/issues)
 
 ## Requirements
@@ -95,14 +95,21 @@ const table = manager.createTable({
   blinds: { small: 10, big: 20 }
 });
 
-// Platform agnostic
-table.addPlayer(new SlackAdapter(slackUser));
-table.addPlayer(new WebSocketAdapter(wsConnection));
-table.addPlayer(new AIPlayer('aggressive'));
+// Add any player implementation
+table.addPlayer(myPlayerImplementation);
+table.addPlayer(aiPlayer);
+table.addPlayer(remotePlayer);
 
-// Event-driven
+// Event-driven architecture
 table.on('game:ended', (result) => {
-  console.log(`Winner: ${result.winner.name}`);
+  console.log(`Winners: ${result.winners.join(', ')}`);
+});
+
+// Tournament support
+const tournament = manager.createTournament({
+  type: 'multi-table',
+  buyIn: 1000,
+  startingChips: 10000
 });
 ```
 

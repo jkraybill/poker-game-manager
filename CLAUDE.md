@@ -49,25 +49,26 @@ git commit -m "message"
 
 ### Current State (Transitioning)
 - **Node Version**: 22.17.0 (required)
-- **Framework**: Migrating from Slack bot to platform-agnostic library
-- **Game Logic**: Preserving RxJS-based state management
-- **Testing**: Vitest configured, migrating from Mocha/Chai
+- **Framework**: Pure poker library with no platform dependencies
+- **Game Logic**: Clean event-driven architecture
+- **Testing**: Vitest configured, writing new tests
 - **Build**: esbuild configured for ESM and CJS output
 - **CI/CD**: GitHub Actions running on Node.js 22
 
 ### Implemented Components
 - **PokerGameManager**: Multi-table management with event forwarding
 - **Table**: Game table with player management and auto-flow
-- **Player/PlayerAdapter**: Base classes for platform integration
+- **Player**: Simple interface for player implementations
+- **GameEngine**: Complete poker game logic (Texas Hold'em)
 - **Type System**: Complete enums and JSDoc types
 - **Infrastructure**: ESLint, Prettier, TypeScript, Vitest all configured
 
 ### Key Patterns
 
-1. **Adapter Pattern**
+1. **Player Interface**
 ```javascript
-// All platform integrations implement this interface
-interface PlayerAdapter {
+// Any player implementation must provide these methods
+interface Player {
   getAction(gameState): Promise<Action>
   receivePrivateCards(cards): Promise<void>
   receiveMessage(message): Promise<void>
@@ -91,22 +92,22 @@ const table2 = manager.createTable({ id: 'beginner' });
 
 ## Workflow & Conventions
 
-### Refactoring Process
+### Development Process
 
 1. **Before changing any file**:
    - Read it completely first
    - Check for existing tests
    - Understand dependencies
 
-2. **When abstracting Slack code**:
-   - Preserve game logic exactly
-   - Create adapter interface
-   - Move Slack-specific code to adapter
+2. **When removing platform code**:
+   - Preserve core game logic
+   - Remove all UI/messaging code
+   - Keep only poker mechanics
 
 3. **When modernizing code**:
    - Convert callbacks to async/await
    - Use ES modules (import/export)
-   - Maintain backward compatibility
+   - Add proper type definitions
 
 4. **Testing requirements**:
    - Write tests BEFORE implementation
@@ -189,23 +190,22 @@ describe('PokerTable', () => {
 
 1. **Completed Tasks** ✅:
    - Set up modern build tooling (ESLint, Prettier, TypeScript, Vitest)
-   - Create adapter interfaces (PlayerAdapter base class)
    - Design core API (PokerGameManager, Table, Player)
+   - Implement GameEngine with complete poker logic
    - Configure for Node.js 22
    - Set up CI/CD pipeline
    - Create GitHub issues for tracking
 
 2. **In Progress** 🚧:
-   - Extract GameEngine from texas-holdem.js
-   - Abstract Slack-specific code
-   - Create event definitions
-   - Write initial tests
+   - Remove all Slack-specific code
+   - Write comprehensive tests
+   - Clean up legacy dependencies
 
 3. **Next Phase**:
-   - Implement SlackAdapter preserving current functionality
-   - Create example adapters (CLI, WebSocket)
-   - Enhance AI framework
-   - Add multi-table stress tests
+   - Add tournament management
+   - Create example player implementations
+   - Add performance benchmarks
+   - Implement additional poker variants
 
 4. **Future Enhancements**:
    - Tournament support

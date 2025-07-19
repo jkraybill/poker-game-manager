@@ -4,12 +4,13 @@
 This document outlines the transformation of the Slack Poker Bot into a general-purpose poker game manager library that can be used in any poker project with support for human and computer players.
 
 ## Goals
-1. **Decouple from Slack** - Abstract all Slack-specific code into adapters
-2. **Modernize** - Update to Node.js 20+ and modern JavaScript patterns
+1. **Pure Poker Library** - Remove all Slack-specific code entirely
+2. **Modernize** - Update to Node.js 22+ and modern JavaScript patterns
 3. **Library Design** - Create a reusable npm package with clean APIs
 4. **Multi-table Support** - Allow multiple simultaneous games
-5. **Extensibility** - Support different poker variants and AI players
-6. **Testing** - Comprehensive test coverage with modern testing tools
+5. **Tournament Support** - Add tournament management capabilities
+6. **Extensibility** - Support different poker variants
+7. **Testing** - Comprehensive test coverage with modern testing tools
 
 ## Architecture Design
 
@@ -47,20 +48,14 @@ interface Player {
 }
 ```
 
-#### 4. Adapter Pattern for Different Platforms
+#### 4. Tournament Manager
 ```javascript
-// Base adapter
-class PlayerAdapter {
-  async getAction(gameState) { /* override */ }
-  async receivePrivateCards(cards) { /* override */ }
-  async receiveMessage(message) { /* override */ }
+class TournamentManager {
+  createTournament(config) // Returns Tournament instance
+  getTournaments() // Returns all active tournaments
+  manageBlinds() // Handle blind level increases
+  manageTableBalancing() // Balance players across tables
 }
-
-// Example implementations
-class SlackPlayerAdapter extends PlayerAdapter { }
-class WebSocketPlayerAdapter extends PlayerAdapter { }
-class CLIPlayerAdapter extends PlayerAdapter { }
-class AIPlayerAdapter extends PlayerAdapter { }
 ```
 
 ### Events Architecture
@@ -76,24 +71,26 @@ The library will emit events for all game state changes:
 
 ## Implementation Phases
 
-### Phase 1: Core Refactoring
-1. **Extract Interfaces**
-   - Create `IPlayer`, `IGameObserver`, `IMessageHandler` interfaces
-   - Define event types and game state structures
+### Phase 1: Core Library Development
+1. **Remove Platform Dependencies**
+   - Delete all Slack-specific code
+   - Remove image generation/upload features
+   - Remove message parsing utilities
+   - Focus purely on game mechanics
 
-2. **Separate Game Logic**
-   - Move pure game logic to `@poker-manager/core`
-   - Remove all Slack dependencies from core logic
-   - Preserve existing RxJS patterns where beneficial
+2. **Core Game Logic**
+   - Implement clean `GameEngine` class
+   - Event-driven architecture for all state changes
+   - Support for async player actions
 
 3. **Modernize Codebase**
    - Convert to ES modules
    - Use async/await instead of callbacks
-   - TypeScript for better type safety (optional but recommended)
+   - Add comprehensive type definitions
 
 ### Phase 2: Multi-table Support
 1. **Table Management**
-   - Create `TableManager` class
+   - PokerGameManager handles multiple tables
    - Implement table creation/destruction
    - Add table ID to all events and state
 
@@ -101,15 +98,12 @@ The library will emit events for all game state changes:
    - Allow players to join multiple tables
    - Track player state per table
 
-### Phase 3: Platform Adapters
-1. **Slack Adapter** (preserve existing functionality)
-   - Implement `SlackPlayerAdapter`
-   - Maintain backward compatibility
-
-2. **Example Adapters**
-   - CLI adapter for terminal play
-   - WebSocket adapter for web applications
-   - REST API adapter for HTTP-based clients
+### Phase 3: Tournament Support
+1. **Tournament Manager**
+   - Multi-table tournament support
+   - Blind level management
+   - Table balancing algorithms
+   - Payout calculations
 
 ### Phase 4: Enhanced Features
 1. **AI Framework**

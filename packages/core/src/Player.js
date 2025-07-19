@@ -2,7 +2,8 @@ import { EventEmitter } from 'eventemitter3';
 import { nanoid } from 'nanoid';
 
 /**
- * Base Player class that can be extended by different implementations
+ * Base Player class that implementations should extend or follow as interface
+ * This provides a template for what methods a player must implement
  */
 export class Player extends EventEmitter {
   constructor(config = {}) {
@@ -11,55 +12,23 @@ export class Player extends EventEmitter {
     this.id = config.id || nanoid();
     this.name = config.name || `Player ${this.id.slice(0, 6)}`;
     this.avatar = config.avatar || null;
-    this.adapter = config.adapter || null;
   }
 
   /**
-   * Get action from player
+   * Get action from player - MUST BE IMPLEMENTED
    * @param {GameState} gameState - Current game state
    * @returns {Promise<PlayerAction>} The player's action
    */
   async getAction(gameState) {
-    if (!this.adapter) {
-      throw new Error('No adapter configured for player');
-    }
-    
-    const startTime = Date.now();
-    
-    try {
-      const action = await this.adapter.getAction(gameState);
-      
-      this.emit('action:taken', {
-        playerId: this.id,
-        action,
-        duration: Date.now() - startTime,
-      });
-      
-      return action;
-    } catch (error) {
-      this.emit('action:error', {
-        playerId: this.id,
-        error: error.message,
-      });
-      
-      // Default to fold on error
-      return {
-        playerId: this.id,
-        action: 'FOLD',
-        timestamp: Date.now(),
-      };
-    }
+    throw new Error('getAction() must be implemented by Player subclass');
   }
 
   /**
-   * Receive private cards
+   * Receive private cards - SHOULD BE IMPLEMENTED
    * @param {string[]} cards - The hole cards
    */
   async receivePrivateCards(cards) {
-    if (this.adapter && this.adapter.receivePrivateCards) {
-      await this.adapter.receivePrivateCards(cards);
-    }
-    
+    // Default implementation - subclasses should override
     this.emit('cards:received', {
       playerId: this.id,
       cardCount: cards.length,
@@ -67,27 +36,15 @@ export class Player extends EventEmitter {
   }
 
   /**
-   * Receive a message/notification
+   * Receive a message/notification - OPTIONAL
    * @param {Object} message - Message object
    */
   async receiveMessage(message) {
-    if (this.adapter && this.adapter.receiveMessage) {
-      await this.adapter.receiveMessage(message);
-    }
-    
+    // Default implementation - subclasses can override
     this.emit('message:received', {
       playerId: this.id,
       messageType: message.type,
     });
-  }
-
-  /**
-   * Set the player's adapter
-   * @param {PlayerAdapter} adapter - The adapter instance
-   */
-  setAdapter(adapter) {
-    this.adapter = adapter;
-    adapter.setPlayer(this);
   }
 
   /**
@@ -98,18 +55,13 @@ export class Player extends EventEmitter {
       id: this.id,
       name: this.name,
       avatar: this.avatar,
-      adapterType: this.adapter ? this.adapter.constructor.name : 'none',
     };
   }
 
   /**
-   * Disconnect the player
+   * Disconnect the player - OPTIONAL
    */
   disconnect() {
-    if (this.adapter && this.adapter.disconnect) {
-      this.adapter.disconnect();
-    }
-    
     this.emit('disconnected', { playerId: this.id });
     this.removeAllListeners();
   }
