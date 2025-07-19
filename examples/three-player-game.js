@@ -1,4 +1,4 @@
-import { PokerGameManager, Player, Action } from '../packages/core/src/index.js';
+import { PokerGameManager, Player, Action, GamePhase } from '../packages/core/src/index.js';
 
 // Player that always folds
 class FoldingPlayer extends Player {
@@ -121,85 +121,238 @@ async function runSimulation() {
   const folder = new FoldingPlayer({ name: 'Fearful Fred' });
   const caller = new CallingPlayer({ name: 'Calling Carl' });
   const raiser = new AggressivePlayer({ name: 'Aggressive Amy' });
+  const players = [folder, caller, raiser];
+  
+  // Track game state
+  let gameNumber = 0;
+  let handNumber = 0;
+  let currentBoard = [];
+  let playerHoleCards = {};
+  let playerChips = {};
+  let gameEnded = false;
+  
+  // Initialize chip counts
+  players.forEach(p => {
+    playerChips[p.id] = 1000;
+  });
   
   // Add event listeners
-  table.on('game:started', ({ gameNumber }) => {
+  table.on('game:started', ({ gameNumber: num }) => {
+    gameNumber = num;
+    handNumber = 0;
     console.log(`\n========== GAME ${gameNumber} STARTED ==========\n`);
   });
   
-  table.on('player:action', ({ playerId, action, amount }) => {
-    const player = [folder, caller, raiser].find(p => p.id === playerId);
-    console.log(`${player.name} ${action}${amount ? ` $${amount}` : ''}`);
-  });
-  
-  table.on('cards:dealt', ({ phase, cards }) => {
-    if (cards && cards.length > 0) {
-      console.log(`\n--- ${phase} ---`);
-      console.log(`Community cards: ${cards.join(' ')}`);
-    }
-  });
-  
-  table.on('pot:updated', ({ total }) => {
-    console.log(`Pot size: $${total}`);
-  });
-  
-  table.on('blinds:posted', ({ small, big }) => {
-    const smallPlayer = [folder, caller, raiser].find(p => p.id === small.playerId);
-    const bigPlayer = [folder, caller, raiser].find(p => p.id === big.playerId);
-    console.log(`${smallPlayer.name} posts small blind $${small.amount}`);
-    console.log(`${bigPlayer.name} posts big blind $${big.amount}`);
-  });
-  
-  table.on('game:ended', ({ winners, payouts }) => {
-    console.log('\n--- SHOWDOWN ---');
-    winners.forEach(winner => {
-      const player = [folder, caller, raiser].find(p => p.id === winner.playerData.player.id);
-      console.log(`${player.name} wins with ${winner.hand.description}!`);
-      console.log(`Hand: ${winner.hand.cards.map(c => c.toString()).join(' ')}`);
+  // Listen to game engine events after game starts
+  table.on('game:started', () => {
+    const engine = table.gameEngine;
+    
+    engine.on('hand:started', ({ dealerIndex, smallBlind, bigBlind }) => {
+      handNumber++;
+      currentBoard = [];
+      playerHoleCards = {};
+      
+      console.log(`== HAND ${handNumber} ==`);
+      
+      // Show hand order with chip counts
+      const handOrder = [];
+      const dealerPlayer = players[dealerIndex];
+      const sbIndex = (dealerIndex + 1) % players.length;
+      const bbIndex = (dealerIndex + 2) % players.length;
+      
+      // Order: SB, BB, Dealer (in 3-player game)
+      handOrder.push(players[sbIndex]);
+      handOrder.push(players[bbIndex]);
+      handOrder.push(dealerPlayer);
+      
+      console.log(`Hand order: ${handOrder.map(p => `${p.name} ($${playerChips[p.id]})`).join(', ')}`);
+      
+      // Update chips for blinds
+      playerChips[smallBlind.playerId] -= smallBlind.amount;
+      playerChips[bigBlind.playerId] -= bigBlind.amount;
+      
+      const sbPlayer = players.find(p => p.id === smallBlind.playerId);
+      const bbPlayer = players.find(p => p.id === bigBlind.playerId);
+      
+      console.log(`${sbPlayer.name} ($${playerChips[sbPlayer.id] + smallBlind.amount}) puts in a small blind of $${smallBlind.amount}.`);
+      console.log(`${bbPlayer.name} ($${playerChips[bbPlayer.id] + bigBlind.amount}) puts in a big blind of $${bigBlind.amount}.`);
+      console.log('');
     });
-    console.log('\nPayouts:');
-    Object.entries(payouts).forEach(([playerId, amount]) => {
-      const player = [folder, caller, raiser].find(p => p.id === playerId);
-      console.log(`${player.name}: $${amount}`);
+    
+    engine.on('cards:dealt', ({ phase, playerCards }) => {
+      if (phase === GamePhase.PRE_FLOP && playerCards) {
+        // Store hole cards
+        Object.entries(playerCards).forEach(([playerId, cards]) => {
+          playerHoleCards[playerId] = cards;
+          const player = players.find(p => p.id === playerId);
+          console.log(`${player.name} ($${playerChips[playerId]}) receives hole cards: [${cards.map(c => c.toString()).join(' ')}]`);
+        });
+        console.log('');
+      }
+    });
+    
+    engine.on('action:requested', ({ playerId, gameState }) => {
+      const player = players.find(p => p.id === playerId);
+      const playerState = gameState.players[playerId];
+      const toCall = gameState.currentBet - playerState.bet;
+      
+      let actionOptions = '';
+      if (toCall === 0) {
+        actionOptions = 'to check or bet';
+      } else if (toCall >= playerState.chips) {
+        actionOptions = `to go all-in for $${playerState.chips} or fold`;
+      } else {
+        actionOptions = `to call $${toCall}, raise, or fold`;
+      }
+      
+      console.log(`The pot is $${gameState.pot}. ${gameState.currentBet > 0 ? `Bet is $${gameState.currentBet}. ` : ''}${player.name} ($${playerState.chips}) ${actionOptions}.`);
+      console.log('');
+    });
+    
+    engine.on('player:action', ({ playerId, action, amount }) => {
+      const player = players.find(p => p.id === playerId);
+      const beforeChips = playerChips[playerId];
+      
+      // Update chip counts
+      if (amount) {
+        playerChips[playerId] -= amount;
+      }
+      
+      let actionStr = '';
+      switch (action) {
+        case Action.FOLD:
+          actionStr = 'folds';
+          break;
+        case Action.CHECK:
+          actionStr = 'checks';
+          break;
+        case Action.CALL:
+          actionStr = 'calls';
+          break;
+        case Action.BET:
+          actionStr = `bets $${amount}`;
+          break;
+        case Action.RAISE:
+          actionStr = `raises to $${amount}`;
+          break;
+        case Action.ALL_IN:
+          actionStr = `goes all-in for $${amount}`;
+          break;
+      }
+      
+      console.log(`${player.name} ($${beforeChips}) ${actionStr}.`);
+    });
+    
+    engine.on('cards:community', ({ phase, cards }) => {
+      currentBoard = cards;
+      const phaseNames = {
+        [GamePhase.FLOP]: 'FLOP',
+        [GamePhase.TURN]: 'TURN',
+        [GamePhase.RIVER]: 'RIVER',
+      };
+      
+      console.log(`Play advances to the next phase (${phaseNames[phase]}).`);
+      console.log(`Board: [${currentBoard.map(c => c.toString()).join(' ')}]`);
+    });
+    
+    engine.on('pot:updated', ({ total }) => {
+      // This is handled inline with actions
+    });
+    
+    engine.on('hand:complete', async ({ winners, payouts }) => {
+      console.log(`The pot is $${Object.values(payouts).reduce((sum, v) => sum + v, 0)}. Play advances to the next phase (SHOWDOWN).`);
+      console.log('');
+      console.log(`Board: [${currentBoard.map(c => c.toString()).join(' ')}]`);
+      
+      // Show all hands from the winners array (which has full hand info)
+      // First, show all active players' hands
+      const activePlayers = [];
+      for (const playerData of engine.players) {
+        if (playerData.state === 'ACTIVE' || playerData.state === 'ALL_IN') {
+          activePlayers.push(playerData);
+        }
+      }
+      
+      // Show each active player's hand
+      for (const playerData of activePlayers) {
+        const player = players.find(p => p.id === playerData.player.id);
+        const holeCards = playerHoleCards[player.id];
+        const winnerInfo = winners.find(w => w.playerId === player.id);
+        
+        if (winnerInfo && winnerInfo.hand) {
+          // Format hand type
+          let handType = winnerInfo.hand.description.toLowerCase();
+          if (handType.includes('two pair')) {
+            handType = '2 pair';
+          } else if (handType.includes('one pair') || handType.includes('pair')) {
+            handType = '1 pair';
+          } else if (handType.includes('three of a kind')) {
+            handType = '3 of a kind';
+          } else if (handType.includes('four of a kind')) {
+            handType = '4 of a kind';
+          } else if (handType.includes('full house')) {
+            handType = 'full house';
+          } else if (handType.includes('flush')) {
+            handType = 'flush';
+          } else if (handType.includes('straight')) {
+            handType = 'straight';
+          } else if (handType.includes('high card')) {
+            handType = 'high card';
+          }
+          
+          console.log(`${player.name} ($${playerChips[player.id]}) [${holeCards.map(c => c.toString()).join(' ')}] has ${handType} [${winnerInfo.hand.cards.map(c => c.toString()).join(' ')}]`);
+        } else {
+          // For non-winners, just show hole cards
+          console.log(`${player.name} ($${playerChips[player.id]}) [${holeCards.map(c => c.toString()).join(' ')}]`);
+        }
+      }
+      
+      // Show winner and update chips
+      winners.forEach(winner => {
+        const player = players.find(p => p.id === winner.playerId);
+        const winAmount = payouts[player.id];
+        playerChips[player.id] += winAmount;
+        console.log(`${player.name} ($${playerChips[player.id]}) wins $${winAmount}.`);
+      });
+      
+      console.log('');
+    });
+    
+    engine.on('game:ended', ({ finalChips }) => {
+      console.log('\n========== GAME ENDED ==========');
+      console.log('\nFinal chip counts:');
+      players.forEach(player => {
+        console.log(`${player.name}: $${finalChips[player.id] || 0}`);
+      });
+      gameEnded = true;
     });
   });
-  
-  // Handle hole cards being dealt
-  folder.receivePrivateCards = function(cards) {
-    console.log(`\n${this.name} receives hole cards: [** **]`);
-  };
-  caller.receivePrivateCards = function(cards) {
-    console.log(`${this.name} receives hole cards: [** **]`);
-  };
-  raiser.receivePrivateCards = function(cards) {
-    console.log(`${this.name} receives hole cards: [** **]`);
-  };
   
   // Add players to table
   table.addPlayer(folder);
   table.addPlayer(caller);
   table.addPlayer(raiser);
   
-  // Game will start automatically when minimum players are reached
-  // Wait for ONE game to complete
+  // Wait for one game
   await new Promise(resolve => {
-    let gameEnded = false;
-    table.on('game:ended', () => {
-      if (!gameEnded) {
-        gameEnded = true;
-        // Stop new games from starting
-        table.state = 'PAUSED';
-        setTimeout(resolve, 100);
+    const checkInterval = setInterval(() => {
+      if (gameEnded) {
+        clearInterval(checkInterval);
+        // Close the table to prevent more games
+        table.close();
+        resolve();
       }
-    });
+    }, 100);
+    
+    // Safety timeout
+    setTimeout(() => {
+      clearInterval(checkInterval);
+      table.close();
+      resolve();
+    }, 30000); // 30 second timeout
   });
   
-  // Check final chip counts
-  console.log('\n========== FINAL CHIP COUNTS ==========');
-  [folder, caller, raiser].forEach(player => {
-    const playerData = table.players.get(player.id);
-    console.log(`${player.name}: $${playerData.chips}`);
-  });
+  console.log('\n=== SIMULATION COMPLETE ===');
 }
 
 // Run the example
