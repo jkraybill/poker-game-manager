@@ -1,34 +1,13 @@
 /**
  * Split Pot Deterministic Tests
  * 
- * Tests split pot scenarios using a custom test table that allows
- * deck injection for deterministic testing.
+ * Tests split pot scenarios using custom decks for deterministic testing.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { PokerGameManager } from '../PokerGameManager.js';
 import { Player } from '../Player.js';
 import { Action } from '../types/index.js';
-import { Deck } from '../game/Deck.js';
-
-// Custom deck that doesn't shuffle and returns cards in order
-class DeterministicDeck extends Deck {
-  constructor(orderedCards) {
-    super();
-    this.cards = orderedCards;
-  }
-
-  shuffle() {
-    // Don't shuffle - keep cards in the order we set
-  }
-
-  draw() {
-    if (this.cards.length === 0) {
-      throw new Error('No more cards in deck');
-    }
-    return this.cards.shift();
-  }
-}
 
 describe('Split Pot Deterministic Tests', () => {
   let manager;
@@ -51,9 +30,32 @@ describe('Split Pot Deterministic Tests', () => {
     });
 
     let gameStarted = false;
-    let deckInjected = false;
     let handEnded = false;
     const winners = [];
+
+    // Set custom deck BEFORE adding players
+    // Both players get AA, board has low cards
+    const customDeck = [
+      // First card to each player
+      { rank: 'A', suit: 's', toString() { return 'As'; } }, // P1 first card
+      { rank: 'A', suit: 'c', toString() { return 'Ac'; } }, // P2 first card
+      // Second card to each player
+      { rank: 'A', suit: 'h', toString() { return 'Ah'; } }, // P1 second card
+      { rank: 'A', suit: 'd', toString() { return 'Ad'; } }, // P2 second card
+      // Burn + Flop
+      { rank: '8', suit: 'c', toString() { return '8c'; } }, // Burn
+      { rank: '2', suit: 'c', toString() { return '2c'; } }, // Flop 1
+      { rank: '3', suit: 's', toString() { return '3s'; } }, // Flop 2
+      { rank: '4', suit: 'h', toString() { return '4h'; } }, // Flop 3
+      // Burn + Turn
+      { rank: '8', suit: 'd', toString() { return '8d'; } }, // Burn
+      { rank: '5', suit: 'd', toString() { return '5d'; } }, // Turn
+      // Burn + River
+      { rank: '8', suit: 'h', toString() { return '8h'; } }, // Burn
+      { rank: '7', suit: 'c', toString() { return '7c'; } }, // River
+    ];
+
+    table.setCustomDeck(customDeck);
 
     // Simple betting players
     class BettingPlayer extends Player {
@@ -67,12 +69,12 @@ describe('Split Pot Deterministic Tests', () => {
         const toCall = gameState.currentBet - myState.bet;
 
         if (gameState.phase === 'PRE_FLOP') {
-          // Button raises
+          // Button raises TO 60 total (already has 10 in as SB)
           if (this.isButton && gameState.currentBet === 20) {
             return {
               playerId: this.id,
               action: Action.RAISE,
-              amount: 60,
+              amount: 50, // Raise BY 50 to make total 60
               timestamp: Date.now(),
             };
           }
@@ -95,45 +97,6 @@ describe('Split Pot Deterministic Tests', () => {
         };
       }
     }
-
-    // Inject custom deck before game starts
-    table.on('table:initialized', () => {
-      // Override the table's game creation to inject our deck
-      const originalStartGame = table.startGame.bind(table);
-      table.startGame = function() {
-        originalStartGame();
-        
-        // Immediately after game creation, inject our deck
-        if (this.gameEngine && !deckInjected) {
-          deckInjected = true;
-          
-          // Create cards that will result in a split pot
-          // Both players get AA, board has low cards
-          const orderedCards = [
-            // Player 1 (Button) hole cards
-            { rank: 'A', suit: 'spades', toString() { return 'As'; } },
-            { rank: 'A', suit: 'hearts', toString() { return 'Ah'; } },
-            // Player 2 (BB) hole cards
-            { rank: 'A', suit: 'clubs', toString() { return 'Ac'; } },
-            { rank: 'A', suit: 'diamonds', toString() { return 'Ad'; } },
-            // Flop
-            { rank: '2', suit: 'clubs', toString() { return '2c'; } },
-            { rank: '3', suit: 'spades', toString() { return '3s'; } },
-            { rank: '4', suit: 'hearts', toString() { return '4h'; } },
-            // Turn
-            { rank: '5', suit: 'diamonds', toString() { return '5d'; } },
-            // River
-            { rank: '7', suit: 'clubs', toString() { return '7c'; } },
-          ];
-          
-          this.gameEngine.deck = new DeterministicDeck(orderedCards);
-          
-          // Re-initialize the hand with our custom deck
-          this.gameEngine.initializeHand();
-          this.gameEngine.startBettingRound();
-        }
-      };
-    });
 
     table.on('game:started', () => {
       gameStarted = true;
@@ -166,7 +129,7 @@ describe('Split Pot Deterministic Tests', () => {
     expect(winners[0].amount).toBe(60);
     expect(winners[1].amount).toBe(60);
     
-    // Both should have the same hand rank (full house or two pair with board)
+    // Both should have the same hand rank (two pair - AA with board)
     expect(winners[0].hand.rank).toBe(winners[1].hand.rank);
 
     table.close();
@@ -182,9 +145,34 @@ describe('Split Pot Deterministic Tests', () => {
     });
 
     let gameStarted = false;
-    let deckInjected = false;
     let handEnded = false;
     const winners = [];
+
+    // Set custom deck BEFORE adding players
+    // All players get pocket pairs, board makes everyone play the board
+    const customDeck = [
+      // First card to each player
+      { rank: '2', suit: 's', toString() { return '2s'; } }, // P1 first card
+      { rank: '3', suit: 'c', toString() { return '3c'; } }, // P2 first card
+      { rank: '4', suit: 's', toString() { return '4s'; } }, // P3 first card
+      // Second card to each player
+      { rank: '2', suit: 'h', toString() { return '2h'; } }, // P1 second card
+      { rank: '3', suit: 'd', toString() { return '3d'; } }, // P2 second card
+      { rank: '4', suit: 'h', toString() { return '4h'; } }, // P3 second card
+      // Burn + Flop
+      { rank: '9', suit: 'c', toString() { return '9c'; } }, // Burn
+      { rank: 'A', suit: 'c', toString() { return 'Ac'; } }, // Flop 1
+      { rank: 'A', suit: 'd', toString() { return 'Ad'; } }, // Flop 2
+      { rank: 'K', suit: 'c', toString() { return 'Kc'; } }, // Flop 3
+      // Burn + Turn
+      { rank: '9', suit: 'd', toString() { return '9d'; } }, // Burn
+      { rank: 'K', suit: 'd', toString() { return 'Kd'; } }, // Turn
+      // Burn + River
+      { rank: '9', suit: 'h', toString() { return '9h'; } }, // Burn
+      { rank: 'Q', suit: 's', toString() { return 'Qs'; } }, // River
+    ];
+
+    table.setCustomDeck(customDeck);
 
     class LimpingPlayer extends Player {
       getAction(gameState) {
@@ -210,41 +198,6 @@ describe('Split Pot Deterministic Tests', () => {
       }
     }
 
-    // Inject custom deck
-    table.on('table:initialized', () => {
-      const originalStartGame = table.startGame.bind(table);
-      table.startGame = function() {
-        originalStartGame();
-        
-        if (this.gameEngine && !deckInjected) {
-          deckInjected = true;
-          
-          // All players get pocket pairs, board makes everyone have same two pair
-          const orderedCards = [
-            // Player 1: 22
-            { rank: '2', suit: 'spades', toString() { return '2s'; } },
-            { rank: '2', suit: 'hearts', toString() { return '2h'; } },
-            // Player 2: 33
-            { rank: '3', suit: 'clubs', toString() { return '3c'; } },
-            { rank: '3', suit: 'diamonds', toString() { return '3d'; } },
-            // Player 3: 44
-            { rank: '4', suit: 'spades', toString() { return '4s'; } },
-            { rank: '4', suit: 'hearts', toString() { return '4h'; } },
-            // Board: AAKKQ - everyone plays the board
-            { rank: 'A', suit: 'clubs', toString() { return 'Ac'; } },
-            { rank: 'A', suit: 'diamonds', toString() { return 'Ad'; } },
-            { rank: 'K', suit: 'clubs', toString() { return 'Kc'; } },
-            { rank: 'K', suit: 'diamonds', toString() { return 'Kd'; } },
-            { rank: 'Q', suit: 'spades', toString() { return 'Qs'; } },
-          ];
-          
-          this.gameEngine.deck = new DeterministicDeck(orderedCards);
-          this.gameEngine.initializeHand();
-          this.gameEngine.startBettingRound();
-        }
-      };
-    });
-
     table.on('game:started', () => {
       gameStarted = true;
     });
@@ -268,7 +221,7 @@ describe('Split Pot Deterministic Tests', () => {
     await vi.waitFor(() => gameStarted, { timeout: 2000 });
     await vi.waitFor(() => handEnded, { timeout: 5000 });
 
-    // All three should win (playing the board)
+    // All three should win (playing the board - AAKKQ)
     expect(winners).toHaveLength(3);
     
     // Each gets 1/3 of pot (60 / 3 = 20)

@@ -45,7 +45,7 @@ export class Deck {
     if (this.cards.length === 0) {
       throw new Error('Cannot draw from empty deck');
     }
-    return this.cards.pop();
+    return this.cards.shift();
   }
 
   /**

@@ -36,29 +36,35 @@ describe('Custom Deck Tests', () => {
     const playerHands = new Map();
     let communityCards = [];
 
-    // Set up custom deck
-    // IMPORTANT: deck.draw() uses pop() which takes from the END
-    // dealHoleCards() deals 2 cards at once to each player!
-    // So for 4 players: P1 gets 2 cards, P2 gets 2 cards, etc.
+    // Set up custom deck following real poker dealing order
+    // deck.draw() uses shift() (takes from beginning)
+    // Deal order: 1 card to each player, then 1 more to each player
+    // Then burn + flop, burn + turn, burn + river
     const customDeck = [
-      // These go at the BEGINNING (dealt last)
-      { rank: '9', suit: 'c', toString() { return '9c'; } }, // River
-      { rank: '7', suit: 'c', toString() { return '7c'; } }, // Turn
-      { rank: '6', suit: 'c', toString() { return '6c'; } }, // Flop card 3
-      { rank: '5', suit: 'c', toString() { return '5c'; } }, // Flop card 2
-      { rank: '4', suit: 'c', toString() { return '4c'; } }, // Flop card 1
-      // Player 4's cards (dealt 4th)
-      { rank: '3', suit: 'c', toString() { return '3c'; } }, // P4 second card
-      { rank: '2', suit: 'c', toString() { return '2c'; } }, // P4 first card
-      // Player 3's cards (dealt 3rd)
-      { rank: 'Q', suit: 'h', toString() { return 'Qh'; } }, // P3 second card
-      { rank: 'Q', suit: 's', toString() { return 'Qs'; } }, // P3 first card
-      // Player 2's cards (dealt 2nd)
-      { rank: 'K', suit: 'h', toString() { return 'Kh'; } }, // P2 second card
+      // First card to each player
+      { rank: 'A', suit: 's', toString() { return 'As'; } }, // P1 first card
       { rank: 'K', suit: 's', toString() { return 'Ks'; } }, // P2 first card
-      // Player 1's cards (dealt 1st) - these go at END
+      { rank: 'Q', suit: 's', toString() { return 'Qs'; } }, // P3 first card
+      { rank: '2', suit: 'c', toString() { return '2c'; } }, // P4 first card
+      // Second card to each player
       { rank: 'A', suit: 'h', toString() { return 'Ah'; } }, // P1 second card
-      { rank: 'A', suit: 's', toString() { return 'As'; } }, // P1 first card (dealt first)
+      { rank: 'K', suit: 'h', toString() { return 'Kh'; } }, // P2 second card
+      { rank: 'Q', suit: 'h', toString() { return 'Qh'; } }, // P3 second card
+      { rank: '3', suit: 'c', toString() { return '3c'; } }, // P4 second card
+      // Burn card before flop
+      { rank: '8', suit: 'd', toString() { return '8d'; } }, // Burn
+      // Flop (3 cards)
+      { rank: '4', suit: 'c', toString() { return '4c'; } }, // Flop card 1
+      { rank: '5', suit: 'c', toString() { return '5c'; } }, // Flop card 2
+      { rank: '6', suit: 'c', toString() { return '6c'; } }, // Flop card 3
+      // Burn card before turn
+      { rank: '8', suit: 'h', toString() { return '8h'; } }, // Burn
+      // Turn
+      { rank: '7', suit: 'c', toString() { return '7c'; } }, // Turn
+      // Burn card before river
+      { rank: '8', suit: 's', toString() { return '8s'; } }, // Burn
+      // River
+      { rank: '9', suit: 'c', toString() { return '9c'; } }, // River
     ];
 
     table.setCustomDeck(customDeck);
@@ -180,19 +186,22 @@ describe('Custom Deck Tests', () => {
 
     // Minimal deck with just enough cards for 2 players
     const customDeck = [
-      // Player 1 cards
+      // First card to each player
       { rank: 'A', suit: 's', toString() { return 'As'; } },
-      { rank: 'A', suit: 'h', toString() { return 'Ah'; } },
-      // Player 2 cards
       { rank: 'K', suit: 's', toString() { return 'Ks'; } },
+      // Second card to each player
+      { rank: 'A', suit: 'h', toString() { return 'Ah'; } },
       { rank: 'K', suit: 'h', toString() { return 'Kh'; } },
-      // Flop
+      // Burn + Flop
+      { rank: '2', suit: 'd', toString() { return '2d'; } }, // Burn
       { rank: 'Q', suit: 'c', toString() { return 'Qc'; } },
       { rank: 'J', suit: 'c', toString() { return 'Jc'; } },
       { rank: 'T', suit: 'c', toString() { return 'Tc'; } },
-      // Turn
+      // Burn + Turn
+      { rank: '3', suit: 'd', toString() { return '3d'; } }, // Burn
       { rank: '9', suit: 'c', toString() { return '9c'; } },
-      // River
+      // Burn + River
+      { rank: '4', suit: 'd', toString() { return '4d'; } }, // Burn
       { rank: '8', suit: 'c', toString() { return '8c'; } },
     ];
 

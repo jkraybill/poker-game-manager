@@ -96,19 +96,26 @@ export class GameEngine extends EventEmitter {
    * Deal hole cards to all active players
    */
   dealHoleCards() {
-    for (const playerData of this.players) {
-      if (playerData.state === PlayerState.ACTIVE) {
-        const cards = [this.deck.draw(), this.deck.draw()];
-        this.playerHands.set(playerData.player.id, cards);
-        
-        // Notify player of their cards
-        playerData.player.receivePrivateCards(cards);
-        
-        this.emit('cards:dealt', {
-          playerId: playerData.player.id,
-          cardCount: 2,
-        });
-      }
+    const activePlayers = this.players.filter(p => p.state === PlayerState.ACTIVE);
+    
+    // Deal first card to each player
+    for (const playerData of activePlayers) {
+      const firstCard = this.deck.draw();
+      this.playerHands.set(playerData.player.id, [firstCard]);
+    }
+    
+    // Deal second card to each player
+    for (const playerData of activePlayers) {
+      const cards = this.playerHands.get(playerData.player.id);
+      cards.push(this.deck.draw());
+      
+      // Notify player of their cards
+      playerData.player.receivePrivateCards(cards);
+      
+      this.emit('cards:dealt', {
+        playerId: playerData.player.id,
+        cardCount: 2,
+      });
     }
   }
 
@@ -456,6 +463,11 @@ return;
    */
   dealFlop() {
     this.phase = GamePhase.FLOP;
+    
+    // Burn one card
+    this.deck.draw();
+    
+    // Deal three flop cards
     const flop = [this.deck.draw(), this.deck.draw(), this.deck.draw()];
     this.board.push(...flop);
     
@@ -474,6 +486,11 @@ return;
    */
   dealTurn() {
     this.phase = GamePhase.TURN;
+    
+    // Burn one card
+    this.deck.draw();
+    
+    // Deal the turn card
     const turn = this.deck.draw();
     this.board.push(turn);
     
@@ -491,6 +508,11 @@ return;
    */
   dealRiver() {
     this.phase = GamePhase.RIVER;
+    
+    // Burn one card
+    this.deck.draw();
+    
+    // Deal the river card
     const river = this.deck.draw();
     this.board.push(river);
     

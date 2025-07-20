@@ -116,11 +116,11 @@ describe('Deck', () => {
       expect(deck.getRemaining()).toBe(initialCount - 1);
     });
 
-    it('should draw cards in LIFO order (from the end)', () => {
-      const lastCard = deck.cards[deck.cards.length - 1];
+    it('should draw cards in FIFO order (from the beginning)', () => {
+      const firstCard = deck.cards[0];
       const drawnCard = deck.draw();
       
-      expect(drawnCard).toEqual(lastCard);
+      expect(drawnCard).toEqual(firstCard);
     });
 
     it('should draw all 52 cards sequentially', () => {
