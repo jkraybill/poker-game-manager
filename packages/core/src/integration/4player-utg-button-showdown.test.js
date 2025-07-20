@@ -194,22 +194,27 @@ describe('4-Player UTG Button Showdown', () => {
       }
     });
 
-    // Add players
+    // Add players and start game
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
-    // Wait a bit for auto-start
-    await new Promise(resolve => setTimeout(resolve, 200));
-
-    // Wait for game to complete
+    // Wait for game to start
     await vi.waitFor(() => gameStarted, { 
-      timeout: 2000,
+      timeout: 500,
       interval: 50, 
     });
+    
+    // Wait for dealer button to be set
     await vi.waitFor(() => dealerButton >= 0, { 
-      timeout: 3000,
+      timeout: 500,
       interval: 50, 
     });
-    await vi.waitFor(() => handEnded, { timeout: 10000 }); // Longer timeout for showdown
+    
+    // Wait for hand to complete
+    await vi.waitFor(() => handEnded, { timeout: 1500 }); // Slightly longer timeout for showdown
+    
+    // Wait for all actions to be captured
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     // Verify pre-flop action sequence - UTG should raise
     const utgRaise = phaseActions.PRE_FLOP.find(a => a.action === Action.RAISE);

@@ -194,11 +194,11 @@ describe('4-Player Multiple All-In Side Pots', () => {
 
     // Add players
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
     // Wait for game to complete
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
 
     // Verify multiple all-ins occurred
     const allInActions = actions.filter(a => a.action === Action.ALL_IN);
@@ -404,11 +404,11 @@ describe('4-Player Multiple All-In Side Pots', () => {
 
     // Add players
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
     // Wait for game to complete
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
 
     // Verify we had multiple players in the pot
     const allIns = actions.filter(a => a.action === Action.ALL_IN);

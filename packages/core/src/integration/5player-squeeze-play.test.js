@@ -213,14 +213,14 @@ describe('5-Player Squeeze Play', () => {
 
     // Add players
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
     // Wait for game to complete
-    await new Promise(resolve => setTimeout(resolve, 200));
     await vi.waitFor(() => gameStarted, { 
-      timeout: 2000,
+      timeout: 500,
       interval: 50, 
     });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
 
     // Verify the squeeze play sequence occurred
     const raiseAction = actions.find(a => a.action === Action.RAISE && a.amount === 60);

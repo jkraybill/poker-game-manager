@@ -119,8 +119,8 @@ describe('Simple Split Pot Test', () => {
     players.forEach(p => table.addPlayer(p));
 
     await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
 
     // With random cards, we can't guarantee a split pot
     // But we can verify the game completes and someone wins

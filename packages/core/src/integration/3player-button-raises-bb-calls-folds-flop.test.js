@@ -196,6 +196,7 @@ describe('3-player: Button raises, BB calls, then folds to flop bet', () => {
 
     // Add players
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
     // Wait for hand to complete
     const { winnerId, winnerAmount } = await handEndPromise;

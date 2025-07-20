@@ -395,9 +395,11 @@ return;
       amount: action.amount,
     });
     
+    let handEnded = false;
+    
     switch (action.action) {
       case Action.FOLD:
-        this.handleFold(playerData);
+        handEnded = this.handleFold(playerData);
         break;
       case Action.CHECK:
         this.handleCheck(playerData);
@@ -414,6 +416,11 @@ return;
       case Action.ALL_IN:
         this.handleAllIn(playerData);
         break;
+    }
+    
+    // If hand ended (e.g., all but one folded), don't continue
+    if (handEnded) {
+      return;
     }
     
     playerData.hasActed = true;
@@ -462,7 +469,9 @@ return;
       });
       
       this.endHand(activePlayers);
+      return true; // Indicate hand has ended
     }
+    return false; // Hand continues
   }
 
   /**

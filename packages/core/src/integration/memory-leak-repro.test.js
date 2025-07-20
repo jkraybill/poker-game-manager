@@ -21,7 +21,7 @@ describe('Table Auto-Start Behavior', () => {
     manager.tables.forEach(table => table.close());
   });
 
-  it('should NOT auto-start games anymore - requires explicit start', { timeout: 10000 }, async () => {
+  it('should NOT auto-start games anymore - requires explicit start', { timeout: 3000 }, async () => {
     const table = manager.createTable({
       blinds: { small: 10, big: 20 },
       minBuyIn: 1000,
@@ -78,7 +78,7 @@ describe('Table Auto-Start Behavior', () => {
     table.tryStartGame();
     
     // Wait for game to complete
-    await vi.waitFor(() => handCount >= 1, { timeout: 2000 });
+    await vi.waitFor(() => handCount >= 1, { timeout: 1000 });
     
     // Wait long enough to see if another game starts automatically
     console.log('⏳ Waiting 6 seconds to verify no automatic restart...');
@@ -95,7 +95,7 @@ describe('Table Auto-Start Behavior', () => {
     table.close();
   });
 
-  it('should show why tests capture actions from multiple games', { timeout: 10000 }, async () => {
+  it('should show why tests capture actions from multiple games', { timeout: 3000 }, async () => {
     const table = manager.createTable({
       blinds: { small: 10, big: 20 },
       minBuyIn: 1000,
@@ -157,7 +157,7 @@ describe('Table Auto-Start Behavior', () => {
     table.tryStartGame();
     
     // Wait for first game to complete
-    await vi.waitFor(() => actions.length >= 2, { timeout: 2000 });
+    await vi.waitFor(() => actions.length >= 2, { timeout: 1000 });
     
     // Wait to see if another game starts automatically
     await new Promise(resolve => setTimeout(resolve, 6000));
@@ -219,7 +219,7 @@ describe('Table Auto-Start Behavior', () => {
     // Start game explicitly
     table.tryStartGame();
     
-    await vi.waitFor(() => handEnded, { timeout: 2000 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
 
     // Wait to ensure no second game starts
     await new Promise(resolve => setTimeout(resolve, 1000));

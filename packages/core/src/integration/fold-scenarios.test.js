@@ -98,12 +98,12 @@ describe('Fold Scenarios', () => {
 
       // Wait for dealer button to be set
       await vi.waitFor(() => dealerButton >= 0, {
-        timeout: 2000,
+        timeout: 500,
         interval: 50,
       });
 
       // Wait for hand to complete
-      await vi.waitFor(() => handEnded, { timeout: 5000 });
+      await vi.waitFor(() => handEnded, { timeout: 1000 });
       
       // Wait a bit for all processing to complete
       await new Promise(resolve => setTimeout(resolve, 200));

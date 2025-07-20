@@ -102,7 +102,7 @@ describe('Table Explicit Start API', () => {
     table.addPlayer(new TestPlayer({ name: 'Player 1' }));
     table.addPlayer(new TestPlayer({ name: 'Player 2' }));
 
-    await vi.waitFor(() => tableReadyData !== null, { timeout: 1000 });
+    await vi.waitFor(() => tableReadyData !== null, { timeout: 500 });
 
     // Verify ready event data
     expect(tableReadyData).toEqual({
@@ -116,7 +116,7 @@ describe('Table Explicit Start API', () => {
     // Now explicitly start the game
     table.tryStartGame();
 
-    await vi.waitFor(() => gameStarted, { timeout: 1000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
 
     expect(gameStarted).toBe(true);
     expect(table.state).toBe('IN_PROGRESS');
@@ -124,7 +124,7 @@ describe('Table Explicit Start API', () => {
     table.close();
   });
 
-  it('should NOT auto-restart after hand ends', { timeout: 10000 }, async () => {
+  it('should NOT auto-restart after hand ends', { timeout: 3000 }, async () => {
     const table = manager.createTable({
       blinds: { small: 10, big: 20 },
       minBuyIn: 1000,
@@ -168,7 +168,7 @@ describe('Table Explicit Start API', () => {
     table.tryStartGame();
 
     // Wait for hand to end
-    await vi.waitFor(() => handCount === 1, { timeout: 2000 });
+    await vi.waitFor(() => handCount === 1, { timeout: 1000 });
 
     // Wait to see if another game starts automatically
     console.log('Waiting 6 seconds to verify no auto-restart...');
@@ -181,7 +181,7 @@ describe('Table Explicit Start API', () => {
     table.close();
   });
 
-  it('should allow manual restart after hand ends', { timeout: 10000 }, async () => {
+  it('should allow manual restart after hand ends', { timeout: 3000 }, async () => {
     const table = manager.createTable({
       blinds: { small: 10, big: 20 },
       minBuyIn: 1000,
@@ -228,7 +228,7 @@ describe('Table Explicit Start API', () => {
     });
 
     // Wait for two hands
-    await vi.waitFor(() => handCount === 2, { timeout: 3000 });
+    await vi.waitFor(() => handCount === 2, { timeout: 1500 });
 
     expect(gameCount).toBe(2);
     expect(handCount).toBe(2);
@@ -266,7 +266,7 @@ describe('Table Explicit Start API', () => {
     // Add 3rd player - should trigger ready
     table.addPlayer(new TestPlayer({ name: 'Player 3' }));
 
-    await vi.waitFor(() => readyEvents.length === 1, { timeout: 1000 });
+    await vi.waitFor(() => readyEvents.length === 1, { timeout: 500 });
     
     expect(readyEvents[0]).toEqual({
       playerCount: 3,

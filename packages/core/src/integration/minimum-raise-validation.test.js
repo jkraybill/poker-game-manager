@@ -113,8 +113,8 @@ describe('Minimum Raise Validation', () => {
     players.forEach(p => table.addPlayer(p));
     table.tryStartGame();
 
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
     
     // Wait a bit for all actions to be captured
     await new Promise(resolve => setTimeout(resolve, 200));
@@ -211,7 +211,7 @@ describe('Minimum Raise Validation', () => {
     players.forEach(p => table.addPlayer(p));
 
     await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
     
     // Wait for all expected actions to be recorded
     await vi.waitFor(() => actionCount >= expectedActions, { timeout: 3000 });
@@ -332,8 +332,8 @@ describe('Minimum Raise Validation', () => {
     players.forEach(p => table.addPlayer(p));
     table.tryStartGame();
 
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
     
     // Wait a bit for all actions to be captured
     await new Promise(resolve => setTimeout(resolve, 200));
@@ -459,8 +459,8 @@ describe('Minimum Raise Validation', () => {
     players.forEach(p => table.addPlayer(p));
     table.tryStartGame();
 
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
     
     // Wait a bit for all actions to be captured
     await new Promise(resolve => setTimeout(resolve, 200));

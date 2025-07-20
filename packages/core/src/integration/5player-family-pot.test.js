@@ -158,16 +158,21 @@ describe('5-Player Family Pot', () => {
       }
     });
 
-    // Add players
+    // Add players and start game
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
-    // Wait for game to complete
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Wait for game to start
     await vi.waitFor(() => gameStarted, { 
-      timeout: 2000,
+      timeout: 500,
       interval: 50, 
     });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    
+    // Wait for hand to complete
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    
+    // Wait for all actions to be captured
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     // Verify a showdown occurred (hand went to river)
     expect(showdownOccurred).toBe(true);

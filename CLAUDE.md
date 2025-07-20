@@ -331,6 +331,12 @@ We'll modernize to RxJS 7 but preserve the patterns.
 - Supports real-time updates
 - Familiar Node.js pattern
 
+### Important API Changes (2025-07-21)
+- Tables no longer auto-start games
+- Must explicitly call `table.tryStartGame()`
+- No automatic restart after hands end
+- This prevents memory leaks and gives full control
+
 ## Performance Considerations
 
 ### Memory Management

@@ -138,10 +138,10 @@ describe('8-Player Poker Scenarios', () => {
     );
 
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
 
     // Verify early position battle
     const raises = actions.filter(a => a.action === Action.RAISE);
@@ -263,10 +263,10 @@ describe('8-Player Poker Scenarios', () => {
     );
 
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
 
     // Verify 8-way pot with min-raise
     // Everyone ends up with 40 in the pot (8 × 40 = 320)
@@ -422,10 +422,10 @@ describe('8-Player Poker Scenarios', () => {
     );
 
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
 
     
     // Verify bubble dynamics
@@ -577,10 +577,10 @@ describe('8-Player Poker Scenarios', () => {
     };
 
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
 
     // In a bounty tournament, aggressive play is expected
     // We might or might not see a knockout in one hand

@@ -150,13 +150,13 @@ describe('3-Player Scenarios', () => {
 
       // Wait for dealer button to be set
       await vi.waitFor(() => dealerButton >= 0, {
-        timeout: 2000,
+        timeout: 500,
         interval: 50,
       });
 
       // Wait for hand to complete first
       await vi.waitFor(() => handEnded, { 
-        timeout: 5000,
+        timeout: 1000,
         interval: 50,
       });
       

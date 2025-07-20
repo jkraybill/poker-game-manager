@@ -143,25 +143,18 @@ describe('6-Player Poker Scenarios', () => {
       new AggressivePlayer({ name: 'Player 6 (CO)', behavior: 'co-4bet' }),
     ];
 
-    // Add players and wait for game to start
+    // Add players and start game
     for (const player of players) {
       table.addPlayer(player);
     }
-
-    // Give the game time to initialize
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    // Check if game started
-    if (!gameStarted && gameError) {
-      throw new Error(`Game failed to start: ${gameError}`);
-    }
+    table.tryStartGame();
 
     // Wait for completion
-    await vi.waitFor(() => gameStarted || gameError, { timeout: 2000 });
+    await vi.waitFor(() => gameStarted || gameError, { timeout: 500 });
     if (gameError) {
 throw gameError;
 }
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
 
     // Verify the aggressive action sequence
     const raises = actions.filter(a => a.action === Action.RAISE);
@@ -205,8 +198,8 @@ throw gameError;
         const myState = gameState.players[this.id];
         const toCall = gameState.currentBet - myState.bet;
 
-        // Call any reasonable bet preflop
-        if (gameState.phase === 'PRE_FLOP' && toCall > 0 && toCall <= 20) {
+        // Call any bet up to the big blind preflop (everyone limps)
+        if (gameState.phase === 'PRE_FLOP' && toCall > 0 && gameState.currentBet <= 20) {
           return {
             playerId: this.id,
             action: Action.CALL,
@@ -240,6 +233,15 @@ throw gameError;
 
     table.on('player:action', ({ playerId, action, amount }) => {
       playerActions.push({ playerId, action, amount });
+      console.log('Action:', action, 'Amount:', amount, 'Actions so far:', playerActions.length);
+    });
+
+    table.on('round:ended', ({ phase }) => {
+      console.log('Round ended:', phase);
+    });
+
+    table.on('action:requested', ({ playerId, validActions }) => {
+      console.log('Action requested from:', playerId, 'Valid actions:', validActions);
     });
 
     table.on('pot:updated', ({ total }) => {
@@ -249,10 +251,21 @@ throw gameError;
     table.on('hand:ended', ({ winners }) => {
       if (!handEnded) {
         handEnded = true;
-        winnerAmount = winners[0]?.amount || 0;
-        showdownOccurred = winners[0]?.hand !== null && winners[0]?.hand !== undefined;
+        console.log('Hand ended event received');
+        console.log('Winners:', JSON.stringify(winners, null, 2));
+        console.log('Pot size at hand end:', potSize);
+        winnerAmount = winners?.[0]?.amount || 0;
+        showdownOccurred = winners?.[0]?.hand !== null && winners?.[0]?.hand !== undefined;
         setTimeout(() => table.close(), 10);
       }
+    });
+
+    table.on('error', (error) => {
+      console.error('Table error:', error);
+    });
+
+    table.on('game:error', (error) => {
+      console.error('Game error:', error);
     });
 
     // Create 6 passive players
@@ -261,11 +274,11 @@ throw gameError;
     );
 
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
     // Wait for game to complete
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
 
     // Debug output
     console.log('Player actions:', playerActions);
@@ -277,8 +290,12 @@ throw gameError;
     const calls = playerActions.filter(a => a.action === Action.CALL);
     const checks = playerActions.filter(a => a.action === Action.CHECK && a.amount === undefined);
     
-    // The pot should match the winner amount
-    expect(winnerAmount).toBe(potSize);
+    // Everyone should limp (5 calls + BB checks)
+    expect(calls.length).toBe(5); // 5 players call the BB
+    
+    // The pot should be 6 * 20 = 120
+    expect(potSize).toBe(120);
+    expect(winnerAmount).toBe(120);
     expect(showdownOccurred).toBe(true); // Should go to showdown
 
     table.close();
@@ -398,11 +415,11 @@ throw gameError;
     ];
 
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
     // Wait for game to complete
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
 
     // Debug output
     console.log('Game started:', gameStarted);

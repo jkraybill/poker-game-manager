@@ -119,8 +119,8 @@ describe('Split Pot Deterministic Tests', () => {
     players.forEach(p => table.addPlayer(p));
 
     await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
 
     // Both players should win with AA
     expect(winners).toHaveLength(2);
@@ -218,8 +218,8 @@ describe('Split Pot Deterministic Tests', () => {
     players.forEach(p => table.addPlayer(p));
 
     await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
 
     // All three should win (playing the board - AAKKQ)
     expect(winners).toHaveLength(3);

@@ -193,11 +193,11 @@ describe('5-Player Complex Side Pots', () => {
 
     // Add players
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
     // Wait for game to complete
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
 
     // Verify complex all-in action occurred
     const allIns = actions.filter(a => a.action === Action.ALL_IN);

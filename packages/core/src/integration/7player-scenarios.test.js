@@ -98,11 +98,11 @@ describe('7-Player Poker Scenarios', () => {
     );
 
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
     // Wait for game
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
 
     // Verify 7-way pot
     expect(winnerAmount).toBe(140); // 7 × 20 = 140
@@ -221,10 +221,10 @@ describe('7-Player Poker Scenarios', () => {
     );
 
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
 
     // Verify action sequence
     const raises = actions.filter(a => a.action === Action.RAISE);
@@ -378,10 +378,10 @@ describe('7-Player Poker Scenarios', () => {
     setupEventTracking();
 
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
 
     
     expect(sidePots.length).toBeGreaterThanOrEqual(3); // Multiple side pots
@@ -504,10 +504,10 @@ describe('7-Player Poker Scenarios', () => {
     );
 
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
 
     // Verify squeeze sequence
     expect(squeezePlayed).toBe(true);

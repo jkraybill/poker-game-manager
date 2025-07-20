@@ -73,7 +73,7 @@ export async function setupTableWithPlayers(manager, config, players) {
   players.forEach(player => table.addPlayer(player));
   
   // Wait for game to start
-  await vi.waitFor(() => table.state === 'PLAYING', { timeout: 2000 });
+  await vi.waitFor(() => table.state === 'PLAYING', { timeout: 500 });
   
   return table;
 }

@@ -76,28 +76,45 @@ describe('Custom Deck Tests', () => {
         this.seatNumber = config.seatNumber;
       }
 
-      getAction(gameState) {
+      async getAction(gameState) {
         const myState = gameState.players[this.id];
         const toCall = gameState.currentBet - myState.bet;
-
-        if (toCall > 0) {
-          return {
+        
+        // Simple strategy: check if possible, call if needed
+        if (toCall === 0) {
+          return { 
+            playerId: this.id,
+            action: Action.CHECK,
+            timestamp: Date.now()
+          };
+        }
+        
+        if (toCall > 0 && toCall <= myState.chips) {
+          return { 
             playerId: this.id,
             action: Action.CALL,
             amount: toCall,
-            timestamp: Date.now(),
+            timestamp: Date.now()
           };
         }
-
-        return {
+        
+        return { 
           playerId: this.id,
-          action: Action.CHECK,
-          timestamp: Date.now(),
+          action: Action.FOLD,
+          timestamp: Date.now()
         };
       }
 
       receivePrivateCards(cards) {
         playerHands.set(this.seatNumber, cards);
+      }
+
+      receivePublicCards(cards) {
+        // No-op for test
+      }
+
+      receiveGameUpdate(update) {
+        // No-op for test
       }
     }
 
@@ -127,11 +144,15 @@ describe('Custom Deck Tests', () => {
     ];
 
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
     // Wait for game to complete
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    
+    // Give some time for the game to progress
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    await vi.waitFor(() => handEnded, { timeout: 2000 });
 
     // Verify hole cards were dealt correctly
     const p1Cards = playerHands.get(1);
@@ -208,24 +229,49 @@ describe('Custom Deck Tests', () => {
     table.setCustomDeck(customDeck);
 
     class SimplePlayer extends Player {
-      getAction(gameState) {
+      async getAction(gameState) {
+        console.log(`SimplePlayer ${this.name} getAction called, phase: ${gameState.phase}, currentBet: ${gameState.currentBet}`);
         const myState = gameState.players[this.id];
+        console.log(`My state - bet: ${myState.bet}, chips: ${myState.chips}`);
         const toCall = gameState.currentBet - myState.bet;
-
-        if (toCall > 0) {
-          return {
+        
+        if (toCall === 0) {
+          console.log(`${this.name} checking`);
+          return { 
+            playerId: this.id,
+            action: Action.CHECK,
+            timestamp: Date.now()
+          };
+        }
+        
+        if (toCall > 0 && toCall <= myState.chips) {
+          console.log(`${this.name} calling ${toCall}`);
+          return { 
             playerId: this.id,
             action: Action.CALL,
             amount: toCall,
-            timestamp: Date.now(),
+            timestamp: Date.now()
           };
         }
-
-        return {
+        
+        console.log(`${this.name} folding`);
+        return { 
           playerId: this.id,
-          action: Action.CHECK,
-          timestamp: Date.now(),
+          action: Action.FOLD,
+          timestamp: Date.now()
         };
+      }
+
+      receivePrivateCards(cards) {
+        // No-op for test
+      }
+
+      receivePublicCards(cards) {
+        // No-op for test
+      }
+
+      receiveGameUpdate(update) {
+        // No-op for test
       }
     }
 
@@ -233,11 +279,28 @@ describe('Custom Deck Tests', () => {
       gameStarted = true;
     });
 
-    table.on('hand:ended', () => {
+    table.on('hand:ended', ({ winners }) => {
       if (!handEnded) {
         handEnded = true;
+        console.log('Second test hand ended:', winners);
         setTimeout(() => table.close(), 10);
       }
+    });
+
+    table.on('game:error', (error) => {
+      console.error('Game error:', error);
+    });
+
+    table.on('round:ended', ({ phase }) => {
+      console.log('Round ended:', phase);
+    });
+
+    table.on('action:requested', ({ playerId, validActions }) => {
+      console.log('Action requested from player:', playerId, 'valid actions:', validActions);
+    });
+
+    table.on('player:action', ({ playerId, action, amount }) => {
+      console.log('Player action event:', { playerId, action, amount });
     });
 
     const players = [
@@ -245,11 +308,21 @@ describe('Custom Deck Tests', () => {
       new SimplePlayer({ name: 'Player 2' }),
     ];
 
+    console.log('Adding players...');
+    console.log('Custom deck length:', customDeck.length);
     players.forEach(p => table.addPlayer(p));
+    console.log('Starting game...');
+    table.tryStartGame();
 
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    console.log('Waiting for game to start...');
+    await vi.waitFor(() => gameStarted, { timeout: 500 });
+    console.log('Game started, waiting for hand to end...');
+    
+    // Wait a bit and check the state
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log('Still waiting for hand to end, handEnded:', handEnded);
+    
+    await vi.waitFor(() => handEnded, { timeout: 1000 });
 
     // Test passes if game completes without error
     expect(handEnded).toBe(true);

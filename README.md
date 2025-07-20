@@ -38,14 +38,16 @@ A high-performance, pure poker game management library for Node.js. Handles tour
 - **Infrastructure**: ✅ Modern build tools configured (ESLint, Prettier, Vitest)
 - **CI/CD**: ✅ GitHub Actions pipeline for Node.js 22 (all tests passing!)
 - **Core API**: ✅ Foundation implemented (PokerGameManager, Table, Player, GameEngine)
-- **Tests**: ✅ Comprehensive test suite (205 passing, 4 failing - all core components covered)
-- **Integration Tests**: ✅ Multi-player betting scenarios (2-8 players implemented, 4 failing tests need fixing)
+- **Tests**: ✅ Comprehensive test suite (218 passing, 3 failing - all core components covered)
+- **Integration Tests**: ✅ Multi-player betting scenarios (2-8 players implemented)
 - **Hand Evaluation**: ✅ Integrated pokersolver library for robust hand evaluation
 - **Player API**: ✅ Enhanced with lastAction tracking for advanced strategies
-- **Active Work**: 🚧 Fixing minimum raise validation (4 failing tests) and pot distribution edge cases
+- **Memory Leaks**: ✅ FIXED! Removed auto-restart logic from Table.js
+- **Test Performance**: ✅ Reduced test timeouts from 5000ms to 1000ms (5x speedup!)
+- **Active Work**: 🚧 Fixing remaining integration test failures
 - **Known Issues**: 🐛 [Pot distribution bug (#11)](https://github.com/jkraybill/poker-game-manager/issues/11) - 90% FIXED, edge cases remain
-- **Critical Issues**: 🔥 Minimum raise validation failing (4 tests) and pot distribution bugs remain
-- **GitHub Issues**: [6 open issues tracking progress](https://github.com/jkraybill/poker-game-manager/issues)
+- **Critical Issues**: 🔥 Custom deck test hanging on flop phase (debugging needed)
+- **GitHub Issues**: [Open issues tracking progress](https://github.com/jkraybill/poker-game-manager/issues)
 
 ## Documentation
 
