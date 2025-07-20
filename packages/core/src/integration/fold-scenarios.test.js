@@ -70,10 +70,13 @@ describe('Fold Scenarios', () => {
       });
 
       table.on('hand:ended', ({ winners }) => {
-        handEnded = true;
-        if (winners && winners.length > 0) {
-          winnerId = winners[0].playerId;
-          winnerAmount = winners[0].amount;
+        if (!handEnded) {
+          handEnded = true;
+          if (winners && winners.length > 0) {
+            winnerId = winners[0].playerId;
+            winnerAmount = winners[0].amount;
+          }
+          setTimeout(() => table.close(), 100);
         }
       });
 
@@ -81,13 +84,11 @@ describe('Fold Scenarios', () => {
       const player2 = new AlwaysFoldPlayer({ name: 'Player 2' });
       const player3 = new AlwaysFoldPlayer({ name: 'Player 3' });
 
-      // Add players
+      // Add players and start game
       table.addPlayer(player1);
       table.addPlayer(player2);
       table.addPlayer(player3);
-
-      // Wait a bit for auto-start
-      await new Promise(resolve => setTimeout(resolve, 200));
+      table.tryStartGame();
 
       // Wait for game to start
       await vi.waitFor(() => gameStarted, { 
@@ -103,6 +104,9 @@ describe('Fold Scenarios', () => {
 
       // Wait for hand to complete
       await vi.waitFor(() => handEnded, { timeout: 5000 });
+      
+      // Wait a bit for all processing to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       // Big blind should win (when everyone folds, BB wins by default)
       const players = [player1, player2, player3];

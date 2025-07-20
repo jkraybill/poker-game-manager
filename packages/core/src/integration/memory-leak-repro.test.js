@@ -21,7 +21,7 @@ describe('Table Auto-Start Behavior', () => {
     manager.tables.forEach(table => table.close());
   });
 
-  it('should NOT auto-start games anymore - requires explicit start', async () => {
+  it('should NOT auto-start games anymore - requires explicit start', { timeout: 10000 }, async () => {
     const table = manager.createTable({
       blinds: { small: 10, big: 20 },
       minBuyIn: 1000,
@@ -68,27 +68,29 @@ describe('Table Auto-Start Behavior', () => {
     ];
     players.forEach(p => table.addPlayer(p));
 
-    // Wait for first game to start
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Wait to see if game auto-starts (it shouldn't)
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Wait long enough to see if multiple games start
-    console.log('⏳ Waiting 10 seconds to observe automatic restarts...');
-    await new Promise(resolve => setTimeout(resolve, 10000));
+    // Verify no game started automatically
+    expect(gameCount).toBe(0);
+    
+    // Now explicitly start a game
+    table.tryStartGame();
+    
+    // Wait for game to complete
+    await vi.waitFor(() => handCount >= 1, { timeout: 2000 });
+    
+    // Wait long enough to see if another game starts automatically
+    console.log('⏳ Waiting 6 seconds to verify no automatic restart...');
+    await new Promise(resolve => setTimeout(resolve, 6000));
 
     console.log('\n📊 Final stats:');
     console.log(`Games started: ${gameCount}`);
     console.log(`Hands ended: ${handCount}`);
-    console.log(`Game start times:`, gameStarts);
-    console.log(`Hand end times:`, handEnds);
 
-    // Calculate time between games
-    if (gameStarts.length > 1) {
-      const timeBetweenGames = gameStarts[1] - handEnds[0];
-      console.log(`Time between hand end and next game: ${timeBetweenGames}ms`);
-    }
-
-    // This is the problem - we expect 1 game but get multiple
-    expect(gameCount).toBeGreaterThanOrEqual(2);
+    // With the fix, we should have exactly 1 game (no auto-restart)
+    expect(gameCount).toBe(1);
+    expect(handCount).toBe(1);
     
     table.close();
   });
@@ -151,25 +153,27 @@ describe('Table Auto-Start Behavior', () => {
     table.addPlayer(player1);
     table.addPlayer(player2);
 
-    // Wait for first game
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Start first game explicitly
+    table.tryStartGame();
     
-    // This simulates what happens in failing tests:
-    // We check actions after some time, expecting only first game's actions
+    // Wait for first game to complete
+    await vi.waitFor(() => actions.length >= 2, { timeout: 2000 });
+    
+    // Wait to see if another game starts automatically
     await new Promise(resolve => setTimeout(resolve, 6000));
     
     console.log('\n🔍 Actions captured after 6 seconds:');
     console.log(`Total actions: ${actions.length}`);
     console.log(`Raises: ${raisesDetected}`);
     
-    // In a real test, we'd expect only 1 raise from the first game
-    // But we might get more if a second game started!
-    console.log('\n⚠️  This is why tests fail - they capture actions from multiple games!');
+    // With the fix, we should only have actions from the first game
+    console.log('\n✅  No more automatic restarts - only explicit game starts!');
     
     table.close();
     
-    // We should have more than 2 actions (first game: raise + fold = 2)
-    expect(actions.length).toBeGreaterThan(2);
+    // We should have exactly 2 actions (first game: raise + fold = 2)
+    expect(actions.length).toBe(2);
+    expect(raisesDetected).toBe(1);
   });
 
   it('should show how to prevent the leak with immediate table close', async () => {
@@ -212,7 +216,9 @@ describe('Table Auto-Start Behavior', () => {
     ];
     players.forEach(p => table.addPlayer(p));
 
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Start game explicitly
+    table.tryStartGame();
+    
     await vi.waitFor(() => handEnded, { timeout: 2000 });
 
     // Wait to ensure no second game starts
