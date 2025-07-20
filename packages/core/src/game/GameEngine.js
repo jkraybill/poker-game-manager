@@ -232,9 +232,166 @@ return;
   }
 
   /**
+   * Validate a player action according to poker rules
+   */
+  validateAction(playerData, action) {
+    const currentBet = this.getCurrentBet();
+    const toCall = currentBet - playerData.bet;
+    
+    switch (action.action) {
+      case Action.FOLD:
+        return { valid: true };
+        
+      case Action.CHECK:
+        if (toCall > 0) {
+          return { valid: false, reason: 'Cannot check when facing a bet' };
+        }
+        return { valid: true };
+        
+      case Action.CALL:
+        if (toCall <= 0) {
+          return { valid: false, reason: 'Nothing to call' };
+        }
+        if (toCall > playerData.chips) {
+          return { valid: false, reason: 'Insufficient chips to call' };
+        }
+        return { valid: true };
+        
+      case Action.BET:
+        if (currentBet > 0) {
+          return { valid: false, reason: 'Cannot bet when facing a bet - use raise' };
+        }
+        return this.validateBetAmount(action.amount, playerData);
+        
+      case Action.RAISE:
+        if (currentBet === 0) {
+          return { valid: false, reason: 'Cannot raise without a bet - use bet' };
+        }
+        return this.validateRaiseAmount(action.amount, playerData);
+        
+      case Action.ALL_IN:
+        return { valid: true }; // All-in is always valid
+        
+      default:
+        return { valid: false, reason: 'Unknown action' };
+    }
+  }
+  
+  /**
+   * Validate bet amount according to poker rules
+   */
+  validateBetAmount(amount, playerData) {
+    // Rule 5.2.1.1: Opening bet must be at least the big blind
+    const minBet = this.config.bigBlind;
+    
+    if (amount < minBet) {
+      return { 
+        valid: false, 
+        reason: `Minimum bet is ${minBet}` 
+      };
+    }
+    
+    if (amount > playerData.chips) {
+      return { 
+        valid: false, 
+        reason: 'Insufficient chips' 
+      };
+    }
+    
+    return { valid: true };
+  }
+  
+  /**
+   * Validate raise amount according to poker rules
+   */
+  validateRaiseAmount(amount, playerData) {
+    const currentBet = this.getCurrentBet();
+    const toCall = currentBet - playerData.bet;
+    
+    // The 'amount' parameter appears to be the total bet amount (raise TO)
+    // not the raise increment (raise BY)
+    const proposedTotalBet = amount;
+    const raiseIncrement = proposedTotalBet - currentBet;
+    
+    if (proposedTotalBet > playerData.chips + playerData.bet) {
+      return { 
+        valid: false, 
+        reason: 'Insufficient chips for raise' 
+      };
+    }
+    
+    // Rule 5.2.1.2: A raise must be at least equal to the largest prior bet or raise of the current round
+    const minRaiseIncrement = this.getMinimumRaiseIncrement();
+    const minTotalBet = currentBet + minRaiseIncrement;
+    
+    if (proposedTotalBet < minTotalBet) {
+      return { 
+        valid: false, 
+        reason: `Minimum total bet is ${minTotalBet}` 
+      };
+    }
+    return { valid: true };
+  }
+  
+  /**
+   * Calculate minimum raise increment according to poker rules
+   */
+  getMinimumRaiseIncrement() {
+    const bigBlind = this.config.bigBlind;
+    const lastRaiseSize = this.getLastRaiseSize();
+    
+    if (lastRaiseSize === 0) {
+      // First raise: minimum total bet should be 2x big blind
+      // Current bet is bigBlind, so minimum raise increment is bigBlind
+      return bigBlind;
+    }
+    
+    // Subsequent raises: must be at least the size of the previous raise
+    return lastRaiseSize;
+  }
+  
+  /**
+   * Get the size of the last raise in the current betting round
+   */
+  getLastRaiseSize() {
+    // Find the largest single raise increment in this round
+    // This is the difference between consecutive betting levels
+    const bigBlind = this.config.bigBlind;
+    const currentBet = this.getCurrentBet();
+    
+    // If current bet is just the blinds, no raises yet
+    if (currentBet <= bigBlind) {
+      return 0;
+    }
+    
+    // For simplicity in this implementation, we'll track the difference
+    // from the big blind as the last raise size
+    // TODO: This could be enhanced to track actual raise increments
+    const raiseSize = currentBet - bigBlind;
+    return raiseSize;
+  }
+
+  /**
    * Handle a player action
    */
   handlePlayerAction(playerData, action) {
+    // Validate the action before processing
+    const validationResult = this.validateAction(playerData, action);
+    if (!validationResult.valid) {
+      // Invalid action - emit error and re-prompt the same player
+      this.emit('action:invalid', {
+        playerId: playerData.player.id,
+        action: action.action,
+        amount: action.amount,
+        reason: validationResult.reason,
+      });
+      
+      
+      // Re-prompt the same player (don't mark as acted, don't move to next player)
+      this.promptNextPlayer();
+      return;
+    }
+    
     // Store the player's last action
     playerData.lastAction = action.action;
     
