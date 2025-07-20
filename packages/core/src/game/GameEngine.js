@@ -164,7 +164,15 @@ return;
     }
     
     this.lastBettor = null;
-    this.promptNextPlayer();
+    
+    // Check if there are any active players who can act
+    const activePlayers = this.players.filter(p => p.state === PlayerState.ACTIVE);
+    if (activePlayers.length === 0) {
+      // No one can act, immediately end the betting round
+      this.endBettingRound();
+    } else {
+      this.promptNextPlayer();
+    }
   }
 
   /**
@@ -366,9 +374,16 @@ return;
    */
   isBettingRoundComplete() {
     const activePlayers = this.players.filter(p => p.state === PlayerState.ACTIVE);
+    const allInPlayers = this.players.filter(p => p.state === PlayerState.ALL_IN);
+    const playersInHand = activePlayers.length + allInPlayers.length;
     
-    // If only one active player, round is complete
-    if (activePlayers.length <= 1) {
+    // If only one player left in hand (active or all-in), round is complete
+    if (playersInHand <= 1) {
+      return true;
+    }
+    
+    // If no active players left (all are all-in), round is complete
+    if (activePlayers.length === 0 && allInPlayers.length > 0) {
       return true;
     }
     

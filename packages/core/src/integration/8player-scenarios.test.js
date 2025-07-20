@@ -317,16 +317,29 @@ describe('8-Player Poker Scenarios', () => {
       getAction(gameState) {
         const myState = gameState.players[this.id];
         const toCall = gameState.currentBet - myState.bet;
-        const mRatio = myState.chips / (gameState.blinds.small + gameState.blinds.big);
+        const mRatio = myState.chips / (50 + 100); // Hardcode blinds for this test
+        
 
-        // Micro stacks go all-in with any decent hand
-        if (this.stackSize === 'micro' && toCall > 0) {
-          return {
-            playerId: this.id,
-            action: Action.ALL_IN,
-            amount: myState.chips,
-            timestamp: Date.now(),
-          };
+        // Micro stacks shove or fold based on position
+        if (this.stackSize === 'micro') {
+          // If in late position with no action, shove
+          if ((this.position === 'BUTTON' || this.position === 'CO') && toCall <= 100) {
+            return {
+              playerId: this.id,
+              action: Action.ALL_IN,
+              amount: myState.chips,
+              timestamp: Date.now(),
+            };
+          }
+          // If facing a raise, call if desperate
+          if (toCall > 0 && toCall < myState.chips && mRatio < 3) {
+            return {
+              playerId: this.id,
+              action: Action.ALL_IN,
+              amount: myState.chips,
+              timestamp: Date.now(),
+            };
+          }
         }
 
         // Short stacks shove or fold
@@ -341,14 +354,16 @@ describe('8-Player Poker Scenarios', () => {
           }
         }
 
-        // Big stacks apply pressure
-        if (this.stackSize === 'big' && gameState.currentBet === 100) {
-          return {
-            playerId: this.id,
-            action: Action.RAISE,
-            amount: 250, // Pressure raise
-            timestamp: Date.now(),
-          };
+        // Big stacks apply pressure only from late position
+        if (this.stackSize === 'big' && gameState.currentBet <= 100 && !myState.hasActed) {
+          if (this.position === 'BUTTON' || this.position === 'CO') {
+            return {
+              playerId: this.id,
+              action: Action.RAISE,
+              amount: 250, // Pressure raise
+              timestamp: Date.now(),
+            };
+          }
         }
 
         // Medium stacks play cautiously
@@ -428,6 +443,17 @@ describe('8-Player Poker Scenarios', () => {
     await vi.waitFor(() => gameStarted, { timeout: 2000 });
     await vi.waitFor(() => handEnded, { timeout: 5000 });
 
+    // Debug logging
+    console.log('=== 8-PLAYER TOURNAMENT BUBBLE DEBUG ===');
+    console.log('Total actions:', actions.length);
+    console.log('Action breakdown:');
+    console.log('  Folds:', actions.filter(a => a.action === Action.FOLD).length);
+    console.log('  Calls:', actions.filter(a => a.action === Action.CALL).length);
+    console.log('  Raises:', actions.filter(a => a.action === Action.RAISE).length);
+    console.log('  All-ins:', actions.filter(a => a.action === Action.ALL_IN).length);
+    console.log('  Checks:', actions.filter(a => a.action === Action.CHECK).length);
+    console.log('All actions:', actions);
+    
     // Verify bubble dynamics
     const allIns = actions.filter(a => a.action === Action.ALL_IN);
     const folds = actions.filter(a => a.action === Action.FOLD);

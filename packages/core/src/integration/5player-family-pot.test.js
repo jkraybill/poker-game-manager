@@ -66,6 +66,8 @@ describe('5-Player Family Pot', () => {
       TURN: [],
       RIVER: [],
     };
+    let potUpdates = [];
+    let finalPot = 0;
 
     // Set up event listeners
     table.on('game:started', () => {
@@ -86,6 +88,12 @@ describe('5-Player Family Pot', () => {
           phaseActions[currentPhase].push(actionData);
         }
       }
+    });
+
+    table.on('pot:updated', ({ total }) => {
+      potUpdates.push(total);
+      finalPot = total;
+      console.log(`Pot updated to: $${total}`);
     });
 
     // Create family pot players who limp and check down
@@ -176,6 +184,16 @@ describe('5-Player Family Pot', () => {
     
     // Should have many checks (all post-flop action)
     expect(checks.length).toBeGreaterThanOrEqual(15); // 5 players × 3 streets minimum
+
+    // Debug logging
+    console.log('=== 5-PLAYER FAMILY POT DEBUG ===');
+    console.log('Pre-flop actions:', phaseActions.PRE_FLOP);
+    console.log('Total actions:', actions.length);
+    console.log('Pot updates:', potUpdates);
+    console.log('Final pot:', finalPot);
+    console.log('Winner amount:', winnerAmount);
+    console.log('Calls:', calls.length);
+    console.log('Checks:', checks.length);
 
     // Verify we had a true 5-way pot
     // Each player puts in 20 chips (BB), so total pot = 5 × 20 = 100

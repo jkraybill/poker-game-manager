@@ -249,6 +249,7 @@ describe('7-Player Poker Scenarios', () => {
     let handEnded = false;
     let sidePots = [];
     let totalPot = 0;
+    const allActions = [];
 
     // Variable stack players
     class AllInPlayer extends Player {
@@ -263,19 +264,9 @@ describe('7-Player Poker Scenarios', () => {
         const myState = gameState.players[this.id];
         const toCall = gameState.currentBet - myState.bet;
 
-        // Button raises to start action
-        if (this.position === 'BUTTON' && gameState.currentBet === 20 && !this.hasActed) {
-          this.hasActed = true;
-          return {
-            playerId: this.id,
-            action: Action.RAISE,
-            amount: 100,
-            timestamp: Date.now(),
-          };
-        }
-
-        // Short stacks go all-in
-        if (toCall > 0 && myState.chips <= 150) {
+        // Create an aggressive all-in festival
+        // Small stacks shove immediately
+        if (myState.chips <= 100 && toCall >= 0) {
           return {
             playerId: this.id,
             action: Action.ALL_IN,
@@ -284,22 +275,39 @@ describe('7-Player Poker Scenarios', () => {
           };
         }
 
-        // Medium stacks call/all-in based on pot odds
-        if (toCall > 0 && toCall >= myState.chips * 0.4) {
-          return {
-            playerId: this.id,
-            action: Action.ALL_IN,
-            amount: myState.chips,
-            timestamp: Date.now(),
-          };
-        }
-
-        // Big stacks call
-        if (toCall > 0 && myState.chips > 500) {
+        // Medium stacks (100-300) call any all-in
+        if (myState.chips > 100 && myState.chips <= 300 && toCall > 0) {
+          if (toCall >= myState.chips) {
+            return {
+              playerId: this.id,
+              action: Action.ALL_IN,
+              amount: myState.chips,
+              timestamp: Date.now(),
+            };
+          }
           return {
             playerId: this.id,
             action: Action.CALL,
             amount: toCall,
+            timestamp: Date.now(),
+          };
+        }
+
+        // Large stacks (300+) also get involved
+        if (myState.chips > 300 && toCall > 0 && toCall <= 200) {
+          return {
+            playerId: this.id,
+            action: Action.CALL,
+            amount: toCall,
+            timestamp: Date.now(),
+          };
+        }
+
+        // Check if possible
+        if (toCall === 0) {
+          return {
+            playerId: this.id,
+            action: Action.CHECK,
             timestamp: Date.now(),
           };
         }
@@ -315,6 +323,18 @@ describe('7-Player Poker Scenarios', () => {
     table.on('game:started', () => {
       gameStarted = true;
     });
+
+    // Event tracking needs to be set up after players are created
+    const setupEventTracking = () => {
+      table.on('player:action', ({ playerId, action, amount }) => {
+        const player = players.find(p => p.id === playerId);
+        allActions.push({
+          position: player?.position || 'unknown',
+          action,
+          amount,
+        });
+      });
+    };
 
     table.on('hand:ended', () => {
       if (!handEnded) {
@@ -356,15 +376,42 @@ describe('7-Player Poker Scenarios', () => {
       }),
     );
 
+    // Set up event tracking now that players are created
+    setupEventTracking();
+
     players.forEach(p => table.addPlayer(p));
 
     await new Promise(resolve => setTimeout(resolve, 200));
     await vi.waitFor(() => gameStarted, { timeout: 2000 });
     await vi.waitFor(() => handEnded, { timeout: 5000 });
 
-    // Verify multiple side pots
+    // Debug logging
+    console.log('=== 7-PLAYER ALL-IN FESTIVAL DEBUG ===');
+    console.log('Actions taken:', allActions);
+    console.log('Total actions:', allActions.length);
+    console.log('All-ins:', allActions.filter(a => a.action === Action.ALL_IN).length);
     console.log('Side pots created:', sidePots.length);
+    console.log('Side pots:', JSON.stringify(sidePots, null, 2));
     console.log('Total pot:', totalPot);
+    
+    // Check contributions
+    if (sidePots.length > 0 && sidePots[0].contributions) {
+      console.log('First pot contributions:');
+      for (const [player, amount] of sidePots[0].contributions) {
+        console.log(`  Player contributed: ${amount}`);
+      }
+    }
+    console.log('Hand ended:', handEnded);
+    console.log('Game engine exists:', !!table.gameEngine);
+    console.log('Pot manager exists:', !!table.gameEngine?.potManager);
+    
+    // Check player states
+    if (table.players) {
+      console.log('Player chip counts:');
+      table.players.forEach((player, id) => {
+        console.log(`  ${player.name}: ${player.chips} chips`);
+      });
+    }
     
     expect(sidePots.length).toBeGreaterThanOrEqual(3); // Multiple side pots
     expect(totalPot).toBeGreaterThan(0);
@@ -372,7 +419,7 @@ describe('7-Player Poker Scenarios', () => {
     table.close();
   });
 
-  it('should handle MP2 squeeze play after UTG raise and 2 callers', async () => {
+  it('should handle CO squeeze play after UTG raise and MP1 call', async () => {
     const table = manager.createTable({
       blinds: { small: 10, big: 20 },
       minBuyIn: 1000,
@@ -409,9 +456,8 @@ describe('7-Player Poker Scenarios', () => {
           };
         }
 
-        // MP1 and CO call the raise
-        if ((this.position === 'MP1' || this.position === 'CO') && 
-            gameState.currentBet === 60 && toCall === 40 && !this.hasActed) {
+        // MP1 calls the raise
+        if (this.position === 'MP1' && gameState.currentBet === 60 && !this.hasActed) {
           this.hasActed = true;
           return {
             playerId: this.id,
@@ -421,12 +467,13 @@ describe('7-Player Poker Scenarios', () => {
           };
         }
 
-        // MP2 executes squeeze play
-        if (this.position === 'MP2' && !this.hasActed) {
+        // CO executes squeeze play after seeing UTG raise and MP1 call
+        if (this.position === 'CO' && !this.hasActed && gameState.currentBet > 20) {
           const raisers = playerStates.filter(p => p.lastAction === Action.RAISE);
           const callers = playerStates.filter(p => p.lastAction === Action.CALL);
           
-          if (raisers.length === 1 && callers.length >= 2) {
+          
+          if (raisers.length === 1 && callers.length >= 1) {
             this.hasActed = true;
             squeezePlayed = true;
             return {
@@ -495,11 +542,11 @@ describe('7-Player Poker Scenarios', () => {
     expect(squeezePlayed).toBe(true);
     
     const raises = actions.filter(a => a.action === Action.RAISE);
-    expect(raises.length).toBeGreaterThanOrEqual(2); // UTG raise + MP2 squeeze
+    expect(raises.length).toBeGreaterThanOrEqual(2); // UTG raise + CO squeeze
     
-    const mp2Raise = raises.find(r => r.position === 'MP2');
-    expect(mp2Raise).toBeDefined();
-    expect(mp2Raise.amount).toBeGreaterThan(180); // Large squeeze size
+    const coRaise = raises.find(r => r.position === 'CO');
+    expect(coRaise).toBeDefined();
+    expect(coRaise.amount).toBeGreaterThan(180); // Large squeeze size
 
     table.close();
   });

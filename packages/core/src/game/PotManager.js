@@ -56,6 +56,7 @@ export class PotManager {
     // Sort by contribution amount
     playerContributions.sort((a, b) => a.amount - b.amount);
     
+    
     // Clear pots to rebuild
     this.pots = [];
     let previousAmount = 0;
