@@ -94,6 +94,7 @@ export class PotManager {
       // Set current pot to the last pot
       this.currentPot = this.pots[this.pots.length - 1];
     }
+    
   }
 
   /**

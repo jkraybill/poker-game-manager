@@ -264,20 +264,12 @@ describe('7-Player Poker Scenarios', () => {
         const myState = gameState.players[this.id];
         const toCall = gameState.currentBet - myState.bet;
 
-        // Create an aggressive all-in festival
-        // Small stacks shove immediately
-        if (myState.chips <= 100 && toCall >= 0) {
-          return {
-            playerId: this.id,
-            action: Action.ALL_IN,
-            amount: myState.chips,
-            timestamp: Date.now(),
-          };
-        }
-
-        // Medium stacks (100-300) call any all-in
-        if (myState.chips > 100 && myState.chips <= 300 && toCall > 0) {
-          if (toCall >= myState.chips) {
+        // Create a pre-flop all-in cascade
+        // We want everyone to go all-in in the pre-flop round
+        if (gameState.phase === 'PRE_FLOP') {
+          // Small blind (50 chips) starts the cascade
+          if (this.position === 'SB' && !this.hasActed) {
+            this.hasActed = true;
             return {
               playerId: this.id,
               action: Action.ALL_IN,
@@ -285,36 +277,37 @@ describe('7-Player Poker Scenarios', () => {
               timestamp: Date.now(),
             };
           }
-          return {
-            playerId: this.id,
-            action: Action.CALL,
-            amount: toCall,
-            timestamp: Date.now(),
-          };
+
+          // Once someone is all-in, others follow based on stack size
+          const allInPlayers = Object.values(gameState.players).filter(
+            p => p.lastAction === Action.ALL_IN
+          );
+
+          if (allInPlayers.length > 0) {
+            // All players go all-in once the cascade starts
+            return {
+              playerId: this.id,
+              action: Action.ALL_IN,
+              amount: myState.chips,
+              timestamp: Date.now(),
+            };
+          }
+
+          // If no one has acted yet and we're not SB, check/call
+          if (toCall > 0) {
+            return {
+              playerId: this.id,
+              action: Action.CALL,
+              amount: toCall,
+              timestamp: Date.now(),
+            };
+          }
         }
 
-        // Large stacks (300+) also get involved
-        if (myState.chips > 300 && toCall > 0 && toCall <= 200) {
-          return {
-            playerId: this.id,
-            action: Action.CALL,
-            amount: toCall,
-            timestamp: Date.now(),
-          };
-        }
-
-        // Check if possible
-        if (toCall === 0) {
-          return {
-            playerId: this.id,
-            action: Action.CHECK,
-            timestamp: Date.now(),
-          };
-        }
-
+        // Post-flop, just check (shouldn't get here with all-ins)
         return {
           playerId: this.id,
-          action: Action.FOLD,
+          action: Action.CHECK,
           timestamp: Date.now(),
         };
       }
@@ -336,13 +329,18 @@ describe('7-Player Poker Scenarios', () => {
       });
     };
 
+    // Capture pots when flop is dealt (after pre-flop betting completes)
+    table.on('cards:community', ({ phase }) => {
+      if (phase === 'FLOP' && sidePots.length === 0 && table.gameEngine?.potManager) {
+        // Capture the pots right after pre-flop ends
+        sidePots = [...table.gameEngine.potManager.pots];
+        totalPot = sidePots.reduce((sum, pot) => sum + pot.amount, 0);
+      }
+    });
+
     table.on('hand:ended', () => {
       if (!handEnded) {
         handEnded = true;
-        if (table.gameEngine?.potManager) {
-          sidePots = table.gameEngine.potManager.pots;
-          totalPot = sidePots.reduce((sum, pot) => sum + pot.amount, 0);
-        }
         setTimeout(() => table.close(), 10);
       }
     });
@@ -385,33 +383,6 @@ describe('7-Player Poker Scenarios', () => {
     await vi.waitFor(() => gameStarted, { timeout: 2000 });
     await vi.waitFor(() => handEnded, { timeout: 5000 });
 
-    // Debug logging
-    console.log('=== 7-PLAYER ALL-IN FESTIVAL DEBUG ===');
-    console.log('Actions taken:', allActions);
-    console.log('Total actions:', allActions.length);
-    console.log('All-ins:', allActions.filter(a => a.action === Action.ALL_IN).length);
-    console.log('Side pots created:', sidePots.length);
-    console.log('Side pots:', JSON.stringify(sidePots, null, 2));
-    console.log('Total pot:', totalPot);
-    
-    // Check contributions
-    if (sidePots.length > 0 && sidePots[0].contributions) {
-      console.log('First pot contributions:');
-      for (const [player, amount] of sidePots[0].contributions) {
-        console.log(`  Player contributed: ${amount}`);
-      }
-    }
-    console.log('Hand ended:', handEnded);
-    console.log('Game engine exists:', !!table.gameEngine);
-    console.log('Pot manager exists:', !!table.gameEngine?.potManager);
-    
-    // Check player states
-    if (table.players) {
-      console.log('Player chip counts:');
-      table.players.forEach((player, id) => {
-        console.log(`  ${player.name}: ${player.chips} chips`);
-      });
-    }
     
     expect(sidePots.length).toBeGreaterThanOrEqual(3); // Multiple side pots
     expect(totalPot).toBeGreaterThan(0);

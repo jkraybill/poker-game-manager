@@ -443,16 +443,6 @@ describe('8-Player Poker Scenarios', () => {
     await vi.waitFor(() => gameStarted, { timeout: 2000 });
     await vi.waitFor(() => handEnded, { timeout: 5000 });
 
-    // Debug logging
-    console.log('=== 8-PLAYER TOURNAMENT BUBBLE DEBUG ===');
-    console.log('Total actions:', actions.length);
-    console.log('Action breakdown:');
-    console.log('  Folds:', actions.filter(a => a.action === Action.FOLD).length);
-    console.log('  Calls:', actions.filter(a => a.action === Action.CALL).length);
-    console.log('  Raises:', actions.filter(a => a.action === Action.RAISE).length);
-    console.log('  All-ins:', actions.filter(a => a.action === Action.ALL_IN).length);
-    console.log('  Checks:', actions.filter(a => a.action === Action.CHECK).length);
-    console.log('All actions:', actions);
     
     // Verify bubble dynamics
     const allIns = actions.filter(a => a.action === Action.ALL_IN);
