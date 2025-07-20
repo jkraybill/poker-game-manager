@@ -94,52 +94,102 @@ export class HandEvaluator {
       return playerHands;
     }
 
-    // Convert all hands to pokersolver format
-    const solvedHands = playerHands.map(ph => {
-      // The playerHands array has objects with: playerData, hand, cards
-      // We need to combine hole cards with board cards
-      const allCards = ph.cards;
-      const pokersolverCards = allCards.map(card => this.cardToPokersolverFormat(card));
-      const solved = Hand.solve(pokersolverCards);
-      return {
-        original: ph,
-        solved,
-      };
-    });
-
-    // Use pokersolver to find winners
-    const winningHands = Hand.winners(solvedHands.map(sh => sh.solved));
+    // Check if hands are already evaluated (have .hand property) or need evaluation (.cards property)
+    const needsEvaluation = playerHands[0].hand === undefined;
     
-    // Map back to our player hands
-    const winners = [];
-    for (const winningHand of winningHands) {
-      const winner = solvedHands.find(sh => sh.solved === winningHand);
-      if (winner) {
-        // Return the original player hand structure with updated hand info
-        const winnerData = {
-          ...winner.original,
-          hand: {
-            rank: this.mapPokersolverRank(winner.solved.name),
-            kickers: winner.solved.cards.map(card => this.getRankValue(card.value)),
-            cards: winner.solved.cards.slice(0, 5).map(card => {
-              const rank = card.value;
-              const suit = card.suit;
-              return { 
-                rank, 
-                suit,
-                toString() {
-                  return `${rank}${suit}`;
-                },
-              };
-            }),
-            description: winner.solved.descr,
-          },
+    if (needsEvaluation) {
+      // Original logic for unevaluated hands
+      // Convert all hands to pokersolver format
+      const solvedHands = playerHands.map(ph => {
+        // The playerHands array has objects with: playerData, cards
+        const allCards = ph.cards;
+        const pokersolverCards = allCards.map(card => this.cardToPokersolverFormat(card));
+        const solved = Hand.solve(pokersolverCards);
+        return {
+          original: ph,
+          solved,
         };
-        winners.push(winnerData);
-      }
-    }
+      });
 
-    return winners;
+      // Use pokersolver to find winners
+      const winningHands = Hand.winners(solvedHands.map(sh => sh.solved));
+      
+      // Map back to our player hands
+      const winners = [];
+      for (const winningHand of winningHands) {
+        const winner = solvedHands.find(sh => sh.solved === winningHand);
+        if (winner) {
+          // Return the original player hand structure with updated hand info
+          const winnerData = {
+            ...winner.original,
+            hand: {
+              rank: this.mapPokersolverRank(winner.solved.name),
+              kickers: winner.solved.cards.map(card => this.getRankValue(card.value)),
+              cards: winner.solved.cards.slice(0, 5).map(card => {
+                const rank = card.value;
+                const suit = card.suit;
+                return { 
+                  rank, 
+                  suit,
+                  toString() {
+                    return `${rank}${suit}`;
+                  },
+                };
+              }),
+              description: winner.solved.descr,
+            },
+          };
+          winners.push(winnerData);
+        }
+      }
+      return winners;
+    } else {
+      // New logic for already evaluated hands
+      // Sort hands by rank (descending) and find the best rank
+      const sortedHands = [...playerHands].sort((a, b) => {
+        // First compare by hand rank
+        if (b.hand.rank !== a.hand.rank) {
+          return b.hand.rank - a.hand.rank;
+        }
+        
+        // If same rank, compare kickers
+        for (let i = 0; i < Math.min(a.hand.kickers.length, b.hand.kickers.length); i++) {
+          if (b.hand.kickers[i] !== a.hand.kickers[i]) {
+            return b.hand.kickers[i] - a.hand.kickers[i];
+          }
+        }
+        
+        return 0; // Tie
+      });
+      
+      const bestHand = sortedHands[0];
+      const winners = [];
+      
+      // Find all players with the same hand strength
+      for (const playerHand of sortedHands) {
+        // Check if this hand is equal to the best hand
+        if (playerHand.hand.rank === bestHand.hand.rank) {
+          // Check if all kickers match
+          let isEqual = true;
+          for (let i = 0; i < Math.min(playerHand.hand.kickers.length, bestHand.hand.kickers.length); i++) {
+            if (playerHand.hand.kickers[i] !== bestHand.hand.kickers[i]) {
+              isEqual = false;
+              break;
+            }
+          }
+          
+          if (isEqual) {
+            winners.push(playerHand);
+          } else {
+            break; // No more winners possible since we're sorted
+          }
+        } else {
+          break; // No more winners possible
+        }
+      }
+      
+      return winners;
+    }
   }
 
   /**
