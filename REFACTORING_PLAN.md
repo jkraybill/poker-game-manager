@@ -8,7 +8,7 @@ This isn't just a poker library. It's a platform for poker excellence - a tool t
 
 ## ✅ Completed Achievements (The Foundation is SOLID!)
 
-The core transformation is complete! We've built a rock-solid foundation:
+The core transformation is complete! We've built a rock-solid foundation (with some edge cases to polish):
 
 - ✅ **Pure Poker Library** - Zero platform dependencies, 100% poker focus
 - ✅ **Modern JavaScript** - Node.js 22+ with ESM modules
@@ -24,8 +24,9 @@ The core transformation is complete! We've built a rock-solid foundation:
 - ✅ **Advanced Features**:
   - Player lastAction tracking for strategy analysis
   - Deterministic testing (no more flaky tests!)
-  - 2-5 player scenario tests covering all major patterns
+  - 2-8 player scenario tests covering all major patterns
   - Event-driven architecture for real-time integration
+  - Granular test architecture (15 focused test files)
 - ✅ **Developer Experience**:
   - Clean API design
   - Comprehensive documentation
@@ -37,6 +38,7 @@ The core transformation is complete! We've built a rock-solid foundation:
 ### 🔥 Priority 1: Critical Fixes (This Week)
 1. **Issue #11 - Pot Distribution Bug** (90% complete)
    - Winners sometimes receive 0 chips despite winning
+   - NEW: Winners can receive MORE chips than pot contains!
    - Critical for player trust and accuracy
    - Impacts complex side pot scenarios
 
@@ -44,6 +46,7 @@ The core transformation is complete! We've built a rock-solid foundation:
    - Complete the full spectrum of table sizes
    - Essential for tournament play simulation
    - Tests for complex multi-way dynamics
+   - Status: Tests written but 4 failing due to pot bugs
 
 ### 🎯 Priority 2: Championship Features (Next Month)
 

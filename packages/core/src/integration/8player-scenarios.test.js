@@ -121,7 +121,7 @@ describe('8-Player Poker Scenarios', () => {
       });
     });
 
-    table.on('hand:ended', ({ winners }) => {
+    table.on('hand:ended', ({ winners: _winners }) => {
       if (!handEnded) {
         handEnded = true;
         setTimeout(() => table.close(), 10);
@@ -134,7 +134,7 @@ describe('8-Player Poker Scenarios', () => {
       new EarlyPositionPlayer({ 
         name: `Player ${idx + 1} (${pos})`,
         position: pos,
-      })
+      }),
     );
 
     players.forEach(p => table.addPlayer(p));
@@ -169,6 +169,8 @@ describe('8-Player Poker Scenarios', () => {
     let handEnded = false;
     let winnerAmount = 0;
     let potSize = 0;
+    const actionLog = [];
+    let finalPotSize = 0;
 
     class PassivePlayer extends Player {
       constructor(config) {
@@ -180,28 +182,42 @@ describe('8-Player Poker Scenarios', () => {
         const myState = gameState.players[this.id];
         const toCall = gameState.currentBet - myState.bet;
 
-        // CO makes a min-raise to build pot
-        if (this.position === 'CO' && gameState.phase === 'PRE_FLOP' && 
-            gameState.currentBet === 20) {
-          return {
-            playerId: this.id,
-            action: Action.RAISE,
-            amount: 40, // Min-raise
-            timestamp: Date.now(),
-          };
+        // Pre-flop strategy
+        if (gameState.phase === 'PRE_FLOP') {
+          // CO makes a min-raise to build pot
+          if (this.position === 'CO' && !myState.hasActed && 
+              gameState.currentBet === 20) {
+            return {
+              playerId: this.id,
+              action: Action.RAISE,
+              amount: 40, // Min-raise
+              timestamp: Date.now(),
+            };
+          }
+
+          // If someone raised to 40, everyone calls
+          if (gameState.currentBet === 40 && toCall > 0) {
+            return {
+              playerId: this.id,
+              action: Action.CALL,
+              amount: toCall,
+              timestamp: Date.now(),
+            };
+          }
+
+          // Otherwise, players before CO should limp (call the BB)
+          if (gameState.currentBet === 20 && toCall > 0 && 
+              ['UTG', 'UTG+1', 'MP1', 'MP2'].includes(this.position)) {
+            return {
+              playerId: this.id,
+              action: Action.CALL,
+              amount: toCall,
+              timestamp: Date.now(),
+            };
+          }
         }
 
-        // Everyone calls the min-raise
-        if (gameState.phase === 'PRE_FLOP' && toCall > 0 && toCall <= 40) {
-          return {
-            playerId: this.id,
-            action: Action.CALL,
-            amount: toCall,
-            timestamp: Date.now(),
-          };
-        }
-
-        // Check all post-flop streets
+        // Check all other situations
         return {
           playerId: this.id,
           action: Action.CHECK,
@@ -216,12 +232,39 @@ describe('8-Player Poker Scenarios', () => {
 
     table.on('pot:updated', ({ total }) => {
       potSize = total;
+      console.log(`Pot updated to: $${total}`);
+    });
+
+    table.on('player:action', ({ playerId, action, amount }) => {
+      const player = players.find(p => p.id === playerId);
+      actionLog.push({
+        position: player?.position || 'unknown',
+        action,
+        amount,
+      });
     });
 
     table.on('hand:ended', ({ winners }) => {
       if (!handEnded) {
         handEnded = true;
         winnerAmount = winners[0]?.amount || 0;
+        finalPotSize = potSize;
+        console.log('=== 8-WAY FAMILY POT DEBUG ===');
+        console.log('Actions taken:', actionLog);
+        console.log('Final pot size:', finalPotSize);
+        console.log('Winner amount:', winnerAmount);
+        console.log('Expected: 8 × 40 = 320');
+        
+        // Calculate what pot should be
+        const preFlopCalls = actionLog.filter(a => 
+          a.action === Action.CALL && a.amount !== undefined,
+        );
+        const totalContributed = preFlopCalls.reduce((sum, a) => sum + a.amount, 0);
+        console.log('Pre-flop calls:', preFlopCalls.length);
+        console.log('Total contributed via calls:', totalContributed);
+        console.log('Plus blinds (10+20):', 30);
+        console.log('Calculated pot should be:', totalContributed + 30);
+        
         setTimeout(() => table.close(), 10);
       }
     });
@@ -232,7 +275,7 @@ describe('8-Player Poker Scenarios', () => {
       new PassivePlayer({ 
         name: `Player ${idx + 1} (${pos})`,
         position: pos,
-      })
+      }),
     );
 
     players.forEach(p => table.addPlayer(p));
@@ -242,7 +285,9 @@ describe('8-Player Poker Scenarios', () => {
     await vi.waitFor(() => handEnded, { timeout: 5000 });
 
     // Verify 8-way pot with min-raise
-    expect(winnerAmount).toBe(320); // 8 × 40 = 320
+    // Everyone ends up with 40 in the pot (8 × 40 = 320)
+    expect(finalPotSize).toBe(320);
+    expect(winnerAmount).toBe(320); // Winner should get the whole pot
     expect(potSize).toBeGreaterThanOrEqual(320);
 
     table.close();
@@ -260,7 +305,6 @@ describe('8-Player Poker Scenarios', () => {
     let gameStarted = false;
     let handEnded = false;
     const actions = [];
-    let allInCount = 0;
 
     class BubblePlayer extends Player {
       constructor(config) {
@@ -277,7 +321,6 @@ describe('8-Player Poker Scenarios', () => {
 
         // Micro stacks go all-in with any decent hand
         if (this.stackSize === 'micro' && toCall > 0) {
-          allInCount++;
           return {
             playerId: this.id,
             action: Action.ALL_IN,
@@ -289,7 +332,6 @@ describe('8-Player Poker Scenarios', () => {
         // Short stacks shove or fold
         if (this.stackSize === 'short' && mRatio < 10) {
           if (this.position === 'BUTTON' || this.position === 'CO') {
-            allInCount++;
             return {
               playerId: this.id,
               action: Action.ALL_IN,
@@ -377,7 +419,7 @@ describe('8-Player Poker Scenarios', () => {
       new BubblePlayer({ 
         name: `Player ${idx + 1} (${config.position})`,
         ...config,
-      })
+      }),
     );
 
     players.forEach(p => table.addPlayer(p));
@@ -407,7 +449,6 @@ describe('8-Player Poker Scenarios', () => {
 
     let gameStarted = false;
     let handEnded = false;
-    let knockoutOccurred = false;
     const playerChips = new Map();
 
     class BountyHunterPlayer extends Player {
@@ -485,14 +526,14 @@ describe('8-Player Poker Scenarios', () => {
       gameStarted = true;
     });
 
-    table.on('hand:ended', ({ winners }) => {
+    table.on('hand:ended', ({ winners: _winners }) => {
       if (!handEnded) {
         handEnded = true;
         
         // Check if any player was eliminated
-        for (const [playerId, chips] of playerChips) {
+        for (const [, chips] of playerChips) {
           if (chips === 0) {
-            knockoutOccurred = true;
+            // Player was eliminated
             break;
           }
         }
@@ -517,7 +558,7 @@ describe('8-Player Poker Scenarios', () => {
       new BountyHunterPlayer({ 
         name: `Player ${idx + 1} (${config.position})`,
         ...config,
-      })
+      }),
     );
 
     // Give one player a short stack

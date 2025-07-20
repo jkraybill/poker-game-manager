@@ -399,6 +399,11 @@ return;
   endBettingRound() {
     this.potManager.endBettingRound();
     
+    // Emit pot update after side pots are created
+    this.emit('pot:updated', {
+      total: this.potManager.getTotal(),
+    });
+    
     // Clear option flags
     for (const player of this.players) {
       player.hasOption = false;

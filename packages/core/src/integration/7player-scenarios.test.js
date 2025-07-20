@@ -87,14 +87,14 @@ describe('7-Player Poker Scenarios', () => {
       if (!handEnded) {
         handEnded = true;
         winnerAmount = winners[0]?.amount || 0;
-        showdownReached = winners[0]?.hand != null;
+        showdownReached = winners[0]?.hand !== null && winners[0]?.hand !== undefined;
         setTimeout(() => table.close(), 10);
       }
     });
 
     // Create 7 passive players
     const players = Array.from({ length: 7 }, (_, i) => 
-      new LimpingPlayer({ name: `Player ${i + 1}` })
+      new LimpingPlayer({ name: `Player ${i + 1}` }),
     );
 
     players.forEach(p => table.addPlayer(p));
@@ -126,7 +126,6 @@ describe('7-Player Poker Scenarios', () => {
 
     let gameStarted = false;
     let handEnded = false;
-    let winnerAmount = 0;
     const actions = [];
 
     // Position-aware aggressive players
@@ -205,10 +204,9 @@ describe('7-Player Poker Scenarios', () => {
       });
     });
 
-    table.on('hand:ended', ({ winners }) => {
+    table.on('hand:ended', ({ winners: _winners }) => {
       if (!handEnded) {
         handEnded = true;
-        winnerAmount = winners[0]?.amount || 0;
         setTimeout(() => table.close(), 10);
       }
     });
@@ -219,7 +217,7 @@ describe('7-Player Poker Scenarios', () => {
       new PositionalPlayer({ 
         name: `Player ${idx + 1} (${pos})`,
         position: pos,
-      })
+      }),
     );
 
     players.forEach(p => table.addPlayer(p));
@@ -355,7 +353,7 @@ describe('7-Player Poker Scenarios', () => {
       new AllInPlayer({ 
         name: `Player ${idx + 1} (${config.position})`,
         ...config,
-      })
+      }),
     );
 
     players.forEach(p => table.addPlayer(p));
@@ -471,7 +469,7 @@ describe('7-Player Poker Scenarios', () => {
       });
     });
 
-    table.on('hand:ended', ({ winners }) => {
+    table.on('hand:ended', ({ winners: _winners }) => {
       if (!handEnded) {
         handEnded = true;
         setTimeout(() => table.close(), 10);
@@ -484,7 +482,7 @@ describe('7-Player Poker Scenarios', () => {
       new SqueezePlayer({ 
         name: `Player ${idx + 1} (${pos})`,
         position: pos,
-      })
+      }),
     );
 
     players.forEach(p => table.addPlayer(p));

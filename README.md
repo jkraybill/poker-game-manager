@@ -9,15 +9,17 @@ Please read these files in order:
 1. SESSION_CONTEXT.md - Current state and immediate tasks (5-10 min startup)
 2. CLAUDE.md - Technical guide and development workflow
 3. ABOUT-JK.md - Working style and communication preferences (if needed)
-4. REFACTORING_PLAN.md - Project transformation roadmap (if needed)
-5. TESTING_GUIDE.md - For test development (if working on tests)
+4. REFACTORING_PLAN.md - Championship vision and roadmap (inspiring!)
+5. TESTING_GUIDE.md - For test development (comprehensive patterns)
+6. POKER_EXCELLENCE.md - Advanced poker theory implementation guide
 
 Key context:
 - Pure JavaScript (no TypeScript), Node.js 22+ required
 - Event-driven architecture with clean player interfaces
-- 168 tests passing (1 skipped), all core components implemented
-- 🐛 CRITICAL BUG: Pot distribution (Issue #11) - winner gets 0 chips
-- Working on AI players and tournament support
+- 180 tests passing (2 skipped), 4 new failing tests need investigation
+- 🐛 CRITICAL BUG: Pot distribution (Issue #11) - 90% fixed, edge cases remain
+- 🔥 NEW BUG: Winners receiving MORE chips than pot contains (8-player test)
+- Working on 6-8 player scenarios and tournament support
 - Use TodoWrite tool frequently to track tasks
 - Run tests with `npm test`, lint with `npm run lint`
 - Never start servers or commit without permission
@@ -36,12 +38,13 @@ A high-performance, pure poker game management library for Node.js. Handles tour
 - **Infrastructure**: ✅ Modern build tools configured (ESLint, Prettier, Vitest)
 - **CI/CD**: ✅ GitHub Actions pipeline for Node.js 22 (all tests passing!)
 - **Core API**: ✅ Foundation implemented (PokerGameManager, Table, Player, GameEngine)
-- **Tests**: ✅ Comprehensive test suite (168 passing, 1 skipped - all core components covered)
-- **Integration Tests**: ✅ Multi-player betting scenarios (2-5 players) fully tested
+- **Tests**: ✅ Comprehensive test suite (180 passing, 2 skipped - all core components covered)
+- **Integration Tests**: ✅ Multi-player betting scenarios (2-5 players fully tested, 6-8 players in progress)
 - **Hand Evaluation**: ✅ Integrated pokersolver library for robust hand evaluation
 - **Player API**: ✅ Enhanced with lastAction tracking for advanced strategies
-- **Active Work**: Ready for AI player implementations and tournament support
-- **Known Issues**: 🐛 [Pot distribution bug (#11)](https://github.com/jkraybill/poker-game-manager/issues/11) - CRITICAL
+- **Active Work**: 🚧 6-8 player scenarios, fixing pot distribution edge cases
+- **Known Issues**: 🐛 [Pot distribution bug (#11)](https://github.com/jkraybill/poker-game-manager/issues/11) - 90% FIXED, edge cases remain
+- **Critical Discovery**: 🔥 Winners can receive more chips than in pot (8-player test failure)
 - **GitHub Issues**: [6 open issues tracking progress](https://github.com/jkraybill/poker-game-manager/issues)
 
 ## Documentation
@@ -127,7 +130,16 @@ Future structure:
 
 ## Session Memory
 
-### Latest Session (2025-07-19 Afternoon)
+### Latest Session (2025-07-20)
+- ✅ **MASSIVE ACHIEVEMENT**: Extracted 2157-line test monolith into 13 granular test files
+- ✅ **POT DISTRIBUTION**: Fixed 90% of Issue #11 using object reference equality solution
+- ✅ **TEST EXPANSION**: Created 6-8 player scenario tests (4 passing, 4 failing)
+- ✅ **DOCUMENTATION**: Updated all .md files with comprehensive guides for future Claudes
+- ✅ **VISION TRANSFORMATION**: Converted REFACTORING_PLAN.md into inspiring championship platform vision
+- 🔥 **NEW BUG FOUND**: Winners receiving more chips than pot contains (8-player test)
+- 📊 **TEST STATUS**: 180 passing, 2 skipped, 4 failing (184 total tests)
+
+### Previous Session (2025-07-19 Afternoon)
 - ✅ Created comprehensive integration tests for betting scenarios:
   - 2-player heads-up: SB folds to BB
   - 3-player: Button raises, blinds fold

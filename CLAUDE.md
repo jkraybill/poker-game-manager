@@ -72,7 +72,7 @@ git commit -m "message"
 - **Node Version**: 22.17.0 (required)
 - **Framework**: Pure poker library with no platform dependencies
 - **Game Logic**: Clean event-driven architecture
-- **Testing**: Vitest configured, 180 tests passing (all core components covered) - MASSIVE EXPANSION!
+- **Testing**: Vitest configured, 180 tests passing, 4 failing (184 total tests) - MASSIVE EXPANSION!
 - **Build**: esbuild configured for ESM and CJS output
 - **CI/CD**: GitHub Actions running on Node.js 22 - all tests passing!
 - **Language**: Pure JavaScript (no TypeScript)
@@ -88,7 +88,8 @@ git commit -m "message"
 - **PotManager**: Betting, pot calculations, and side pot management
 - **Type System**: Complete enums and JSDoc types
 - **Infrastructure**: ESLint, Prettier, Vitest all configured
-- **Tests**: Comprehensive test suite for all core components (180 tests) - World-class coverage!
+- **Tests**: Comprehensive test suite for all core components (184 tests total)
+- **Test Status**: 180 passing, 2 skipped, 4 failing (pot distribution issues) - World-class coverage!
 
 ### Key Patterns
 
@@ -193,7 +194,10 @@ fix(ai): prevent infinite decision loop
 - `/integration/4player-*.test.js` - 4-player scenarios (5 files)
 - `/integration/5player-*.test.js` - 5-player advanced concepts (4 files)
 - `/integration/fold-scenarios.test.js` - Folding pattern testing
-- `/integration/betting-scenarios.test.js` - Original comprehensive suite
+- `/integration/betting-scenarios.test.js` - DELETED (redundant after extraction)
+- `/integration/6player-scenarios.test.js` - 6-player dynamics (3 tests)
+- `/integration/7player-scenarios.test.js` - 7-player scenarios (4 tests) 
+- `/integration/8player-scenarios.test.js` - 8-player complexity (4 tests)
 
 ### Test Structure
 ```javascript
@@ -429,8 +433,9 @@ Key files to check:
 - `/packages/core/src/` - Main library implementation
 - `/packages/core/src/game/` - Game logic components
 - `/packages/ai/src/` - AI player implementations
-- `/REFACTORING_PLAN.md` - Transformation roadmap
+- `/REFACTORING_PLAN.md` - Championship vision and roadmap
 - `/POKER-RULES.md` - Simulation-focused poker rules
+- `/CURRENT_BUGS.md` - Critical bug tracking (NEW!)
 - GitHub Issues [#1-#6](https://github.com/jkraybill/poker-game-manager/issues)
 
 ## 🚀 ADVANCED POKER IMPLEMENTATION MASTERY
@@ -577,6 +582,7 @@ function getAction() {
 - Complex side pot scenarios still show `amount: 0`
 - Different player instances tracked as eligible vs. winners
 - Root cause: Player state tracking between pot creation and hand evaluation
+- **NEW CRITICAL BUG**: 8-player test shows winner receiving $320 from $150 pot!
 
 **Detection**: Extracted tests automatically detect and log this bug with detailed debugging info
 **Workaround**: Affected tests pass but log warning messages
@@ -620,6 +626,7 @@ npm run lint && npm run format && npm test
 - Issues are being used to track all major work items
 - Progress updates posted as comments
 - Using MCP GitHub tools for issue management
+- Created 3 new issues for championship vision
 
 ### Player API Enhancement (Session 2025-07-19)
 The GameEngine now tracks `lastAction` for each player, exposing it through `gameState.players[id].lastAction`:
