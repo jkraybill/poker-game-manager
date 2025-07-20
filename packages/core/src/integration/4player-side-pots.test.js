@@ -243,7 +243,7 @@ describe('4-Player Multiple All-In Side Pots', () => {
     table.close();
   });
 
-  it.skip('should handle multi-way pot with various stack sizes - BUG: Issue #11 winner gets 0 chips', async () => {
+  it('should handle multi-way pot with various stack sizes', async () => {
     const table = manager.createTable({
       blinds: { small: 10, big: 20 },
       minBuyIn: 200,

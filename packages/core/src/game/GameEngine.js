@@ -31,6 +31,7 @@ export class GameEngine extends EventEmitter {
     this.roundBets = new Map();
     this.playerHands = new Map();
     this.lastBettor = null;
+    this.customDeck = config.customDeck || null;
   }
 
   /**
@@ -56,8 +57,16 @@ export class GameEngine extends EventEmitter {
   initializeHand() {
     // Reset game state
     this.board = [];
-    this.deck = new Deck();
-    this.deck.shuffle();
+    
+    // Use custom deck if provided, otherwise create new deck
+    if (this.customDeck && this.customDeck.length > 0) {
+      this.deck = new Deck();
+      this.deck.cards = [...this.customDeck];
+    } else {
+      this.deck = new Deck();
+      this.deck.shuffle();
+    }
+    
     this.roundBets.clear();
     this.playerHands.clear();
     

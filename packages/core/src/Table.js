@@ -27,6 +27,7 @@ export class Table extends EventEmitter {
     this.state = TableState.WAITING;
     this.gameEngine = null;
     this.gameCount = 0;
+    this.customDeck = null;
   }
 
   /**
@@ -104,6 +105,17 @@ export class Table extends EventEmitter {
   }
 
   /**
+   * Set a custom deck for deterministic testing
+   * @param {Array} cards - Array of card objects
+   */
+  setCustomDeck(cards) {
+    if (this.state === TableState.IN_PROGRESS) {
+      throw new Error('Cannot set custom deck while game is in progress');
+    }
+    this.customDeck = cards;
+  }
+
+  /**
    * Start a new game if conditions are met
    */
   tryStartGame() {
@@ -133,6 +145,7 @@ export class Table extends EventEmitter {
         blinds: this.config.blinds,
         timeout: this.config.timeout,
         dealerButton: this.config.dealerButton,
+        customDeck: this.customDeck,
       });
 
       // Forward specific game events we care about
@@ -165,6 +178,9 @@ export class Table extends EventEmitter {
       });
 
       this.gameEngine.start();
+      
+      // Clear custom deck after use
+      this.customDeck = null;
     } catch (error) {
       // If game fails to start, revert state
       this.state = TableState.WAITING;
