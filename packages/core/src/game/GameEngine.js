@@ -32,6 +32,7 @@ export class GameEngine extends EventEmitter {
     this.playerHands = new Map();
     this.lastBettor = null;
     this.customDeck = config.customDeck || null;
+    this.raiseHistory = []; // Track raise increments in current round
   }
 
   /**
@@ -69,6 +70,7 @@ export class GameEngine extends EventEmitter {
     
     this.roundBets.clear();
     this.playerHands.clear();
+    this.raiseHistory = []; // Reset raise history for new hand
     
     // Initialize pot manager
     // Use all players, not just active ones, to maintain consistent object references
@@ -180,6 +182,7 @@ return;
     }
     
     this.lastBettor = null;
+    this.raiseHistory = []; // Reset raise history for new betting round
     
     // Check if there are any active players who can act
     const activePlayers = this.players.filter(p => p.state === PlayerState.ACTIVE);
@@ -354,21 +357,11 @@ return;
    * Get the size of the last raise in the current betting round
    */
   getLastRaiseSize() {
-    // Find the largest single raise increment in this round
-    // This is the difference between consecutive betting levels
-    const bigBlind = this.config.bigBlind;
-    const currentBet = this.getCurrentBet();
-    
-    // If current bet is just the blinds, no raises yet
-    if (currentBet <= bigBlind) {
+    // Return the last raise increment from our history
+    if (this.raiseHistory.length === 0) {
       return 0;
     }
-    
-    // For simplicity in this implementation, we'll track the difference
-    // from the big blind as the last raise size
-    // TODO: This could be enhanced to track actual raise increments
-    const raiseSize = currentBet - bigBlind;
-    return raiseSize;
+    return this.raiseHistory[this.raiseHistory.length - 1];
   }
 
   /**
@@ -395,6 +388,7 @@ return;
     // Store the player's last action
     playerData.lastAction = action.action;
     
+    
     this.emit('player:action', {
       playerId: playerData.player.id,
       action: action.action,
@@ -412,8 +406,10 @@ return;
         this.handleCall(playerData);
         break;
       case Action.BET:
-      case Action.RAISE:
         this.handleBet(playerData, action.amount);
+        break;
+      case Action.RAISE:
+        this.handleRaise(playerData, action.amount);
         break;
       case Action.ALL_IN:
         this.handleAllIn(playerData);
@@ -500,7 +496,7 @@ return;
   }
 
   /**
-   * Handle bet/raise action
+   * Handle bet action
    */
   handleBet(playerData, amount, blindType = '') {
     const actualAmount = Math.min(amount, playerData.chips);
@@ -522,6 +518,20 @@ return;
       total: this.potManager.getTotal(),
       playerBet: { playerId: playerData.player.id, amount: actualAmount },
     });
+  }
+
+  /**
+   * Handle raise action - tracks raise increments
+   */
+  handleRaise(playerData, amount) {
+    const currentBet = this.getCurrentBet();
+    const raiseIncrement = amount - currentBet;
+    
+    // Track this raise increment for minimum re-raise validation
+    this.raiseHistory.push(raiseIncrement);
+    
+    // Use the same betting logic as handleBet
+    this.handleBet(playerData, amount);
   }
 
   /**

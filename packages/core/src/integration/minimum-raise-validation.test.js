@@ -129,6 +129,8 @@ describe('Minimum Raise Validation', () => {
     let gameStarted = false;
     let handEnded = false;
     const actions = [];
+    let actionCount = 0;
+    const expectedActions = 5; // 2 raises + 3 folds
 
     class ReRaisePlayer extends Player {
       constructor(config) {
@@ -176,12 +178,13 @@ describe('Minimum Raise Validation', () => {
 
     table.on('player:action', ({ playerId, action, amount }) => {
       actions.push({ action, amount });
+      actionCount++;
     });
 
-    table.on('hand:ended', () => {
+    table.on('hand:ended', (data) => {
       if (!handEnded) {
         handEnded = true;
-        setTimeout(() => table.close(), 10);
+        table.close();
       }
     });
 
@@ -196,9 +199,12 @@ describe('Minimum Raise Validation', () => {
 
     await new Promise(resolve => setTimeout(resolve, 200));
     await vi.waitFor(() => gameStarted, { timeout: 2000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    
+    // Wait for all expected actions to be recorded
+    await vi.waitFor(() => actionCount >= expectedActions, { timeout: 3000 });
 
     const raises = actions.filter(a => a.action === Action.RAISE);
+    
     expect(raises).toHaveLength(2);
     expect(raises[0].amount).toBe(60);  // UTG raise
     expect(raises[1].amount).toBe(100); // Button re-raise
