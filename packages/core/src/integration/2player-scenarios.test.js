@@ -80,6 +80,11 @@ describe('2-Player (Heads-Up) Scenarios', () => {
         actions.push({ playerId, action, amount });
       });
 
+      // Auto-start when ready
+      table.on('table:ready', () => {
+        table.tryStartGame();
+      });
+
       // Add players
       table.addPlayer(sbPlayer);
       table.addPlayer(bbPlayer);

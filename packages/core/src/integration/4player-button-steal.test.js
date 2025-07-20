@@ -152,7 +152,6 @@ describe('4-Player Button Steal', () => {
     table.on('hand:ended', ({ winners }) => {
       if (!handEnded) {
         handEnded = true;
-        captureActions = false;
         if (winners && winners.length > 0) {
           winnerId = winners[0].playerId;
           winnerAmount = winners[0].amount;
@@ -161,20 +160,27 @@ describe('4-Player Button Steal', () => {
       }
     });
 
-    // Add players
+    // Add players and start game manually
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
-    // Wait for game to complete
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Wait for game to start
     await vi.waitFor(() => gameStarted, { 
+      timeout: 1000,
+      interval: 50, 
+    });
+    
+    // Wait for dealer button to be set
+    await vi.waitFor(() => dealerButton >= 0, { 
       timeout: 2000,
       interval: 50, 
     });
-    await vi.waitFor(() => dealerButton >= 0, { 
-      timeout: 3000,
-      interval: 50, 
-    });
+    
+    // Wait for hand to complete
     await vi.waitFor(() => handEnded, { timeout: 5000 });
+    
+    // Wait a bit for all actions to be captured
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     // Find button player
     const buttonPlayer = players[dealerButton];

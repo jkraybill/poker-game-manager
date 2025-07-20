@@ -132,21 +132,32 @@ describe('Table', () => {
       expect(table.players.get('player3').seatNumber).toBe(3);
     });
 
-    it('should start game when minimum players reached', async () => {
+    it('should start game when minimum players reached and explicitly started', async () => {
       const startSpy = vi.fn();
+      const readySpy = vi.fn();
       table.on('game:started', startSpy);
+      table.on('table:ready', readySpy);
       
       table.addPlayer(createMockPlayer('player1', 'Player 1'));
       expect(startSpy).not.toHaveBeenCalled();
+      expect(readySpy).not.toHaveBeenCalled();
       
       table.addPlayer(createMockPlayer('player2', 'Player 2'));
       
-      // Wait for auto-start delay (100ms)
-      await new Promise(resolve => setTimeout(resolve, 150));
+      // Should emit table:ready but not start game
+      await vi.waitFor(() => readySpy.mock.calls.length > 0);
+      expect(readySpy).toHaveBeenCalledWith({
+        playerCount: 2,
+        minPlayers: 2,
+      });
+      expect(startSpy).not.toHaveBeenCalled();
       
-      // Game should have started (even if it ended quickly)
+      // Now explicitly start the game
+      table.tryStartGame();
+      
+      // Game should have started
+      await vi.waitFor(() => startSpy.mock.calls.length > 0);
       expect(table.gameCount).toBe(1);
-      expect(startSpy).toHaveBeenCalled();
       expect(startSpy).toHaveBeenCalledWith({
         tableId: table.id,
         gameNumber: 1,
@@ -344,7 +355,7 @@ describe('Table', () => {
       expect(table.state).toBe(TableState.WAITING);
     });
 
-    it('should schedule next game', () => {
+    it('should NOT automatically schedule next game', () => {
       vi.useFakeTimers();
       // Set minPlayers back to 2 for this test  
       table.config.minPlayers = 2;
@@ -363,11 +374,12 @@ describe('Table', () => {
       table.handleGameEnd(result);
       expect(table.state).toBe(TableState.WAITING);
       
-      // Fast forward time
+      // Fast forward time - game should NOT auto-start
       vi.advanceTimersByTime(5000);
       
-      // Should have tried to start new game
-      expect(table.gameCount).toBeGreaterThan(0);
+      // Game should NOT have started automatically
+      expect(startedSpy).not.toHaveBeenCalled();
+      expect(table.state).toBe(TableState.WAITING);
       
       vi.useRealTimers();
     });

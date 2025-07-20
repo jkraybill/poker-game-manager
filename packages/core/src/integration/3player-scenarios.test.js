@@ -28,6 +28,7 @@ describe('3-Player Scenarios', () => {
         blinds: { small: 10, big: 20 },
         minBuyIn: 1000,
         maxBuyIn: 1000,
+        minPlayers: 3, // Require 3 players for this test
         dealerButton: 0, // Deterministic for testing
       });
 
@@ -40,7 +41,10 @@ describe('3-Player Scenarios', () => {
       const actions = [];
       let captureActions = true;
 
-      // Set up event listeners BEFORE adding players
+      // Create players array early so we can reference it in event handlers
+      const players = [];
+
+      // Set up event listeners BEFORE creating players
       table.on('game:started', () => {
         gameStarted = true;
       });
@@ -50,9 +54,6 @@ describe('3-Player Scenarios', () => {
           actions.push({ playerId, action, amount });
         }
       });
-
-      // Create players that will adapt based on position
-      const players = [];
       
       class PositionAwarePlayer extends Player {
         constructor(config) {
@@ -112,7 +113,7 @@ describe('3-Player Scenarios', () => {
       
       players.push(player1, player2, player3);
 
-      // Set up remaining event listeners
+      // Set up hand:started listener
       table.on('hand:started', ({ dealerButton: db }) => {
         dealerButton = db;
         // In 3-player, button is also UTG
@@ -124,23 +125,22 @@ describe('3-Player Scenarios', () => {
       table.on('hand:ended', ({ winners }) => {
         if (!handEnded) {  // Only capture first hand
           handEnded = true;
-          captureActions = false;  // Stop capturing actions
           if (winners && winners.length > 0) {
             winnerId = winners[0].playerId;
             winnerAmount = winners[0].amount;
           }
-          // Close table to prevent auto-restart
-          setTimeout(() => table.close(), 10);
+          // Close table to prevent auto-restart after a delay
+          setTimeout(() => {
+            table.close();
+          }, 500);
         }
       });
 
-      // Add players
+      // Add all players and start game
       table.addPlayer(player1);
       table.addPlayer(player2);
       table.addPlayer(player3);
-
-      // Wait a bit for auto-start
-      await new Promise(resolve => setTimeout(resolve, 200));
+      table.tryStartGame();
 
       // Wait for game to start
       await vi.waitFor(() => gameStarted, { 
@@ -154,8 +154,14 @@ describe('3-Player Scenarios', () => {
         interval: 50,
       });
 
-      // Wait for hand to complete
-      await vi.waitFor(() => handEnded, { timeout: 5000 });
+      // Wait for hand to complete first
+      await vi.waitFor(() => handEnded, { 
+        timeout: 5000,
+        interval: 50,
+      });
+      
+      // Then wait a bit for any remaining actions to be processed
+      await new Promise(resolve => setTimeout(resolve, 200));
       
       // Ensure dealerButton was set
       expect(dealerButton).toBeGreaterThanOrEqual(0);

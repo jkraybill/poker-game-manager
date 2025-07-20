@@ -37,6 +37,7 @@ describe('Minimum Raise Validation', () => {
     let handEnded = false;
     const actions = [];
     let invalidRaiseAttempted = false;
+    let invalidActionEmitted = false;
 
     class MinRaisePlayer extends Player {
       constructor(config) {
@@ -48,11 +49,13 @@ describe('Minimum Raise Validation', () => {
       getAction(gameState) {
         const myState = gameState.players[this.id];
         this.attemptCount++;
+        console.log(`${this.name} getAction called, attempt ${this.attemptCount}, currentBet: ${gameState.currentBet}`);
 
         if (gameState.phase === 'PRE_FLOP') {
           if (this.isButton && gameState.currentBet === 20) {
             // First attempt: try to raise to 30 (less than min raise)
             if (this.attemptCount === 1) {
+              console.log(`${this.name} attempting invalid raise to 30`);
               invalidRaiseAttempted = true;
               return {
                 playerId: this.id,
@@ -62,6 +65,7 @@ describe('Minimum Raise Validation', () => {
               };
             }
             // Second attempt: valid min raise
+            console.log(`${this.name} attempting valid raise to 40`);
             return {
               playerId: this.id,
               action: Action.RAISE,
@@ -72,6 +76,7 @@ describe('Minimum Raise Validation', () => {
         }
 
         // Default fold
+        console.log(`${this.name} folding`);
         return {
           playerId: this.id,
           action: Action.FOLD,
@@ -95,16 +100,24 @@ describe('Minimum Raise Validation', () => {
       }
     });
 
+    table.on('action:invalid', ({ playerId, action, amount, reason }) => {
+      console.log(`Invalid action detected: ${action} ${amount} - ${reason}`);
+      invalidActionEmitted = true;
+    });
+    
     const players = [
       new MinRaisePlayer({ name: 'Button', isButton: true }),
       new MinRaisePlayer({ name: 'BB', isButton: false }),
     ];
 
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
-    await new Promise(resolve => setTimeout(resolve, 200));
     await vi.waitFor(() => gameStarted, { timeout: 2000 });
     await vi.waitFor(() => handEnded, { timeout: 5000 });
+    
+    // Wait a bit for all actions to be captured
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     // Should have attempted invalid raise
     expect(invalidRaiseAttempted).toBe(true);
@@ -317,10 +330,13 @@ describe('Minimum Raise Validation', () => {
     ];
 
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
-    await new Promise(resolve => setTimeout(resolve, 200));
     await vi.waitFor(() => gameStarted, { timeout: 2000 });
     await vi.waitFor(() => handEnded, { timeout: 5000 });
+    
+    // Wait a bit for all actions to be captured
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     // Verify action sequence
     const p1Raise = actionSequence.find(a => a.position === 'P1' && a.action === Action.RAISE);
@@ -441,10 +457,13 @@ describe('Minimum Raise Validation', () => {
     ];
 
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
-    await new Promise(resolve => setTimeout(resolve, 200));
     await vi.waitFor(() => gameStarted, { timeout: 2000 });
     await vi.waitFor(() => handEnded, { timeout: 5000 });
+    
+    // Wait a bit for all actions to be captured
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     // Verify raise sequence
     expect(raiseSequence).toHaveLength(4);
