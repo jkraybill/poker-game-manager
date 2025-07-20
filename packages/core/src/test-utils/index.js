@@ -71,6 +71,14 @@ import { PLAYER_TYPES, StrategicPlayer, TournamentPlayer, STRATEGIES } from './p
 // Import Action for convenience
 export { Action } from '../types/index.js';
 
+// Table helpers for new explicit start API
+export {
+  createAutoStartTable,
+  createManualTable,
+  waitForTableReadyAndStart,
+  setupTableWithPlayers
+} from './tableHelpers.js';
+
 /**
  * Complete test scenario setup - combines table, events, and players
  * @param {Object} config - Test scenario configuration

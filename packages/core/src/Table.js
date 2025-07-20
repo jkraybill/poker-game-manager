@@ -59,14 +59,12 @@ export class Table extends EventEmitter {
       seatNumber: this.players.get(player.id).seatNumber,
     });
 
-    // Check if we can start a game
-    if (this.players.size >= this.config.minPlayers && this.state === TableState.WAITING) {
-      // Delay start to allow more players to join
-      setTimeout(() => {
-        if (this.state === TableState.WAITING) {
-          this.tryStartGame();
-        }
-      }, 100);
+    // Emit event when minimum players first reached (consumer can decide to start)
+    if (this.players.size === this.config.minPlayers && this.state === TableState.WAITING) {
+      this.emit('table:ready', {
+        playerCount: this.players.size,
+        minPlayers: this.config.minPlayers,
+      });
     }
 
     return true;
@@ -213,12 +211,7 @@ export class Table extends EventEmitter {
       }
     }
 
-    // Start new game after delay
-    setTimeout(() => {
-      if (this.players.size >= this.config.minPlayers) {
-        this.tryStartGame();
-      }
-    }, 5000);
+    // Game has ended - table consumer can start a new game if desired
   }
 
   /**
