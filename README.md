@@ -38,13 +38,13 @@ A high-performance, pure poker game management library for Node.js. Handles tour
 - **Infrastructure**: ✅ Modern build tools configured (ESLint, Prettier, Vitest)
 - **CI/CD**: ✅ GitHub Actions pipeline for Node.js 22 (all tests passing!)
 - **Core API**: ✅ Foundation implemented (PokerGameManager, Table, Player, GameEngine)
-- **Tests**: ✅ Comprehensive test suite (180 passing, 2 skipped - all core components covered)
-- **Integration Tests**: ✅ Multi-player betting scenarios (2-5 players fully tested, 6-8 players in progress)
+- **Tests**: ✅ Comprehensive test suite (205 passing, 4 failing - all core components covered)
+- **Integration Tests**: ✅ Multi-player betting scenarios (2-8 players implemented, 4 failing tests need fixing)
 - **Hand Evaluation**: ✅ Integrated pokersolver library for robust hand evaluation
 - **Player API**: ✅ Enhanced with lastAction tracking for advanced strategies
-- **Active Work**: 🚧 6-8 player scenarios, fixing pot distribution edge cases
+- **Active Work**: 🚧 Fixing minimum raise validation (4 failing tests) and pot distribution edge cases
 - **Known Issues**: 🐛 [Pot distribution bug (#11)](https://github.com/jkraybill/poker-game-manager/issues/11) - 90% FIXED, edge cases remain
-- **Critical Discovery**: 🔥 Winners can receive more chips than in pot (8-player test failure)
+- **Critical Issues**: 🔥 Minimum raise validation failing (4 tests) and pot distribution bugs remain
 - **GitHub Issues**: [6 open issues tracking progress](https://github.com/jkraybill/poker-game-manager/issues)
 
 ## Documentation
@@ -133,11 +133,12 @@ Future structure:
 ### Latest Session (2025-07-20)
 - ✅ **MASSIVE ACHIEVEMENT**: Extracted 2157-line test monolith into 13 granular test files
 - ✅ **POT DISTRIBUTION**: Fixed 90% of Issue #11 using object reference equality solution
-- ✅ **TEST EXPANSION**: Created 6-8 player scenario tests (4 passing, 4 failing)
+- ✅ **TEST EXPANSION**: Created 6-8 player scenario tests and comprehensive test coverage
 - ✅ **DOCUMENTATION**: Updated all .md files with comprehensive guides for future Claudes
 - ✅ **VISION TRANSFORMATION**: Converted REFACTORING_PLAN.md into inspiring championship platform vision
-- 🔥 **NEW BUG FOUND**: Winners receiving more chips than pot contains (8-player test)
-- 📊 **TEST STATUS**: 180 passing, 2 skipped, 4 failing (184 total tests)
+- ✅ **DEALING IMPLEMENTATION**: Proper burn card sequence (burn before flop, turn, river)
+- 🔥 **NEW CRITICAL ISSUE**: Minimum raise validation failing (4 tests need immediate attention)
+- 📊 **TEST STATUS**: 205 passing, 4 failing (209 total tests)
 
 ### Previous Session (2025-07-19 Afternoon)
 - ✅ Created comprehensive integration tests for betting scenarios:

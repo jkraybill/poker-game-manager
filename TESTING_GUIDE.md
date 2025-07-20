@@ -1,6 +1,6 @@
 # 🎯 POKER TESTING MASTERY GUIDE
 
-> **From 169 → 180 Tests: The Granular Revolution**
+> **From 169 → 205 Tests: The Granular Revolution**
 > 
 > This guide encapsulates the testing wisdom gained from shattering a 2157-line test monolith into 13 surgical, poker-focused test files. Each pattern here is battle-tested for poker excellence.
 
@@ -822,11 +822,11 @@ describe('⚡ Performance Benchmarks', () => {
 - [ ] **Hand Evaluation**: < 0.5ms average  
 - [ ] **Memory Usage**: < 512KB per table
 - [ ] **Concurrent Tables**: 1000+ supported
-- [ ] **Test Suite Speed**: All 180 tests < 5 seconds
+- [ ] **Test Suite Speed**: All 205 tests < 5 seconds
 
 ## 🎯 Coverage Goals (Production Excellence)
 
-### 🏆 Current Achievement: 180 Tests Passing!
+### 🏆 Current Achievement: 205 Tests Passing!
 - **Core game logic**: 100% coverage achieved ✅
 - **Integration scenarios**: All major patterns covered ✅  
 - **Edge cases**: Side pots, timeouts, all-ins ✅

@@ -14,16 +14,16 @@ const table = manager.createTable({
 });
 ```
 
-### 2. Pot Distribution Bug - Winner Gets 0 Chips
-**Symptom**: Winner receives 0 chips despite pot having chips (Issue #11)
-**Status**: CRITICAL BUG - Not yet fixed
-**Workaround**: Skip affected tests
+### 2. Minimum Raise Validation Failing - NEW CRITICAL BUG
+**Symptom**: Minimum raise validation logic failing (4 tests failing)
+**Status**: CRITICAL BUG - Needs immediate attention
+**Workaround**: Skip affected tests for now
 ```javascript
-it.skip('should handle multi-way pot with various stack sizes', async () => {
-  // Test skipped due to pot distribution bug
+it.skip('should enforce minimum raise of 2x big blind for first raise', async () => {
+  // Test skipped due to minimum raise validation bug
 });
 ```
-**Location**: `/packages/core/src/game/PotManager.js` - `distributePots()` method
+**Location**: `/packages/core/src/game/GameEngine.js` - betting validation logic
 
 ### 3. Test Timeout Errors
 **Symptom**: Test hangs and times out

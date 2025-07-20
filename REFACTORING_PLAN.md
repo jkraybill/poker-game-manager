@@ -12,7 +12,7 @@ The core transformation is complete! We've built a rock-solid foundation (with s
 
 - ✅ **Pure Poker Library** - Zero platform dependencies, 100% poker focus
 - ✅ **Modern JavaScript** - Node.js 22+ with ESM modules
-- ✅ **Comprehensive Testing** - 180 tests passing (was 169, now even better!)
+- ✅ **Comprehensive Testing** - 205 tests passing (massive expansion from original 169!)
 - ✅ **CI/CD Excellence** - Green builds, ESLint clean, production ready
 - ✅ **Core Components Complete**:
   - GameEngine with complete Texas Hold'em rules
@@ -36,17 +36,21 @@ The core transformation is complete! We've built a rock-solid foundation (with s
 ## 🚀 The Path to Poker Excellence (What's Next)
 
 ### 🔥 Priority 1: Critical Fixes (This Week)
-1. **Issue #11 - Pot Distribution Bug** (90% complete)
-   - Winners sometimes receive 0 chips despite winning
-   - NEW: Winners can receive MORE chips than pot contains!
-   - Critical for player trust and accuracy
-   - Impacts complex side pot scenarios
+1. **Minimum Raise Validation Bug** (NEW CRITICAL)
+   - 4 tests failing in minimum-raise-validation.test.js
+   - Betting rules enforcement broken
+   - Fundamental poker logic issue
+   - Needs immediate attention
 
-2. **6-8 Player Scenarios** (Issue #5)
-   - Complete the full spectrum of table sizes
-   - Essential for tournament play simulation
-   - Tests for complex multi-way dynamics
-   - Status: Tests written but 4 failing due to pot bugs
+2. **Issue #11 - Pot Distribution Bug** (90% complete)
+   - Winners sometimes receive 0 chips despite winning
+   - Critical for player trust and accuracy
+   - Mostly resolved but edge cases remain
+
+3. **Complete Test Suite** (Issue #5)
+   - 205/209 tests passing (4 failing)
+   - Essential for production readiness
+   - All core functionality implemented
 
 ### 🎯 Priority 2: Championship Features (Next Month)
 

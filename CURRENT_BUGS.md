@@ -1,37 +1,34 @@
 # 🐛 Current Bugs & Issues (2025-07-20)
 
-## 🔥 CRITICAL: Pot Overpayment Bug (NEW!)
+## 🔥 CRITICAL: Minimum Raise Validation Failing (NEW!)
 
-**Issue**: Winners receiving MORE chips than exist in the pot
-**Discovery**: 8-player "family pot with minimal raising" test
-**Severity**: CRITICAL - Breaks fundamental poker economics
+**Issue**: Minimum raise validation logic failing in GameEngine
+**Discovery**: 4 tests in minimum-raise-validation.test.js failing
+**Severity**: CRITICAL - Breaks fundamental poker betting rules
 
-### Symptoms
-- Test expects pot of $320 (8 players × $40 each)
-- Actual pot shows only $150
-- Winner receives $320 (more than pot contains!)
-- Players appear to be calling $20 before CO even raises
-
-### Test Details
-```javascript
-// From 8player-scenarios.test.js
-it('should handle 8-way family pot with minimal raising', async () => {
-  // Expected: CO raises to $40, everyone calls
-  // Actual: Players call $20 before CO acts, pot calculations wrong
-});
-```
+### Failing Tests
+1. **should enforce minimum raise of 2x big blind for first raise**
+   - Expected: First raise ≥ $40 (2x $20 BB)
+   - Actual: Getting $30 raise
+   
+2. **should enforce minimum re-raise equal to previous raise size**
+   - Expected: 2 raises in sequence
+   - Actual: Getting 4 raises (logic error)
+   
+3. **should not reopen betting when all-in is less than minimum raise**
+   - Expected: Short all-in defined
+   - Actual: shortAllIn is undefined
+   
+4. **should track minimum raise amounts through multiple raises**
+   - Expected: 4 raises in sequence
+   - Actual: Only getting 2 raises
 
 ### Debug Output
 ```
-🎯 Debug - Player actions leading to failure:
-Player 1 (UTG) [position 3]: checks (was: check)
-Player 2 (UTG+1) [position 4]: calls $20 (was: call)
-Player 3 (MP) [position 5]: calls $20 (was: call)
-Player 4 (MP+1) [position 6]: calls $20 (was: call)
-Player 5 (CO) [position 7]: raises to $40 (was: minRaise)
-...
-Final pot: $150
-Winner gets: $320 ❌
+AssertionError: expected 30 to be greater than or equal to 40
+AssertionError: expected [ …(4) ] to have a length of 2 but got 4
+AssertionError: expected undefined to be defined
+AssertionError: expected [ Array(2) ] to have a length of 4 but got 2
 ```
 
 ## 🐛 Issue #11: Pot Distribution Bug (90% Fixed)
@@ -53,26 +50,23 @@ Winner gets: $320 ❌
 
 ## 📊 Test Status Summary
 
-**Total Tests**: 184
-- ✅ Passing: 180
-- ⏭️ Skipped: 2
+**Total Tests**: 209
+- ✅ Passing: 205
 - ❌ Failing: 4
 
 ### Failing Tests
-1. **7player-scenarios.test.js**:
-   - "should handle 7-way family pot with everyone calling" ❌
-   - "should handle LAG wars with 3-betting and 4-betting" ❌
-
-2. **8player-scenarios.test.js**:
-   - "should handle 8-way family pot with minimal raising" ❌
-   - "should handle bubble scenario with short stacks" ❌
+1. **minimum-raise-validation.test.js**:
+   - "should enforce minimum raise of 2x big blind for first raise" ❌
+   - "should enforce minimum re-raise equal to previous raise size" ❌
+   - "should not reopen betting when all-in is less than minimum raise" ❌
+   - "should track minimum raise amounts through multiple raises" ❌
 
 ### Common Failure Pattern
 All failing tests involve:
-- Large number of players (7-8)
-- Complex betting patterns
-- Side pot calculations
-- Pot size mismatches
+- Minimum raise validation logic
+- Betting rule enforcement
+- Raise amount calculations
+- Action sequence tracking
 
 ## 🔍 Root Cause Analysis
 

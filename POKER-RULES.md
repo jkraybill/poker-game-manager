@@ -76,10 +76,11 @@ Substantial Action (SA) is either:
 - **4.1.3** Deal continues even if players are absent
 
 ### 4.2 Community Cards
-- **4.2.1** Burn one card before each street
-- **4.2.2** Flop: 3 cards dealt together
-- **4.2.3** Turn: 1 card
-- **4.2.4** River: 1 card
+- **4.2.1** Burn one card before each street (flop, turn, river)
+- **4.2.2** Flop: Burn 1 card, then deal 3 cards together
+- **4.2.3** Turn: Burn 1 card, then deal 1 card  
+- **4.2.4** River: Burn 1 card, then deal 1 card
+- **4.2.5** Implementation: `deck.draw()` removes burned cards from play
 
 ### 4.3 Betting Rounds
 - **4.3.1** Pre-flop: Action starts with player to left of big blind
