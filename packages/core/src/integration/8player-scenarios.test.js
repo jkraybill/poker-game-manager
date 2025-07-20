@@ -232,7 +232,6 @@ describe('8-Player Poker Scenarios', () => {
 
     table.on('pot:updated', ({ total }) => {
       potSize = total;
-      console.log(`Pot updated to: $${total}`);
     });
 
     table.on('player:action', ({ playerId, action, amount }) => {
@@ -249,21 +248,6 @@ describe('8-Player Poker Scenarios', () => {
         handEnded = true;
         winnerAmount = winners[0]?.amount || 0;
         finalPotSize = potSize;
-        console.log('=== 8-WAY FAMILY POT DEBUG ===');
-        console.log('Actions taken:', actionLog);
-        console.log('Final pot size:', finalPotSize);
-        console.log('Winner amount:', winnerAmount);
-        console.log('Expected: 8 × 40 = 320');
-        
-        // Calculate what pot should be
-        const preFlopCalls = actionLog.filter(a => 
-          a.action === Action.CALL && a.amount !== undefined,
-        );
-        const totalContributed = preFlopCalls.reduce((sum, a) => sum + a.amount, 0);
-        console.log('Pre-flop calls:', preFlopCalls.length);
-        console.log('Total contributed via calls:', totalContributed);
-        console.log('Plus blinds (10+20):', 30);
-        console.log('Calculated pot should be:', totalContributed + 30);
         
         setTimeout(() => table.close(), 10);
       }

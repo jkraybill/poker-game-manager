@@ -280,7 +280,7 @@ describe('7-Player Poker Scenarios', () => {
 
           // Once someone is all-in, others follow based on stack size
           const allInPlayers = Object.values(gameState.players).filter(
-            p => p.lastAction === Action.ALL_IN
+            p => p.lastAction === Action.ALL_IN,
           );
 
           if (allInPlayers.length > 0) {
