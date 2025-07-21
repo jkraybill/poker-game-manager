@@ -121,12 +121,15 @@ describe('5-Player Complex Side Pots', () => {
     }
 
     // Create 5 players with different stack sizes
+    // With dealerButton: 0, positions will be:
+    // Index 0: Button, Index 1: SB, Index 2: BB, Index 3: UTG (first to act), Index 4: MP
+    // Put Huge Stack at index 3 (UTG) so it acts first pre-flop
     const playerConfigs = [
-      { name: 'Tiny Stack', chips: 50, stackSize: 'tiny' },
-      { name: 'Small Stack', chips: 100, stackSize: 'small' },
-      { name: 'Medium Stack', chips: 300, stackSize: 'medium' },
-      { name: 'Large Stack', chips: 500, stackSize: 'large' },
-      { name: 'Huge Stack', chips: 1000, stackSize: 'huge' },
+      { name: 'Tiny Stack', chips: 50, stackSize: 'tiny' },      // Button
+      { name: 'Small Stack', chips: 100, stackSize: 'small' },   // SB
+      { name: 'Medium Stack', chips: 300, stackSize: 'medium' },  // BB
+      { name: 'Huge Stack', chips: 1000, stackSize: 'huge' },    // UTG (acts first)
+      { name: 'Large Stack', chips: 500, stackSize: 'large' },   // MP
     ];
 
     const players = playerConfigs.map(config => 
@@ -169,14 +172,18 @@ describe('5-Player Complex Side Pots', () => {
     table.on('hand:ended', (result) => {
       if (!handEnded) {
         handEnded = true;
-        captureActions = false;
+        // Don't stop capturing actions immediately - the event might fire before all actions are processed
         winners = result.winners || [];
         
         // Get side pots from the game engine
         if (table.gameEngine && table.gameEngine.potManager) {
           sidePots = table.gameEngine.potManager.pots;
         }
-        setTimeout(() => table.close(), 10);
+        // Stop capturing actions after a small delay
+        setTimeout(() => {
+          captureActions = false;
+          table.close();
+        }, 50);
       }
     });
 
@@ -198,6 +205,9 @@ describe('5-Player Complex Side Pots', () => {
     // Wait for game to complete
     await vi.waitFor(() => gameStarted, { timeout: 500 });
     await vi.waitFor(() => handEnded, { timeout: 1000 });
+    
+    // Wait a bit more to ensure all actions are captured
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     // Verify complex all-in action occurred
     const allIns = actions.filter(a => a.action === Action.ALL_IN);
