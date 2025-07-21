@@ -198,22 +198,48 @@ class StrategicPlayer extends Player {
 
 ---
 
-## 🔥 SESSION END NOTES (2025-07-21)
+## 🏆 TODAY'S ACHIEVEMENTS (2025-01-21 Session #2)
 
-### Current Blocker
-**Custom Deck Test Hanging** - 2-player test gets stuck after flop phase
-- Players correctly check on flop
-- Game doesn't progress to turn  
-- Need to debug GameEngine state machine
-- First test (4-player) works perfectly\!
+### 🎯 Test Suite Debugging Victory
+- **🔍 ROOT CAUSE FOUND**: Event capture timing issues - `captureActions = false` set too early
+- **✅ FIXED 5 TEST FILES**: Applied Promise-based event handling pattern
+  - split-pot-simple.test.js ✅
+  - split-pot-deterministic.test.js ✅
+  - 4player-side-pots.test.js ✅
+  - 5player-squeeze-play.test.js ✅
+  - split-pot-scenarios.test.js (partial) ✅
+- **⚡ MEMORY OPTIMIZATION**: Configured vitest with fork pool and limited concurrency
+- **📋 CREATED ISSUE #16**: Comprehensive documentation of test failures and fixes
+
+### 🛠️ Technical Solutions Applied
+1. **Promise-based event handling**: Replaced unreliable `vi.waitFor` conditions
+2. **Event capture fix**: Removed `captureActions = false` from hand:ended handlers
+3. **Timing delays**: Added 100ms delay after events to ensure processing completes
+4. **Memory config**: Limited test concurrency to prevent OOM errors
+
+### 📚 Documentation Updates
+- **CLAUDE.md**: Added Issue #16 as top priority with full details
+- **README.md**: Updated to highlight test suite issues as critical priority
+- **End-of-Session Checklist**: Added comprehensive guide for future Claudes
+
+## 🔥 SESSION END NOTES (2025-01-21)
+
+### Current Blockers
+1. **Memory Issues**: Full test suite still runs out of memory despite optimizations
+2. **Remaining Test Failures**: 
+   - 3 more split-pot-scenarios tests need Promise-based fix
+   - 6-8 player scenario tests failing
+   - table-explicit-start tests hanging
+3. **Custom Deck Test**: Still hanging after flop phase (from previous session)
 
 ### Key Discoveries Today
-1. Table.js had auto-restart logic causing memory leaks
-2. Tests were capturing actions from multiple games
-3. Player interface uses `getAction()` not `requestAction()`
-4. Breaking API changes are worth it for clean architecture
+1. Event capture timing was the root cause of most test failures
+2. Promise-based event handling is more reliable than vi.waitFor conditions
+3. Tests pass individually but memory leaks prevent full suite execution
+4. Vitest fork pool helps but isn't sufficient for large test runs
 
-### Next Session Priority
-1. Debug the hanging custom deck test
-2. Complete remaining integration test fixes
-3. Address pot distribution edge cases
+### Next Session Priorities
+1. **Apply remaining fixes**: Complete Promise-based conversion for all failing tests
+2. **Memory leak investigation**: Find root cause of memory issues
+3. **Test suite refactor**: Consider breaking large test files into smaller ones
+4. **Cleanup patterns**: Add proper afterEach cleanup to free memory
