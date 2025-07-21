@@ -93,11 +93,14 @@ describe('Minimum Raise Validation', () => {
       actions.push({ playerId, action, amount });
     });
 
-    table.on('hand:ended', () => {
-      if (!handEnded) {
-        handEnded = true;
-        setTimeout(() => table.close(), 10);
-      }
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('hand:ended', () => {
+        if (!handEnded) {
+          handEnded = true;
+          resolve();
+        }
+      });
     });
 
     table.on('action:invalid', ({ playerId, action, amount, reason }) => {
@@ -114,10 +117,10 @@ describe('Minimum Raise Validation', () => {
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 500 });
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    await handResult;
     
     // Wait a bit for all actions to be captured
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     // Should have attempted invalid raise
     expect(invalidRaiseAttempted).toBe(true);
@@ -194,11 +197,14 @@ describe('Minimum Raise Validation', () => {
       actionCount++;
     });
 
-    table.on('hand:ended', (data) => {
-      if (!handEnded) {
-        handEnded = true;
-        table.close();
-      }
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('hand:ended', (data) => {
+        if (!handEnded) {
+          handEnded = true;
+          resolve();
+        }
+      });
     });
 
     const players = [
@@ -209,12 +215,13 @@ describe('Minimum Raise Validation', () => {
     ];
 
     players.forEach(p => table.addPlayer(p));
+    table.tryStartGame();
 
-    await new Promise(resolve => setTimeout(resolve, 200));
     await vi.waitFor(() => gameStarted, { timeout: 500 });
+    await handResult;
     
-    // Wait for all expected actions to be recorded
-    await vi.waitFor(() => actionCount >= expectedActions, { timeout: 3000 });
+    // Wait a bit for all actions to be captured
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     const raises = actions.filter(a => a.action === Action.RAISE);
     
@@ -316,11 +323,14 @@ describe('Minimum Raise Validation', () => {
       });
     });
 
-    table.on('hand:ended', () => {
-      if (!handEnded) {
-        handEnded = true;
-        setTimeout(() => table.close(), 10);
-      }
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('hand:ended', () => {
+        if (!handEnded) {
+          handEnded = true;
+          resolve();
+        }
+      });
     });
 
     const players = [
@@ -333,10 +343,10 @@ describe('Minimum Raise Validation', () => {
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 500 });
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    await handResult;
     
     // Wait a bit for all actions to be captured
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     // Verify action sequence
     const p1Raise = actionSequence.find(a => a.position === 'P1' && a.action === Action.RAISE);
@@ -442,11 +452,14 @@ describe('Minimum Raise Validation', () => {
       }
     });
 
-    table.on('hand:ended', () => {
-      if (!handEnded) {
-        handEnded = true;
-        setTimeout(() => table.close(), 10);
-      }
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('hand:ended', () => {
+        if (!handEnded) {
+          handEnded = true;
+          resolve();
+        }
+      });
     });
 
     const players = [
@@ -460,10 +473,10 @@ describe('Minimum Raise Validation', () => {
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 500 });
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    await handResult;
     
     // Wait a bit for all actions to be captured
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     // Verify raise sequence
     expect(raiseSequence).toHaveLength(4);

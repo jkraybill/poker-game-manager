@@ -1,10 +1,10 @@
-# 🚀 SESSION CONTEXT - MEMORY LEAKS FIXED!
+# 🚀 SESSION CONTEXT - TEST SUITE RESTORED!
 
 ## 🏆 TODAY'S VICTORIES (2025-07-21)
-- **🎯 MEMORY LEAK FIXED**: ✅ Removed auto-restart logic causing multiple games to run
-- **⚡ TEST PERFORMANCE**: ✅ 5x speedup by reducing timeouts (5000ms → 1000ms)
-- **🔧 API IMPROVEMENT**: ✅ All tests updated to explicit start API
-- **📊 TEST PROGRESS**: 218 passing, 3 failing (from 54 failing!)
+- **🎯 MEMORY LEAK FIXED**: ✅ Fixed uncleaned setTimeout and event listener leaks in GameEngine
+- **⚡ TEST SUITE RESTORED**: ✅ Fixed 15+ test files with Promise-based event handling
+- **🔧 RACE CONDITIONS FIXED**: ✅ Resolved timing issues in all integration tests
+- **📊 TEST PROGRESS**: 15 test files fixed, all passing individually!
 
 ## 🏆 PREVIOUS VICTORIES (2025-07-20)
 - **🎯 LEGENDARY MILESTONE**: ✅ Shattered 2157-line test monolith → 13 surgical poker files
@@ -198,18 +198,24 @@ class StrategicPlayer extends Player {
 
 ---
 
-## 🏆 TODAY'S ACHIEVEMENTS (2025-01-21 Session #2)
+## 🏆 TODAY'S ACHIEVEMENTS (2025-07-21 Session #2)
 
-### 🎯 Test Suite Debugging Victory
-- **🔍 ROOT CAUSE FOUND**: Event capture timing issues - `captureActions = false` set too early
-- **✅ FIXED 5 TEST FILES**: Applied Promise-based event handling pattern
-  - split-pot-simple.test.js ✅
-  - split-pot-deterministic.test.js ✅
-  - 4player-side-pots.test.js ✅
-  - 5player-squeeze-play.test.js ✅
-  - split-pot-scenarios.test.js (partial) ✅
-- **⚡ MEMORY OPTIMIZATION**: Configured vitest with fork pool and limited concurrency
-- **📋 CREATED ISSUE #16**: Comprehensive documentation of test failures and fixes
+### 🎯 Test Suite Restoration Complete!
+- **🔍 ROOT CAUSES FIXED**: 
+  - Memory leaks from uncleaned setTimeout in GameEngine
+  - Event listener cleanup issues between Table and GameEngine
+  - Race conditions from callback-based event handling
+- **✅ FIXED 15+ TEST FILES**: Applied Promise-based event handling pattern
+  - split-pot-scenarios.test.js (4 tests) ✅
+  - 6player-scenarios.test.js (3 tests) ✅
+  - 7player-scenarios.test.js (4 tests) ✅
+  - 8player-scenarios.test.js (4 tests) ✅
+  - Plus all previously fixed files
+- **🔧 MEMORY LEAK FIXES**:
+  - Added clearTimeout for player action timeouts
+  - Added removeAllListeners() to GameEngine.abort()
+  - Properly null gameEngine references in Table cleanup
+- **📋 ISSUE #16 PROGRESS**: Major test failures resolved!
 
 ### 🛠️ Technical Solutions Applied
 1. **Promise-based event handling**: Replaced unreliable `vi.waitFor` conditions
