@@ -243,7 +243,8 @@ describe('8-Player Poker Scenarios', () => {
           handEnded = true;
           winnerAmount = _winners[0]?.amount || 0;
           finalPotSize = potSize;
-          resolve();
+          // Delay resolve to ensure all state updates are complete
+          setTimeout(() => resolve(), 50);
         }
       });
     });
@@ -262,6 +263,9 @@ describe('8-Player Poker Scenarios', () => {
 
     await vi.waitFor(() => gameStarted, { timeout: 500 });
     await handResult;
+    
+    // Add delay to let async operations complete
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     // Verify 8-way pot with min-raise
     // Everyone ends up with 40 in the pot (8 × 40 = 320)
