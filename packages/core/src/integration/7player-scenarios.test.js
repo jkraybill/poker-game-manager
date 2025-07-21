@@ -89,7 +89,8 @@ describe('7-Player Poker Scenarios', () => {
           handEnded = true;
           winnerAmount = _winners[0]?.amount || 0;
           showdownReached = _winners[0]?.hand !== null && _winners[0]?.hand !== undefined;
-          resolve();
+          // Delay resolve to ensure all state updates are complete
+          setTimeout(() => resolve(), 50);
         }
       });
     });
@@ -105,6 +106,9 @@ describe('7-Player Poker Scenarios', () => {
     // Wait for game
     await vi.waitFor(() => gameStarted, { timeout: 500 });
     await handResult;
+    
+    // Add delay to let async operations complete
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     // Verify 7-way pot
     expect(winnerAmount).toBe(140); // 7 × 20 = 140
