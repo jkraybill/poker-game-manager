@@ -1,11 +1,11 @@
-import { EventEmitter } from 'eventemitter3';
 import { nanoid } from 'nanoid';
+import { WildcardEventEmitter } from './base/WildcardEventEmitter.js';
 
 /**
  * Base Player class that implementations should extend or follow as interface
  * This provides a template for what methods a player must implement
  */
-export class Player extends EventEmitter {
+export class Player extends WildcardEventEmitter {
   constructor(config = {}) {
     super();
     

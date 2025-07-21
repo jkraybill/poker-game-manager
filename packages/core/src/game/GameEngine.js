@@ -1,5 +1,5 @@
-import { EventEmitter } from 'eventemitter3';
 import { GamePhase, PlayerState, Action } from '../types/index.js';
+import { WildcardEventEmitter } from '../base/WildcardEventEmitter.js';
 import { Deck } from './Deck.js';
 import { PotManager } from './PotManager.js';
 import { HandEvaluator } from './HandEvaluator.js';
@@ -8,7 +8,7 @@ import { HandEvaluator } from './HandEvaluator.js';
  * Core game engine that handles Texas Hold'em game logic
  * This is abstracted from any platform-specific concerns
  */
-export class GameEngine extends EventEmitter {
+export class GameEngine extends WildcardEventEmitter {
   constructor(config) {
     super();
     

@@ -1,12 +1,12 @@
-import { EventEmitter } from 'eventemitter3';
 import { nanoid } from 'nanoid';
+import { WildcardEventEmitter } from './base/WildcardEventEmitter.js';
 import { GameEngine } from './game/GameEngine.js';
 import { TableState, PlayerState } from './types/index.js';
 
 /**
  * Represents a poker table that manages games and players
  */
-export class Table extends EventEmitter {
+export class Table extends WildcardEventEmitter {
   constructor(config = {}) {
     super();
     

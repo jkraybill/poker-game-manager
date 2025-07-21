@@ -1,12 +1,12 @@
-import { EventEmitter } from 'eventemitter3';
 import { nanoid } from 'nanoid';
+import { WildcardEventEmitter } from './base/WildcardEventEmitter.js';
 import { Table } from './Table.js';
 
 /**
  * Main entry point for the poker game management library.
  * Manages multiple tables and provides a clean API for game operations.
  */
-export class PokerGameManager extends EventEmitter {
+export class PokerGameManager extends WildcardEventEmitter {
   constructor(config = {}) {
     super();
     this.tables = new Map();
