@@ -407,8 +407,20 @@ const table = manager.createTable({
 - Use event capture control flags
 - Clean up tables in afterEach
 - Don't share player instances between tests
+- Disable parallelism in vitest.config.js (maxConcurrency: 1)
 
-### 5. ESLint Errors Breaking CI
+### 5. Async Race Conditions in CI
+**Problem**: Tests pass locally but fail in CI with wrong values
+**Solution**: Add delays after event handling to let async operations complete:
+```javascript
+// In event handler
+setTimeout(() => resolve(), 50);
+
+// After awaiting events
+await new Promise(resolve => setTimeout(resolve, 200-600)); // CI needs more time
+```
+
+### 6. ESLint Errors Breaking CI
 **Problem**: CI fails on minor linting issues
 **Solution**: Always run before committing:
 ```bash
@@ -417,7 +429,7 @@ npm run format
 npm test
 ```
 
-### 6. Card Format Issues
+### 7. Card Format Issues
 **Problem**: Using '10' instead of 'T' for tens
 **Solution**: Use pokersolver notation - 'T' for 10:
 ```javascript
