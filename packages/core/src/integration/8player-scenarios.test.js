@@ -108,24 +108,27 @@ describe('8-Player Poker Scenarios', () => {
       }
     }
 
-    table.on('game:started', () => {
-      gameStarted = true;
-    });
-
-    table.on('player:action', ({ playerId, action, amount }) => {
-      const player = players.find(p => p.id === playerId);
-      actions.push({
-        position: player?.position,
-        action,
-        amount,
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('game:started', () => {
+        gameStarted = true;
       });
-    });
 
-    table.on('hand:ended', ({ winners: _winners }) => {
-      if (!handEnded) {
-        handEnded = true;
-        setTimeout(() => table.close(), 10);
-      }
+      table.on('player:action', ({ playerId, action, amount }) => {
+        const player = players.find(p => p.id === playerId);
+        actions.push({
+          position: player?.position,
+          action,
+          amount,
+        });
+      });
+
+      table.on('hand:ended', ({ winners: _winners }) => {
+        if (!handEnded) {
+          handEnded = true;
+          resolve();
+        }
+      });
     });
 
     // Create players
@@ -141,7 +144,7 @@ describe('8-Player Poker Scenarios', () => {
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 500 });
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    await handResult;
 
     // Verify early position battle
     const raises = actions.filter(a => a.action === Action.RAISE);
@@ -226,31 +229,33 @@ describe('8-Player Poker Scenarios', () => {
       }
     }
 
-    table.on('game:started', () => {
-      gameStarted = true;
-    });
-
-    table.on('pot:updated', ({ total }) => {
-      potSize = total;
-    });
-
-    table.on('player:action', ({ playerId, action, amount }) => {
-      const player = players.find(p => p.id === playerId);
-      actionLog.push({
-        position: player?.position || 'unknown',
-        action,
-        amount,
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('game:started', () => {
+        gameStarted = true;
       });
-    });
 
-    table.on('hand:ended', ({ winners }) => {
-      if (!handEnded) {
-        handEnded = true;
-        winnerAmount = winners[0]?.amount || 0;
-        finalPotSize = potSize;
-        
-        setTimeout(() => table.close(), 10);
-      }
+      table.on('pot:updated', ({ total }) => {
+        potSize = total;
+      });
+
+      table.on('player:action', ({ playerId, action, amount }) => {
+        const player = players.find(p => p.id === playerId);
+        actionLog.push({
+          position: player?.position || 'unknown',
+          action,
+          amount,
+        });
+      });
+
+      table.on('hand:ended', ({ winners }) => {
+        if (!handEnded) {
+          handEnded = true;
+          winnerAmount = winners[0]?.amount || 0;
+          finalPotSize = potSize;
+          resolve();
+        }
+      });
     });
 
     // Create 8 passive players
@@ -266,7 +271,7 @@ describe('8-Player Poker Scenarios', () => {
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 500 });
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    await handResult;
 
     // Verify 8-way pot with min-raise
     // Everyone ends up with 40 in the pot (8 × 40 = 320)
@@ -376,19 +381,22 @@ describe('8-Player Poker Scenarios', () => {
       }
     }
 
-    table.on('game:started', () => {
-      gameStarted = true;
-    });
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('game:started', () => {
+        gameStarted = true;
+      });
 
-    table.on('player:action', ({ playerId, action, amount }) => {
-      actions.push({ playerId, action, amount });
-    });
+      table.on('player:action', ({ playerId, action, amount }) => {
+        actions.push({ playerId, action, amount });
+      });
 
-    table.on('hand:ended', () => {
-      if (!handEnded) {
-        handEnded = true;
-        setTimeout(() => table.close(), 10);
-      }
+      table.on('hand:ended', () => {
+        if (!handEnded) {
+          handEnded = true;
+          resolve();
+        }
+      });
     });
 
     // Override addPlayer for custom chips
@@ -425,7 +433,7 @@ describe('8-Player Poker Scenarios', () => {
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 500 });
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    await handResult;
 
     
     // Verify bubble dynamics
@@ -522,24 +530,27 @@ describe('8-Player Poker Scenarios', () => {
       }
     }
 
-    table.on('game:started', () => {
-      gameStarted = true;
-    });
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('game:started', () => {
+        gameStarted = true;
+      });
 
-    table.on('hand:ended', ({ winners: _winners }) => {
-      if (!handEnded) {
-        handEnded = true;
-        
-        // Check if any player was eliminated
-        for (const [, chips] of playerChips) {
-          if (chips === 0) {
-            // Player was eliminated
-            break;
+      table.on('hand:ended', ({ winners: _winners }) => {
+        if (!handEnded) {
+          handEnded = true;
+          
+          // Check if any player was eliminated
+          for (const [, chips] of playerChips) {
+            if (chips === 0) {
+              // Player was eliminated
+              break;
+            }
           }
+          
+          resolve();
         }
-        
-        setTimeout(() => table.close(), 10);
-      }
+      });
     });
 
     // Mix of aggressive bounty hunters and cautious players
@@ -580,7 +591,7 @@ describe('8-Player Poker Scenarios', () => {
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 500 });
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    await handResult;
 
     // In a bounty tournament, aggressive play is expected
     // We might or might not see a knockout in one hand

@@ -211,6 +211,12 @@ export class Table extends EventEmitter {
       }
     }
 
+    // Clean up game engine
+    if (this.gameEngine) {
+      this.gameEngine.removeAllListeners();
+      this.gameEngine = null;
+    }
+
     // Game has ended - table consumer can start a new game if desired
   }
 
@@ -237,6 +243,7 @@ export class Table extends EventEmitter {
   endGame(reason) {
     if (this.gameEngine) {
       this.gameEngine.abort();
+      this.gameEngine = null;
     }
     this.state = TableState.WAITING;
     this.emit('game:ended', { 

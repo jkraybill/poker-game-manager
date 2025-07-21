@@ -215,14 +215,18 @@ return;
     
     try {
       // Get action from player with timeout
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), this.config.timeout),
-      );
+      let timeoutId;
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('Timeout')), this.config.timeout);
+      });
       
       const action = await Promise.race([
         currentPlayer.player.getAction(gameState),
         timeoutPromise,
       ]);
+      
+      // Clear the timeout since action completed
+      clearTimeout(timeoutId);
       
       this.handlePlayerAction(currentPlayer, action);
     } catch (error) {
@@ -852,5 +856,6 @@ return;
   abort() {
     this.phase = GamePhase.ENDED;
     this.emit('game:aborted');
+    this.removeAllListeners();
   }
 }

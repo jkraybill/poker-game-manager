@@ -172,7 +172,7 @@ describe('Split Pot Scenarios', () => {
 
     let gameStarted = false;
     let handEnded = false;
-    const winners = [];
+    let winners = [];
     
     // Set custom deck for board play scenario
     // All players get weak cards, board has royal flush
@@ -226,16 +226,18 @@ describe('Split Pot Scenarios', () => {
     }
 
 
-    table.on('game:started', () => {
-      gameStarted = true;
-    });
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('game:started', () => {
+        gameStarted = true;
+      });
 
-    table.on('hand:ended', ({ winners: handWinners }) => {
-      if (!handEnded) {
-        handEnded = true;
-        winners.push(...handWinners);
-        // Don't close table here - it interferes with event processing
-      }
+      table.on('hand:ended', ({ winners: handWinners }) => {
+        if (!handEnded) {
+          handEnded = true;
+          resolve(handWinners || []);
+        }
+      });
     });
 
     // Create 3 players
@@ -251,7 +253,7 @@ describe('Split Pot Scenarios', () => {
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 1000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    winners = await handResult;
 
     // All 3 players should win (playing the board)
     expect(winners).toHaveLength(3);
@@ -285,7 +287,7 @@ describe('Split Pot Scenarios', () => {
 
     let gameStarted = false;
     let handEnded = false;
-    const winners = [];
+    let winners = [];
     const actions = [];
     
     // Set custom deck for 2-way split with player 3 losing
@@ -353,17 +355,18 @@ describe('Split Pot Scenarios', () => {
       }
     }
 
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('game:started', () => {
+        gameStarted = true;
+      });
 
-    table.on('game:started', () => {
-      gameStarted = true;
-    });
-
-    table.on('hand:ended', ({ winners: handWinners }) => {
-      if (!handEnded) {
-        handEnded = true;
-        winners.push(...handWinners);
-        // Don't close table here - it interferes with event processing
-      }
+      table.on('hand:ended', ({ winners: handWinners }) => {
+        if (!handEnded) {
+          handEnded = true;
+          resolve(handWinners || []);
+        }
+      });
     });
 
     // Create 3 players
@@ -380,7 +383,7 @@ describe('Split Pot Scenarios', () => {
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 1000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    winners = await handResult;
 
     // Two players should win (both have AA)
     expect(winners).toHaveLength(2);
@@ -411,7 +414,7 @@ describe('Split Pot Scenarios', () => {
 
     let gameStarted = false;
     let handEnded = false;
-    const winners = [];
+    let winners = [];
     
     // Set custom deck for split main pot scenario
     // deck.draw() uses shift(), deals 1 card at a time with burn cards
@@ -490,16 +493,18 @@ describe('Split Pot Scenarios', () => {
       return result;
     };
 
-    table.on('game:started', () => {
-      gameStarted = true;
-    });
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('game:started', () => {
+        gameStarted = true;
+      });
 
-    table.on('hand:ended', ({ winners: handWinners }) => {
-      if (!handEnded) {
-        handEnded = true;
-        winners.push(...handWinners);
-        // Don't close table here - it interferes with event processing
-      }
+      table.on('hand:ended', ({ winners: handWinners }) => {
+        if (!handEnded) {
+          handEnded = true;
+          resolve(handWinners || []);
+        }
+      });
     });
 
     // Create players with different stacks
@@ -527,7 +532,7 @@ describe('Split Pot Scenarios', () => {
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 1000 });
-    await vi.waitFor(() => handEnded, { timeout: 5000 });
+    winners = await handResult;
 
     // Scenario: Short stack (100) all-in, P2 (500) and P3 (500) have more chips
     // Short stack and P2 have AA (split), P3 has KK

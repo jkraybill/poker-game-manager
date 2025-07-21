@@ -104,31 +104,33 @@ describe('6-Player Poker Scenarios', () => {
       }
     }
 
-    // Event listeners
-    table.on('game:started', () => {
-      gameStarted = true;
-    });
-
-    table.on('error', (error) => {
-      gameError = error;
-      console.error('Game error:', error);
-    });
-
-    table.on('player:action', ({ playerId, action, amount }) => {
-      const player = players.find(p => p.id === playerId);
-      actions.push({
-        behavior: player?.targetBehavior,
-        action,
-        amount,
+    // Create promise to wait for hand end and capture actions
+    const handResult = new Promise((resolve) => {
+      table.on('game:started', () => {
+        gameStarted = true;
       });
-    });
 
-    table.on('hand:ended', ({ winners }) => {
-      if (!handEnded) {
-        handEnded = true;
-        winnerAmount = winners[0]?.amount || 0;
-        setTimeout(() => table.close(), 10);
-      }
+      table.on('error', (error) => {
+        gameError = error;
+        console.error('Game error:', error);
+      });
+
+      table.on('player:action', ({ playerId, action, amount }) => {
+        const player = players.find(p => p.id === playerId);
+        actions.push({
+          behavior: player?.targetBehavior,
+          action,
+          amount,
+        });
+      });
+
+      table.on('hand:ended', ({ winners }) => {
+        if (!handEnded) {
+          handEnded = true;
+          winnerAmount = winners[0]?.amount || 0;
+          resolve();
+        }
+      });
     });
 
     // Create 6 players with specific behaviors
@@ -152,9 +154,9 @@ describe('6-Player Poker Scenarios', () => {
     // Wait for completion
     await vi.waitFor(() => gameStarted || gameError, { timeout: 500 });
     if (gameError) {
-throw gameError;
-}
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+      throw gameError;
+    }
+    await handResult;
 
     // Verify the aggressive action sequence
     const raises = actions.filter(a => a.action === Action.RAISE);
@@ -226,46 +228,49 @@ throw gameError;
       }
     }
 
-    table.on('game:started', () => {
-      gameStarted = true;
-      console.log('Game started with', table.players.size, 'players');
-    });
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('game:started', () => {
+        gameStarted = true;
+        console.log('Game started with', table.players.size, 'players');
+      });
 
-    table.on('player:action', ({ playerId, action, amount }) => {
-      playerActions.push({ playerId, action, amount });
-      console.log('Action:', action, 'Amount:', amount, 'Actions so far:', playerActions.length);
-    });
+      table.on('player:action', ({ playerId, action, amount }) => {
+        playerActions.push({ playerId, action, amount });
+        console.log('Action:', action, 'Amount:', amount, 'Actions so far:', playerActions.length);
+      });
 
-    table.on('round:ended', ({ phase }) => {
-      console.log('Round ended:', phase);
-    });
+      table.on('round:ended', ({ phase }) => {
+        console.log('Round ended:', phase);
+      });
 
-    table.on('action:requested', ({ playerId, validActions }) => {
-      console.log('Action requested from:', playerId, 'Valid actions:', validActions);
-    });
+      table.on('action:requested', ({ playerId, validActions }) => {
+        console.log('Action requested from:', playerId, 'Valid actions:', validActions);
+      });
 
-    table.on('pot:updated', ({ total }) => {
-      potSize = total;
-    });
+      table.on('pot:updated', ({ total }) => {
+        potSize = total;
+      });
 
-    table.on('hand:ended', ({ winners }) => {
-      if (!handEnded) {
-        handEnded = true;
-        console.log('Hand ended event received');
-        console.log('Winners:', JSON.stringify(winners, null, 2));
-        console.log('Pot size at hand end:', potSize);
-        winnerAmount = winners?.[0]?.amount || 0;
-        showdownOccurred = winners?.[0]?.hand !== null && winners?.[0]?.hand !== undefined;
-        setTimeout(() => table.close(), 10);
-      }
-    });
+      table.on('hand:ended', ({ winners }) => {
+        if (!handEnded) {
+          handEnded = true;
+          console.log('Hand ended event received');
+          console.log('Winners:', JSON.stringify(winners, null, 2));
+          console.log('Pot size at hand end:', potSize);
+          winnerAmount = winners?.[0]?.amount || 0;
+          showdownOccurred = winners?.[0]?.hand !== null && winners?.[0]?.hand !== undefined;
+          resolve();
+        }
+      });
 
-    table.on('error', (error) => {
-      console.error('Table error:', error);
-    });
+      table.on('error', (error) => {
+        console.error('Table error:', error);
+      });
 
-    table.on('game:error', (error) => {
-      console.error('Game error:', error);
+      table.on('game:error', (error) => {
+        console.error('Game error:', error);
+      });
     });
 
     // Create 6 passive players
@@ -278,7 +283,7 @@ throw gameError;
 
     // Wait for game to complete
     await vi.waitFor(() => gameStarted, { timeout: 500 });
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    await handResult;
 
     // Debug output
     console.log('Player actions:', playerActions);
@@ -377,19 +382,22 @@ throw gameError;
       }
     }
 
-    table.on('game:started', () => {
-      gameStarted = true;
-    });
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('game:started', () => {
+        gameStarted = true;
+      });
 
-    table.on('hand:ended', () => {
-      if (!handEnded) {
-        handEnded = true;
-        if (table.gameEngine?.potManager) {
-          sidePots = table.gameEngine.potManager.pots;
-          totalPot = sidePots.reduce((sum, pot) => sum + pot.amount, 0);
+      table.on('hand:ended', () => {
+        if (!handEnded) {
+          handEnded = true;
+          if (table.gameEngine?.potManager) {
+            sidePots = table.gameEngine.potManager.pots;
+            totalPot = sidePots.reduce((sum, pot) => sum + pot.amount, 0);
+          }
+          resolve();
         }
-        setTimeout(() => table.close(), 10);
-      }
+      });
     });
 
     // Override addPlayer to set custom chip amounts
@@ -419,7 +427,7 @@ throw gameError;
 
     // Wait for game to complete
     await vi.waitFor(() => gameStarted, { timeout: 500 });
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    await handResult;
 
     // Debug output
     console.log('Game started:', gameStarted);

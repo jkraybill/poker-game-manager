@@ -74,22 +74,24 @@ describe('7-Player Poker Scenarios', () => {
       }
     }
 
-    // Event tracking
-    table.on('game:started', () => {
-      gameStarted = true;
-    });
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('game:started', () => {
+        gameStarted = true;
+      });
 
-    table.on('player:action', ({ playerId, action, amount }) => {
-      actions.push({ playerId, action, amount });
-    });
+      table.on('player:action', ({ playerId, action, amount }) => {
+        actions.push({ playerId, action, amount });
+      });
 
-    table.on('hand:ended', ({ winners }) => {
-      if (!handEnded) {
-        handEnded = true;
-        winnerAmount = winners[0]?.amount || 0;
-        showdownReached = winners[0]?.hand !== null && winners[0]?.hand !== undefined;
-        setTimeout(() => table.close(), 10);
-      }
+      table.on('hand:ended', ({ winners }) => {
+        if (!handEnded) {
+          handEnded = true;
+          winnerAmount = winners[0]?.amount || 0;
+          showdownReached = winners[0]?.hand !== null && winners[0]?.hand !== undefined;
+          resolve();
+        }
+      });
     });
 
     // Create 7 passive players
@@ -102,7 +104,7 @@ describe('7-Player Poker Scenarios', () => {
 
     // Wait for game
     await vi.waitFor(() => gameStarted, { timeout: 500 });
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    await handResult;
 
     // Verify 7-way pot
     expect(winnerAmount).toBe(140); // 7 × 20 = 140
@@ -191,24 +193,27 @@ describe('7-Player Poker Scenarios', () => {
       }
     }
 
-    table.on('game:started', () => {
-      gameStarted = true;
-    });
-
-    table.on('player:action', ({ playerId, action, amount }) => {
-      const player = players.find(p => p.id === playerId);
-      actions.push({
-        position: player?.position,
-        action,
-        amount,
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('game:started', () => {
+        gameStarted = true;
       });
-    });
 
-    table.on('hand:ended', ({ winners: _winners }) => {
-      if (!handEnded) {
-        handEnded = true;
-        setTimeout(() => table.close(), 10);
-      }
+      table.on('player:action', ({ playerId, action, amount }) => {
+        const player = players.find(p => p.id === playerId);
+        actions.push({
+          position: player?.position,
+          action,
+          amount,
+        });
+      });
+
+      table.on('hand:ended', ({ winners: _winners }) => {
+        if (!handEnded) {
+          handEnded = true;
+          resolve();
+        }
+      });
     });
 
     // Create players with positions
@@ -224,7 +229,7 @@ describe('7-Player Poker Scenarios', () => {
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 500 });
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    await handResult;
 
     // Verify action sequence
     const raises = actions.filter(a => a.action === Action.RAISE);
@@ -313,8 +318,27 @@ describe('7-Player Poker Scenarios', () => {
       }
     }
 
-    table.on('game:started', () => {
-      gameStarted = true;
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('game:started', () => {
+        gameStarted = true;
+      });
+
+      // Capture pots when flop is dealt (after pre-flop betting completes)
+      table.on('cards:community', ({ phase }) => {
+        if (phase === 'FLOP' && sidePots.length === 0 && table.gameEngine?.potManager) {
+          // Capture the pots right after pre-flop ends
+          sidePots = [...table.gameEngine.potManager.pots];
+          totalPot = sidePots.reduce((sum, pot) => sum + pot.amount, 0);
+        }
+      });
+
+      table.on('hand:ended', () => {
+        if (!handEnded) {
+          handEnded = true;
+          resolve();
+        }
+      });
     });
 
     // Event tracking needs to be set up after players are created
@@ -328,22 +352,6 @@ describe('7-Player Poker Scenarios', () => {
         });
       });
     };
-
-    // Capture pots when flop is dealt (after pre-flop betting completes)
-    table.on('cards:community', ({ phase }) => {
-      if (phase === 'FLOP' && sidePots.length === 0 && table.gameEngine?.potManager) {
-        // Capture the pots right after pre-flop ends
-        sidePots = [...table.gameEngine.potManager.pots];
-        totalPot = sidePots.reduce((sum, pot) => sum + pot.amount, 0);
-      }
-    });
-
-    table.on('hand:ended', () => {
-      if (!handEnded) {
-        handEnded = true;
-        setTimeout(() => table.close(), 10);
-      }
-    });
 
     // Override addPlayer for custom chips
     const originalAddPlayer = table.addPlayer.bind(table);
@@ -381,7 +389,7 @@ describe('7-Player Poker Scenarios', () => {
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 500 });
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    await handResult;
 
     
     expect(sidePots.length).toBeGreaterThanOrEqual(3); // Multiple side pots
@@ -474,24 +482,27 @@ describe('7-Player Poker Scenarios', () => {
       }
     }
 
-    table.on('game:started', () => {
-      gameStarted = true;
-    });
-
-    table.on('player:action', ({ playerId, action, amount }) => {
-      const player = players.find(p => p.id === playerId);
-      actions.push({
-        position: player?.position,
-        action,
-        amount,
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('game:started', () => {
+        gameStarted = true;
       });
-    });
 
-    table.on('hand:ended', ({ winners: _winners }) => {
-      if (!handEnded) {
-        handEnded = true;
-        setTimeout(() => table.close(), 10);
-      }
+      table.on('player:action', ({ playerId, action, amount }) => {
+        const player = players.find(p => p.id === playerId);
+        actions.push({
+          position: player?.position,
+          action,
+          amount,
+        });
+      });
+
+      table.on('hand:ended', ({ winners: _winners }) => {
+        if (!handEnded) {
+          handEnded = true;
+          resolve();
+        }
+      });
     });
 
     // Create players
@@ -507,7 +518,7 @@ describe('7-Player Poker Scenarios', () => {
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 500 });
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    await handResult;
 
     // Verify squeeze sequence
     expect(squeezePlayed).toBe(true);

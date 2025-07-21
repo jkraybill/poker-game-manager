@@ -33,5 +33,7 @@ export default defineConfig({
     },
     maxConcurrency: 2,
     isolate: true,
+    // Force exit after tests complete
+    teardownTimeout: 1000,
   },
 })
