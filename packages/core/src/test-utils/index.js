@@ -122,6 +122,8 @@ export function createTestScenario(config = {}) {
       playerList.forEach(player => table.addPlayer(player));
     },
     
+    startGame: () => table.tryStartGame(),
+    
     waitForStart: () => waitForGameStart(events, waitHelpers.gameStart),
     waitForEnd: () => waitForHandEnd(events, waitHelpers.handEnd),
     
@@ -280,6 +282,9 @@ export async function executePokerTest(testSetup, testValidation, options = {}) 
   const scenario = testSetup();
   
   try {
+    // Start the game (required by new API)
+    scenario.startGame();
+    
     // Wait for test completion
     await scenario.waitForStart();
     await scenario.waitForEnd();

@@ -62,10 +62,6 @@ describe('Simple Split Pot Test', () => {
       dealerButton: 0,
     });
 
-    let gameStarted = false;
-    let handEnded = false;
-    const winners = [];
-
     // Simple all-in players
     class AllInPlayer extends Player {
       getAction(gameState) {
@@ -89,25 +85,26 @@ describe('Simple Split Pot Test', () => {
       }
     }
 
-    table.on('game:started', () => {
-      gameStarted = true;
-    });
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('game:started', () => {
+        console.log('Game started');
+      });
 
-    table.on('hand:ended', ({ winners: handWinners }) => {
-      if (!handEnded) {
-        handEnded = true;
-        winners.push(...handWinners);
+      table.on('hand:ended', (event) => {
+        console.log('hand:ended event received:', event);
+        const handWinners = event.winners;
         
-        console.log('Hand ended with winners:', handWinners.length);
-        console.log('Winner details:', handWinners.map(w => ({
+        console.log('Hand ended with winners:', handWinners?.length || 0);
+        console.log('Winner details:', handWinners?.map(w => ({
           playerId: w.playerId,
           handRank: w.hand?.rank,
           handKickers: w.hand?.kickers,
           amount: w.amount,
-        })));
+        })) || []);
         
-        setTimeout(() => table.close(), 10);
-      }
+        resolve(handWinners || []);
+      });
     });
 
     // Create 2 players with equal chips
@@ -117,11 +114,16 @@ describe('Simple Split Pot Test', () => {
     ];
 
     players.forEach(p => table.addPlayer(p));
+    
+    // Explicitly start the game (new API)
+    table.tryStartGame();
 
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 500 });
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    // Wait for hand to complete
+    const winners = await handResult;
 
+    console.log('Final winners array:', winners);
+    console.log('Winners length:', winners.length);
+    
     // With random cards, we can't guarantee a split pot
     // But we can verify the game completes and someone wins
     expect(winners.length).toBeGreaterThan(0);

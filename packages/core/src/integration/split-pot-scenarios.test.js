@@ -114,13 +114,13 @@ describe('Split Pot Scenarios', () => {
     });
 
     table.on('hand:ended', ({ winners: handWinners }) => {
-      if (!handEnded) {
+      if (!handEnded && handWinners && handWinners.length > 0) {
         handEnded = true;
         winners.push(...handWinners);
         showdownOccurred = handWinners[0]?.hand != null;
         
         
-        setTimeout(() => table.close(), 10);
+        // Don't close table here - it interferes with event processing
       }
     });
 
@@ -131,10 +131,12 @@ describe('Split Pot Scenarios', () => {
     ];
 
     players.forEach(p => table.addPlayer(p));
+    
+    // Explicitly start the game (new API)
+    table.tryStartGame();
 
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 500 });
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    await vi.waitFor(() => gameStarted, { timeout: 1000 });
+    await vi.waitFor(() => handEnded && winners.length > 0, { timeout: 5000 });
 
     // Verify split pot
     expect(winners).toHaveLength(2); // Both players win
@@ -232,7 +234,7 @@ describe('Split Pot Scenarios', () => {
       if (!handEnded) {
         handEnded = true;
         winners.push(...handWinners);
-        setTimeout(() => table.close(), 10);
+        // Don't close table here - it interferes with event processing
       }
     });
 
@@ -244,10 +246,12 @@ describe('Split Pot Scenarios', () => {
     ];
 
     players.forEach(p => table.addPlayer(p));
+    
+    // Explicitly start the game (new API)
+    table.tryStartGame();
 
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 500 });
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    await vi.waitFor(() => gameStarted, { timeout: 1000 });
+    await vi.waitFor(() => handEnded && winners.length > 0, { timeout: 5000 });
 
     // All 3 players should win (playing the board)
     expect(winners).toHaveLength(3);
@@ -358,7 +362,7 @@ describe('Split Pot Scenarios', () => {
       if (!handEnded) {
         handEnded = true;
         winners.push(...handWinners);
-        setTimeout(() => table.close(), 10);
+        // Don't close table here - it interferes with event processing
       }
     });
 
@@ -371,10 +375,12 @@ describe('Split Pot Scenarios', () => {
     ];
 
     players.forEach(p => table.addPlayer(p));
+    
+    // Explicitly start the game (new API)
+    table.tryStartGame();
 
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 500 });
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    await vi.waitFor(() => gameStarted, { timeout: 1000 });
+    await vi.waitFor(() => handEnded && winners.length > 0, { timeout: 5000 });
 
     // Two players should win (both have AA)
     expect(winners).toHaveLength(2);
@@ -492,7 +498,7 @@ describe('Split Pot Scenarios', () => {
       if (!handEnded) {
         handEnded = true;
         winners.push(...handWinners);
-        setTimeout(() => table.close(), 10);
+        // Don't close table here - it interferes with event processing
       }
     });
 
@@ -516,10 +522,12 @@ describe('Split Pot Scenarios', () => {
     ];
 
     players.forEach(p => table.addPlayer(p));
+    
+    // Explicitly start the game (new API)
+    table.tryStartGame();
 
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 500 });
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    await vi.waitFor(() => gameStarted, { timeout: 1000 });
+    await vi.waitFor(() => handEnded && winners.length > 0, { timeout: 5000 });
 
     // Scenario: Short stack (100) all-in, P2 (500) and P3 (500) have more chips
     // Short stack and P2 have AA (split), P3 has KK

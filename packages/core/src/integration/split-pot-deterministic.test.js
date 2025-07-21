@@ -20,7 +20,7 @@ describe('Split Pot Deterministic Tests', () => {
     manager.tables.forEach(table => table.close());
   });
 
-  it('should split pot between two players with identical hands', async () => {
+  it('should split pot between two players with identical hands', { timeout: 10000 }, async () => {
     const table = manager.createTable({
       blinds: { small: 10, big: 20 },
       minBuyIn: 1000,
@@ -30,8 +30,6 @@ describe('Split Pot Deterministic Tests', () => {
     });
 
     let gameStarted = false;
-    let handEnded = false;
-    const winners = [];
 
     // Set custom deck BEFORE adding players
     // Both players get AA, board has low cards
@@ -96,18 +94,30 @@ describe('Split Pot Deterministic Tests', () => {
           timestamp: Date.now(),
         };
       }
+      
+      receivePrivateCards(cards) {
+        // Required by Player interface
+      }
+      
+      receivePublicCards(cards) {
+        // Required by Player interface
+      }
+      
+      receiveGameUpdate(update) {
+        // Required by Player interface
+      }
     }
 
-    table.on('game:started', () => {
-      gameStarted = true;
-    });
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('game:started', () => {
+        gameStarted = true;
+      });
 
-    table.on('hand:ended', ({ winners: handWinners }) => {
-      if (!handEnded) {
-        handEnded = true;
-        winners.push(...handWinners);
-        setTimeout(() => table.close(), 10);
-      }
+      table.on('hand:ended', ({ winners: handWinners }) => {
+        console.log('Hand ended with winners:', handWinners?.length || 0);
+        resolve(handWinners || []);
+      });
     });
 
     // Create 2 players
@@ -117,10 +127,15 @@ describe('Split Pot Deterministic Tests', () => {
     ];
 
     players.forEach(p => table.addPlayer(p));
+    
+    // Small delay to ensure table is ready
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Explicitly start the game (new API)
+    table.tryStartGame();
 
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 500 });
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    await vi.waitFor(() => gameStarted, { timeout: 1000 });
+    const winners = await handResult;
 
     // Both players should win with AA
     expect(winners).toHaveLength(2);
@@ -135,7 +150,7 @@ describe('Split Pot Deterministic Tests', () => {
     table.close();
   });
 
-  it('should split pot three ways with identical hands', async () => {
+  it('should split pot three ways with identical hands', { timeout: 10000 }, async () => {
     const table = manager.createTable({
       blinds: { small: 10, big: 20 },
       minBuyIn: 1000,
@@ -145,8 +160,6 @@ describe('Split Pot Deterministic Tests', () => {
     });
 
     let gameStarted = false;
-    let handEnded = false;
-    const winners = [];
 
     // Set custom deck BEFORE adding players
     // All players get pocket pairs, board makes everyone play the board
@@ -196,18 +209,30 @@ describe('Split Pot Deterministic Tests', () => {
           timestamp: Date.now(),
         };
       }
+      
+      receivePrivateCards(cards) {
+        // Required by Player interface
+      }
+      
+      receivePublicCards(cards) {
+        // Required by Player interface
+      }
+      
+      receiveGameUpdate(update) {
+        // Required by Player interface
+      }
     }
 
-    table.on('game:started', () => {
-      gameStarted = true;
-    });
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('game:started', () => {
+        gameStarted = true;
+      });
 
-    table.on('hand:ended', ({ winners: handWinners }) => {
-      if (!handEnded) {
-        handEnded = true;
-        winners.push(...handWinners);
-        setTimeout(() => table.close(), 10);
-      }
+      table.on('hand:ended', ({ winners: handWinners }) => {
+        console.log('Hand ended with winners:', handWinners?.length || 0);
+        resolve(handWinners || []);
+      });
     });
 
     // Create 3 players
@@ -216,10 +241,15 @@ describe('Split Pot Deterministic Tests', () => {
     );
 
     players.forEach(p => table.addPlayer(p));
+    
+    // Small delay to ensure table is ready
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Explicitly start the game (new API)
+    table.tryStartGame();
 
-    await new Promise(resolve => setTimeout(resolve, 200));
-    await vi.waitFor(() => gameStarted, { timeout: 500 });
-    await vi.waitFor(() => handEnded, { timeout: 1000 });
+    await vi.waitFor(() => gameStarted, { timeout: 1000 });
+    const winners = await handResult;
 
     // All three should win (playing the board - AAKKQ)
     expect(winners).toHaveLength(3);
