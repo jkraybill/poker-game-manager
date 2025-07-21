@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { PokerGameManager } from '../PokerGameManager.js';
 import { Player } from '../Player.js';
-import { Action, PlayerState } from '../types/index.js';
+import { Action } from '../types/index.js';
 
 describe('6-Player Simple Test', () => {
   let manager;
@@ -54,7 +54,7 @@ describe('6-Player Simple Test', () => {
       gameStarted = true;
     });
 
-    table.on('player:action', ({ action, playerId }) => {
+    table.on('player:action', () => {
       actionCount++;
     });
 
@@ -75,7 +75,7 @@ describe('6-Player Simple Test', () => {
     // Add 6 players
     for (let i = 0; i < 6; i++) {
       table.addPlayer(new FoldPlayer({ 
-        name: `Player ${i + 1}`
+        name: `Player ${i + 1}`,
       }));
     }
     table.tryStartGame();

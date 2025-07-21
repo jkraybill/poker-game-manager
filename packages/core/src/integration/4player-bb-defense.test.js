@@ -289,7 +289,7 @@ describe('4-Player Big Blind Defense', () => {
     const flopCall = actions.find((a, idx) => 
       a.action === Action.CALL && 
       a.amount === 80 && 
-      idx > actions.findIndex(act => act.action === Action.BET)
+      idx > actions.findIndex(act => act.action === Action.BET),
     );
     
     if (flopBet && flopCall) {
