@@ -198,19 +198,9 @@ describe('8-Player Poker Scenarios', () => {
             };
           }
 
-          // If someone raised to 40, everyone calls
-          if (gameState.currentBet === 40 && toCall > 0) {
-            return {
-              playerId: this.id,
-              action: Action.CALL,
-              amount: toCall,
-              timestamp: Date.now(),
-            };
-          }
-
-          // Otherwise, players before CO should limp (call the BB)
-          if (gameState.currentBet === 20 && toCall > 0 && 
-              ['UTG', 'UTG+1', 'MP1', 'MP2'].includes(this.position)) {
+          // If there's a bet to call (regardless of amount), call it
+          // This handles both initial BB calls and calling raises
+          if (toCall > 0) {
             return {
               playerId: this.id,
               action: Action.CALL,

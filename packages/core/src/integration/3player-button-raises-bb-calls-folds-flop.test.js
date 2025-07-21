@@ -201,10 +201,6 @@ describe('3-player: Button raises, BB calls, then folds to flop bet', () => {
     // Wait for hand to complete
     const { winnerId, winnerAmount } = await handEndPromise;
 
-    // console.log('Final pot size:', potSize);
-    // console.log('Winner amount:', winnerAmount);
-    // console.log('Actions:', JSON.stringify(actions, null, 2));
-
     // Verify the button player won
     expect(winnerId).toBe(buttonPlayer.id);
     // Button should win entire pot: pre-flop $210 + uncalled flop bet $200 = $410

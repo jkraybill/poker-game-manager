@@ -22,17 +22,20 @@ export default defineConfig({
         '**/test-utils/**',
       ],
     },
-    // Memory optimization settings
+    // Disable all parallelism
     pool: 'forks',
     poolOptions: {
       forks: {
         singleFork: true,
-        maxForks: 2,
+        maxForks: 1,
         minForks: 1,
       }
     },
-    maxConcurrency: 2,
+    maxConcurrency: 1,
+    maxWorkers: 1,
+    minWorkers: 1,
     isolate: true,
+    fileParallelism: false,
     // Force exit after tests complete
     teardownTimeout: 1000,
   },

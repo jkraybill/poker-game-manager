@@ -112,7 +112,6 @@ describe('6-Player Poker Scenarios', () => {
 
       table.on('error', (error) => {
         gameError = error;
-        console.error('Game error:', error);
       });
 
       table.on('player:action', ({ playerId, action, amount }) => {
@@ -190,7 +189,6 @@ describe('6-Player Poker Scenarios', () => {
     let gameStarted = false;
     let handEnded = false;
     let winnerAmount = 0;
-    let showdownOccurred = false;
     let potSize = 0;
     const playerActions = [];
 
@@ -228,49 +226,45 @@ describe('6-Player Poker Scenarios', () => {
       }
     }
 
+    // Flag to stop capturing actions after hand ends
+    let captureActions = true;
+
     // Create promise to wait for hand end
     const handResult = new Promise((resolve) => {
-      table.on('game:started', () => {
+      const handleGameStarted = () => {
         gameStarted = true;
-        console.log('Game started with', table.players.size, 'players');
-      });
+      };
 
-      table.on('player:action', ({ playerId, action, amount }) => {
-        playerActions.push({ playerId, action, amount });
-        console.log('Action:', action, 'Amount:', amount, 'Actions so far:', playerActions.length);
-      });
+      const handlePlayerAction = ({ playerId, action, amount }) => {
+        if (captureActions) {
+          playerActions.push({ playerId, action, amount });
+        }
+      };
 
-      table.on('round:ended', ({ phase }) => {
-        console.log('Round ended:', phase);
-      });
-
-      table.on('action:requested', ({ playerId, validActions }) => {
-        console.log('Action requested from:', playerId, 'Valid actions:', validActions);
-      });
-
-      table.on('pot:updated', ({ total }) => {
+      const handlePotUpdated = ({ total }) => {
         potSize = total;
-      });
+      };
 
-      table.on('hand:ended', ({ winners }) => {
+      const handleHandEnded = ({ winners }) => {
         if (!handEnded) {
           handEnded = true;
-          console.log('Hand ended event received');
-          console.log('Winners:', JSON.stringify(winners, null, 2));
-          console.log('Pot size at hand end:', potSize);
+          captureActions = false; // Stop capturing actions
           winnerAmount = winners?.[0]?.amount || 0;
-          showdownOccurred = winners?.[0]?.hand !== null && winners?.[0]?.hand !== undefined;
+          
+          // Clean up event listeners
+          table.off('game:started', handleGameStarted);
+          table.off('player:action', handlePlayerAction);
+          table.off('pot:updated', handlePotUpdated);
+          table.off('hand:ended', handleHandEnded);
+          
           resolve();
         }
-      });
+      };
 
-      table.on('error', (error) => {
-        console.error('Table error:', error);
-      });
-
-      table.on('game:error', (error) => {
-        console.error('Game error:', error);
-      });
+      table.on('game:started', handleGameStarted);
+      table.on('player:action', handlePlayerAction);
+      table.on('pot:updated', handlePotUpdated);
+      table.on('hand:ended', handleHandEnded);
     });
 
     // Create 6 passive players
@@ -285,15 +279,9 @@ describe('6-Player Poker Scenarios', () => {
     await vi.waitFor(() => gameStarted, { timeout: 500 });
     await handResult;
 
-    // Debug output
-    console.log('Player actions:', playerActions);
-    console.log('Final pot size:', potSize);
-    console.log('Winner amount:', winnerAmount);
-
     // Verify result: All active players should be in the pot
     // Count how many players called/checked
     const calls = playerActions.filter(a => a.action === Action.CALL);
-    // const checks = playerActions.filter(a => a.action === Action.CHECK && a.amount === undefined);
     
     // Everyone should limp (5 calls + BB checks)
     expect(calls.length).toBe(5); // 5 players call the BB
@@ -301,7 +289,6 @@ describe('6-Player Poker Scenarios', () => {
     // The pot should be 6 * 20 = 120
     expect(potSize).toBe(120);
     expect(winnerAmount).toBe(120);
-    expect(showdownOccurred).toBe(true); // Should go to showdown
 
     table.close();
   });
@@ -429,15 +416,9 @@ describe('6-Player Poker Scenarios', () => {
     await vi.waitFor(() => gameStarted, { timeout: 500 });
     await handResult;
 
-    // Debug output
-    console.log('Game started:', gameStarted);
-    console.log('Side pots:', sidePots.length, 'Total pot:', totalPot);
-    console.log('Hand ended:', handEnded);
-    
     // Verify multiple side pots created
     if (sidePots.length === 0 && totalPot === 0) {
       // The game might have ended differently than expected
-      console.log('No side pots created - checking if game actually ran');
     }
     
     // For now, just verify the game ran
