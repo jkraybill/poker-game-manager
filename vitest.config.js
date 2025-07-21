@@ -22,5 +22,16 @@ export default defineConfig({
         '**/test-utils/**',
       ],
     },
+    // Memory optimization settings
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true,
+        maxForks: 2,
+        minForks: 1,
+      }
+    },
+    maxConcurrency: 2,
+    isolate: true,
   },
 })

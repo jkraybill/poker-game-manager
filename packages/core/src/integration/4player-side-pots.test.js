@@ -70,9 +70,16 @@ describe('4-Player Multiple All-In Side Pots', () => {
         const myState = gameState.players[this.id];
         const toCall = gameState.currentBet - myState.bet;
 
-        // Big Stack: initiates action with a raise
-        if (this.stackSize === 'big' && !this.hasActed && gameState.currentBet <= 20) {
+        console.log(`${this.name} (${this.stackSize}) getAction - currentBet: ${gameState.currentBet}, myBet: ${myState.bet}, toCall: ${toCall}, hasActed: ${this.hasActed}`);
+
+        // We need to understand the action sequence better
+        // The first player to act (UTG) should initiate
+        const isFirstToAct = gameState.currentBet === 20 && !this.hasActed;
+        
+        // If we're first to act and have big stack, raise to start action
+        if (this.stackSize === 'big' && isFirstToAct) {
           this.hasActed = true;
+          console.log(`${this.name} raising to 150`);
           return {
             playerId: this.id,
             action: Action.RAISE,
@@ -81,24 +88,27 @@ describe('4-Player Multiple All-In Side Pots', () => {
           };
         }
 
-        // Short Stack: goes all-in when facing any bet
-        if (this.stackSize === 'short' && toCall > 0) {
-          return {
-            playerId: this.id,
-            action: Action.ALL_IN,
-            amount: myState.chips,
-            timestamp: Date.now(),
-          };
-        }
-
-        // Medium Stacks: go all-in when facing a bet
-        if ((this.stackSize === 'medium1' || this.stackSize === 'medium2') && toCall > 0) {
-          return {
-            playerId: this.id,
-            action: Action.ALL_IN,
-            amount: myState.chips,
-            timestamp: Date.now(),
-          };
+        // If facing a raise, stacks go all-in based on their size
+        if (toCall > 0) {
+          // Short stack always goes all-in
+          if (this.stackSize === 'short') {
+            return {
+              playerId: this.id,
+              action: Action.ALL_IN,
+              amount: myState.chips,
+              timestamp: Date.now(),
+            };
+          }
+          
+          // Medium stacks go all-in when facing big bets
+          if ((this.stackSize === 'medium1' || this.stackSize === 'medium2') && toCall >= 100) {
+            return {
+              playerId: this.id,
+              action: Action.ALL_IN,
+              amount: myState.chips,
+              timestamp: Date.now(),
+            };
+          }
         }
 
         // Big Stack: calls all-ins after initial raise
@@ -122,11 +132,13 @@ describe('4-Player Multiple All-In Side Pots', () => {
     }
 
     // Create players with specific chip amounts and stack size labels
+    // Order players so that Big Stack is UTG (position 3) and acts first
+    // With dealerButton: 0 => P0: Button, P1: SB, P2: BB, P3: UTG
     const playerConfigs = [
-      { name: 'Big Stack', chips: 1000, stackSize: 'big' },
-      { name: 'Short Stack', chips: 200, stackSize: 'short' },
-      { name: 'Medium Stack 1', chips: 300, stackSize: 'medium1' },
-      { name: 'Medium Stack 2', chips: 500, stackSize: 'medium2' },
+      { name: 'Short Stack', chips: 200, stackSize: 'short' },      // Position 0: Button
+      { name: 'Medium Stack 1', chips: 300, stackSize: 'medium1' }, // Position 1: SB
+      { name: 'Medium Stack 2', chips: 500, stackSize: 'medium2' }, // Position 2: BB
+      { name: 'Big Stack', chips: 1000, stackSize: 'big' },         // Position 3: UTG (acts first)
     ];
 
     const players = playerConfigs.map(config => 
@@ -138,16 +150,22 @@ describe('4-Player Multiple All-In Side Pots', () => {
       gameStarted = true;
     });
 
-    table.on('player:action', ({ playerId, action, amount }) => {
+    table.on('player:action', (event) => {
+      console.log('player:action event received:', JSON.stringify(event));
+      const { playerId, action, amount } = event;
       if (captureActions) {
         const player = players.find(p => p.id === playerId);
-        actions.push({
+        const actionData = {
           playerId,
           playerName: player?.name,
           stackSize: player?.stackSize,
           action,
           amount,
-        });
+        };
+        console.log('Player action captured:', actionData);
+        actions.push(actionData);
+      } else {
+        console.log('Action NOT captured (captureActions=false)');
       }
     });
 
@@ -156,9 +174,11 @@ describe('4-Player Multiple All-In Side Pots', () => {
     });
 
     table.on('hand:ended', (result) => {
+      console.log('hand:ended event fired');
       if (!handEnded) {
         handEnded = true;
-        captureActions = false;
+        // Don't stop capturing actions - they might still be coming
+        console.log('Setting handEnded = true, but keeping captureActions = true');
         winners = result.winners || [];
         
         // Calculate payouts from winners
@@ -193,15 +213,31 @@ describe('4-Player Multiple All-In Side Pots', () => {
     };
 
     // Add players
-    players.forEach(p => table.addPlayer(p));
+    players.forEach(p => {
+      table.addPlayer(p);
+      console.log(`Added ${p.name} with ${p.targetChips || p.chips} chips (${p.stackSize || 'N/A'})`);
+    });
+    console.log('Starting game...');
     table.tryStartGame();
 
     // Wait for game to complete
     await vi.waitFor(() => gameStarted, { timeout: 500 });
     await vi.waitFor(() => handEnded, { timeout: 1000 });
+    
+    // Give a moment for all events to process
+    await new Promise(resolve => setTimeout(resolve, 100));
 
+    // Debug: log all actions
+    console.log('Total actions captured:', actions.length);
+    console.log('All actions:', actions.map(a => ({ 
+      name: a.playerName, 
+      action: a.action, 
+      amount: a.amount 
+    })));
+    
     // Verify multiple all-ins occurred
     const allInActions = actions.filter(a => a.action === Action.ALL_IN);
+    console.log('All-in actions found:', allInActions.length);
     expect(allInActions.length).toBeGreaterThanOrEqual(3);
     console.log('All-in actions:', allInActions.map(a => ({ name: a.playerName, amount: a.amount })));
 
@@ -379,7 +415,7 @@ describe('4-Player Multiple All-In Side Pots', () => {
     table.on('hand:ended', (result) => {
       if (!handEnded) {
         handEnded = true;
-        captureActions = false;
+        // Don't stop capturing actions - they might still be coming
         winners = result.winners || [];
         
         // Get side pots from the game engine
@@ -403,12 +439,19 @@ describe('4-Player Multiple All-In Side Pots', () => {
     };
 
     // Add players
-    players.forEach(p => table.addPlayer(p));
+    players.forEach(p => {
+      table.addPlayer(p);
+      console.log(`Added ${p.name} with ${p.targetChips || p.chips} chips (${p.stackSize || 'N/A'})`);
+    });
+    console.log('Starting game...');
     table.tryStartGame();
 
     // Wait for game to complete
     await vi.waitFor(() => gameStarted, { timeout: 500 });
     await vi.waitFor(() => handEnded, { timeout: 1000 });
+    
+    // Give a moment for all events to process
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     // Verify we had multiple players in the pot
     const allIns = actions.filter(a => a.action === Action.ALL_IN);
