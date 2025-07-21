@@ -145,8 +145,8 @@ describe('Minimum Raise Validation', () => {
     let gameStarted = false;
     let handEnded = false;
     const actions = [];
-    let actionCount = 0;
-    const expectedActions = 5; // 2 raises + 3 folds
+    // let actionCount = 0; // Unused
+    // const expectedActions = 5; // 2 raises + 3 folds // Unused
 
     class ReRaisePlayer extends Player {
       constructor(config) {
@@ -156,7 +156,7 @@ describe('Minimum Raise Validation', () => {
 
       getAction(gameState) {
         const myState = gameState.players[this.id];
-        const toCall = gameState.currentBet - myState.bet;
+        // const toCall = gameState.currentBet - myState.bet; // Unused
 
         if (gameState.phase === 'PRE_FLOP') {
           // UTG raises to 60 (raise of 40)
@@ -194,12 +194,12 @@ describe('Minimum Raise Validation', () => {
 
     table.on('player:action', ({ playerId, action, amount }) => {
       actions.push({ action, amount });
-      actionCount++;
+      // actionCount++;
     });
 
     // Create promise to wait for hand end
     const handResult = new Promise((resolve) => {
-      table.on('hand:ended', (data) => {
+      table.on('hand:ended', (_data) => {
         if (!handEnded) {
           handEnded = true;
           resolve();

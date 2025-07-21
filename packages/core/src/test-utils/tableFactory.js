@@ -82,7 +82,7 @@ export const TABLE_CONFIGS = {
     maxBuyIn: 1000,
     minPlayers: 3,
     dealerButton: 0,
-  }
+  },
 };
 
 /**
@@ -108,7 +108,7 @@ export function createTestTable(config = 'standard', overrides = {}) {
   return {
     manager,
     table,
-    config: finalConfig
+    config: finalConfig,
   };
 }
 
@@ -143,7 +143,7 @@ export function createChipStackTable(config = 'standard', chipAmounts = [], over
     manager,
     table,
     config: finalConfig,
-    chipAmounts
+    chipAmounts,
   };
 }
 
@@ -162,7 +162,7 @@ export function createHeadsUpTable(options = {}) {
   
   return createChipStackTable('headsUp', [buttonChips, bbChips], {
     blinds,
-    ...otherOptions
+    ...otherOptions,
   });
 }
 
@@ -180,7 +180,7 @@ export function createAllInTable(playerCount, chipAmounts, options = {}) {
     maxBuyIn: Math.max(...chipAmounts),
     minPlayers: playerCount,
     dealerButton: 0,
-    ...options
+    ...options,
   };
   
   return createChipStackTable(config, chipAmounts);
@@ -203,7 +203,7 @@ export function createSplitPotTable(playerCount = 3, options = {}) {
   
   return createChipStackTable(configName, chipAmounts, {
     minPlayers: playerCount,
-    ...otherOptions
+    ...otherOptions,
   });
 }
 
@@ -235,7 +235,7 @@ export function createTournamentTable(options = {}) {
   return createChipStackTable('tournament', chipAmounts, {
     blinds,
     minPlayers: playerCount,
-    ...otherOptions
+    ...otherOptions,
   });
 }
 
@@ -276,7 +276,7 @@ export function createMultiTableSetup(tableCount = 2, config = 'standard', overr
   return {
     manager,
     tables,
-    primaryTable: tables[0]
+    primaryTable: tables[0],
   };
 }
 
@@ -291,6 +291,6 @@ export function createWaitHelper(conditions = {}, timeout = 5000) {
     gameStart: timeout * 0.4, // 40% of total timeout for game start
     handEnd: timeout,         // Full timeout for hand completion
     playerAction: timeout * 0.2, // 20% for individual actions
-    ...conditions
+    ...conditions,
   };
 }

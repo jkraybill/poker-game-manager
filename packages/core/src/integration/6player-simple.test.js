@@ -38,7 +38,7 @@ describe('6-Player Simple Test', () => {
         await new Promise(resolve => setTimeout(resolve, 10));
         
         const activePlayers = Object.values(gameState.players).filter(p => 
-          p.state === PlayerState.ACTIVE || p.state === PlayerState.ALL_IN
+          p.state === PlayerState.ACTIVE || p.state === PlayerState.ALL_IN,
         );
         console.log(`Player ${this.id} acting. Active players: ${activePlayers.length}`);
         
@@ -109,7 +109,7 @@ describe('6-Player Simple Test', () => {
     for (let i = 0; i < 6; i++) {
       table.addPlayer(new FoldPlayer({ 
         name: `Player ${i + 1}`,
-        isBigBlind: i === 2 // With 6 players and dealerButton: 0, index 2 is BB
+        isBigBlind: i === 2, // With 6 players and dealerButton: 0, index 2 is BB
       }));
     }
     table.tryStartGame();

@@ -73,7 +73,7 @@ export function setupEventCapture(table, options = {}) {
       this.potUpdates.length = 0;
       this.phases.length = 0;
       this.currentPhase = null;
-    }
+    },
   };
   
   // Default events to capture
@@ -87,7 +87,7 @@ export function setupEventCapture(table, options = {}) {
     'cards:dealt',
     'cards:community',
     'round:ended',
-    'chips:awarded'
+    'chips:awarded',
   ];
   
   const eventsToCapture = options.events || defaultEvents;
@@ -100,7 +100,7 @@ export function setupEventCapture(table, options = {}) {
         event: eventName,
         data,
         timestamp: Date.now(),
-        phase: state.currentPhase
+        phase: state.currentPhase,
       };
       
       // Store in general events array
@@ -135,7 +135,7 @@ export function setupEventCapture(table, options = {}) {
             action: data.action,
             amount: data.amount,
             timestamp: data.timestamp || Date.now(),
-            phase: state.currentPhase
+            phase: state.currentPhase,
           });
           break;
           
@@ -143,7 +143,7 @@ export function setupEventCapture(table, options = {}) {
           state.potUpdates.push({
             total: data.total,
             timestamp: Date.now(),
-            phase: state.currentPhase
+            phase: state.currentPhase,
           });
           break;
           
@@ -171,7 +171,7 @@ export function setupEventCapture(table, options = {}) {
           data: args[0],
           timestamp: Date.now(),
           phase: state.currentPhase,
-          captured: 'all'
+          captured: 'all',
         });
       }
       return originalEmit(eventName, ...args);
@@ -188,7 +188,7 @@ export function setupEventCapture(table, options = {}) {
  * @param {number} timeout - Timeout in milliseconds
  * @returns {Promise} Resolves when conditions are met
  */
-export async function waitForConditions(eventState, conditions, timeout = 5000) {
+export function waitForConditions(eventState, conditions, timeout = 5000) {
   const startTime = Date.now();
   
   return new Promise((resolve, reject) => {
@@ -251,6 +251,6 @@ export function waitForGameStart(eventState, timeout = 2000) {
  */
 export function setupSimpleCapture(table) {
   return setupEventCapture(table, {
-    events: ['game:started', 'player:action', 'hand:ended']
+    events: ['game:started', 'player:action', 'hand:ended'],
   });
 }

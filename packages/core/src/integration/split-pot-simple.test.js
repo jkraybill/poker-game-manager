@@ -5,7 +5,7 @@
  * without complex deck manipulation.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { PokerGameManager } from '../PokerGameManager.js';
 import { Player } from '../Player.js';
 import { Action } from '../types/index.js';

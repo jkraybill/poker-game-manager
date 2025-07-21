@@ -293,7 +293,7 @@ describe('6-Player Poker Scenarios', () => {
     // Verify result: All active players should be in the pot
     // Count how many players called/checked
     const calls = playerActions.filter(a => a.action === Action.CALL);
-    const checks = playerActions.filter(a => a.action === Action.CHECK && a.amount === undefined);
+    // const checks = playerActions.filter(a => a.action === Action.CHECK && a.amount === undefined);
     
     // Everyone should limp (5 calls + BB checks)
     expect(calls.length).toBe(5); // 5 players call the BB

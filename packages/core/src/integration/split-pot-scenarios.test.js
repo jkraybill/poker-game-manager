@@ -47,22 +47,46 @@ describe('Split Pot Scenarios', () => {
     // Board: 5c 6s 7h Tc Jc (making 5-9 straight for both)
     const customDeck = [
       // First card to each player
-      { rank: '8', suit: 'h', toString() { return '8h'; } }, // P1 first card
-      { rank: '8', suit: 'd', toString() { return '8d'; } }, // P2 first card
+      { rank: '8', suit: 'h', toString() {
+ return '8h'; 
+} }, // P1 first card
+      { rank: '8', suit: 'd', toString() {
+ return '8d'; 
+} }, // P2 first card
       // Second card to each player
-      { rank: '9', suit: 'h', toString() { return '9h'; } }, // P1 second card
-      { rank: '9', suit: 'd', toString() { return '9d'; } }, // P2 second card
+      { rank: '9', suit: 'h', toString() {
+ return '9h'; 
+} }, // P1 second card
+      { rank: '9', suit: 'd', toString() {
+ return '9d'; 
+} }, // P2 second card
       // Burn + Flop
-      { rank: '2', suit: 'c', toString() { return '2c'; } }, // Burn
-      { rank: '5', suit: 'c', toString() { return '5c'; } }, // Flop 1
-      { rank: '6', suit: 's', toString() { return '6s'; } }, // Flop 2
-      { rank: '7', suit: 'h', toString() { return '7h'; } }, // Flop 3
+      { rank: '2', suit: 'c', toString() {
+ return '2c'; 
+} }, // Burn
+      { rank: '5', suit: 'c', toString() {
+ return '5c'; 
+} }, // Flop 1
+      { rank: '6', suit: 's', toString() {
+ return '6s'; 
+} }, // Flop 2
+      { rank: '7', suit: 'h', toString() {
+ return '7h'; 
+} }, // Flop 3
       // Burn + Turn
-      { rank: '2', suit: 'd', toString() { return '2d'; } }, // Burn
-      { rank: 'T', suit: 'c', toString() { return 'Tc'; } }, // Turn
+      { rank: '2', suit: 'd', toString() {
+ return '2d'; 
+} }, // Burn
+      { rank: 'T', suit: 'c', toString() {
+ return 'Tc'; 
+} }, // Turn
       // Burn + River
-      { rank: '2', suit: 'h', toString() { return '2h'; } }, // Burn
-      { rank: 'J', suit: 'c', toString() { return 'Jc'; } }, // River
+      { rank: '2', suit: 'h', toString() {
+ return '2h'; 
+} }, // Burn
+      { rank: 'J', suit: 'c', toString() {
+ return 'Jc'; 
+} }, // River
     ];
     
     table.setCustomDeck(customDeck);
@@ -118,7 +142,7 @@ describe('Split Pot Scenarios', () => {
       table.on('hand:ended', ({ winners: handWinners }) => {
         if (!handEnded) {
           handEnded = true;
-          showdownOccurred = handWinners && handWinners[0]?.hand != null;
+          showdownOccurred = handWinners && handWinners[0]?.hand !== null;
           resolve(handWinners || []);
         }
       });
@@ -179,24 +203,52 @@ describe('Split Pot Scenarios', () => {
     // deck.draw() uses shift(), deals 1 card at a time with burn cards
     const customDeck = [
       // First card to each player
-      { rank: '2', suit: 'h', toString() { return '2h'; } }, // P1 first card
-      { rank: '2', suit: 'd', toString() { return '2d'; } }, // P2 first card
-      { rank: '2', suit: 'c', toString() { return '2c'; } }, // P3 first card
+      { rank: '2', suit: 'h', toString() {
+ return '2h'; 
+} }, // P1 first card
+      { rank: '2', suit: 'd', toString() {
+ return '2d'; 
+} }, // P2 first card
+      { rank: '2', suit: 'c', toString() {
+ return '2c'; 
+} }, // P3 first card
       // Second card to each player
-      { rank: '3', suit: 'h', toString() { return '3h'; } }, // P1 second card
-      { rank: '3', suit: 'd', toString() { return '3d'; } }, // P2 second card
-      { rank: '3', suit: 'c', toString() { return '3c'; } }, // P3 second card
+      { rank: '3', suit: 'h', toString() {
+ return '3h'; 
+} }, // P1 second card
+      { rank: '3', suit: 'd', toString() {
+ return '3d'; 
+} }, // P2 second card
+      { rank: '3', suit: 'c', toString() {
+ return '3c'; 
+} }, // P3 second card
       // Burn + Flop
-      { rank: '4', suit: 'h', toString() { return '4h'; } }, // Burn
-      { rank: 'A', suit: 's', toString() { return 'As'; } }, // Flop 1
-      { rank: 'K', suit: 's', toString() { return 'Ks'; } }, // Flop 2
-      { rank: 'Q', suit: 's', toString() { return 'Qs'; } }, // Flop 3
+      { rank: '4', suit: 'h', toString() {
+ return '4h'; 
+} }, // Burn
+      { rank: 'A', suit: 's', toString() {
+ return 'As'; 
+} }, // Flop 1
+      { rank: 'K', suit: 's', toString() {
+ return 'Ks'; 
+} }, // Flop 2
+      { rank: 'Q', suit: 's', toString() {
+ return 'Qs'; 
+} }, // Flop 3
       // Burn + Turn
-      { rank: '4', suit: 'd', toString() { return '4d'; } }, // Burn
-      { rank: 'J', suit: 's', toString() { return 'Js'; } }, // Turn
+      { rank: '4', suit: 'd', toString() {
+ return '4d'; 
+} }, // Burn
+      { rank: 'J', suit: 's', toString() {
+ return 'Js'; 
+} }, // Turn
       // Burn + River
-      { rank: '4', suit: 'c', toString() { return '4c'; } }, // Burn
-      { rank: 'T', suit: 's', toString() { return 'Ts'; } }, // River
+      { rank: '4', suit: 'c', toString() {
+ return '4c'; 
+} }, // Burn
+      { rank: 'T', suit: 's', toString() {
+ return 'Ts'; 
+} }, // River
     ];
     
     table.setCustomDeck(customDeck);
@@ -288,30 +340,58 @@ describe('Split Pot Scenarios', () => {
     let gameStarted = false;
     let handEnded = false;
     let winners = [];
-    const actions = [];
+    // const actions = []; // Unused
     
     // Set custom deck for 2-way split with player 3 losing
     // deck.draw() uses shift(), deals 1 card at a time with burn cards
     const customDeck = [
       // First card to each player
-      { rank: 'A', suit: 's', toString() { return 'As'; } }, // P1 first card
-      { rank: 'A', suit: 'c', toString() { return 'Ac'; } }, // P2 first card
-      { rank: '2', suit: 'h', toString() { return '2h'; } }, // P3 first card
+      { rank: 'A', suit: 's', toString() {
+ return 'As'; 
+} }, // P1 first card
+      { rank: 'A', suit: 'c', toString() {
+ return 'Ac'; 
+} }, // P2 first card
+      { rank: '2', suit: 'h', toString() {
+ return '2h'; 
+} }, // P3 first card
       // Second card to each player
-      { rank: 'A', suit: 'h', toString() { return 'Ah'; } }, // P1 second card
-      { rank: 'A', suit: 'd', toString() { return 'Ad'; } }, // P2 second card
-      { rank: '3', suit: 'd', toString() { return '3d'; } }, // P3 second card
+      { rank: 'A', suit: 'h', toString() {
+ return 'Ah'; 
+} }, // P1 second card
+      { rank: 'A', suit: 'd', toString() {
+ return 'Ad'; 
+} }, // P2 second card
+      { rank: '3', suit: 'd', toString() {
+ return '3d'; 
+} }, // P3 second card
       // Burn + Flop
-      { rank: '5', suit: 'h', toString() { return '5h'; } }, // Burn
-      { rank: 'K', suit: 'h', toString() { return 'Kh'; } }, // Flop 1
-      { rank: 'K', suit: 'c', toString() { return 'Kc'; } }, // Flop 2
-      { rank: 'Q', suit: 's', toString() { return 'Qs'; } }, // Flop 3
+      { rank: '5', suit: 'h', toString() {
+ return '5h'; 
+} }, // Burn
+      { rank: 'K', suit: 'h', toString() {
+ return 'Kh'; 
+} }, // Flop 1
+      { rank: 'K', suit: 'c', toString() {
+ return 'Kc'; 
+} }, // Flop 2
+      { rank: 'Q', suit: 's', toString() {
+ return 'Qs'; 
+} }, // Flop 3
       // Burn + Turn
-      { rank: '5', suit: 'd', toString() { return '5d'; } }, // Burn
-      { rank: 'J', suit: 'd', toString() { return 'Jd'; } }, // Turn
+      { rank: '5', suit: 'd', toString() {
+ return '5d'; 
+} }, // Burn
+      { rank: 'J', suit: 'd', toString() {
+ return 'Jd'; 
+} }, // Turn
       // Burn + River
-      { rank: '5', suit: 'c', toString() { return '5c'; } }, // Burn
-      { rank: '9', suit: 'c', toString() { return '9c'; } }, // River
+      { rank: '5', suit: 'c', toString() {
+ return '5c'; 
+} }, // Burn
+      { rank: '9', suit: 'c', toString() {
+ return '9c'; 
+} }, // River
     ];
     
     table.setCustomDeck(customDeck);
@@ -420,24 +500,52 @@ describe('Split Pot Scenarios', () => {
     // deck.draw() uses shift(), deals 1 card at a time with burn cards
     const customDeck = [
       // First card to each player
-      { rank: 'A', suit: 's', toString() { return 'As'; } }, // Short stack first card
-      { rank: 'A', suit: 'c', toString() { return 'Ac'; } }, // P2 first card
-      { rank: 'K', suit: 's', toString() { return 'Ks'; } }, // P3 first card
+      { rank: 'A', suit: 's', toString() {
+ return 'As'; 
+} }, // Short stack first card
+      { rank: 'A', suit: 'c', toString() {
+ return 'Ac'; 
+} }, // P2 first card
+      { rank: 'K', suit: 's', toString() {
+ return 'Ks'; 
+} }, // P3 first card
       // Second card to each player
-      { rank: 'A', suit: 'h', toString() { return 'Ah'; } }, // Short stack second card
-      { rank: 'A', suit: 'd', toString() { return 'Ad'; } }, // P2 second card
-      { rank: 'K', suit: 'h', toString() { return 'Kh'; } }, // P3 second card
+      { rank: 'A', suit: 'h', toString() {
+ return 'Ah'; 
+} }, // Short stack second card
+      { rank: 'A', suit: 'd', toString() {
+ return 'Ad'; 
+} }, // P2 second card
+      { rank: 'K', suit: 'h', toString() {
+ return 'Kh'; 
+} }, // P3 second card
       // Burn + Flop
-      { rank: '6', suit: 'h', toString() { return '6h'; } }, // Burn
-      { rank: 'Q', suit: 'c', toString() { return 'Qc'; } }, // Flop 1
-      { rank: 'J', suit: 'd', toString() { return 'Jd'; } }, // Flop 2
-      { rank: 'T', suit: 'h', toString() { return 'Th'; } }, // Flop 3
+      { rank: '6', suit: 'h', toString() {
+ return '6h'; 
+} }, // Burn
+      { rank: 'Q', suit: 'c', toString() {
+ return 'Qc'; 
+} }, // Flop 1
+      { rank: 'J', suit: 'd', toString() {
+ return 'Jd'; 
+} }, // Flop 2
+      { rank: 'T', suit: 'h', toString() {
+ return 'Th'; 
+} }, // Flop 3
       // Burn + Turn
-      { rank: '6', suit: 'd', toString() { return '6d'; } }, // Burn
-      { rank: '9', suit: 's', toString() { return '9s'; } }, // Turn
+      { rank: '6', suit: 'd', toString() {
+ return '6d'; 
+} }, // Burn
+      { rank: '9', suit: 's', toString() {
+ return '9s'; 
+} }, // Turn
       // Burn + River
-      { rank: '6', suit: 'c', toString() { return '6c'; } }, // Burn
-      { rank: '8', suit: 'c', toString() { return '8c'; } }, // River
+      { rank: '6', suit: 'c', toString() {
+ return '6c'; 
+} }, // Burn
+      { rank: '8', suit: 'c', toString() {
+ return '8c'; 
+} }, // River
     ];
     
     table.setCustomDeck(customDeck);
@@ -543,7 +651,7 @@ describe('Split Pot Scenarios', () => {
     console.log('Winners:', winners.map(w => ({
       playerId: w.playerId,
       amount: w.amount,
-      hand: w.hand?.description || 'N/A'
+      hand: w.hand?.description || 'N/A',
     })));
     
     // In this scenario with different stack sizes:

@@ -57,7 +57,7 @@ describe('5-Player Squeeze Play', () => {
     let handEnded = false;
     let winnerId = null;
     let winnerAmount = 0;
-    let captureActions = true;
+    const captureActions = true;
     const actions = [];
 
     // Set up event listeners

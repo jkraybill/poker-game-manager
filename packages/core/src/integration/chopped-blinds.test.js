@@ -337,7 +337,7 @@ describe('Chopped Blinds Scenarios', () => {
 
     // Create 4 players
     const players = Array.from({ length: 4 }, (_, i) => 
-      new SimpleFoldPlayer({ name: `Player ${i + 1}` })
+      new SimpleFoldPlayer({ name: `Player ${i + 1}` }),
     );
 
     players.forEach(p => table.addPlayer(p));

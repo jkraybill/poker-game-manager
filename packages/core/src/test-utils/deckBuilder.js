@@ -206,7 +206,7 @@ export class DeckBuilder {
       suit,
       toString() {
         return cardStr;
-      }
+      },
     };
   }
   
@@ -277,7 +277,7 @@ export const DECK_SCENARIOS = {
    */
   headsUpStraightSplit: () => DeckBuilder.createHeadsUpDeck(
     ['8h', '9h'], ['8d', '9d'],
-    ['5c', '6s', '7h', 'Tc', 'Jc']
+    ['5c', '6s', '7h', 'Tc', 'Jc'],
   ),
   
   /**
@@ -286,7 +286,7 @@ export const DECK_SCENARIOS = {
   threeWayBoardPlay: () => DeckBuilder.createBoardPlayDeck(
     3,
     ['2h', '3d', '4c'],
-    ['As', 'Ks', 'Qs', 'Js', 'Ts']
+    ['As', 'Ks', 'Qs', 'Js', 'Ts'],
   ),
   
   /**
@@ -294,7 +294,7 @@ export const DECK_SCENARIOS = {
    */
   headsUpNuts: () => DeckBuilder.createHeadsUpDeck(
     ['As', 'Ah'], ['Kh', 'Kd'],
-    ['Ac', 'Ad', '2c', '3h', '4s']
+    ['Ac', 'Ad', '2c', '3h', '4s'],
   ),
   
   /**
@@ -305,10 +305,10 @@ export const DECK_SCENARIOS = {
       ['As', 'Ah'], // AA
       ['Ks', 'Kh'], // KK  
       ['Qs', 'Qh'], // QQ
-      ['2c', '3c']  // Weak hand
+      ['2c', '3c'],  // Weak hand
     ])
     .addFlop('4c', '5c', '6c') // Gives 2c3c straight flush
     .addTurn('7c')
     .addRiver('9c')
-    .build()
+    .build(),
 };

@@ -294,14 +294,14 @@ return;
     if (amount < minBet) {
       return { 
         valid: false, 
-        reason: `Minimum bet is ${minBet}` 
+        reason: `Minimum bet is ${minBet}`, 
       };
     }
     
     if (amount > playerData.chips) {
       return { 
         valid: false, 
-        reason: 'Insufficient chips' 
+        reason: 'Insufficient chips', 
       };
     }
     
@@ -313,17 +313,17 @@ return;
    */
   validateRaiseAmount(amount, playerData) {
     const currentBet = this.getCurrentBet();
-    const toCall = currentBet - playerData.bet;
+    // const toCall = currentBet - playerData.bet;
     
     // The 'amount' parameter appears to be the total bet amount (raise TO)
     // not the raise increment (raise BY)
     const proposedTotalBet = amount;
-    const raiseIncrement = proposedTotalBet - currentBet;
+    // const raiseIncrement = proposedTotalBet - currentBet;
     
     if (proposedTotalBet > playerData.chips + playerData.bet) {
       return { 
         valid: false, 
-        reason: 'Insufficient chips for raise' 
+        reason: 'Insufficient chips for raise', 
       };
     }
     
@@ -334,7 +334,7 @@ return;
     if (proposedTotalBet < minTotalBet) {
       return { 
         valid: false, 
-        reason: `Minimum total bet is ${minTotalBet}` 
+        reason: `Minimum total bet is ${minTotalBet}`, 
       };
     }
     return { valid: true };

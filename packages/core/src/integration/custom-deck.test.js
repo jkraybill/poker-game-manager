@@ -42,29 +42,61 @@ describe('Custom Deck Tests', () => {
     // Then burn + flop, burn + turn, burn + river
     const customDeck = [
       // First card to each player
-      { rank: 'A', suit: 's', toString() { return 'As'; } }, // P1 first card
-      { rank: 'K', suit: 's', toString() { return 'Ks'; } }, // P2 first card
-      { rank: 'Q', suit: 's', toString() { return 'Qs'; } }, // P3 first card
-      { rank: '2', suit: 'c', toString() { return '2c'; } }, // P4 first card
+      { rank: 'A', suit: 's', toString() {
+ return 'As'; 
+} }, // P1 first card
+      { rank: 'K', suit: 's', toString() {
+ return 'Ks'; 
+} }, // P2 first card
+      { rank: 'Q', suit: 's', toString() {
+ return 'Qs'; 
+} }, // P3 first card
+      { rank: '2', suit: 'c', toString() {
+ return '2c'; 
+} }, // P4 first card
       // Second card to each player
-      { rank: 'A', suit: 'h', toString() { return 'Ah'; } }, // P1 second card
-      { rank: 'K', suit: 'h', toString() { return 'Kh'; } }, // P2 second card
-      { rank: 'Q', suit: 'h', toString() { return 'Qh'; } }, // P3 second card
-      { rank: '3', suit: 'c', toString() { return '3c'; } }, // P4 second card
+      { rank: 'A', suit: 'h', toString() {
+ return 'Ah'; 
+} }, // P1 second card
+      { rank: 'K', suit: 'h', toString() {
+ return 'Kh'; 
+} }, // P2 second card
+      { rank: 'Q', suit: 'h', toString() {
+ return 'Qh'; 
+} }, // P3 second card
+      { rank: '3', suit: 'c', toString() {
+ return '3c'; 
+} }, // P4 second card
       // Burn card before flop
-      { rank: '8', suit: 'd', toString() { return '8d'; } }, // Burn
+      { rank: '8', suit: 'd', toString() {
+ return '8d'; 
+} }, // Burn
       // Flop (3 cards)
-      { rank: '4', suit: 'c', toString() { return '4c'; } }, // Flop card 1
-      { rank: '5', suit: 'c', toString() { return '5c'; } }, // Flop card 2
-      { rank: '6', suit: 'c', toString() { return '6c'; } }, // Flop card 3
+      { rank: '4', suit: 'c', toString() {
+ return '4c'; 
+} }, // Flop card 1
+      { rank: '5', suit: 'c', toString() {
+ return '5c'; 
+} }, // Flop card 2
+      { rank: '6', suit: 'c', toString() {
+ return '6c'; 
+} }, // Flop card 3
       // Burn card before turn
-      { rank: '8', suit: 'h', toString() { return '8h'; } }, // Burn
+      { rank: '8', suit: 'h', toString() {
+ return '8h'; 
+} }, // Burn
       // Turn
-      { rank: '7', suit: 'c', toString() { return '7c'; } }, // Turn
+      { rank: '7', suit: 'c', toString() {
+ return '7c'; 
+} }, // Turn
       // Burn card before river
-      { rank: '8', suit: 's', toString() { return '8s'; } }, // Burn
+      { rank: '8', suit: 's', toString() {
+ return '8s'; 
+} }, // Burn
       // River
-      { rank: '9', suit: 'c', toString() { return '9c'; } }, // River
+      { rank: '9', suit: 'c', toString() {
+ return '9c'; 
+} }, // River
     ];
 
     table.setCustomDeck(customDeck);
@@ -76,7 +108,7 @@ describe('Custom Deck Tests', () => {
         this.seatNumber = config.seatNumber;
       }
 
-      async getAction(gameState) {
+      getAction(gameState) {
         const myState = gameState.players[this.id];
         const toCall = gameState.currentBet - myState.bet;
         
@@ -85,7 +117,7 @@ describe('Custom Deck Tests', () => {
           return { 
             playerId: this.id,
             action: Action.CHECK,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           };
         }
         
@@ -94,26 +126,26 @@ describe('Custom Deck Tests', () => {
             playerId: this.id,
             action: Action.CALL,
             amount: toCall,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           };
         }
         
         return { 
           playerId: this.id,
           action: Action.FOLD,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         };
       }
 
-      receivePrivateCards(cards) {
-        playerHands.set(this.seatNumber, cards);
+      receivePrivateCards(_cards) {
+        playerHands.set(this.seatNumber, _cards);
       }
 
-      receivePublicCards(cards) {
+      receivePublicCards(_cards) {
         // No-op for test
       }
 
-      receiveGameUpdate(update) {
+      receiveGameUpdate(_update) {
         // No-op for test
       }
     }
@@ -208,28 +240,52 @@ describe('Custom Deck Tests', () => {
     // Minimal deck with just enough cards for 2 players
     const customDeck = [
       // First card to each player
-      { rank: 'A', suit: 's', toString() { return 'As'; } },
-      { rank: 'K', suit: 's', toString() { return 'Ks'; } },
+      { rank: 'A', suit: 's', toString() {
+ return 'As'; 
+} },
+      { rank: 'K', suit: 's', toString() {
+ return 'Ks'; 
+} },
       // Second card to each player
-      { rank: 'A', suit: 'h', toString() { return 'Ah'; } },
-      { rank: 'K', suit: 'h', toString() { return 'Kh'; } },
+      { rank: 'A', suit: 'h', toString() {
+ return 'Ah'; 
+} },
+      { rank: 'K', suit: 'h', toString() {
+ return 'Kh'; 
+} },
       // Burn + Flop
-      { rank: '2', suit: 'd', toString() { return '2d'; } }, // Burn
-      { rank: 'Q', suit: 'c', toString() { return 'Qc'; } },
-      { rank: 'J', suit: 'c', toString() { return 'Jc'; } },
-      { rank: 'T', suit: 'c', toString() { return 'Tc'; } },
+      { rank: '2', suit: 'd', toString() {
+ return '2d'; 
+} }, // Burn
+      { rank: 'Q', suit: 'c', toString() {
+ return 'Qc'; 
+} },
+      { rank: 'J', suit: 'c', toString() {
+ return 'Jc'; 
+} },
+      { rank: 'T', suit: 'c', toString() {
+ return 'Tc'; 
+} },
       // Burn + Turn
-      { rank: '3', suit: 'd', toString() { return '3d'; } }, // Burn
-      { rank: '9', suit: 'c', toString() { return '9c'; } },
+      { rank: '3', suit: 'd', toString() {
+ return '3d'; 
+} }, // Burn
+      { rank: '9', suit: 'c', toString() {
+ return '9c'; 
+} },
       // Burn + River
-      { rank: '4', suit: 'd', toString() { return '4d'; } }, // Burn
-      { rank: '8', suit: 'c', toString() { return '8c'; } },
+      { rank: '4', suit: 'd', toString() {
+ return '4d'; 
+} }, // Burn
+      { rank: '8', suit: 'c', toString() {
+ return '8c'; 
+} },
     ];
 
     table.setCustomDeck(customDeck);
 
     class SimplePlayer extends Player {
-      async getAction(gameState) {
+      getAction(gameState) {
         console.log(`SimplePlayer ${this.name} getAction called, phase: ${gameState.phase}, currentBet: ${gameState.currentBet}`);
         const myState = gameState.players[this.id];
         console.log(`My state - bet: ${myState.bet}, chips: ${myState.chips}`);
@@ -240,7 +296,7 @@ describe('Custom Deck Tests', () => {
           return { 
             playerId: this.id,
             action: Action.CHECK,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           };
         }
         
@@ -250,7 +306,7 @@ describe('Custom Deck Tests', () => {
             playerId: this.id,
             action: Action.CALL,
             amount: toCall,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           };
         }
         
@@ -258,19 +314,19 @@ describe('Custom Deck Tests', () => {
         return { 
           playerId: this.id,
           action: Action.FOLD,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         };
       }
 
-      receivePrivateCards(cards) {
+      receivePrivateCards(_cards) {
         // No-op for test
       }
 
-      receivePublicCards(cards) {
+      receivePublicCards(_cards) {
         // No-op for test
       }
 
-      receiveGameUpdate(update) {
+      receiveGameUpdate(_update) {
         // No-op for test
       }
     }

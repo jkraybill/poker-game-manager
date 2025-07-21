@@ -35,22 +35,46 @@ describe('Split Pot Deterministic Tests', () => {
     // Both players get AA, board has low cards
     const customDeck = [
       // First card to each player
-      { rank: 'A', suit: 's', toString() { return 'As'; } }, // P1 first card
-      { rank: 'A', suit: 'c', toString() { return 'Ac'; } }, // P2 first card
+      { rank: 'A', suit: 's', toString() {
+ return 'As'; 
+} }, // P1 first card
+      { rank: 'A', suit: 'c', toString() {
+ return 'Ac'; 
+} }, // P2 first card
       // Second card to each player
-      { rank: 'A', suit: 'h', toString() { return 'Ah'; } }, // P1 second card
-      { rank: 'A', suit: 'd', toString() { return 'Ad'; } }, // P2 second card
+      { rank: 'A', suit: 'h', toString() {
+ return 'Ah'; 
+} }, // P1 second card
+      { rank: 'A', suit: 'd', toString() {
+ return 'Ad'; 
+} }, // P2 second card
       // Burn + Flop
-      { rank: '8', suit: 'c', toString() { return '8c'; } }, // Burn
-      { rank: '2', suit: 'c', toString() { return '2c'; } }, // Flop 1
-      { rank: '3', suit: 's', toString() { return '3s'; } }, // Flop 2
-      { rank: '4', suit: 'h', toString() { return '4h'; } }, // Flop 3
+      { rank: '8', suit: 'c', toString() {
+ return '8c'; 
+} }, // Burn
+      { rank: '2', suit: 'c', toString() {
+ return '2c'; 
+} }, // Flop 1
+      { rank: '3', suit: 's', toString() {
+ return '3s'; 
+} }, // Flop 2
+      { rank: '4', suit: 'h', toString() {
+ return '4h'; 
+} }, // Flop 3
       // Burn + Turn
-      { rank: '8', suit: 'd', toString() { return '8d'; } }, // Burn
-      { rank: '5', suit: 'd', toString() { return '5d'; } }, // Turn
+      { rank: '8', suit: 'd', toString() {
+ return '8d'; 
+} }, // Burn
+      { rank: '5', suit: 'd', toString() {
+ return '5d'; 
+} }, // Turn
       // Burn + River
-      { rank: '8', suit: 'h', toString() { return '8h'; } }, // Burn
-      { rank: '7', suit: 'c', toString() { return '7c'; } }, // River
+      { rank: '8', suit: 'h', toString() {
+ return '8h'; 
+} }, // Burn
+      { rank: '7', suit: 'c', toString() {
+ return '7c'; 
+} }, // River
     ];
 
     table.setCustomDeck(customDeck);
@@ -95,15 +119,15 @@ describe('Split Pot Deterministic Tests', () => {
         };
       }
       
-      receivePrivateCards(cards) {
+      receivePrivateCards(_cards) {
         // Required by Player interface
       }
       
-      receivePublicCards(cards) {
+      receivePublicCards(_cards) {
         // Required by Player interface
       }
       
-      receiveGameUpdate(update) {
+      receiveGameUpdate(_update) {
         // Required by Player interface
       }
     }
@@ -165,24 +189,52 @@ describe('Split Pot Deterministic Tests', () => {
     // All players get pocket pairs, board makes everyone play the board
     const customDeck = [
       // First card to each player
-      { rank: '2', suit: 's', toString() { return '2s'; } }, // P1 first card
-      { rank: '3', suit: 'c', toString() { return '3c'; } }, // P2 first card
-      { rank: '4', suit: 's', toString() { return '4s'; } }, // P3 first card
+      { rank: '2', suit: 's', toString() {
+ return '2s'; 
+} }, // P1 first card
+      { rank: '3', suit: 'c', toString() {
+ return '3c'; 
+} }, // P2 first card
+      { rank: '4', suit: 's', toString() {
+ return '4s'; 
+} }, // P3 first card
       // Second card to each player
-      { rank: '2', suit: 'h', toString() { return '2h'; } }, // P1 second card
-      { rank: '3', suit: 'd', toString() { return '3d'; } }, // P2 second card
-      { rank: '4', suit: 'h', toString() { return '4h'; } }, // P3 second card
+      { rank: '2', suit: 'h', toString() {
+ return '2h'; 
+} }, // P1 second card
+      { rank: '3', suit: 'd', toString() {
+ return '3d'; 
+} }, // P2 second card
+      { rank: '4', suit: 'h', toString() {
+ return '4h'; 
+} }, // P3 second card
       // Burn + Flop
-      { rank: '9', suit: 'c', toString() { return '9c'; } }, // Burn
-      { rank: 'A', suit: 'c', toString() { return 'Ac'; } }, // Flop 1
-      { rank: 'A', suit: 'd', toString() { return 'Ad'; } }, // Flop 2
-      { rank: 'K', suit: 'c', toString() { return 'Kc'; } }, // Flop 3
+      { rank: '9', suit: 'c', toString() {
+ return '9c'; 
+} }, // Burn
+      { rank: 'A', suit: 'c', toString() {
+ return 'Ac'; 
+} }, // Flop 1
+      { rank: 'A', suit: 'd', toString() {
+ return 'Ad'; 
+} }, // Flop 2
+      { rank: 'K', suit: 'c', toString() {
+ return 'Kc'; 
+} }, // Flop 3
       // Burn + Turn
-      { rank: '9', suit: 'd', toString() { return '9d'; } }, // Burn
-      { rank: 'K', suit: 'd', toString() { return 'Kd'; } }, // Turn
+      { rank: '9', suit: 'd', toString() {
+ return '9d'; 
+} }, // Burn
+      { rank: 'K', suit: 'd', toString() {
+ return 'Kd'; 
+} }, // Turn
       // Burn + River
-      { rank: '9', suit: 'h', toString() { return '9h'; } }, // Burn
-      { rank: 'Q', suit: 's', toString() { return 'Qs'; } }, // River
+      { rank: '9', suit: 'h', toString() {
+ return '9h'; 
+} }, // Burn
+      { rank: 'Q', suit: 's', toString() {
+ return 'Qs'; 
+} }, // River
     ];
 
     table.setCustomDeck(customDeck);
@@ -210,15 +262,15 @@ describe('Split Pot Deterministic Tests', () => {
         };
       }
       
-      receivePrivateCards(cards) {
+      receivePrivateCards(_cards) {
         // Required by Player interface
       }
       
-      receivePublicCards(cards) {
+      receivePublicCards(_cards) {
         // Required by Player interface
       }
       
-      receiveGameUpdate(update) {
+      receiveGameUpdate(_update) {
         // Required by Player interface
       }
     }
@@ -237,7 +289,7 @@ describe('Split Pot Deterministic Tests', () => {
 
     // Create 3 players
     const players = Array.from({ length: 3 }, (_, i) => 
-      new LimpingPlayer({ name: `Player ${i + 1}` })
+      new LimpingPlayer({ name: `Player ${i + 1}` }),
     );
 
     players.forEach(p => table.addPlayer(p));

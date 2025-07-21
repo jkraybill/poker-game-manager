@@ -53,7 +53,7 @@ describe('4-Player Multiple All-In Side Pots', () => {
     let winners = [];
     let payouts = new Map();
     let sidePots = [];
-    let captureActions = true;
+    const captureActions = true;
     const actions = [];
 
     // Create all-in players with specific chip stacks
@@ -232,7 +232,7 @@ describe('4-Player Multiple All-In Side Pots', () => {
     console.log('All actions:', actions.map(a => ({ 
       name: a.playerName, 
       action: a.action, 
-      amount: a.amount 
+      amount: a.amount, 
     })));
     
     // Verify multiple all-ins occurred
@@ -292,7 +292,7 @@ describe('4-Player Multiple All-In Side Pots', () => {
     let gameStarted = false;
     let handEnded = false;
     let winners = [];
-    let captureActions = true;
+    const captureActions = true;
     const actions = [];
     let sidePots = [];
 

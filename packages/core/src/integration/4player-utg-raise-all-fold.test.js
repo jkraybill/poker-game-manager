@@ -44,7 +44,7 @@ describe('4-Player UTG Raise All Fold', () => {
     let winnerId = null;
     let winnerAmount = 0;
     let dealerButton = -1;
-    let captureActions = true;
+    const captureActions = true;
     const actions = [];
 
     // Set up event listeners

@@ -248,10 +248,10 @@ describe('8-Player Poker Scenarios', () => {
         });
       });
 
-      table.on('hand:ended', ({ winners }) => {
+      table.on('hand:ended', ({ winners: _winners }) => {
         if (!handEnded) {
           handEnded = true;
-          winnerAmount = winners[0]?.amount || 0;
+          winnerAmount = _winners[0]?.amount || 0;
           finalPotSize = potSize;
           resolve();
         }

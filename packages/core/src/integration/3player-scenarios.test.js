@@ -39,7 +39,7 @@ describe('3-Player Scenarios', () => {
       let winnerAmount = 0;
       let dealerButton = -1;
       const actions = [];
-      let captureActions = true;
+      const captureActions = true;
 
       // Create players array early so we can reference it in event handlers
       const players = [];

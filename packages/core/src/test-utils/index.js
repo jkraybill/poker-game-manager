@@ -17,7 +17,7 @@ export {
   createMultiTableSetup,
   cleanupTables,
   createWaitHelper,
-  TABLE_CONFIGS
+  TABLE_CONFIGS,
 } from './tableFactory.js';
 
 // Event Capture exports
@@ -26,14 +26,14 @@ export {
   setupSimpleCapture,
   waitForConditions,
   waitForHandEnd,
-  waitForGameStart
+  waitForGameStart,
 } from './eventCapture.js';
 
 // Deck Builder exports
 export {
   DeckBuilder,
   createDeck,
-  DECK_SCENARIOS
+  DECK_SCENARIOS,
 } from './deckBuilder.js';
 
 // Player Implementation exports
@@ -44,7 +44,7 @@ export {
   TournamentPlayer,
   STRATEGIES,
   PLAYER_TYPES,
-  assignPositions
+  assignPositions,
 } from './players.js';
 
 // Assertion exports
@@ -59,7 +59,7 @@ export {
   assertBettingRounds,
   assertAllInScenario,
   assertTournamentState,
-  assertPokerScenario
+  assertPokerScenario,
 } from './assertions.js';
 
 // Import local modules for internal use
@@ -76,7 +76,7 @@ export {
   createAutoStartTable,
   createManualTable,
   waitForTableReadyAndStart,
-  setupTableWithPlayers
+  setupTableWithPlayers,
 } from './tableHelpers.js';
 
 /**
@@ -92,7 +92,7 @@ export function createTestScenario(config = {}) {
     players = [],
     customDeck = null,
     eventOptions = {},
-    timeout = 5000
+    timeout = 5000,
   } = config;
   
   // Create table
@@ -129,7 +129,7 @@ export function createTestScenario(config = {}) {
     
     cleanup: () => {
       cleanupTables(manager);
-    }
+    },
   };
 }
 
@@ -151,7 +151,7 @@ export function createHeadsUpScenario(config = {}) {
     tableConfig: 'headsUp',
     chipAmounts: [buttonChips, bbChips],
     customDeck,
-    ...otherConfig
+    ...otherConfig,
   });
   
   // Add players if types specified
@@ -181,19 +181,19 @@ export function createSplitPotScenario(config = {}) {
   // Create custom deck for split scenario
   const customDeck = DeckBuilder.createSplitPotDeck(
     identicalHands.slice(0, playerCount),
-    communityCards
+    communityCards,
   );
   
   const scenario = createTestScenario({
     tableConfig: useOddChips ? 'oddChip' : 'standard',
     tableOverrides: { minPlayers: playerCount },
     customDeck,
-    ...otherConfig
+    ...otherConfig,
   });
   
   // Add calling players
   const players = Array.from({ length: playerCount }, (_, i) => 
-    PLAYER_TYPES.station(`Player ${i + 1}`)
+    PLAYER_TYPES.station(`Player ${i + 1}`),
   );
   scenario.addPlayers(players);
   
@@ -216,15 +216,15 @@ export function createAllInScenario(config = {}) {
   const scenario = createTestScenario({
     tableConfig: 'shortStack',
     chipAmounts: chipAmounts.slice(0, playerCount),
-    ...otherConfig
+    ...otherConfig,
   });
   
   // Add aggressive players for all-in action
   const players = Array.from({ length: playerCount }, (_, i) =>
     new StrategicPlayer({
       name: `Player ${i + 1}`,
-      strategy: STRATEGIES[playerStrategy] || STRATEGIES.pushOrFold
-    })
+      strategy: STRATEGIES[playerStrategy] || STRATEGIES.pushOrFold,
+    }),
   );
   scenario.addPlayers(players);
   
@@ -249,7 +249,7 @@ export function createTournamentScenario(config = {}) {
     tableConfig: 'tournament',
     chipAmounts: Array(playerCount).fill(startingChips),
     tableOverrides: { minPlayers: playerCount },
-    ...otherConfig
+    ...otherConfig,
   });
   
   // Add tournament players
@@ -258,8 +258,8 @@ export function createTournamentScenario(config = {}) {
       name: `Player ${i + 1}`,
       tournamentStage,
       playersRemaining: playerCount * 10, // Simulated field size
-      avgStack: startingChips
-    })
+      avgStack: startingChips,
+    }),
   );
   scenario.addPlayers(players);
   
@@ -276,7 +276,7 @@ export function createTournamentScenario(config = {}) {
 export async function executePokerTest(testSetup, testValidation, options = {}) {
   const {
     timeout = 5000,
-    cleanup = true
+    cleanup = true,
   } = options;
   
   const scenario = testSetup();
@@ -296,7 +296,7 @@ export async function executePokerTest(testSetup, testValidation, options = {}) 
       events: scenario.events.events,
       totalPot: scenario.events.totalPot,
       showdownOccurred: scenario.events.winners.length > 0 && 
-                         scenario.events.winners[0].hand != null
+                         scenario.events.winners[0].hand !== null,
     };
     
     // Validate results
@@ -322,13 +322,13 @@ export async function executePokerTest(testSetup, testValidation, options = {}) 
 export async function executeBatchTests(testConfigs, options = {}) {
   const {
     parallel = false,
-    continueOnError = false
+    continueOnError = false,
   } = options;
   
   if (parallel) {
     const promises = testConfigs.map(config => 
       executePokerTest(config.setup, config.validation, config.options)
-        .catch(error => continueOnError ? { error } : Promise.reject(error))
+        .catch(error => continueOnError ? { error } : Promise.reject(error)),
     );
     return Promise.all(promises);
   } else {

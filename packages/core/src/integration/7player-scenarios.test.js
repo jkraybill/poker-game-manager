@@ -84,11 +84,11 @@ describe('7-Player Poker Scenarios', () => {
         actions.push({ playerId, action, amount });
       });
 
-      table.on('hand:ended', ({ winners }) => {
+      table.on('hand:ended', ({ winners: _winners }) => {
         if (!handEnded) {
           handEnded = true;
-          winnerAmount = winners[0]?.amount || 0;
-          showdownReached = winners[0]?.hand !== null && winners[0]?.hand !== undefined;
+          winnerAmount = _winners[0]?.amount || 0;
+          showdownReached = _winners[0]?.hand !== null && _winners[0]?.hand !== undefined;
           resolve();
         }
       });

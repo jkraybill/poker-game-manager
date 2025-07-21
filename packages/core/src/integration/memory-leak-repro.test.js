@@ -52,7 +52,7 @@ describe('Table Auto-Start Behavior', () => {
       console.log(`🎮 Game ${gameCount} started`);
     });
 
-    table.on('hand:ended', ({ winners }) => {
+    table.on('hand:ended', ({ winners: _winners }) => {
       handCount++;
       handEnds.push(Date.now());
       console.log(`🏁 Hand ${handCount} ended`);

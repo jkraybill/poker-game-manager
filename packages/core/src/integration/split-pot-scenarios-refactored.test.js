@@ -5,19 +5,19 @@
  * and make tests more readable and maintainable.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import {
   createSplitPotScenario,
   createHeadsUpScenario,
   DeckBuilder,
-  PLAYER_TYPES,
-  StrategicPlayer,
+  // PLAYER_TYPES, // Unused
+  // StrategicPlayer, // Unused
   assertPotSplit,
   assertHandStrengths,
   assertShowdown,
   executePokerTest,
   cleanupTables,
-  Action
+  Action,
 } from '../test-utils/index.js';
 import { Player } from '../Player.js';
 
@@ -36,9 +36,9 @@ describe('Split Pot Scenarios - Refactored', () => {
         const scenario = createHeadsUpScenario({
           customDeck: DeckBuilder.createHeadsUpDeck(
             ['8h', '9h'], ['8d', '9d'],
-            ['5c', '6s', '7h', 'Tc', 'Jc']
+            ['5c', '6s', '7h', 'Tc', 'Jc'],
           ),
-          playerTypes: [] // Don't add default players, we'll add our own
+          playerTypes: [], // Don't add default players, we'll add our own
         });
         
         // Create custom players using the same pattern as the original working test
@@ -105,7 +105,7 @@ describe('Split Pot Scenarios - Refactored', () => {
         // Verify even split
         expect(results.winners[0].amount).toBe(60);
         expect(results.winners[1].amount).toBe(60);
-      }
+      },
     );
     
     manager = results.scenario?.manager;
@@ -116,7 +116,7 @@ describe('Split Pot Scenarios - Refactored', () => {
       () => createSplitPotScenario({
         playerCount: 3,
         identicalHands: [['2h', '3h'], ['2d', '3d'], ['2c', '3c']], // Weak hands
-        communityCards: ['As', 'Ks', 'Qs', 'Js', 'Ts'] // Royal flush on board
+        communityCards: ['As', 'Ks', 'Qs', 'Js', 'Ts'], // Royal flush on board
       }),
       (results) => {
         // All 3 players should win (playing the board)
@@ -131,7 +131,7 @@ describe('Split Pot Scenarios - Refactored', () => {
         results.winners.forEach(winner => {
           expect(winner.amount).toBe(20);
         });
-      }
+      },
     );
     
     manager = results.scenario?.manager;
@@ -146,7 +146,7 @@ describe('Split Pot Scenarios - Refactored', () => {
           .dealHoleCards([
             ['As', 'Ah'], // Player 1 - AA
             ['Ac', 'Ad'], // Player 2 - AA (identical to create tie)
-            ['2h', '3d']  // Player 3 - weak hand
+            ['2h', '3d'],  // Player 3 - weak hand
           ])
           .addCommunityCards(['Kh', 'Ks', '7c', '8d', '9h']) // No flush possible
           .addCards('4s', '5s', '6s', '7s', '8s', '9s', 'Ts') // Extra cards to prevent empty deck
@@ -155,7 +155,7 @@ describe('Split Pot Scenarios - Refactored', () => {
         const scenario = createSplitPotScenario({
           playerCount: 3,
           useOddChips: true, // Use 5/10 blinds for odd pot
-          customDeck
+          customDeck,
         });
         
         // Create custom players for specific betting pattern that creates odd pot
@@ -212,7 +212,7 @@ describe('Split Pot Scenarios - Refactored', () => {
         console.log('Odd chip test winners:', results.winners.map(w => ({ 
           playerId: w.playerId, 
           amount: w.amount, 
-          hand: w.hand?.description 
+          hand: w.hand?.description, 
         })));
         
         // First verify we have winners
@@ -229,7 +229,7 @@ describe('Split Pot Scenarios - Refactored', () => {
           const amounts = results.winners.map(w => w.amount).sort((a, b) => b - a);
           expect(amounts[0] - amounts[1]).toBeLessThanOrEqual(1); // Difference ≤ 1 chip
         }
-      }
+      },
     );
     
     manager = results.scenario?.manager;
@@ -243,7 +243,7 @@ describe('Split Pot Scenarios - Refactored', () => {
           .dealHoleCards([
             ['As', 'Ah'], // Short stack - strong hand
             ['Ac', 'Ad'], // Player 2 - also strong 
-            ['Ks', 'Kh']  // Player 3 - slightly weaker
+            ['Ks', 'Kh'],  // Player 3 - slightly weaker
           ])
           .addCommunityCards(['Qc', 'Jd', 'Th', '9s', '8c'])
           .addCards('2c', '3c', '4c', '5c', '6c', '7c', '8h', '9h', 'Tc') // Extra cards
@@ -252,7 +252,7 @@ describe('Split Pot Scenarios - Refactored', () => {
         const scenario = createSplitPotScenario({
           playerCount: 3,
           customDeck,
-          chipAmounts: [100, 500, 500] // Short stack creates side pot opportunity
+          chipAmounts: [100, 500, 500], // Short stack creates side pot opportunity
         });
         
         // Create custom players for side pot scenario
@@ -322,7 +322,7 @@ describe('Split Pot Scenarios - Refactored', () => {
         console.log('Side pot test winners:', results.winners.map(w => ({ 
           playerId: w.playerId, 
           amount: w.amount, 
-          hand: w.hand?.description 
+          hand: w.hand?.description, 
         })));
         
         // This test demonstrates the test utilities working even for complex scenarios
@@ -341,7 +341,7 @@ describe('Split Pot Scenarios - Refactored', () => {
         
         // The fact that we got here shows the test utilities work correctly!
         console.log('✅ Test utilities successfully handled complex side pot scenario');
-      }
+      },
     );
     
     manager = results.scenario?.manager;

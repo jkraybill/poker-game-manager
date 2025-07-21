@@ -276,11 +276,13 @@ describe('Table Explicit Start API', () => {
 
     // Create promise to wait for two hands
     const twoHandsResult = new Promise((resolve, reject) => {
-      let resolveTimeout;
+      let resolveTimeout = null;
       const checkComplete = () => {
         if (handCount >= 2) {
           secondHandComplete = true;
-          if (resolveTimeout) clearTimeout(resolveTimeout);
+          if (resolveTimeout) {
+clearTimeout(resolveTimeout);
+}
           resolve();
         }
       };

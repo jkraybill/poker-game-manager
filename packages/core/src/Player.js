@@ -20,7 +20,7 @@ export class Player extends EventEmitter {
    * @returns {Promise<PlayerAction>} The player's action
    */
   // eslint-disable-next-line require-await
-  async getAction(_gameState) {
+  getAction(_gameState) {
     throw new Error('getAction() must be implemented by Player subclass');
   }
 
@@ -28,11 +28,11 @@ export class Player extends EventEmitter {
    * Receive private cards - SHOULD BE IMPLEMENTED
    * @param {string[]} cards - The hole cards
    */
-  receivePrivateCards(cards) {
+  receivePrivateCards(_cards) {
     // Default implementation - subclasses should override
     this.emit('cards:received', {
       playerId: this.id,
-      cardCount: cards.length,
+      cardCount: _cards.length,
     });
   }
 

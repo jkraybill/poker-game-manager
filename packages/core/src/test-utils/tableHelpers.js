@@ -49,7 +49,7 @@ export function createManualTable(manager, config) {
 /**
  * Wait for table to be ready and start game
  */
-export async function waitForTableReadyAndStart(table, timeout = 2000) {
+export function waitForTableReadyAndStart(table, timeout = 2000) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       reject(new Error('Table did not become ready in time'));
