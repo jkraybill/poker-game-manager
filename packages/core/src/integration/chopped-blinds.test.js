@@ -140,7 +140,7 @@ describe('Chopped Blinds Scenarios', () => {
         this.isButton = config.isButton;
       }
 
-      getAction(gameState) {
+      getAction(_gameState) {
         // In heads-up, button is SB and acts first
         if (this.isButton) {
           return {

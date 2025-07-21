@@ -36,7 +36,7 @@ describe('Table Auto-Start Behavior', () => {
 
     // Simple player that just folds
     class LeakyPlayer extends Player {
-      getAction(gameState) {
+      getAction(_gameState) {
         console.log(`Player ${this.id} acting in game ${gameCount}, hand ${handCount}`);
         return {
           playerId: this.id,
@@ -142,7 +142,7 @@ describe('Table Auto-Start Behavior', () => {
       }
     }
 
-    table.on('player:action', ({ playerId, action, amount }) => {
+    table.on('player:action', ({ playerId: _playerId, action, amount }) => {
       actions.push({ action, amount });
       if (action === Action.RAISE) {
         raisesDetected++;
@@ -202,7 +202,7 @@ describe('Table Auto-Start Behavior', () => {
     let handEnded = false;
 
     class QuickPlayer extends Player {
-      getAction(gameState) {
+      getAction(_gameState) {
         return {
           playerId: this.id,
           action: Action.FOLD,

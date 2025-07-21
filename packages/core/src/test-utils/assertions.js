@@ -63,8 +63,8 @@ export function assertPotSplit(winners, expectedTotal, options = {}) {
  */
 export function assertHandStrengths(winners, expectedRanks, options = {}) {
   const {
-    allowTies = true,
-    description = 'hand strengths',
+    _allowTies = true, // API consistency - not yet implemented
+    _description = 'hand strengths', // API consistency - not yet implemented
   } = options;
   
   expect(winners).toBeInstanceOf(Array);
@@ -94,8 +94,8 @@ export function assertHandStrengths(winners, expectedRanks, options = {}) {
 export function assertActionSequence(actions, expectedSequence, options = {}) {
   const {
     allowAdditionalActions = true,
-    strictOrder = true,
-    description = 'action sequence',
+    _strictOrder = true, // API consistency - not yet implemented
+    _description = 'action sequence', // API consistency - not yet implemented
   } = options;
   
   expect(actions).toBeInstanceOf(Array);
@@ -151,7 +151,7 @@ function matchesActionPattern(actualAction, expectedPattern) {
  */
 export function assertActionsOccurred(actions, expectedActions, options = {}) {
   const {
-    description = 'expected actions',
+    _description = 'expected actions', // API consistency - not yet implemented
   } = options;
   
   expectedActions.forEach(expectedAction => {
@@ -170,7 +170,7 @@ export function assertPlayerChips(players, expectedChips, options = {}) {
   const {
     allowApproximate = false,
     tolerance = 0,
-    description = 'player chip counts',
+    _description = 'player chip counts', // API consistency - not yet implemented
   } = options;
   
   Object.entries(expectedChips).forEach(([playerId, expectedAmount]) => {
@@ -193,7 +193,7 @@ export function assertPlayerChips(players, expectedChips, options = {}) {
  */
 export function assertShowdown(winners, shouldHaveShowdown, options = {}) {
   const {
-    description = 'showdown occurrence',
+    _description = 'showdown occurrence', // API consistency - not yet implemented
   } = options;
   
   if (shouldHaveShowdown) {
@@ -216,7 +216,7 @@ export function assertShowdown(winners, shouldHaveShowdown, options = {}) {
  */
 export function assertSidePots(winners, expectedDistribution, options = {}) {
   const {
-    description = 'side pot distribution',
+    _description = 'side pot distribution', // API consistency - not yet implemented
   } = options;
   
   // Group winners by pot type
@@ -245,8 +245,8 @@ acc[potType] = [];
  */
 export function assertBettingRounds(actions, expectedRounds, options = {}) {
   const {
-    allowIncomplete = false,
-    description = 'betting rounds',
+    _allowIncomplete = false, // API consistency - not yet implemented
+    _description = 'betting rounds', // API consistency - not yet implemented
   } = options;
   
   const roundActions = groupActionsByRound(actions);
@@ -306,7 +306,7 @@ function groupActionsByRound(actions) {
  */
 export function assertAllInScenario(actions, winners, expectedOutcome, options = {}) {
   const {
-    description = 'all-in scenario',
+    _description = 'all-in scenario', // API consistency - not yet implemented
   } = options;
   
   // Verify all-in actions occurred
@@ -336,7 +336,7 @@ export function assertAllInScenario(actions, winners, expectedOutcome, options =
  */
 export function assertTournamentState(gameState, expectedState, options = {}) {
   const {
-    description = 'tournament state',
+    _description = 'tournament state', // API consistency - not yet implemented
   } = options;
   
   if (expectedState.playersRemaining) {
@@ -368,7 +368,7 @@ export function assertPokerScenario(testResult, expected, options = {}) {
     winners,
     actions,
     gameState,
-    showdownOccurred,
+    _showdownOccurred, // API consistency - not yet implemented
   } = testResult;
   
   // Pot assertions

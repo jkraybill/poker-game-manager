@@ -37,7 +37,7 @@ describe('Minimum Raise Validation', () => {
     let handEnded = false;
     const actions = [];
     let invalidRaiseAttempted = false;
-    let invalidActionEmitted = false;
+    // Removed unused variable: invalidActionEmitted
 
     class MinRaisePlayer extends Player {
       constructor(config) {
@@ -47,7 +47,7 @@ describe('Minimum Raise Validation', () => {
       }
 
       getAction(gameState) {
-        const myState = gameState.players[this.id];
+        // Removed unused variable: myState (not needed for this simple test player)
         this.attemptCount++;
         console.log(`${this.name} getAction called, attempt ${this.attemptCount}, currentBet: ${gameState.currentBet}`);
 
@@ -103,9 +103,9 @@ describe('Minimum Raise Validation', () => {
       });
     });
 
-    table.on('action:invalid', ({ playerId, action, amount, reason }) => {
+    table.on('action:invalid', ({ playerId: _playerId, action, amount, reason }) => {
       console.log(`Invalid action detected: ${action} ${amount} - ${reason}`);
-      invalidActionEmitted = true;
+      // Removed unused assignment to invalidActionEmitted
     });
     
     const players = [
@@ -155,8 +155,8 @@ describe('Minimum Raise Validation', () => {
       }
 
       getAction(gameState) {
-        const myState = gameState.players[this.id];
-        // const toCall = gameState.currentBet - myState.bet; // Unused
+        // Removed unused variable: myState
+        // Removed unused variable: toCall
 
         if (gameState.phase === 'PRE_FLOP') {
           // UTG raises to 60 (raise of 40)
@@ -192,7 +192,7 @@ describe('Minimum Raise Validation', () => {
       gameStarted = true;
     });
 
-    table.on('player:action', ({ playerId, action, amount }) => {
+    table.on('player:action', ({ playerId: _playerId, action, amount }) => {
       actions.push({ action, amount });
       // actionCount++;
     });
@@ -386,7 +386,7 @@ describe('Minimum Raise Validation', () => {
       }
 
       getAction(gameState) {
-        const myState = gameState.players[this.id];
+        // Removed unused variable: myState
 
         if (gameState.phase === 'PRE_FLOP') {
           // P1: Raise to 60 (raise of 40)

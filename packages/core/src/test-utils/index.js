@@ -89,7 +89,7 @@ export function createTestScenario(config = {}) {
     tableConfig = 'standard',
     tableOverrides = {},
     chipAmounts = [],
-    players = [],
+    _players = [], // API consistency - not yet implemented
     customDeck = null,
     eventOptions = {},
     timeout = 5000,
@@ -239,7 +239,7 @@ export function createAllInScenario(config = {}) {
 export function createTournamentScenario(config = {}) {
   const {
     playerCount = 8,
-    blindLevel = 1,
+    _blindLevel = 1, // API consistency - not yet implemented
     startingChips = 1500,
     tournamentStage = 'early',
     ...otherConfig
@@ -275,7 +275,7 @@ export function createTournamentScenario(config = {}) {
  */
 export async function executePokerTest(testSetup, testValidation, options = {}) {
   const {
-    timeout = 5000,
+    _timeout = 5000, // API consistency - not yet implemented
     cleanup = true,
   } = options;
   
