@@ -30,6 +30,52 @@ GitHub repo: https://github.com/jkraybill/poker-game-manager
 Open issues: https://github.com/jkraybill/poker-game-manager/issues
 ```
 
+## End-of-Session Checklist for Claude
+
+When wrapping up your session, please follow this checklist:
+
+```
+Before signing off, please:
+
+1. **Commit all changes** with descriptive messages:
+   - Use conventional commits (feat:, fix:, docs:, test:, refactor:)
+   - Include what was changed and why
+   - Reference relevant GitHub issues
+
+2. **Update GitHub issues**:
+   - Comment on issues you worked on with progress made
+   - Create new issues for any bugs discovered
+   - Update issue labels and status as needed
+
+3. **Update SESSION_CONTEXT.md** with:
+   - Today's victories and achievements
+   - Current blockers or challenges
+   - Next session priorities
+   - Any critical debugging context
+
+4. **Update CLAUDE.md** if you:
+   - Discovered new patterns or best practices
+   - Found workarounds for common issues
+   - Added new tools or workflows
+
+5. **Run final checks**:
+   - `git status` - ensure no uncommitted changes
+   - `npm test -- [specific-test]` - verify your fixes work
+   - `npm run lint` - ensure code quality
+
+6. **Document any incomplete work**:
+   - What you were in the middle of
+   - Why it's not complete
+   - Next steps to finish it
+
+7. **Summarize for JK**:
+   - Key accomplishments
+   - Critical issues discovered
+   - Recommended next steps
+
+Remember: Clear documentation helps the next Claude (or JK) pick up exactly where you left off!
+```
+
 ---
 
 A high-performance, pure poker game management library for Node.js. Handles tournaments, tables, and games with a clean event-driven API that any player implementation can connect to.
