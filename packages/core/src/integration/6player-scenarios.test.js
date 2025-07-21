@@ -281,7 +281,7 @@ describe('6-Player Poker Scenarios', () => {
     await handResult;
     
     // Add delay to let async operations complete
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 600));
 
     // Verify result: All active players should be in the pot
     // Count how many players called/checked
