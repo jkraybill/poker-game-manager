@@ -5,12 +5,15 @@ This guide shows you how to integrate the Poker Game Manager library into your a
 ## Table of Contents
 
 1. [Installation](#installation)
-2. [Basic Setup](#basic-setup)
-3. [Implementing a Player](#implementing-a-player)
-4. [Listening to Game Events](#listening-to-game-events)
-5. [Complete Example: Three-Player Game](#complete-example-three-player-game)
-6. [Example Output](#example-output)
-7. [Advanced Topics](#advanced-topics)
+2. [Quick Start](#quick-start)
+3. [Core Concepts](#core-concepts)
+4. [Player Implementation](#player-implementation)
+5. [Table Management](#table-management)
+6. [Event System](#event-system)
+7. [Complete Examples](#complete-examples)
+8. [Testing Best Practices](#testing-best-practices)
+9. [Advanced Topics](#advanced-topics)
+10. [API Reference](#api-reference)
 
 ## Installation
 
@@ -18,7 +21,7 @@ This guide shows you how to integrate the Poker Game Manager library into your a
 npm install @poker-manager/core
 ```
 
-## Basic Setup
+## Quick Start
 
 ```javascript
 import { PokerGameManager, Player, Action } from '@poker-manager/core';
@@ -31,117 +34,82 @@ const table = manager.createTable({
   blinds: { small: 10, big: 20 },
   minBuyIn: 1000,
   maxBuyIn: 5000,
+  minPlayers: 2,
 });
+
+// Add players
+table.addPlayer(player1);
+table.addPlayer(player2);
+
+// IMPORTANT: Tables no longer auto-start
+// You must explicitly start the game
+table.tryStartGame();
 ```
 
-## Implementing a Player
+## Core Concepts
+
+### 1. No Automatic Game Start
+Tables no longer automatically start games when minimum players are reached. You must explicitly call `tryStartGame()`:
+
+```javascript
+// Add players first
+table.addPlayer(player1);
+table.addPlayer(player2);
+
+// Then start the game
+table.tryStartGame();
+
+// No automatic restart after hands end
+// You must call tryStartGame() again for the next hand
+```
+
+### 2. Enhanced Player API
+The `gameState` object now includes `lastAction` for each player, enabling advanced strategies:
+
+```javascript
+getAction(gameState) {
+  // Access other players' last actions
+  const raisers = Object.values(gameState.players)
+    .filter(p => p.lastAction === Action.RAISE);
+  
+  // Player state includes:
+  // - id: player ID
+  // - chips: current chip count
+  // - bet: current bet this round
+  // - state: ACTIVE, FOLDED, ALL_IN, etc.
+  // - hasActed: whether acted this round
+  // - lastAction: previous action (CHECK, BET, RAISE, etc.)
+}
+```
+
+## Player Implementation
 
 Every player must extend the `Player` class and implement the `getAction()` method:
 
 ```javascript
 import { Player, Action } from '@poker-manager/core';
 
-class MyPlayer extends Player {
+class StrategicPlayer extends Player {
   constructor(config) {
     super(config);
-    this.strategy = config.strategy || 'default';
+    this.style = config.style || 'balanced';
   }
 
-  getAction(gameState) {
-    // gameState contains:
-    // - phase: current game phase (PRE_FLOP, FLOP, TURN, RIVER)
-    // - communityCards: cards on the board
-    // - pot: current pot size
-    // - currentBet: amount to call
-    // - players: all player states
-    // - actionHistory: previous actions
-    
+  async getAction(gameState) {
     const myState = gameState.players[this.id];
     const toCall = gameState.currentBet - myState.bet;
     
-    // Your decision logic here
-    if (toCall === 0) {
-      return {
-        playerId: this.id,
-        action: Action.CHECK,
-        timestamp: Date.now(),
-      };
-    } else if (toCall <= myState.chips * 0.1) {
-      return {
-        playerId: this.id,
-        action: Action.CALL,
-        amount: toCall,
-        timestamp: Date.now(),
-      };
-    } else {
-      return {
-        playerId: this.id,
-        action: Action.FOLD,
-        timestamp: Date.now(),
-      };
+    // Advanced strategy using lastAction
+    const aggressors = Object.values(gameState.players)
+      .filter(p => p.lastAction === Action.RAISE || p.lastAction === Action.BET)
+      .length;
+    
+    // Squeeze play opportunity
+    if (aggressors === 1 && this.detectCallers(gameState) >= 1) {
+      return this.squeezePlay(gameState);
     }
-  }
-
-  // Optional: Handle receiving hole cards
-  receivePrivateCards(cards) {
-    super.receivePrivateCards(cards);
-    console.log(`${this.name} received cards:`, cards);
-  }
-}
-```
-
-## Listening to Game Events
-
-The library emits various events you can listen to:
-
-```javascript
-// Table events
-table.on('game:started', ({ gameNumber, players }) => {
-  console.log(`Game ${gameNumber} started with players:`, players);
-});
-
-table.on('game:ended', ({ winners, payouts }) => {
-  console.log('Game ended. Winners:', winners);
-  console.log('Payouts:', payouts);
-});
-
-table.on('player:joined', ({ player, seatNumber }) => {
-  console.log(`${player.name} joined at seat ${seatNumber}`);
-});
-
-// Game events (during gameplay)
-table.on('cards:dealt', ({ phase, cards }) => {
-  console.log(`${phase} cards:`, cards);
-});
-
-table.on('player:action', ({ playerId, action, amount }) => {
-  console.log(`Player ${playerId} ${action}${amount ? ` $${amount}` : ''}`);
-});
-
-table.on('pot:updated', ({ total, sidePots }) => {
-  console.log(`Pot: $${total}`);
-});
-
-// Manager events (for multi-table setups)
-manager.on('table:created', ({ tableId }) => {
-  console.log(`Table ${tableId} created`);
-});
-```
-
-## Complete Example: Three-Player Game
-
-Here's a complete example with three different player strategies:
-
-```javascript
-import { PokerGameManager, Player, Action } from '@poker-manager/core';
-
-// Player that always folds
-class FoldingPlayer extends Player {
-  getAction(gameState) {
-    const myState = gameState.players[this.id];
-    const toCall = gameState.currentBet - myState.bet;
     
-    // Always fold unless we can check
+    // Standard decision logic
     if (toCall === 0) {
       return {
         playerId: this.id,
@@ -150,53 +118,25 @@ class FoldingPlayer extends Player {
       };
     }
     
+    // Must return action with playerId and timestamp
     return {
       playerId: this.id,
       action: Action.FOLD,
       timestamp: Date.now(),
     };
   }
-}
-
-// Player that always calls
-class CallingPlayer extends Player {
-  getAction(gameState) {
-    const myState = gameState.players[this.id];
-    const toCall = gameState.currentBet - myState.bet;
-    
-    if (toCall === 0) {
-      return {
-        playerId: this.id,
-        action: Action.CHECK,
-        timestamp: Date.now(),
-      };
-    }
-    
-    // Call up to all-in
-    const callAmount = Math.min(toCall, myState.chips);
-    return {
-      playerId: this.id,
-      action: callAmount === myState.chips ? Action.ALL_IN : Action.CALL,
-      amount: callAmount,
-      timestamp: Date.now(),
-    };
+  
+  detectCallers(gameState) {
+    return Object.values(gameState.players)
+      .filter(p => p.lastAction === Action.CALL)
+      .length;
   }
-}
-
-// Player that always raises half the pot
-class AggressivePlayer extends Player {
-  getAction(gameState) {
+  
+  squeezePlay(gameState) {
     const myState = gameState.players[this.id];
-    const toCall = gameState.currentBet - myState.bet;
-    const potSize = gameState.pot;
+    const squeezeAmount = gameState.currentBet * 3.5;
     
-    // Calculate half-pot raise
-    const raiseAmount = Math.floor(potSize / 2);
-    const totalBet = gameState.currentBet + raiseAmount;
-    const myTotalBet = totalBet - myState.bet;
-    
-    // If we can't afford the raise, just call or go all-in
-    if (myTotalBet >= myState.chips) {
+    if (squeezeAmount >= myState.chips) {
       return {
         playerId: this.id,
         action: Action.ALL_IN,
@@ -205,8 +145,150 @@ class AggressivePlayer extends Player {
       };
     }
     
-    // If it's already a big bet relative to our stack, just call
-    if (toCall > myState.chips * 0.5) {
+    return {
+      playerId: this.id,
+      action: Action.RAISE,
+      amount: squeezeAmount,
+      timestamp: Date.now(),
+    };
+  }
+
+  // Optional: Handle receiving hole cards
+  receivePrivateCards(cards) {
+    super.receivePrivateCards(cards);
+    this.holeCards = cards;
+  }
+}
+```
+
+## Table Management
+
+### Creating Tables
+
+```javascript
+const table = manager.createTable({
+  id: 'high-stakes-1',           // Optional custom ID
+  variant: 'texas-holdem',        // Game variant (default)
+  maxPlayers: 9,                  // Maximum seats
+  minPlayers: 2,                  // Minimum to start
+  blinds: { small: 25, big: 50 }, // Blind structure
+  minBuyIn: 2000,                 // Minimum chips
+  maxBuyIn: 10000,                // Maximum chips
+  timeout: 30000,                 // Decision timeout (ms)
+  dealerButton: 0,                // Initial button position
+});
+```
+
+### Multi-Table Support
+
+```javascript
+// Create multiple tables
+const cashGame = manager.createTable({ 
+  id: 'cash-1',
+  blinds: { small: 1, big: 2 },
+});
+
+const tournament = manager.createTable({
+  id: 'tourney-1',
+  blinds: { small: 50, big: 100 },
+});
+
+// Access tables
+const table = manager.getTable('cash-1');
+const allTables = manager.getTables();
+
+// Monitor all tables via event forwarding
+manager.on('table:event', ({ tableId, eventName, data }) => {
+  console.log(`Table ${tableId}: ${eventName}`, data);
+});
+```
+
+## Event System
+
+### Table Events
+
+```javascript
+// Game lifecycle
+table.on('game:started', ({ gameNumber, players }) => {
+  console.log(`Game ${gameNumber} started`);
+});
+
+table.on('hand:started', ({ dealerButton }) => {
+  console.log(`New hand, button at position ${dealerButton}`);
+});
+
+table.on('hand:ended', ({ winners }) => {
+  // Note: 'hand:complete' is mapped to 'hand:ended' for compatibility
+  console.log('Hand complete, winners:', winners);
+});
+
+// Player events
+table.on('player:joined', ({ player }) => {
+  console.log(`${player.name} joined the table`);
+});
+
+table.on('player:action', ({ playerId, action, amount }) => {
+  console.log(`Player ${playerId}: ${action} ${amount || ''}`);
+});
+
+// Betting rounds
+table.on('round:started', ({ phase }) => {
+  console.log(`${phase} round started`);
+});
+
+// Pot updates
+table.on('pot:updated', ({ total, sidePots }) => {
+  console.log(`Main pot: $${total}`);
+  if (sidePots?.length > 0) {
+    console.log('Side pots:', sidePots);
+  }
+});
+```
+
+### Manager Events
+
+```javascript
+// Table management
+manager.on('table:created', ({ tableId, table }) => {
+  console.log(`Table ${tableId} created`);
+});
+
+manager.on('table:removed', ({ tableId }) => {
+  console.log(`Table ${tableId} removed`);
+});
+
+// Global event forwarding
+manager.on('table:event', ({ tableId, eventName, data }) => {
+  // All table events are forwarded here
+  console.log(`[${tableId}] ${eventName}:`, data);
+});
+```
+
+## Complete Examples
+
+### Example 1: Heads-Up Game
+
+```javascript
+import { PokerGameManager, Player, Action } from '@poker-manager/core';
+
+// Simple aggressive player
+class AggressivePlayer extends Player {
+  getAction(gameState) {
+    const myState = gameState.players[this.id];
+    const toCall = gameState.currentBet - myState.bet;
+    
+    // Always raise if possible
+    if (toCall === 0 && myState.chips > gameState.currentBet) {
+      return {
+        playerId: this.id,
+        action: Action.BET,
+        amount: Math.min(gameState.pot, myState.chips),
+        timestamp: Date.now(),
+      };
+    }
+    
+    // Call any bet up to half stack
+    if (toCall > 0 && toCall <= myState.chips / 2) {
       return {
         playerId: this.id,
         action: Action.CALL,
@@ -215,259 +297,413 @@ class AggressivePlayer extends Player {
       };
     }
     
-    // Otherwise, raise half the pot
-    if (toCall === 0 && raiseAmount > 0) {
-      return {
-        playerId: this.id,
-        action: Action.BET,
-        amount: raiseAmount,
-        timestamp: Date.now(),
-      };
-    } else if (raiseAmount > gameState.currentBet) {
-      return {
-        playerId: this.id,
-        action: Action.RAISE,
-        amount: totalBet,
-        timestamp: Date.now(),
-      };
-    } else {
-      // Just call if raise would be too small
-      return {
-        playerId: this.id,
-        action: Action.CALL,
-        amount: toCall,
-        timestamp: Date.now(),
-      };
-    }
+    // Otherwise fold
+    return {
+      playerId: this.id,
+      action: toCall > 0 ? Action.FOLD : Action.CHECK,
+      timestamp: Date.now(),
+    };
   }
 }
 
-// Run the simulation
-async function runSimulation() {
+async function runHeadsUp() {
   const manager = new PokerGameManager();
-  
   const table = manager.createTable({
     blinds: { small: 10, big: 20 },
     minBuyIn: 1000,
     maxBuyIn: 1000,
+    minPlayers: 2,
   });
   
   // Create players
-  const folder = new FoldingPlayer({ name: 'Fearful Fred' });
-  const caller = new CallingPlayer({ name: 'Calling Carl' });
-  const raiser = new AggressivePlayer({ name: 'Aggressive Amy' });
+  const player1 = new AggressivePlayer({ name: 'Alice' });
+  const player2 = new AggressivePlayer({ name: 'Bob' });
   
-  // Add event listeners
-  table.on('game:started', ({ gameNumber }) => {
-    console.log(`\n========== GAME ${gameNumber} STARTED ==========\n`);
+  // Wait for hand to complete
+  const handResult = new Promise(resolve => {
+    table.on('hand:ended', ({ winners }) => {
+      resolve(winners);
+    });
   });
   
-  table.on('player:action', ({ playerId, action, amount }) => {
-    const player = [folder, caller, raiser].find(p => p.id === playerId);
-    console.log(`${player.name} ${action}${amount ? ` $${amount}` : ''}`);
-  });
+  // Add players and start
+  table.addPlayer(player1);
+  table.addPlayer(player2);
+  table.tryStartGame();
   
-  table.on('cards:dealt', ({ phase, cards }) => {
-    if (cards && cards.length > 0) {
-      console.log(`\n--- ${phase} ---`);
-      console.log(`Community cards: ${cards.join(' ')}`);
+  // Wait for result
+  const winners = await handResult;
+  console.log('Winners:', winners);
+  
+  // Clean up
+  table.close();
+}
+```
+
+### Example 2: Multi-Way Pot with Side Pots
+
+```javascript
+class StackSizePlayer extends Player {
+  constructor(config) {
+    super(config);
+    this.stackSize = config.stackSize;
+  }
+  
+  getAction(gameState) {
+    const myState = gameState.players[this.id];
+    const toCall = gameState.currentBet - myState.bet;
+    
+    // Short stacks go all-in when facing bets
+    if (this.stackSize === 'short' && toCall > 0) {
+      return {
+        playerId: this.id,
+        action: Action.ALL_IN,
+        amount: myState.chips,
+        timestamp: Date.now(),
+      };
+    }
+    
+    // Big stacks raise to put pressure
+    if (this.stackSize === 'big' && gameState.currentBet < 100) {
+      return {
+        playerId: this.id,
+        action: Action.RAISE,
+        amount: 150,
+        timestamp: Date.now(),
+      };
+    }
+    
+    // Medium stacks call reasonable bets
+    if (toCall > 0 && toCall <= myState.chips * 0.3) {
+      return {
+        playerId: this.id,
+        action: Action.CALL,
+        amount: toCall,
+        timestamp: Date.now(),
+      };
+    }
+    
+    return {
+      playerId: this.id,
+      action: toCall > 0 ? Action.FOLD : Action.CHECK,
+      timestamp: Date.now(),
+    };
+  }
+}
+
+// Create players with different stack sizes
+const shortStack = new StackSizePlayer({ 
+  name: 'Short Stack',
+  stackSize: 'short',
+});
+
+const bigStack = new StackSizePlayer({ 
+  name: 'Big Stack',
+  stackSize: 'big',
+});
+```
+
+### Example 3: Tournament Bubble Play
+
+```javascript
+class BubblePlayer extends Player {
+  constructor(config) {
+    super(config);
+    this.isBubble = config.isBubble;
+    this.position = config.position;
+  }
+  
+  getAction(gameState) {
+    const myState = gameState.players[this.id];
+    const toCall = gameState.currentBet - myState.bet;
+    const mRatio = myState.chips / (gameState.blinds.small + gameState.blinds.big);
+    
+    // ICM pressure on bubble
+    if (this.isBubble && mRatio < 10) {
+      // Shove from late position
+      if (this.position === 'BUTTON' || this.position === 'CO') {
+        return {
+          playerId: this.id,
+          action: Action.ALL_IN,
+          amount: myState.chips,
+          timestamp: Date.now(),
+        };
+      }
+    }
+    
+    // Exploit bubble dynamics
+    const shortStacks = Object.values(gameState.players)
+      .filter(p => p.chips < myState.chips * 0.5)
+      .length;
+    
+    if (shortStacks >= 2 && toCall === 0) {
+      // Apply pressure as big stack
+      return {
+        playerId: this.id,
+        action: Action.BET,
+        amount: gameState.blinds.big * 2.5,
+        timestamp: Date.now(),
+      };
+    }
+    
+    // Tight play otherwise
+    return {
+      playerId: this.id,
+      action: toCall > myState.chips * 0.2 ? Action.FOLD : Action.CHECK,
+      timestamp: Date.now(),
+    };
+  }
+}
+```
+
+## Testing Best Practices
+
+### Handling Race Conditions
+
+When testing, use proper delays to handle asynchronous operations:
+
+```javascript
+import { vi } from 'vitest';
+
+it('should handle complex scenarios', async () => {
+  const table = manager.createTable({ /* config */ });
+  
+  let handEnded = false;
+  let winners = [];
+  
+  // Capture data in event handler with delay
+  table.on('hand:ended', (result) => {
+    if (!handEnded) {
+      handEnded = true;
+      winners = result.winners;
+      // Add delay for state updates
+      setTimeout(() => table.close(), 50);
     }
   });
   
-  table.on('pot:updated', ({ total }) => {
-    console.log(`Pot size: $${total}`);
-  });
+  // Start game
+  table.tryStartGame();
   
-  // Listen to game engine events after game starts
-  table.on('game:started', () => {
-    const engine = table.gameEngine;
-    
-    engine.on('hand:complete', ({ winners, payouts }) => {
-      console.log('\n--- SHOWDOWN ---');
-      winners.forEach(winner => {
-        const player = [folder, caller, raiser].find(p => p.id === winner.playerId);
-        console.log(`${player.name} wins with ${winner.hand.description}!`);
-        console.log(`Hand: ${winner.hand.cards.map(c => c.toString()).join(' ')}`);
-      });
-    });
-  });
+  // Wait with Vitest utilities
+  await vi.waitFor(() => handEnded, { timeout: 1000 });
   
-  table.on('game:ended', ({ finalChips }) => {
-    console.log('\n========== FINAL CHIP COUNTS ==========');
-    Object.entries(finalChips).forEach(([playerId, chips]) => {
-      const player = [folder, caller, raiser].find(p => p.id === playerId);
-      console.log(`${player.name}: $${chips}`);
-    });
-  });
+  // Additional delay for async operations
+  await new Promise(resolve => setTimeout(resolve, 100));
   
-  // Add players to table
-  table.addPlayer(folder);
-  table.addPlayer(caller);
-  table.addPlayer(raiser);
-  
-  // Game will start automatically when minimum players are reached
-  // Wait for game to complete
-  await new Promise(resolve => {
-    table.on('game:ended', () => {
-      setTimeout(resolve, 1000);
-    });
-  });
-  
-  // Check final chip counts
-  console.log('\n========== FINAL CHIP COUNTS ==========');
-  const finalStates = table.getInfo();
-  [folder, caller, raiser].forEach(player => {
-    const playerData = table.players.get(player.id);
-    console.log(`${player.name}: $${playerData.chips}`);
-  });
-}
-
-// Run the example
-runSimulation().catch(console.error);
+  // Now safe to check results
+  expect(winners.length).toBeGreaterThan(0);
+});
 ```
 
-## Example Output
+### Deterministic Testing
 
-```
-========== GAME 1 STARTED ==========
+Always use fixed dealer button positions for consistent tests:
 
-Fearful Fred posts small blind $10
-Calling Carl posts big blind $20
+```javascript
+const table = manager.createTable({
+  blinds: { small: 10, big: 20 },
+  dealerButton: 0, // Fixed position for testing
+});
 
-Fearful Fred receives: Kh 7s
-Calling Carl receives: 9c 9d
-Aggressive Amy receives: Ah Qc
-
-Aggressive Amy raises to $45
-Fearful Fred folds
-Calling Carl calls $45
-Pot: $100
-
---- FLOP ---
-Community cards: 9h 5s 2d
-Calling Carl checks
-Aggressive Amy bets $50
-Calling Carl raises to $150
-Aggressive Amy calls $150
-Pot: $400
-
---- TURN ---
-Community cards: 9h 5s 2d Jc
-Calling Carl bets $200
-Aggressive Amy calls $200
-Pot: $800
-
---- RIVER ---
-Community cards: 9h 5s 2d Jc 3h
-Calling Carl bets $400
-Aggressive Amy folds
-Pot: $800
-
---- SHOWDOWN ---
-Calling Carl wins $800 with Three of a Kind, Nines
-Winning hand: 9c 9d 9h Jc 5s
-
-========== FINAL CHIP COUNTS ==========
-Fearful Fred: $990
-Calling Carl: $1405  
-Aggressive Amy: $605
+// With dealerButton: 0
+// 2 players: P0 = SB/Button, P1 = BB
+// 3 players: P0 = Button, P1 = SB, P2 = BB
+// 4+ players: P0 = Button, then positions clockwise
 ```
 
 ## Advanced Topics
 
-### Custom Game Configuration
+### Memory Management
 
 ```javascript
-const table = manager.createTable({
-  variant: 'texas-holdem',
-  maxPlayers: 6,
-  minPlayers: 2,
-  blinds: { small: 25, big: 50 },
-  minBuyIn: 2000,
-  maxBuyIn: 10000,
-  timeout: 60000, // 60 second decision time
-});
-```
-
-### Player Disconnection Handling
-
-```javascript
-class RobustPlayer extends Player {
-  async getAction(gameState) {
-    try {
-      // Your logic here
-      return await this.makeDecision(gameState);
-    } catch (error) {
-      console.error('Error making decision:', error);
-      // Default to check/fold on error
-      const myState = gameState.players[this.id];
-      const toCall = gameState.currentBet - myState.bet;
-      
-      return {
-        playerId: this.id,
-        action: toCall === 0 ? Action.CHECK : Action.FOLD,
-        timestamp: Date.now(),
-      };
-    }
-  }
-  
-  disconnect() {
-    // Clean up resources
-    super.disconnect();
-  }
-}
-```
-
-### Multi-Table Management
-
-```javascript
-const manager = new PokerGameManager({ maxTables: 10 });
-
-// Create multiple tables
-const cashGame = manager.createTable({ 
-  blinds: { small: 1, big: 2 },
-  minBuyIn: 100,
+// Clean up tables after use
+afterEach(() => {
+  manager.tables.forEach(table => table.close());
 });
 
-const tournament = manager.createTable({
-  blinds: { small: 50, big: 100 },
-  minBuyIn: 10000,
-});
-
-// Monitor all tables
-manager.on('table:event', ({ tableId, eventName, data }) => {
-  console.log(`Table ${tableId} event:`, eventName, data);
-});
-
-// Get statistics
+// Monitor memory usage
 const stats = manager.getStats();
-console.log(`Active tables: ${stats.activeTables}/${stats.totalTables}`);
-console.log(`Total players: ${stats.totalPlayers}`);
+console.log(`Memory usage: ${stats.memoryUsage / 1024 / 1024}MB`);
+```
+
+### Custom Hand Evaluation
+
+The library uses the `pokersolver` library for hand evaluation:
+
+```javascript
+// Card format uses T for 10
+const validCards = ['As', 'Kh', 'Qd', 'Jc', 'Ts', '9s', '8h'];
+// NOT: ['As', 'Kh', 'Qd', 'Jc', '10s', '9s', '8h'] // Wrong!
+```
+
+### Performance Optimization
+
+```javascript
+// Batch event handling
+const actions = [];
+table.on('player:action', (action) => {
+  actions.push(action);
+});
+
+// Process in batches
+setInterval(() => {
+  if (actions.length > 0) {
+    processBatch(actions.splice(0));
+  }
+}, 100);
 ```
 
 ### State Persistence
 
 ```javascript
-// Save game state
-const gameState = table.getInfo();
-fs.writeFileSync('game-state.json', JSON.stringify(gameState));
+// Get current table state
+const state = table.getInfo();
 
-// Note: Full state restoration requires additional implementation
+// Save to database
+await saveTableState(state);
+
+// Note: Full restoration requires custom implementation
+// as player instances cannot be serialized
 ```
 
-## Best Practices
+## API Reference
 
-1. **Always handle errors** in your `getAction()` method
-2. **Return actions promptly** to avoid timeouts
-3. **Validate game state** before making decisions
-4. **Use event listeners** for logging and analytics
-5. **Test your players** with different scenarios
-6. **Monitor memory usage** for long-running games
+### PokerGameManager
+
+```javascript
+class PokerGameManager extends EventEmitter {
+  constructor(config?: {
+    maxTables?: number;        // Default: 1000
+    defaultTimeout?: number;   // Default: 30000ms
+  });
+  
+  createTable(config?: TableConfig): Table;
+  getTable(tableId: string): Table | undefined;
+  getTables(): Table[];
+  closeTable(tableId: string): boolean;
+  closeAllTables(): void;
+  getStats(): {
+    totalTables: number;
+    activeTables: number;
+    totalPlayers: number;
+    memoryUsage: number;
+  };
+}
+```
+
+### Table
+
+```javascript
+class Table extends EventEmitter {
+  constructor(config: TableConfig);
+  
+  addPlayer(player: Player): boolean;
+  removePlayer(playerId: string): boolean;
+  tryStartGame(): void;  // Must be called explicitly
+  close(): void;
+  getInfo(): TableInfo;
+  getPlayerCount(): number;
+  isGameInProgress(): boolean;
+}
+```
+
+### Player
+
+```javascript
+abstract class Player extends EventEmitter {
+  constructor(config?: {
+    id?: string;
+    name?: string;
+    avatar?: string;
+  });
+  
+  abstract getAction(gameState: GameState): Promise<PlayerAction> | PlayerAction;
+  
+  // Optional overrides
+  receivePrivateCards(cards: string[]): void;
+  receiveMessage(message: any): void;
+  disconnect(): void;
+}
+```
+
+### GameState
+
+```javascript
+interface GameState {
+  phase: 'PRE_FLOP' | 'FLOP' | 'TURN' | 'RIVER';
+  communityCards: string[];
+  pot: number;
+  currentBet: number;
+  currentPlayer: string;
+  players: {
+    [playerId: string]: {
+      id: string;
+      chips: number;
+      bet: number;
+      state: 'ACTIVE' | 'FOLDED' | 'ALL_IN';
+      hasActed: boolean;
+      lastAction: Action | null;  // NEW: Track last action
+    };
+  };
+}
+```
+
+### PlayerAction
+
+```javascript
+interface PlayerAction {
+  playerId: string;
+  action: 'CHECK' | 'BET' | 'CALL' | 'RAISE' | 'FOLD' | 'ALL_IN';
+  amount?: number;  // Required for BET, RAISE, CALL, ALL_IN
+  timestamp: number;
+}
+```
+
+## Migration from Previous Versions
+
+### Breaking Changes
+
+1. **No Auto-Start**: Tables no longer automatically start games
+   ```javascript
+   // Old behavior (deprecated)
+   table.addPlayer(player1);
+   table.addPlayer(player2);
+   // Game would auto-start
+   
+   // New behavior (required)
+   table.addPlayer(player1);
+   table.addPlayer(player2);
+   table.tryStartGame(); // Must explicitly start
+   ```
+
+2. **Enhanced GameState**: Players now have `lastAction` property
+   ```javascript
+   // New property available
+   gameState.players[playerId].lastAction // 'RAISE', 'CALL', etc.
+   ```
+
+3. **Event Name Changes**: `hand:complete` → `hand:ended`
+   ```javascript
+   // Both work for compatibility, but prefer:
+   table.on('hand:ended', handler);
+   ```
+
+## Best Practices Summary
+
+1. **Always call `tryStartGame()`** after adding players
+2. **Use `lastAction`** for advanced strategies
+3. **Handle race conditions** with proper delays in tests
+4. **Clean up tables** with `table.close()` when done
+5. **Use deterministic dealer buttons** for testing
+6. **Monitor memory usage** for long-running applications
+7. **Return proper timestamps** in all player actions
+8. **Use 'T' not '10'** for card notation
 
 ## Next Steps
 
-- Check out the [API Reference](./API.md) for detailed documentation
-- See [Example Players](./packages/ai/src/) for more sophisticated implementations
-- Join our [Discord](https://discord.gg/poker-game-manager) for support
+- Explore the [test files](./packages/core/src/integration/) for more examples
+- Check [POKER-RULES.md](./POKER-RULES.md) for game rules reference
+- See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for common issues
+- Review [GitHub Issues](https://github.com/jkraybill/poker-game-manager/issues) for known bugs
 
 Happy coding! 🎰
