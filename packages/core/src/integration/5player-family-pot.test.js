@@ -171,8 +171,8 @@ describe('5-Player Family Pot', () => {
     // Wait for hand to complete
     await vi.waitFor(() => handEnded, { timeout: 1000 });
     
-    // Wait for all actions to be captured
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Wait for all actions to be captured and async operations to complete
+    await new Promise(resolve => setTimeout(resolve, 400));
 
     // Verify a showdown occurred (hand went to river)
     expect(showdownOccurred).toBe(true);
