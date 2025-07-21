@@ -38,7 +38,7 @@ describe('Split Pot Scenarios', () => {
 
     let gameStarted = false;
     let handEnded = false;
-    const winners = [];
+    let winners = [];
     let showdownOccurred = false;
     
     // Set custom deck BEFORE adding players
@@ -109,19 +109,19 @@ describe('Split Pot Scenarios', () => {
       }
     }
 
-    table.on('game:started', () => {
-      gameStarted = true;
-    });
+    // Create promise to wait for hand end
+    const handResult = new Promise((resolve) => {
+      table.on('game:started', () => {
+        gameStarted = true;
+      });
 
-    table.on('hand:ended', ({ winners: handWinners }) => {
-      if (!handEnded && handWinners && handWinners.length > 0) {
-        handEnded = true;
-        winners.push(...handWinners);
-        showdownOccurred = handWinners[0]?.hand != null;
-        
-        
-        // Don't close table here - it interferes with event processing
-      }
+      table.on('hand:ended', ({ winners: handWinners }) => {
+        if (!handEnded) {
+          handEnded = true;
+          showdownOccurred = handWinners && handWinners[0]?.hand != null;
+          resolve(handWinners || []);
+        }
+      });
     });
 
     // Create 2 players
@@ -136,7 +136,7 @@ describe('Split Pot Scenarios', () => {
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 1000 });
-    await vi.waitFor(() => handEnded && winners.length > 0, { timeout: 5000 });
+    winners = await handResult;
 
     // Verify split pot
     expect(winners).toHaveLength(2); // Both players win
@@ -251,7 +251,7 @@ describe('Split Pot Scenarios', () => {
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 1000 });
-    await vi.waitFor(() => handEnded && winners.length > 0, { timeout: 5000 });
+    await vi.waitFor(() => handEnded, { timeout: 5000 });
 
     // All 3 players should win (playing the board)
     expect(winners).toHaveLength(3);
@@ -380,7 +380,7 @@ describe('Split Pot Scenarios', () => {
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 1000 });
-    await vi.waitFor(() => handEnded && winners.length > 0, { timeout: 5000 });
+    await vi.waitFor(() => handEnded, { timeout: 5000 });
 
     // Two players should win (both have AA)
     expect(winners).toHaveLength(2);
@@ -527,7 +527,7 @@ describe('Split Pot Scenarios', () => {
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 1000 });
-    await vi.waitFor(() => handEnded && winners.length > 0, { timeout: 5000 });
+    await vi.waitFor(() => handEnded, { timeout: 5000 });
 
     // Scenario: Short stack (100) all-in, P2 (500) and P3 (500) have more chips
     // Short stack and P2 have AA (split), P3 has KK
