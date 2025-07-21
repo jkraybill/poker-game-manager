@@ -257,7 +257,8 @@ describe('6-Player Poker Scenarios', () => {
           table.off('pot:updated', handlePotUpdated);
           table.off('hand:ended', handleHandEnded);
           
-          resolve();
+          // Delay resolve to ensure all state updates are complete
+          setTimeout(() => resolve(), 50);
         }
       };
 
@@ -278,6 +279,9 @@ describe('6-Player Poker Scenarios', () => {
     // Wait for game to complete
     await vi.waitFor(() => gameStarted, { timeout: 500 });
     await handResult;
+    
+    // Add delay to let async operations complete
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     // Verify result: All active players should be in the pot
     // Count how many players called/checked
