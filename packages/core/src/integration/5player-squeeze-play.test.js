@@ -202,12 +202,12 @@ describe('5-Player Squeeze Play', () => {
     table.on('hand:ended', ({ winners }) => {
       if (!handEnded) {
         handEnded = true;
-        captureActions = false;
+        // Don't stop capturing actions - they might still be coming
         if (winners && winners.length > 0) {
           winnerId = winners[0].playerId;
           winnerAmount = winners[0].amount;
         }
-        setTimeout(() => table.close(), 10);
+        // Don't close table here - it interferes with event processing
       }
     });
 
@@ -221,6 +221,9 @@ describe('5-Player Squeeze Play', () => {
       interval: 50, 
     });
     await vi.waitFor(() => handEnded, { timeout: 1000 });
+    
+    // Give a moment for all events to process
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     // Verify the squeeze play sequence occurred
     const raiseAction = actions.find(a => a.action === Action.RAISE && a.amount === 60);
