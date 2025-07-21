@@ -297,6 +297,7 @@ betting-scenarios.test.js (2157 lines)
    - **🌟 6-8 PLAYER SCENARIOS**: Complete the poker complexity spectrum
 
 ### 🎯 **IMMEDIATE PRIORITIES FOR POKER GREATNESS**:
+   - **🔥 CRITICAL**: Fix test suite failures - memory leaks and timing issues (GitHub Issue #16)
    - **🔥 HOT**: Complete 6-8 player betting scenarios (GitHub Issue #5)
    - **⚡ CRITICAL**: Final resolution of side pot edge cases (Issue #11 remaining 10%)
    - **🏆 GAME CHANGER**: Tournament bracket management system
@@ -572,6 +573,29 @@ function getAction() {
 ```
 
 ## Known Bugs
+
+### 🔥 CRITICAL: Test Suite Failures (Issue #16)
+**Problem**: Multiple integration tests failing due to memory leaks and timing issues
+**Status**: Partially fixed - tests pass individually but fail when run as full suite
+**Root Causes**:
+- Event capture timing issues (captureActions set to false too early)
+- Asynchronous event handling race conditions
+- Memory leaks when running tests in parallel
+
+**Fixed Tests** (when run individually):
+- ✅ split-pot-simple.test.js
+- ✅ split-pot-deterministic.test.js
+- ✅ 4player-side-pots.test.js
+- ✅ 5player-squeeze-play.test.js
+- ✅ split-pot-scenarios.test.js (1 of 4)
+
+**Solutions Applied**:
+- Promise-based event handling
+- Removed early captureActions = false
+- Added vitest memory optimization config
+- Added processing delays for event completion
+
+**Next Steps**: Apply fixes to remaining tests, investigate memory leak root cause
 
 ### 🐛 PARTIALLY RESOLVED: Pot Distribution Bug (Issue #11)
 **Problem**: Winner receives 0 chips despite pot having chips in complex side pot scenarios

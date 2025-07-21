@@ -16,7 +16,8 @@ Please read these files in order:
 Key context:
 - Pure JavaScript (no TypeScript), Node.js 22+ required
 - Event-driven architecture with clean player interfaces
-- 180 tests passing (2 skipped), 4 new failing tests need investigation
+- 🔥 TOP PRIORITY: Test suite failures - memory leaks and timing issues (Issue #16)
+- 180+ tests, many passing individually but failing in full suite
 - 🐛 CRITICAL BUG: Pot distribution (Issue #11) - 90% fixed, edge cases remain
 - 🔥 NEW BUG: Winners receiving MORE chips than pot contains (8-player test)
 - Working on 6-8 player scenarios and tournament support
@@ -38,15 +39,15 @@ A high-performance, pure poker game management library for Node.js. Handles tour
 - **Infrastructure**: ✅ Modern build tools configured (ESLint, Prettier, Vitest)
 - **CI/CD**: ✅ GitHub Actions pipeline for Node.js 22 (all tests passing!)
 - **Core API**: ✅ Foundation implemented (PokerGameManager, Table, Player, GameEngine)
-- **Tests**: ✅ Comprehensive test suite (218 passing, 3 failing - all core components covered)
+- **Tests**: 🚧 Comprehensive test suite (many tests pass individually but memory issues prevent full suite run)
 - **Integration Tests**: ✅ Multi-player betting scenarios (2-8 players implemented)
 - **Hand Evaluation**: ✅ Integrated pokersolver library for robust hand evaluation
 - **Player API**: ✅ Enhanced with lastAction tracking for advanced strategies
 - **Memory Leaks**: ✅ FIXED! Removed auto-restart logic from Table.js
 - **Test Performance**: ✅ Reduced test timeouts from 5000ms to 1000ms (5x speedup!)
-- **Active Work**: 🚧 Fixing remaining integration test failures
+- **Active Work**: 🚧 Fixing test suite failures - memory leaks and timing issues
+- **Top Priority**: 🔥 [Test Suite Failures (#16)](https://github.com/jkraybill/poker-game-manager/issues/16) - Memory leaks and timing issues preventing full test suite from running
 - **Known Issues**: 🐛 [Pot distribution bug (#11)](https://github.com/jkraybill/poker-game-manager/issues/11) - 90% FIXED, edge cases remain
-- **Critical Issues**: 🔥 Custom deck test hanging on flop phase (debugging needed)
 - **GitHub Issues**: [Open issues tracking progress](https://github.com/jkraybill/poker-game-manager/issues)
 
 ## Documentation
