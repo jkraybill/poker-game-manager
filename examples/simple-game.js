@@ -255,21 +255,26 @@ async function runGame() {
     }
   });
 
-  table.on('hand:ended', ({ winners }) => {
+  table.on('cards:community', ({ cards }) => {
+    communityCards = cards.map(card => `${card.rank}${card.suit}`);
+  });
+
+  table.on('hand:ended', ({ winners, board }) => {
     console.log('\n--- SHOWDOWN ---');
-    console.log(`*Final board: ${communityCards.join(' ')}`);
+    // Use board from event if available, otherwise use tracked communityCards
+    const finalBoard = board ? board.map(card => `${card.rank}${card.suit}`).join(' ') : communityCards.join(' ');
+    console.log(`*Final board: ${finalBoard}`);
     console.log('');
 
     // Show all players' hands
     const players = [folder, caller, raiser];
-    const activePlayers = players.filter(player => {
-      const playerData = table.players.get(player.id);
-      console.log(player.id + " " + playerData.state);
-      return playerData && playerData.state !== 'FOLDED';
+    
+    players.forEach(player => {
+      console.log(`${player.name} ${player.state}`);
     });
 
     console.log('Players\' hands:');
-    activePlayers.forEach(player => {
+    players.forEach(player => {
       const cards = holeCards[player.id];
       if (cards) {
         console.log(`${player.name}: ${cards.join(' ')}`);
