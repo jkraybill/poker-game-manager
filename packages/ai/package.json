@@ -11,7 +11,7 @@
     "@poker-manager/core": "file:../core"
   },
   "devDependencies": {
-    "vitest": "^2.1.8"
+    "vitest": "^3.2.4"
   },
   "engines": {
     "node": ">=22.0.0"

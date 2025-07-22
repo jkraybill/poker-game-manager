@@ -7,7 +7,6 @@ class FoldingPlayer extends Player {
     const toCall = gameState.currentBet - myState.bet;
 
     if (toCall === 0) {
-      console.log(`${this.name} checks`);
       return {
         playerId: this.id,
         action: Action.CHECK,
@@ -15,7 +14,6 @@ class FoldingPlayer extends Player {
       };
     }
 
-    console.log(`${this.name} folds to $${toCall} bet`);
     return {
       playerId: this.id,
       action: Action.FOLD,
@@ -38,7 +36,6 @@ class CallingPlayer extends Player {
     }
 
     if (toCall === 0) {
-      console.log(`${this.name} checks`);
       return {
         playerId: this.id,
         action: Action.CHECK,
@@ -48,7 +45,6 @@ class CallingPlayer extends Player {
 
     const callAmount = Math.min(toCall, myState.chips);
     if (callAmount === myState.chips) {
-      console.log(`${this.name} goes all-in for $${callAmount}`);
       return {
         playerId: this.id,
         action: Action.ALL_IN,
@@ -57,7 +53,6 @@ class CallingPlayer extends Player {
       };
     }
 
-    console.log(`${this.name} calls $${callAmount}`);
     return {
       playerId: this.id,
       action: Action.CALL,
@@ -112,7 +107,6 @@ class AggressivePlayer extends Player {
 
     // Standard aggressive play
     if (myState.chips <= toCall) {
-      console.log(`${this.name} goes all-in for $${myState.chips}`);
       return {
         playerId: this.id,
         action: Action.ALL_IN,
@@ -127,7 +121,6 @@ class AggressivePlayer extends Player {
 
       if (toCall === 0 && raiseAmount > 0) {
         const betAmount = Math.min(raiseAmount, myState.chips);
-        console.log(`${this.name} bets $${betAmount}`);
         this.hasRaised = true;
         return {
           playerId: this.id,
@@ -140,7 +133,6 @@ class AggressivePlayer extends Player {
         const myTotalBet = totalBet - myState.bet;
 
         if (myTotalBet <= myState.chips) {
-          console.log(`${this.name} raises to $${totalBet}`);
           this.hasRaised = true;
           return {
             playerId: this.id,
@@ -163,7 +155,6 @@ class AggressivePlayer extends Player {
       };
     }
 
-    console.log(`${this.name} checks`);
     return {
       playerId: this.id,
       action: Action.CHECK,
@@ -177,18 +168,58 @@ class AggressivePlayer extends Player {
 
     // Special formatting for key events
     switch (eventName) {
+      case 'player:joined':
+        console.log(`[${timestamp}] [${source}] ${eventName}: ${data.player.name} joined in seat ${data.seatNumber}.`);
+        break;
+      case 'table:ready':
+        console.log(`[${timestamp}] [${source}] ${eventName}: ${data.playerCount} are at table (min ${data.minPlayers}), table is ready for a deal.`);
+        break;
+      case 'game:started':
+        console.log(`[${timestamp}] [${source}] ${eventName}: game started with ${data.players.length} players.`);
+        break;
+      case 'hand:started':
+        console.log(`[${timestamp}] [${source}] ${eventName}: hand started with ${data.players.length} players.`);
+        console.log(`[${timestamp}] [${source}] ${eventName}: Dealer button (${data.players[data.dealerButton]}) at position: ${data.dealerButton}`);
+
+        // Calculate positions based on dealer button
+        const sbIndex = (data.dealerButton + 1) % data.players.length;
+        const bbIndex = (data.dealerButton + 2) % data.players.length;
+
+        console.log(`[${timestamp}] [${source}] ${eventName}: Small blind (${data.players[sbIndex]}) posts $10`);
+        console.log(`[${timestamp}] [${source}] ${eventName}: Big blind (${data.players[bbIndex]}) posts $20`);
+        break;
+
+      case 'action:requested':
+        //TODO: I'm getting two events when the big button has the option to check.
+        //TODO: add dollar specs to action:requested, e.g. currentBet + toCall + minRaise + maxRaise and validate edge cases (less than half all-in etc)
+        //console.log(data);
+        console.log(`[${timestamp}] [${source}] ${eventName}: ${data.playerId} to act, bet is ${data.gameState.phase} $${data.gameState.currentBet}`);
+        break;
+      case 'pot:updated':
+        console.log(`[${timestamp}] [${source}] ${eventName}: Pot: $${data.total}`);
+        break;
       case 'player:action':
-        console.log(`** [${timestamp}] [${source}] ${eventName}: ${data.playerId} ${data.action} ${data.amount ? `$${data.amount}` : ''}`);
+        console.log(`[${timestamp}] [${source}] ${eventName}: ${data.playerId} ${data.action} ${data.amount ? `$${data.amount}` : ''}`);
         break;
       case 'hand:ended':
-        const winners = data.winners?.map(w => `${w.playerId}($${w.amount})`).join(', ') || 'none';
-        console.log(`** [${timestamp}] [${source}] ${eventName}: Winners: ${winners}`);
+        //console.log(JSON.stringify(data, null, 4));
+        const winners = data.winners?.map(w => `${w.playerId} wins $${w.amount} with ${w.hand.description} (${w.hand.cards.map(c => c.rank+c.suit).join(' ')})`).join(', ') || 'none';
+        console.log(`[${timestamp}] [${source}] ${eventName}: Winners: ${winners}`);
         break;
       case 'cards:community':
-        console.log(`** [${timestamp}] [${source}] ${eventName}: ${data.phase} - ${data.cards?.join(', ')}`);
+        console.log(`[${timestamp}] [${source}] ${eventName}: ${data.phase} - ${data.cards?.join(', ')}`);
         break;
+      case 'chips:awarded':
+        console.log(`[${timestamp}] [${source}] ${eventName}: ${data.playerId} awarded $${data.amount}, total chips: $${data.total}`);
+        break;
+      case 'cards:dealt':
+        break;
+      case 'table:event':
+        if (data.eventName === 'player:joined' || data.eventName === 'table:ready' || data.eventName === 'game:started' || data.eventName === 'hand:started' || data.eventName === 'cards:dealt' || data.eventName === 'pot:updated' || data.eventName === 'action:requested' || data.eventName === 'player:action' || data.eventName === 'cards:community' || data.eventName === 'chips:awarded' || data.eventName === 'hand:ended') {
+          break;
+        }
       default:
-        console.log(`** [${timestamp}] [${source}] ${eventName}:`, JSON.stringify(data));
+        console.log(`** [${timestamp}] [${source}] ${eventName}:`, JSON.stringify(data, null, 4));
     }
   };
 
@@ -205,9 +236,9 @@ async function runGame() {
   });
 
   // Create players
-  const folder = new FoldingPlayer({ name: 'Fearful Fred' });
-  const caller = new CallingPlayer({ name: 'Calling Carl' });
-  const raiser = new AggressivePlayer({ name: 'Aggressive Amy' });
+  const folder = new FoldingPlayer({ id: 'Fearful Fred' });
+  const caller = new CallingPlayer({ id: 'Calling Carl' });
+  const raiser = new AggressivePlayer({ id: 'Aggressive Amy' });
 
   // Track game state
   let currentPhase = '';
@@ -216,51 +247,12 @@ async function runGame() {
   let communityCards = [];
   let holeCards = {};
 
-  // Event listeners
-  table.on('game:started', ({ gameNumber: num }) => {
-    gameNumber = num;
-    console.log(`\n*========== GAME ${num} STARTED ==========\n`);
-  });
-
-  table.on('hand:started', ({ dealerButton }) => {
-    const players = [folder, caller, raiser];
-    console.log(`*Dealer button at position: ${dealerButton}`);
-
-    // Calculate positions based on dealer button
-    const sbIndex = (dealerButton + 1) % 3;
-    const bbIndex = (dealerButton + 2) % 3;
-
-    console.log(`*Small blind: ${players[sbIndex].name} posts $10`);
-    console.log(`*Big blind: ${players[bbIndex].name} posts $20`);
-    console.log('');
-  });
 
   table.on('round:started', ({ phase }) => {
     currentPhase = phase;
     if (phase !== 'PRE_FLOP') {
       console.log(`*\n--- ${phase} ---`);
     }
-  });
-
-  table.on('cards:community', ({ phase, cards }) => {
-    if (phase === 'FLOP') {
-      communityCards = [...cards];
-      console.log(`*Flop: ${cards.join(' ')}`);
-    } else if (phase === 'TURN') {
-      communityCards = [...cards];
-      console.log(`*Turn: ${cards[cards.length - 1]} (Board: ${cards.join(' ')})`);
-    } else if (phase === 'RIVER') {
-      communityCards = [...cards];
-      console.log(`*River: ${cards[cards.length - 1]} (Board: ${cards.join(' ')})`);
-    }
-  });
-
-  table.on('player:action', ({ playerId, action, amount }) => {
-    // Actions are already logged by player classes
-  });
-
-  table.on('pot:updated', ({ total }) => {
-    console.log(`*Pot: $${total}\n`);
   });
 
   table.on('hand:ended', ({ winners }) => {
@@ -272,6 +264,7 @@ async function runGame() {
     const players = [folder, caller, raiser];
     const activePlayers = players.filter(player => {
       const playerData = table.players.get(player.id);
+      console.log(player.id + " " + playerData.state);
       return playerData && playerData.state !== 'FOLDED';
     });
 
@@ -325,7 +318,7 @@ async function runGame() {
   table.addPlayer(caller);
   table.addPlayer(raiser);
 
-  console.log('\nStarting game...');
+  console.log('Starting game...');
   // IMPORTANT: Must explicitly start the game
   table.tryStartGame();
 

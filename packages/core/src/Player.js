@@ -8,9 +8,9 @@ import { WildcardEventEmitter } from './base/WildcardEventEmitter.js';
 export class Player extends WildcardEventEmitter {
   constructor(config = {}) {
     super();
-    
+
     this.id = config.id || nanoid();
-    this.name = config.name || `Player ${this.id.slice(0, 6)}`;
+    this.name = config.name || `${this.id}`;
     this.avatar = config.avatar || null;
   }
 
