@@ -22,7 +22,7 @@ Commands:
 - ?? = ask clarifying questions
 - flush = commit/push changes
 
-Use TodoWrite tool to track tasks. Run `npm test` and `npm run lint` before committing.
+Use TodoWrite tool to track tasks. Make use of the sequential-thinking MCP if it will improve outcomes. Run `npm test` and `npm run lint` before committing.
 ```
 
 ## End-of-Session Checklist for Claude
