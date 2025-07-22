@@ -288,10 +288,7 @@ async function runGame() {
 
     console.log('\n--- CHIP COUNTS ---');
     players.forEach(player => {
-      const playerData = table.players.get(player.id);
-      if (playerData) {
-        console.log(`${player.name}: $${playerData.chips}`);
-      }
+      console.log(`${player.name}: $${player.chips}`);
     });
 
     handComplete = true;

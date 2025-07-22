@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { PotManager } from './PotManager.js';
+import { Player } from '../Player.js';
 
 describe('PotManager', () => {
   let players;
@@ -195,6 +196,57 @@ describe('PotManager', () => {
       
       // Verify side pots were created
       expect(potManager.pots.length).toBeGreaterThan(1);
+    });
+  });
+
+  describe('real game scenario', () => {
+    it('should handle pre-flop all-ins with blinds correctly', () => {
+      // Recreate the exact scenario from the integration test
+      // Starting chips: p1=50, p2=150, p3=300
+      // Blinds: p1=SB(10), p2=BB(20)
+      // Action: p3 all-in 300, p1 all-in 50 (40 more), p2 all-in 150 (130 more)
+      
+      const p1 = new Player({ id: 'p1', name: 'Small Stack' });
+      const p2 = new Player({ id: 'p2', name: 'Medium Stack' });
+      const p3 = new Player({ id: 'p3', name: 'Big Stack' });
+      
+      // Set initial chips
+      p1.chips = 50;
+      p2.chips = 150;
+      p3.chips = 300;
+      
+      const testPotManager = new PotManager([p1, p2, p3]);
+      
+      // Pre-flop: blinds
+      testPotManager.addToPot(p1, 10); // SB
+      testPotManager.addToPot(p2, 20); // BB
+      
+      // p3 goes all-in for 300
+      testPotManager.addToPot(p3, 300);
+      
+      // p1 goes all-in for remaining 40
+      testPotManager.addToPot(p1, 40);
+      
+      // p2 goes all-in for remaining 130
+      testPotManager.addToPot(p2, 130);
+      
+      // Create side pots
+      testPotManager.createSidePots();
+      
+      console.log('Test pots created:', testPotManager.pots.map(pot => ({
+        amount: pot.amount,
+        eligibleCount: pot.eligiblePlayers.length,
+        eligibleIds: pot.eligiblePlayers.map(p => p.id),
+      })));
+      
+      // Should have multiple pots
+      expect(testPotManager.pots.length).toBeGreaterThan(1);
+      
+      // Main pot should have all 3 players eligible
+      expect(testPotManager.pots[0].eligiblePlayers).toHaveLength(3);
+      
+      // Total should be 500 (50 + 150 + 300)
+      expect(testPotManager.getTotal()).toBe(500);
     });
   });
 

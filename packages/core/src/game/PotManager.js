@@ -73,13 +73,11 @@ export class PotManager {
           contributions: new Map(),
         };
         
-        // All players who contributed at least up to the current pot amount are eligible
-        for (let j = 0; j < playerContributions.length; j++) {
-          if (playerContributions[j].amount >= currentAmount) {
-            pot.eligiblePlayers.push(playerContributions[j].player);
-            const contrib = currentAmount - previousAmount;
-            pot.contributions.set(playerContributions[j].player, contrib);
-          }
+        // All players who contributed any amount are eligible for this pot level
+        for (let j = i; j < playerContributions.length; j++) {
+          pot.eligiblePlayers.push(playerContributions[j].player);
+          const contrib = currentAmount - previousAmount;
+          pot.contributions.set(playerContributions[j].player, contrib);
         }
         
         this.pots.push(pot);
