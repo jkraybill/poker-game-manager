@@ -121,7 +121,7 @@ export class PotManager {
   calculatePayouts(winners) {
     const payouts = new Map();
 
-    // Initialize payouts
+    // Initialize payouts - winners have playerData property pointing to Player instance
     for (const winner of winners) {
       payouts.set(winner.playerData, 0);
     }
@@ -130,10 +130,8 @@ export class PotManager {
     for (const pot of this.pots) {
       const eligibleWinners = winners.filter(w => 
         pot.eligiblePlayers.some(ep => {
-          // Handle both simple player objects and complex playerData objects
-          const epId = ep.player ? ep.player.id : ep.id;
-          const winnerPlayerId = w.playerData.player ? w.playerData.player.id : w.playerData.id;
-          return epId === winnerPlayerId;
+          // Both ep and w.playerData are Player instances now
+          return ep.id === w.playerData.id;
         }),
       );
 

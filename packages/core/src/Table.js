@@ -46,9 +46,11 @@ export class Table extends WildcardEventEmitter {
       throw new Error('Player already at table');
     }
 
+    // Set player's initial chips
+    player.buyIn(this.config.minBuyIn);
+    
     this.players.set(player.id, {
       player,
-      chips: this.config.minBuyIn,
       state: PlayerState.WAITING,
       seatNumber: this.getNextAvailableSeat(),
     });
@@ -85,7 +87,7 @@ export class Table extends WildcardEventEmitter {
     this.emit('player:left', { 
       playerId,
       tableId: this.id,
-      chips: playerData.chips,
+      chips: playerData.player.chips,
     });
 
     // Add waiting player if available
@@ -136,10 +138,7 @@ export class Table extends WildcardEventEmitter {
       
       this.gameEngine = new GameEngine({
         variant: this.config.variant,
-        players: sortedPlayers.map(playerData => ({
-          player: playerData.player,
-          chips: playerData.chips,
-        })),
+        players: sortedPlayers.map(pd => pd.player), // Pass Player instances directly
         blinds: this.config.blinds,
         timeout: this.config.timeout,
         dealerButton: this.config.dealerButton,
@@ -193,20 +192,15 @@ export class Table extends WildcardEventEmitter {
   /**
    * Handle game end
    */
-  handleGameEnd(result) {
+  handleGameEnd(_result) {
     this.state = TableState.WAITING;
     
-    // Update chip counts
-    for (const [playerId, chips] of Object.entries(result.finalChips)) {
-      const playerData = this.players.get(playerId);
-      if (playerData) {
-        playerData.chips = chips;
-      }
-    }
-
+    // Update chip counts are already handled by GameEngine via player.chips setter
+    // No need to update here since Player instances are shared
+    
     // Remove broke players
     for (const [playerId, playerData] of this.players.entries()) {
-      if (playerData.chips <= 0) {
+      if (playerData.player.chips <= 0) {
         this.removePlayer(playerId);
       }
     }

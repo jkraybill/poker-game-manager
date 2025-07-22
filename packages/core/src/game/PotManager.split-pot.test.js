@@ -6,17 +6,21 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { PotManager } from './PotManager.js';
+import { Player } from '../Player.js';
 
 describe('PotManager Split Pot Distribution', () => {
   let players;
 
   beforeEach(() => {
-    // Create mock players
+    // Create real Player instances
     players = [
-      { player: { id: 'p1' }, chips: 1000, state: 'ACTIVE' },
-      { player: { id: 'p2' }, chips: 1000, state: 'ACTIVE' },
-      { player: { id: 'p3' }, chips: 1000, state: 'ACTIVE' },
+      new Player({ id: 'p1', name: 'Player 1' }),
+      new Player({ id: 'p2', name: 'Player 2' }),
+      new Player({ id: 'p3', name: 'Player 3' }),
     ];
+    
+    // Initialize chip stacks
+    players.forEach(p => p.buyIn(1000));
   });
 
   it('should split pot evenly between two winners', () => {
@@ -118,7 +122,7 @@ describe('PotManager Split Pot Distribution', () => {
   it('should handle complex multi-way split with side pots', () => {
     const potManager = new PotManager(players, 10);
     
-    // Different stack sizes
+    // Different stack sizes - reset chips
     players[0].chips = 50;
     players[1].chips = 150;
     players[2].chips = 300;

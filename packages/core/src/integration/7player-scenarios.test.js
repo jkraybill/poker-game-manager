@@ -361,9 +361,9 @@ describe('7-Player Poker Scenarios', () => {
     const originalAddPlayer = table.addPlayer.bind(table);
     table.addPlayer = function(player) {
       const result = originalAddPlayer(player);
-      const playerData = this.players.get(player.id);
-      if (playerData && player.targetChips) {
-        playerData.chips = player.targetChips;
+      if (player.targetChips) {
+        // Set chips directly on the Player instance
+        player.chips = player.targetChips;
       }
       return result;
     };

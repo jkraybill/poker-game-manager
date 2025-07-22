@@ -3,6 +3,7 @@ import { WildcardEventEmitter } from '../base/WildcardEventEmitter.js';
 import { Deck } from './Deck.js';
 import { PotManager } from './PotManager.js';
 import { HandEvaluator } from './HandEvaluator.js';
+import { Player } from '../Player.js';
 
 /**
  * Core game engine that handles Texas Hold'em game logic
@@ -19,7 +20,19 @@ export class GameEngine extends WildcardEventEmitter {
       ...config,
     };
     
-    this.players = config.players;
+    // Players are now the single source of truth - no wrappers
+    // Support both wrapped format (for backward compatibility) and direct Player instances
+    this.players = config.players.map(p => {
+      if (p instanceof Player) {
+        return p;
+      } else if (p.player instanceof Player) {
+        // Transfer chips from wrapper to Player instance
+        p.player.chips = p.chips;
+        return p.player;
+      } else {
+        throw new Error('Invalid player format');
+      }
+    });
     this.phase = GamePhase.WAITING;
     this.board = [];
     this.deck = null;
@@ -44,7 +57,7 @@ export class GameEngine extends WildcardEventEmitter {
     }
     
     this.emit('hand:started', {
-      players: this.players.map(p => p.player.id),
+      players: this.players.map(p => p.id),
       dealerButton: this.dealerButtonIndex,
     });
     
@@ -72,16 +85,15 @@ export class GameEngine extends WildcardEventEmitter {
     this.playerHands.clear();
     this.raiseHistory = []; // Reset raise history for new hand
     
-    // Initialize pot manager
-    // Use all players, not just active ones, to maintain consistent object references
+    // Initialize pot manager with Player instances directly
     this.potManager = new PotManager(this.players, this.config.smallBlind);
     
-    // Reset player states
-    for (const playerData of this.players) {
-      playerData.state = playerData.chips > 0 ? PlayerState.ACTIVE : PlayerState.SITTING_OUT;
-      playerData.bet = 0;
-      playerData.hasActed = false;
-      playerData.lastAction = null;
+    // Reset player states directly on Player instances
+    for (const player of this.players) {
+      player.state = player.chips > 0 ? PlayerState.ACTIVE : PlayerState.SITTING_OUT;
+      player.bet = 0;
+      player.hasActed = false;
+      player.lastAction = null;
     }
     
     // Deal hole cards
@@ -101,21 +113,21 @@ export class GameEngine extends WildcardEventEmitter {
     const activePlayers = this.players.filter(p => p.state === PlayerState.ACTIVE);
     
     // Deal first card to each player
-    for (const playerData of activePlayers) {
+    for (const player of activePlayers) {
       const firstCard = this.deck.draw();
-      this.playerHands.set(playerData.player.id, [firstCard]);
+      this.playerHands.set(player.id, [firstCard]);
     }
     
     // Deal second card to each player
-    for (const playerData of activePlayers) {
-      const cards = this.playerHands.get(playerData.player.id);
+    for (const player of activePlayers) {
+      const cards = this.playerHands.get(player.id);
       cards.push(this.deck.draw());
       
       // Notify player of their cards
-      playerData.player.receivePrivateCards(cards);
+      player.receivePrivateCards(cards);
       
       this.emit('cards:dealt', {
-        playerId: playerData.player.id,
+        playerId: player.id,
         cardCount: 2,
       });
     }
@@ -209,7 +221,7 @@ return;
     const gameState = this.buildGameState();
     
     this.emit('action:requested', {
-      playerId: currentPlayer.player.id,
+      playerId: currentPlayer.id,
       gameState,
     });
     
@@ -221,7 +233,7 @@ return;
       });
       
       const action = await Promise.race([
-        currentPlayer.player.getAction(gameState),
+        currentPlayer.getAction(gameState),
         timeoutPromise,
       ]);
       
@@ -233,7 +245,7 @@ return;
       // Default to fold on timeout or error
       this.handlePlayerAction(currentPlayer, {
         action: Action.FOLD,
-        playerId: currentPlayer.player.id,
+        playerId: currentPlayer.id,
       });
     }
   }
@@ -241,9 +253,9 @@ return;
   /**
    * Validate a player action according to poker rules
    */
-  validateAction(playerData, action) {
+  validateAction(player, action) {
     const currentBet = this.getCurrentBet();
-    const toCall = currentBet - playerData.bet;
+    const toCall = currentBet - player.bet;
     
     switch (action.action) {
       case Action.FOLD:
@@ -259,7 +271,7 @@ return;
         if (toCall <= 0) {
           return { valid: false, reason: 'Nothing to call' };
         }
-        if (toCall > playerData.chips) {
+        if (toCall > player.chips) {
           return { valid: false, reason: 'Insufficient chips to call' };
         }
         return { valid: true };
@@ -268,13 +280,13 @@ return;
         if (currentBet > 0) {
           return { valid: false, reason: 'Cannot bet when facing a bet - use raise' };
         }
-        return this.validateBetAmount(action.amount, playerData);
+        return this.validateBetAmount(action.amount, player);
         
       case Action.RAISE:
         if (currentBet === 0) {
           return { valid: false, reason: 'Cannot raise without a bet - use bet' };
         }
-        return this.validateRaiseAmount(action.amount, playerData);
+        return this.validateRaiseAmount(action.amount, player);
         
       case Action.ALL_IN:
         return { valid: true }; // All-in is always valid
@@ -287,7 +299,7 @@ return;
   /**
    * Validate bet amount according to poker rules
    */
-  validateBetAmount(amount, playerData) {
+  validateBetAmount(amount, player) {
     // Rule 5.2.1.1: Opening bet must be at least the big blind
     const minBet = this.config.bigBlind;
     
@@ -298,7 +310,7 @@ return;
       };
     }
     
-    if (amount > playerData.chips) {
+    if (amount > player.chips) {
       return { 
         valid: false, 
         reason: 'Insufficient chips', 
@@ -311,16 +323,16 @@ return;
   /**
    * Validate raise amount according to poker rules
    */
-  validateRaiseAmount(amount, playerData) {
+  validateRaiseAmount(amount, player) {
     const currentBet = this.getCurrentBet();
-    // const toCall = currentBet - playerData.bet;
+    // const toCall = currentBet - player.bet;
     
     // The 'amount' parameter appears to be the total bet amount (raise TO)
     // not the raise increment (raise BY)
     const proposedTotalBet = amount;
     // const raiseIncrement = proposedTotalBet - currentBet;
     
-    if (proposedTotalBet > playerData.chips + playerData.bet) {
+    if (proposedTotalBet > player.chips + player.bet) {
       return { 
         valid: false, 
         reason: 'Insufficient chips for raise', 
@@ -371,13 +383,13 @@ return;
   /**
    * Handle a player action
    */
-  handlePlayerAction(playerData, action) {
+  handlePlayerAction(player, action) {
     // Validate the action before processing
-    const validationResult = this.validateAction(playerData, action);
+    const validationResult = this.validateAction(player, action);
     if (!validationResult.valid) {
       // Invalid action - emit error and re-prompt the same player
       this.emit('action:invalid', {
-        playerId: playerData.player.id,
+        playerId: player.id,
         action: action.action,
         amount: action.amount,
         reason: validationResult.reason,
@@ -390,11 +402,11 @@ return;
     }
     
     // Store the player's last action
-    playerData.lastAction = action.action;
+    player.lastAction = action.action;
     
     
     this.emit('player:action', {
-      playerId: playerData.player.id,
+      playerId: player.id,
       action: action.action,
       amount: action.amount,
     });
@@ -403,22 +415,22 @@ return;
     
     switch (action.action) {
       case Action.FOLD:
-        handEnded = this.handleFold(playerData);
+        handEnded = this.handleFold(player);
         break;
       case Action.CHECK:
-        this.handleCheck(playerData);
+        this.handleCheck(player);
         break;
       case Action.CALL:
-        this.handleCall(playerData);
+        this.handleCall(player);
         break;
       case Action.BET:
-        this.handleBet(playerData, action.amount);
+        this.handleBet(player, action.amount);
         break;
       case Action.RAISE:
-        this.handleRaise(playerData, action.amount);
+        this.handleRaise(player, action.amount);
         break;
       case Action.ALL_IN:
-        this.handleAllIn(playerData);
+        this.handleAllIn(player);
         break;
     }
     
@@ -427,7 +439,7 @@ return;
       return;
     }
     
-    playerData.hasActed = true;
+    player.hasActed = true;
     
     // Check if betting round is complete after this action
     if (this.isBettingRoundComplete()) {
@@ -442,8 +454,8 @@ return;
   /**
    * Handle fold action
    */
-  handleFold(playerData) {
-    playerData.state = PlayerState.FOLDED;
+  handleFold(player) {
+    player.state = PlayerState.FOLDED;
     
     // Check if only one player remains
     const activePlayers = this.players.filter(p => 
@@ -451,24 +463,24 @@ return;
     );
     
     if (activePlayers.length === 1) {
-      // Last player wins the pot
-      const winnersData = activePlayers.map(p => ({ playerData: p }));
-      const payouts = this.potManager.calculatePayouts(winnersData);
+      // Last player wins the pot - PotManager expects playerData property
+      const winners = activePlayers.map(p => ({ playerData: p }));
+      const payouts = this.potManager.calculatePayouts(winners);
       this.distributeWinnings(payouts);
       
       // Build winners array with amounts
-      const winners = [];
-      for (const [playerData, amount] of payouts) {
-        winners.push({
-          playerId: playerData.player.id,
+      const winnersArray = [];
+      for (const [player, amount] of payouts) {
+        winnersArray.push({
+          playerId: player.id,
           hand: 'Won by fold',
-          cards: this.playerHands.get(playerData.player.id) || [],
+          cards: this.playerHands.get(player.id) || [],
           amount,
         });
       }
       
       this.emit('hand:complete', {
-        winners,
+        winners: winnersArray,
         board: this.board,
       });
       
@@ -481,29 +493,29 @@ return;
   /**
    * Handle check action
    */
-  handleCheck(playerData) {
+  handleCheck(player) {
     // Check is only valid if no bet to match
     const currentBet = this.getCurrentBet();
-    if (currentBet > playerData.bet) {
+    if (currentBet > player.bet) {
       // Invalid action, treat as fold
-      this.handleFold(playerData);
+      this.handleFold(player);
     }
   }
 
   /**
    * Handle call action
    */
-  handleCall(playerData) {
+  handleCall(player) {
     const currentBet = this.getCurrentBet();
-    const callAmount = Math.min(currentBet - playerData.bet, playerData.chips);
+    const callAmount = Math.min(currentBet - player.bet, player.chips);
     
     if (callAmount > 0) {
-      playerData.chips -= callAmount;
-      playerData.bet += callAmount;
-      this.potManager.addToPot(playerData, callAmount);
+      player.chips -= callAmount;
+      player.bet += callAmount;
+      this.potManager.addToPot(player, callAmount);
       
-      if (playerData.chips === 0) {
-        playerData.state = PlayerState.ALL_IN;
+      if (player.chips === 0) {
+        player.state = PlayerState.ALL_IN;
       }
     }
   }
@@ -511,32 +523,32 @@ return;
   /**
    * Handle bet action
    */
-  handleBet(playerData, amount, blindType = '') {
-    const actualAmount = Math.min(amount, playerData.chips);
+  handleBet(player, amount, blindType = '') {
+    const actualAmount = Math.min(amount, player.chips);
     
-    playerData.chips -= actualAmount;
-    playerData.bet += actualAmount;
-    this.potManager.addToPot(playerData, actualAmount);
+    player.chips -= actualAmount;
+    player.bet += actualAmount;
+    this.potManager.addToPot(player, actualAmount);
     
-    if (playerData.chips === 0) {
-      playerData.state = PlayerState.ALL_IN;
+    if (player.chips === 0) {
+      player.state = PlayerState.ALL_IN;
     }
     
     // Track last bettor for betting round completion
     if (!blindType) {
-      this.lastBettor = playerData;
+      this.lastBettor = player;
     }
     
     this.emit('pot:updated', {
       total: this.potManager.getTotal(),
-      playerBet: { playerId: playerData.player.id, amount: actualAmount },
+      playerBet: { playerId: player.id, amount: actualAmount },
     });
   }
 
   /**
    * Handle raise action - tracks raise increments
    */
-  handleRaise(playerData, amount) {
+  handleRaise(player, amount) {
     const currentBet = this.getCurrentBet();
     const raiseIncrement = amount - currentBet;
     
@@ -544,15 +556,15 @@ return;
     this.raiseHistory.push(raiseIncrement);
     
     // Use the same betting logic as handleBet
-    this.handleBet(playerData, amount);
+    this.handleBet(player, amount);
   }
 
   /**
    * Handle all-in action
    */
-  handleAllIn(playerData) {
-    const allInAmount = playerData.chips;
-    this.handleBet(playerData, allInAmount);
+  handleAllIn(player) {
+    const allInAmount = player.chips;
+    this.handleBet(player, allInAmount);
   }
 
   /**
@@ -715,13 +727,13 @@ return;
       p.state === PlayerState.ACTIVE || p.state === PlayerState.ALL_IN,
     );
     
-    // Evaluate hands
-    const playerHands = activePlayers.map(playerData => {
-      const holeCards = this.playerHands.get(playerData.player.id);
+    // Evaluate hands - PotManager expects playerData property
+    const playerHands = activePlayers.map(player => {
+      const holeCards = this.playerHands.get(player.id);
       const hand = HandEvaluator.evaluate([...holeCards, ...this.board]);
       
       return {
-        playerData,
+        playerData: player,
         hand,
         cards: holeCards,
       };
@@ -735,13 +747,11 @@ return;
     // Build winners array with amounts
     const winnersWithAmounts = [];
     for (const winner of winners) {
-      const amount = Array.from(payouts).find(([pd]) => {
-        const pdId = pd.player ? pd.player.id : pd.id;
-        const winnerId = winner.playerData.player ? winner.playerData.player.id : winner.playerData.id;
-        return pdId === winnerId;
+      const amount = Array.from(payouts).find(([p]) => {
+        return p.id === winner.playerData.id;
       })?.[1] || 0;
       winnersWithAmounts.push({
-        playerId: winner.playerData.player ? winner.playerData.player.id : winner.playerData.id,
+        playerId: winner.playerData.id,
         hand: winner.hand,
         cards: winner.cards,
         amount,
@@ -763,18 +773,18 @@ return;
     this.phase = GamePhase.ENDED;
     
     const result = {
-      winners: winners.map(w => w.player.id),
+      winners: winners.map(w => w.id),
       finalChips: {},
       showdownHands: {},
     };
     
     // Record final chip counts
-    for (const playerData of this.players) {
-      result.finalChips[playerData.player.id] = playerData.chips;
+    for (const player of this.players) {
+      result.finalChips[player.id] = player.chips;
       
-      if (this.playerHands.has(playerData.player.id)) {
-        result.showdownHands[playerData.player.id] = 
-          this.playerHands.get(playerData.player.id);
+      if (this.playerHands.has(player.id)) {
+        result.showdownHands[player.id] = 
+          this.playerHands.get(player.id);
       }
     }
     
@@ -785,13 +795,13 @@ return;
    * Distribute winnings to winners
    */
   distributeWinnings(payouts) {
-    for (const [playerData, amount] of payouts) {
-      playerData.chips += amount;
+    for (const [player, amount] of payouts) {
+      player.addChips(amount);
       
       this.emit('chips:awarded', {
-        playerId: playerData.player.id,
+        playerId: player.id,
         amount,
-        total: playerData.chips,
+        total: player.chips,
       });
     }
   }
@@ -826,17 +836,17 @@ return;
   buildGameState() {
     const pot = this.potManager.getTotal();
     const currentBet = this.getCurrentBet();
-    const currentPlayerId = this.players[this.currentPlayerIndex].player.id;
+    const currentPlayerId = this.players[this.currentPlayerIndex].id;
     
     const players = {};
-    for (const playerData of this.players) {
-      players[playerData.player.id] = {
-        id: playerData.player.id,
-        chips: playerData.chips,
-        bet: playerData.bet,
-        state: playerData.state,
-        hasActed: playerData.hasActed,
-        lastAction: playerData.lastAction,
+    for (const player of this.players) {
+      players[player.id] = {
+        id: player.id,
+        chips: player.chips,
+        bet: player.bet,
+        state: player.state,
+        hasActed: player.hasActed,
+        lastAction: player.lastAction,
       };
     }
     

@@ -12,6 +12,14 @@ export class Player extends WildcardEventEmitter {
     this.id = config.id || nanoid();
     this.name = config.name || `${this.id}`;
     this.avatar = config.avatar || null;
+    this._chips = 0; // Private backing field for chips
+    
+    // Game state properties - Player is THE source of truth
+    this.bet = 0;          // Current bet in the betting round
+    this.state = null;     // PlayerState enum (ACTIVE, FOLDED, ALL_IN, etc.)
+    this.hasActed = false; // Whether player has acted in current betting round
+    this.lastAction = null; // Last action taken (Action enum)
+    this.hasOption = false; // For big blind option tracking
   }
 
   /**
@@ -65,5 +73,81 @@ export class Player extends WildcardEventEmitter {
   disconnect() {
     this.emit('disconnected', { playerId: this.id });
     this.removeAllListeners();
+  }
+
+  /**
+   * Get current chip count
+   * @returns {number} Current chip count
+   */
+  get chips() {
+    return this._chips;
+  }
+
+  /**
+   * Set chip count
+   * @param {number} amount - New chip amount
+   */
+  set chips(amount) {
+    const oldAmount = this._chips;
+    this._chips = Math.max(0, amount); // Never go negative
+    
+    if (oldAmount !== this._chips) {
+      this.emit('chips:changed', {
+        playerId: this.id,
+        oldAmount,
+        newAmount: this._chips,
+        difference: this._chips - oldAmount,
+      });
+    }
+  }
+
+  /**
+   * Add chips to player's stack
+   * @param {number} amount - Amount to add
+   * @returns {number} New chip count
+   */
+  addChips(amount) {
+    if (amount < 0) {
+      throw new Error('Cannot add negative chips');
+    }
+    this.chips = this._chips + amount;
+    return this._chips;
+  }
+
+  /**
+   * Remove chips from player's stack
+   * @param {number} amount - Amount to remove
+   * @returns {number} New chip count
+   * @throws {Error} If insufficient chips
+   */
+  removeChips(amount) {
+    if (amount < 0) {
+      throw new Error('Cannot remove negative chips');
+    }
+    if (amount > this._chips) {
+      throw new Error(`Insufficient chips: has ${this._chips}, needs ${amount}`);
+    }
+    this.chips = this._chips - amount;
+    return this._chips;
+  }
+
+  /**
+   * Check if player can afford an amount
+   * @param {number} amount - Amount to check
+   * @returns {boolean} True if player has enough chips
+   */
+  canAfford(amount) {
+    return this._chips >= amount;
+  }
+
+  /**
+   * Set initial chip stack (for buy-in)
+   * @param {number} amount - Initial stack size
+   */
+  buyIn(amount) {
+    if (amount <= 0) {
+      throw new Error('Buy-in must be positive');
+    }
+    this.chips = amount;
   }
 }

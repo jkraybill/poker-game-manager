@@ -1,45 +1,47 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { GameEngine } from './GameEngine.js';
 import { Action, PlayerState } from '../types/index.js';
+import { Player } from '../Player.js';
+
+// Mock player class for testing
+class MockPlayer extends Player {
+  constructor(config) {
+    super(config);
+    this.getAction = vi.fn();
+    this.receivePrivateCards = vi.fn();
+    this.receiveMessage = vi.fn();
+  }
+}
 
 describe('GameEngine', () => {
   let gameEngine;
   let mockPlayers;
 
   beforeEach(() => {
-    // Create mock players
+    // Create mock players with chips
+    const player1 = new MockPlayer({ id: 'player1', name: 'Alice' });
+    player1.buyIn(1000);
+    
+    const player2 = new MockPlayer({ id: 'player2', name: 'Bob' });
+    player2.buyIn(1000);
+    
+    const player3 = new MockPlayer({ id: 'player3', name: 'Charlie' });
+    player3.buyIn(1000);
+    
     mockPlayers = [
       {
-        player: {
-          id: 'player1',
-          name: 'Alice',
-          getAction: vi.fn(),
-          receivePrivateCards: vi.fn(),
-          receiveMessage: vi.fn(),
-        },
-        chips: 1000,
+        player: player1,
+        chips: player1.chips,
         state: PlayerState.ACTIVE,
       },
       {
-        player: {
-          id: 'player2', 
-          name: 'Bob',
-          getAction: vi.fn(),
-          receivePrivateCards: vi.fn(),
-          receiveMessage: vi.fn(),
-        },
-        chips: 1000,
+        player: player2,
+        chips: player2.chips,
         state: PlayerState.ACTIVE,
       },
       {
-        player: {
-          id: 'player3',
-          name: 'Charlie',
-          getAction: vi.fn(),
-          receivePrivateCards: vi.fn(),
-          receiveMessage: vi.fn(),
-        },
-        chips: 1000,
+        player: player3,
+        chips: player3.chips,
         state: PlayerState.ACTIVE,
       },
     ];
@@ -161,16 +163,16 @@ describe('GameEngine', () => {
       const actionSpy = vi.fn();
       gameEngine.on('player:action', actionSpy);
       
-      bbPlayer.player.getAction.mockResolvedValue({
+      bbPlayer.getAction.mockResolvedValue({
         action: Action.CHECK,
-        playerId: bbPlayer.player.id,
+        playerId: bbPlayer.id,
       });
 
       await gameEngine.promptNextPlayer();
 
       expect(bbPlayer.state).toBe(PlayerState.ACTIVE);
       expect(actionSpy).toHaveBeenCalledWith({
-        playerId: bbPlayer.player.id,
+        playerId: bbPlayer.id,
         action: Action.CHECK,
         amount: undefined,
       });
@@ -233,18 +235,23 @@ describe('GameEngine', () => {
   describe('hand completion', () => {
     it('should end hand when only one player remains', () => {
       const handCompleteSpy = vi.fn();
-      gameEngine.on('game:ended', handCompleteSpy);
+      gameEngine.on('hand:complete', handCompleteSpy);
 
       gameEngine.start();
 
       // Fold all but one player
-      gameEngine.handleFold(mockPlayers[0]);
-      gameEngine.handleFold(mockPlayers[1]);
+      gameEngine.handleFold(gameEngine.players[0]);
+      gameEngine.handleFold(gameEngine.players[1]);
 
       expect(handCompleteSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          winners: ['player3'],
-          finalChips: expect.any(Object),
+          winners: expect.arrayContaining([
+            expect.objectContaining({
+              playerId: 'player3',
+              hand: 'Won by fold',
+            }),
+          ]),
+          board: expect.any(Array),
         }),
       );
     });

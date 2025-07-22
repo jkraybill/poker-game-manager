@@ -191,9 +191,9 @@ describe('5-Player Complex Side Pots', () => {
     const originalAddPlayer = table.addPlayer.bind(table);
     table.addPlayer = function(player) {
       const result = originalAddPlayer(player);
-      const playerData = this.players.get(player.id);
-      if (playerData && player.chipAmount) {
-        playerData.chips = player.chipAmount;
+      if (player.chipAmount) {
+        // Set chips directly on the Player instance
+        player.chips = player.chipAmount;
       }
       return result;
     };
