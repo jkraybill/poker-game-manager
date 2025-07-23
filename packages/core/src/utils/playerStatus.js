@@ -69,9 +69,15 @@ export function getFormattedStandings(playersMap) {
  * @returns {string} Player status
  */
 export function getPlayerStatus(player) {
-  if (!player) return 'unknown';
-  if (player.chips === 0) return 'eliminated';
-  if (player.chips > 0) return 'active';
+  if (!player) {
+    return 'unknown';
+  }
+  if (player.chips === 0) {
+    return 'eliminated';
+  }
+  if (player.chips > 0) {
+    return 'active';
+  }
   return 'unknown';
 }
 

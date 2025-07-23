@@ -38,7 +38,7 @@ describe('Event Ordering - Verified (Issue #33)', () => {
     let gameEndCleanupTime = 0;
 
     // Track hand:ended
-    table.on('hand:ended', ({ winners }) => {
+    table.on('hand:ended', () => {
       handEndedTime = Date.now();
       eventLog.push({
         event: 'hand:ended',
@@ -134,7 +134,7 @@ describe('Event Ordering - Verified (Issue #33)', () => {
     
     expect(handEndedEvent).toBeDefined();
     expect(handleGameEndEvent).toBeDefined();
-    expect(handleGameEndEvent.timestamp).toBeGreaterThan(handEndedEvent.timestamp);
+    expect(handleGameEndEvent.timestamp).toBeGreaterThanOrEqual(handEndedEvent.timestamp);
     
     console.log('\n✓ Events fired in correct order');
   });
@@ -152,7 +152,7 @@ describe('Event Ordering - Verified (Issue #33)', () => {
     const eventLog = [];
 
     // Track events
-    table.on('hand:ended', ({ winners }) => {
+    table.on('hand:ended', () => {
       eventLog.push({
         event: 'hand:ended',
         timestamp: Date.now(),

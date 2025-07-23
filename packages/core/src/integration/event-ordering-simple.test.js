@@ -1,10 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import {
   createTestScenario,
   StrategicPlayer,
   STRATEGIES,
   waitForHandEnd,
-  cleanupTables,
 } from '../test-utils/index.js';
 
 /**
