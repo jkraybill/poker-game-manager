@@ -1,4 +1,5 @@
 import { PokerGameManager, Player, Action } from '../packages/core/src/index.js';
+import { getFormattedStandings } from '../packages/core/src/utils/playerStatus.js';
 
 // Constants
 const HANDS_TO_PLAY = 12;
@@ -120,6 +121,7 @@ class LoosePlayer extends Player {
 // Track game state
 let handsPlayed = 0;
 let eliminatedPlayers = new Set();
+let eliminatedPlayerData = []; // Track eliminated player details for standings
 let players = [];
 let table = null;
 let manager = null;
@@ -266,8 +268,19 @@ function setupEventListeners(manager, table) {
 
   // Player state events
   table.on('player:eliminated', (data) => {
-    console.log(`☠️  ${getPlayerName(data.playerId)} eliminated from game!`);
+    const playerName = getPlayerName(data.playerId);
+    console.log(`☠️  ${playerName} eliminated from game!`);
     eliminatedPlayers.add(data.playerId);
+    
+    // Track eliminated player data for standings display (Issue #34)
+    eliminatedPlayerData.push({
+      id: data.playerId,
+      name: playerName,
+      chips: 0,
+      seatNumber: data.seatNumber || 0, // May not be available in elimination event
+      status: 'eliminated',
+      eliminationOrder: eliminatedPlayerData.length + 1, // Simple ordering
+    });
   });
 
   // Custom event for tracking private cards (for demo purposes)
@@ -334,31 +347,43 @@ async function runMultiHandGame() {
       // Prevent duplicate processing
       if (isProcessing) return;
       isProcessing = true;
-      // Show current standings
+      // Show current standings using proper utilities (fixes Issue #34)
       console.log('\n📊 === CURRENT STANDINGS ===');
-      const activePlayers = players.filter((p) => !eliminatedPlayers.has(p.id));
+      const { standings, eliminated, summary } = getFormattedStandings(table.players, eliminatedPlayerData);
       
-      activePlayers
-        .sort((a, b) => b.chips - a.chips)
-        .forEach((player, index) => {
-          const chips = table.players.get(player.id)?.player.chips || 0;
-          console.log(`${index + 1}. ${player.name}: $${chips}`);
+      // Display active players
+      console.log('\n🏆 ACTIVE PLAYERS:');
+      if (standings.length > 0) {
+        standings.forEach(player => {
+          console.log(`${player.rank}. ${player.name}: $${player.chips} (Seat ${player.seatNumber})`);
         });
+        console.log(`\nTotal chips in play: $${summary.totalChipsInPlay} | Average stack: $${summary.averageStack}`);
+      } else {
+        console.log('No active players remaining');
+      }
+      
+      // Display eliminated players separately (addresses Issue #34)
+      if (eliminated.length > 0) {
+        console.log('\n☠️  ELIMINATED PLAYERS:');
+        eliminated.forEach(player => {
+          console.log(`   ${player.name} (elimination order: ${player.eliminationOrder || 'unknown'})`);
+        });
+      }
+      
+      console.log(`\nPlayers remaining: ${summary.playersRemaining}/${standings.length + eliminated.length}`);
 
       // Check if we should continue
-      if (handsPlayed >= HANDS_TO_PLAY || activePlayers.length < 2) {
+      if (handsPlayed >= HANDS_TO_PLAY || standings.length < 2) {
         console.log('\n🎊 === GAME COMPLETE ===');
         
-        if (activePlayers.length === 1) {
-          console.log(`\n🏆 WINNER: ${activePlayers[0].name} wins the tournament!`);
+        if (standings.length === 1) {
+          console.log(`\n🏆 WINNER: ${standings[0].name} wins the tournament!`);
+        } else if (standings.length > 0) {
+          // Winner is already sorted by chips (rank 1)
+          const winner = standings[0];
+          console.log(`\n🏆 WINNER: ${winner.name} with $${winner.chips}!`);
         } else {
-          const winner = activePlayers.sort((a, b) => {
-            const aChips = table.players.get(a.id)?.player.chips || 0;
-            const bChips = table.players.get(b.id)?.player.chips || 0;
-            return bChips - aChips;
-          })[0];
-          const winnerChips = table.players.get(winner.id)?.player.chips || 0;
-          console.log(`\n🏆 WINNER: ${winner.name} with $${winnerChips}!`);
+          console.log('\n🤔 No active players remain - tournament ended');
         }
 
         resolve();

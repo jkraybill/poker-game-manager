@@ -45,14 +45,18 @@ export function categorizePlayersByStatus(playersMap) {
 /**
  * Format standings for display
  * @param {Map<string, Object>} playersMap - Table players map
+ * @param {Array} externalEliminated - Optional array of eliminated player data
  * @returns {Object} Formatted standings object
  */
-export function getFormattedStandings(playersMap) {
+export function getFormattedStandings(playersMap, externalEliminated = []) {
   const { active, eliminated } = categorizePlayersByStatus(playersMap);
+  
+  // Combine eliminated players from table and external tracking
+  const allEliminated = [...eliminated, ...externalEliminated];
   
   return {
     standings: active,
-    eliminated,
+    eliminated: allEliminated,
     summary: {
       playersRemaining: active.length,
       totalChipsInPlay: active.reduce((sum, p) => sum + p.chips, 0),

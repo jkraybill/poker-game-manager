@@ -61,6 +61,23 @@ async function demonstrateStandings() {
     dealerButton: 0,
   });
   
+  // Track eliminated players for proper standings display (Issue #34)
+  const eliminatedPlayers = [];
+  
+  table.on('player:eliminated', ({ playerId }) => {
+    const playerName = players.find(p => p.id === playerId)?.name || playerId;
+    console.log(`\n🔴 ${playerName} has been eliminated!`);
+    
+    eliminatedPlayers.push({
+      id: playerId,
+      name: playerName,
+      chips: 0,
+      seatNumber: 0, // Seat number not available in elimination event
+      status: 'eliminated',
+      eliminationOrder: eliminatedPlayers.length + 1,
+    });
+  });
+  
   // Add players with different chip amounts
   const players = [
     new SimplePlayer({ name: 'Alice', targetAction: 'check' }),
@@ -78,31 +95,31 @@ async function demonstrateStandings() {
   table.players.get(players[3].id).player.chips = 20;  // David - micro stack (will go all-in)
   
   console.log('Initial standings:');
-  displayStandings(table);
+  displayStandings(table, eliminatedPlayers);
   
   // Play a hand
   console.log('\n--- Playing Hand 1 ---');
   await playHand(table);
   
   console.log('\nStandings after Hand 1:');
-  displayStandings(table);
+  displayStandings(table, eliminatedPlayers);
   
   // If players remain, play another hand
-  const standings = getFormattedStandings(table.players);
+  const standings = getFormattedStandings(table.players, eliminatedPlayers);
   if (standings.standings.length >= 2) {
     console.log('\n--- Playing Hand 2 ---');
     await playHand(table);
     
     console.log('\nStandings after Hand 2:');
-    displayStandings(table);
+    displayStandings(table, eliminatedPlayers);
   }
   
   // Clean up
   table.close();
 }
 
-function displayStandings(table) {
-  const { standings, eliminated, summary } = getFormattedStandings(table.players);
+function displayStandings(table, eliminatedPlayerData = []) {
+  const { standings, eliminated, summary } = getFormattedStandings(table.players, eliminatedPlayerData);
   
   // Display active players
   console.log('\n=== ACTIVE PLAYERS ===');
@@ -117,11 +134,11 @@ function displayStandings(table) {
     console.log('No active players');
   }
   
-  // Display eliminated players
+  // Display eliminated players (Issue #34 fix)
   if (eliminated.length > 0) {
     console.log('\n=== ELIMINATED ===');
     eliminated.forEach(player => {
-      console.log(`${player.name}: Eliminated (was in Seat ${player.seatNumber})`);
+      console.log(`${player.name}: Eliminated (order: ${player.eliminationOrder || 'unknown'})`);
     });
   }
   

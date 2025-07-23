@@ -3,21 +3,21 @@
 ## Current State (2025-07-23)
 
 ### Status Summary
-- ✅ **Tests**: 185 passing (was 184 + 1 skipped)
-- ✅ **Code Quality**: ESLint clean, CI passing
-- ✅ **Side Pots**: Basic functionality verified working
+- ✅ **Tests**: 190 passing, all clean
+- ✅ **Code Quality**: ESLint clean, CI passing  
+- ✅ **Event Ordering**: Issue #33 FIXED ✅
+- ✅ **Side Pots**: Working correctly
 
 ### Recent Session Work
-- ✅ Enabled skipped PotManager split pot test
-- ✅ Created poker-101 test demonstrating side pot basics
-- ✅ Verified PotManager handles side pots correctly when used properly
+- ✅ Fixed event ordering (Issue #33) - elimination events now fire after hand:ended
+- ✅ Created 4 event ordering tests to verify the fix
+- ✅ Used process.nextTick in Table.js for proper event sequence
+- ✅ All tests passing, code clean and pushed to master
 
 ### Next Priorities
-1. Fix event ordering (Issue #33)
-2. Fix eliminated players display (Issue #34)  
-3. Create multi-hand examples (Issue #23)
+1. ✅ Fix event ordering (Issue #33) - COMPLETED
+2. Create multi-hand examples (Issue #23) - Ready to start
+3. Fix eliminated players display (Issue #34) - May already be working
 
-## Architecture Notes
-- Betting reopening logic implemented in GameEngine
-- validActions prevents invalid action attempts
-- Test strategies now use array indices instead of position properties
+### No Active Blockers
+All systems green - ready for new development work!
