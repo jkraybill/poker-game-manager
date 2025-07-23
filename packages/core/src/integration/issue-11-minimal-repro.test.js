@@ -112,21 +112,51 @@ describe('Issue #11 - Minimal Pot Distribution Bug', () => {
       amount: w.amount
     })));
     
-    console.log('\nPots:', handResult.sidePots.map(pot => ({
+    console.log('\nActual Pots:', handResult.sidePots.map(pot => ({
       amount: pot.amount,
       eligible: pot.eligiblePlayers
     })));
+    
+    // Expected pot structure:
+    // Main pot: 300 (100 from each player) - P1, P2, P3 eligible
+    // Side pot: 400 (200 from P2 and P3) - only P2, P3 eligible
+    console.log('\nExpected Pots:');
+    console.log('- Main pot: 300, eligible: [p1, p2, p3]');
+    console.log('- Side pot: 400, eligible: [p2, p3]');
 
     const winner = handResult.winners[0];
     expect(winner.playerId).toBe('p1');
     
+    // Calculate expected winnings:
+    // P1 (100 chips) is all-in, so main pot = 100 * 3 = 300
+    // P1 should win this main pot since they have AA
+    const expectedWinnings = 300;
+    
     if (winner.amount === 0) {
-      console.log('\n🐛 BUG REPRODUCED: Winner got 0 chips!');
+      console.log('\n🐛 BUG REPRODUCED: Winner got 0 chips instead of', expectedWinnings);
+    } else if (winner.amount === expectedWinnings) {
+      console.log('\n✅ Bug FIXED: Winner correctly got', winner.amount, 'chips');
     } else {
-      console.log('\n✅ Bug NOT reproduced: Winner got', winner.amount, 'chips');
+      console.log('\n⚠️  Partial bug: Winner got', winner.amount, 'chips instead of', expectedWinnings);
     }
     
-    expect(winner.amount).toBeGreaterThan(0);
+    // The exact amount P1 should win
+    expect(winner.amount).toBe(expectedWinnings);
+    
+    // Also check final chip counts
+    console.log('\n=== FINAL CHIP COUNTS ===');
+    console.log('P1:', p1.chips, '(started with 100)');
+    console.log('P2:', p2.chips, '(started with 300)'); 
+    console.log('P3:', p3.chips, '(started with 1000)');
+    
+    // Expected final chips:
+    // Betting: P1 all-in 100, P2 all-in 300, P3 calls 300
+    // Main pot: 100 * 3 = 300 (all players eligible)
+    // Side pot: 200 * 2 = 400 (only P2 and P3 eligible)
+    // Winners: P1 (AA) wins main pot, P2 (KK) beats P3 (QQ) for side pot
+    expect(p1.chips).toBe(400);  // Started 100 + won 300
+    expect(p2.chips).toBe(400);  // Started 300 - bet 300 + won 400
+    expect(p3.chips).toBe(700);  // Started 1000 - bet 300
   });
 
   it.skip('FAILS: all-in winner gets 0 chips with side pots', async () => {
