@@ -119,7 +119,7 @@ class AggressivePlayer extends Player {
     if (!this.hasRaised && myState.lastAction !== Action.RAISE) {
       const raiseAmount = Math.floor(potSize / 2);
 
-      if (toCall === 0 && raiseAmount > 0) {
+      if (toCall === 0 && gameState.currentBet === 0 && raiseAmount > 0) {
         const betAmount = Math.min(raiseAmount, myState.chips);
         this.hasRaised = true;
         return {
@@ -163,6 +163,15 @@ class AggressivePlayer extends Player {
   }
 }
 
+// Players array that will be populated later
+let players = [];
+
+ // Helper to get player name from ID
+  const getPlayerName = (playerId) => {
+    const player = players.find(p => p.id === playerId);
+    return player ? player.name : playerId;
+  };
+
  const logEvent = (source, eventName, data) => {
     const timestamp = new Date().toTimeString().split(' ')[0];
 
@@ -179,38 +188,44 @@ class AggressivePlayer extends Player {
         break;
       case 'hand:started':
         console.log(`[${timestamp}] [${source}] ${eventName}: hand started with ${data.players.length} players.`);
-        console.log(`[${timestamp}] [${source}] ${eventName}: Dealer button (${data.players[data.dealerButton]}) at position: ${data.dealerButton}`);
+        console.log(`[${timestamp}] [${source}] ${eventName}: Dealer button (${getPlayerName(data.players[data.dealerButton])}) at position: ${data.dealerButton}`);
 
         // Calculate positions based on dealer button
         const sbIndex = (data.dealerButton + 1) % data.players.length;
         const bbIndex = (data.dealerButton + 2) % data.players.length;
 
-        console.log(`[${timestamp}] [${source}] ${eventName}: Small blind (${data.players[sbIndex]}) posts $10`);
-        console.log(`[${timestamp}] [${source}] ${eventName}: Big blind (${data.players[bbIndex]}) posts $20`);
+        console.log(`[${timestamp}] [${source}] ${eventName}: Small blind (${getPlayerName(data.players[sbIndex])}) posts $10`);
+        console.log(`[${timestamp}] [${source}] ${eventName}: Big blind (${getPlayerName(data.players[bbIndex])}) posts $20`);
         break;
 
       case 'action:requested':
-        //TODO: I'm getting two events when the big button has the option to check.
-        //TODO: add dollar specs to action:requested, e.g. currentBet + toCall + minRaise + maxRaise and validate edge cases (less than half all-in etc)
-        //console.log(data);
-        console.log(`[${timestamp}] [${source}] ${eventName}: ${data.playerId} to act, bet is ${data.gameState.phase} $${data.gameState.currentBet}`);
+        const { bettingDetails } = data;
+        if (bettingDetails) {
+          console.log(`[${timestamp}] [${source}] ${eventName}: ${getPlayerName(data.playerId)} to act`);
+          console.log(`    Pot: $${bettingDetails.potSize}, Current bet: $${bettingDetails.currentBet}, To call: $${bettingDetails.toCall}`);
+          console.log(`    Min raise: $${bettingDetails.minRaise}, Max raise: $${bettingDetails.maxRaise}`);
+          console.log(`    Valid actions: ${bettingDetails.validActions.join(', ')}`);
+        } else {
+          // Fallback for older format
+          console.log(`[${timestamp}] [${source}] ${eventName}: ${getPlayerName(data.playerId)} to act, bet is ${data.gameState.phase} $${data.gameState.currentBet}`);
+        }
         break;
       case 'pot:updated':
         console.log(`[${timestamp}] [${source}] ${eventName}: Pot: $${data.total}`);
         break;
       case 'player:action':
-        console.log(`[${timestamp}] [${source}] ${eventName}: ${data.playerId} ${data.action} ${data.amount ? `$${data.amount}` : ''}`);
+        console.log(`[${timestamp}] [${source}] ${eventName}: ${getPlayerName(data.playerId)} ${data.action} ${data.amount ? `$${data.amount}` : ''}`);
         break;
       case 'hand:ended':
         //console.log(JSON.stringify(data, null, 4));
-        const winners = data.winners?.map(w => `${w.playerId} wins $${w.amount} with ${w.hand.description} (${w.hand.cards.map(c => c.rank+c.suit).join(' ')})`).join(', ') || 'none';
+        const winners = data.winners?.map(w => `${getPlayerName(w.playerId)} wins $${w.amount} with ${w.hand.description} (${w.hand.cards.map(c => c.rank+c.suit).join(' ')})`).join(', ') || 'none';
         console.log(`[${timestamp}] [${source}] ${eventName}: Winners: ${winners}`);
         break;
       case 'cards:community':
         console.log(`[${timestamp}] [${source}] ${eventName}: ${data.phase} - ${data.cards?.join(', ')}`);
         break;
       case 'chips:awarded':
-        console.log(`[${timestamp}] [${source}] ${eventName}: ${data.playerId} awarded $${data.amount}, total chips: $${data.total}`);
+        console.log(`[${timestamp}] [${source}] ${eventName}: ${getPlayerName(data.playerId)} awarded $${data.amount}, total chips: $${data.total}`);
         break;
       case 'cards:dealt':
         break;
@@ -236,9 +251,12 @@ async function runGame() {
   });
 
   // Create players
-  const folder = new FoldingPlayer({ id: 'Fearful Fred' });
-  const caller = new CallingPlayer({ id: 'Calling Carl' });
-  const raiser = new AggressivePlayer({ id: 'Aggressive Amy' });
+  const folder = new FoldingPlayer({ id: 'player-1', name: 'Fearful Fred' });
+  const caller = new CallingPlayer({ id: 'player-2', name: 'Calling Carl' });
+  const raiser = new AggressivePlayer({ id: 'player-3', name: 'Aggressive Amy' });
+  
+  // Set global players array for name lookup
+  players = [folder, caller, raiser];
 
   // Track game state
   let currentPhase = '';
@@ -267,8 +285,6 @@ async function runGame() {
     console.log('');
 
     // Show all players' hands
-    const players = [folder, caller, raiser];
-    
     players.forEach(player => {
       console.log(`${player.name} ${player.state}`);
     });
@@ -304,7 +320,6 @@ async function runGame() {
 
 
   // Override receivePrivateCards to show and store hole cards
-  const players = [folder, caller, raiser];
   players.forEach(player => {
     const originalReceiveCards = player.receivePrivateCards.bind(player);
     player.receivePrivateCards = function(cards) {

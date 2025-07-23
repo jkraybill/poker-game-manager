@@ -245,6 +245,13 @@ betting-scenarios.test.js (2157 lines)
 └── fold-scenarios.test.js (folding patterns)
 ```
 
+### Test Migration Rules
+**CRITICAL**: When migrating tests to use test utilities:
+1. **NEVER skip tests that were previously passing** - If a test passes in the original version, it MUST pass in the migrated version
+2. **Fix migration issues properly** - Debug and resolve any issues that arise during migration
+3. **Preserve test behavior** - The migrated test should test the exact same functionality as the original
+4. **Keep all edge cases** - Don't simplify tests by removing complex scenarios
+
 ### Testing Priorities
 1. **Core game logic** - 100% coverage required
 2. **Adapter interfaces** - Mock extensively  

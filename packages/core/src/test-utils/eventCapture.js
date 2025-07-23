@@ -23,6 +23,7 @@ export function setupEventCapture(table, options = {}) {
     winners: [],
     events: [],
     potUpdates: [],
+    sidePots: [],
     
     // Game flow tracking
     phases: [],
@@ -71,6 +72,7 @@ export function setupEventCapture(table, options = {}) {
       this.winners.length = 0;
       this.events.length = 0;
       this.potUpdates.length = 0;
+      this.sidePots.length = 0;
       this.phases.length = 0;
       this.currentPhase = null;
     },
@@ -88,6 +90,7 @@ export function setupEventCapture(table, options = {}) {
     'cards:community',
     'round:ended',
     'chips:awarded',
+    'side-pot:created',
   ];
   
   const eventsToCapture = options.events || defaultEvents;
@@ -150,12 +153,22 @@ export function setupEventCapture(table, options = {}) {
         case 'hand:ended':
           state.handEnded = true;
           state.winners = data.winners || [];
+          state.sidePots = data.sidePots || [];
           state.currentPhase = 'COMPLETE';
           break;
           
         case 'game:ended':
           state.gameEnded = true;
           state.handEnded = true;
+          break;
+          
+        case 'side-pot:created':
+          state.sidePots.push({
+            potId: data.potId,
+            amount: data.amount,
+            eligiblePlayers: data.eligiblePlayers,
+            timestamp: Date.now(),
+          });
           break;
       }
     });

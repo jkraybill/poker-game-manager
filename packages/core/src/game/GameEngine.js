@@ -175,6 +175,7 @@ return;
       // Normal: UTG acts first (player after BB)
       this.currentPlayerIndex = this.getNextActivePlayerIndex(bbIndex);
     }
+    
   }
 
   /**
@@ -207,6 +208,84 @@ return;
   }
 
   /**
+   * Calculate betting details for current player
+   */
+  calculateBettingDetails(player) {
+    const currentBet = this.getCurrentBet();
+    const toCall = Math.max(0, currentBet - player.bet);
+    const potSize = this.potManager.getTotal();
+    
+    // Calculate minimum raise
+    let minRaise = currentBet;
+    if (this.lastBettor && this.raiseHistory.length > 0) {
+      // Minimum raise is the size of the last raise
+      const lastRaiseAmount = this.raiseHistory[this.raiseHistory.length - 1];
+      minRaise = currentBet + lastRaiseAmount;
+    } else {
+      // First raise must be at least double the big blind
+      minRaise = currentBet + Math.max(this.config.bigBlind, currentBet);
+    }
+    
+    // Ensure minimum raise doesn't exceed player's stack
+    minRaise = Math.min(minRaise, player.bet + player.chips);
+    
+    // Maximum raise is player's remaining chips
+    const maxRaise = player.bet + player.chips;
+    
+    // Determine valid actions
+    const validActions = [];
+    
+    // Fold is always valid (unless player is all-in)
+    if (player.state === PlayerState.ACTIVE) {
+      validActions.push(Action.FOLD);
+    }
+    
+    // Check if player can check
+    if (toCall === 0) {
+      validActions.push(Action.CHECK);
+    }
+    
+    // Call if there's something to call and player has chips
+    if (toCall > 0 && player.chips > 0) {
+      if (toCall >= player.chips) {
+        validActions.push(Action.ALL_IN);
+      } else {
+        validActions.push(Action.CALL);
+      }
+    }
+    
+    // Bet/Raise if player has enough chips
+    if (currentBet === 0 && player.chips > 0) {
+      // Can bet when no current bet
+      validActions.push(Action.BET);
+      if (player.chips <= this.config.bigBlind) {
+        validActions.push(Action.ALL_IN);
+      }
+    } else if (currentBet > 0 && toCall === 0 && player.chips > 0) {
+      // Can raise when already matched the bet (like BB with option)
+      validActions.push(Action.RAISE);
+      if (player.chips <= minRaise - player.bet) {
+        validActions.push(Action.ALL_IN);
+      }
+    } else if (currentBet > 0 && player.chips > toCall) {
+      // Can raise if they have more than just the call amount
+      validActions.push(Action.RAISE);
+      if (player.chips <= minRaise - player.bet) {
+        validActions.push(Action.ALL_IN);
+      }
+    }
+    
+    return {
+      currentBet,
+      toCall,
+      minRaise,
+      maxRaise,
+      potSize,
+      validActions,
+    };
+  }
+
+  /**
    * Prompt the next player for action
    */
   async promptNextPlayer() {
@@ -220,9 +299,13 @@ return;
     // Build game state for player
     const gameState = this.buildGameState();
     
+    // Calculate betting details
+    const bettingDetails = this.calculateBettingDetails(currentPlayer);
+    
     this.emit('action:requested', {
       playerId: currentPlayer.id,
       gameState,
+      bettingDetails,
     });
     
     try {
@@ -442,7 +525,8 @@ return;
     player.hasActed = true;
     
     // Check if betting round is complete after this action
-    if (this.isBettingRoundComplete()) {
+    const isComplete = this.isBettingRoundComplete();
+    if (isComplete) {
       this.endBettingRound();
     } else {
       // Continue to next player
@@ -482,6 +566,7 @@ return;
       this.emit('hand:complete', {
         winners: winnersArray,
         board: this.board,
+        sidePots: this.getSidePotInfo(),
       });
       
       this.endHand(activePlayers);
@@ -499,6 +584,11 @@ return;
     if (currentBet > player.bet) {
       // Invalid action, treat as fold
       this.handleFold(player);
+    }
+    
+    // Clear the big blind option flag if this is BB checking
+    if (player.hasOption) {
+      player.hasOption = false;
     }
   }
 
@@ -761,9 +851,26 @@ return;
     this.emit('hand:complete', {
       winners: winnersWithAmounts,
       board: this.board,
+      sidePots: this.getSidePotInfo(),
     });
     
     this.endHand(winners.map(w => w.playerData));
+  }
+
+  /**
+   * Get side pot information for display/testing
+   */
+  getSidePotInfo() {
+    if (!this.potManager || !this.potManager.pots) {
+      return [];
+    }
+    
+    return this.potManager.pots.map((pot, index) => ({
+      potId: index,
+      amount: pot.amount,
+      eligiblePlayers: pot.eligiblePlayers.map(p => p.id),
+      isMain: index === 0,
+    }));
   }
 
   /**
