@@ -446,6 +446,21 @@ const cards = ['As', 'Th', '2c'];  // Ace spades, Ten hearts, Two clubs
 const cards = ['As', '10h', '2c'];
 ```
 
+### 8. ESLint Unused Variable Errors
+**Problem**: Test files have unused parameters in strategies
+**Solution**: Remove unused parameters or prefix with underscore:
+```javascript
+// Wrong - myState is unused
+const strategy = ({ player, gameState, myState, toCall }) => {
+  if (toCall > 0) return { action: Action.FOLD };
+};
+
+// Correct - remove unused parameter
+const strategy = ({ player, gameState, toCall }) => {
+  if (toCall > 0) return { action: Action.FOLD };
+};
+```
+
 ## Session Continuity
 
 When resuming work:
