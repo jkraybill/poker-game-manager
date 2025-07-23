@@ -315,8 +315,14 @@ export class GameEngine extends WildcardEventEmitter {
       return;
     }
 
+    // Calculate valid actions for the current player
+    const validActions = this.calculateValidActions(currentPlayer);
+    
     // Build game state for player
     const gameState = this.buildGameState();
+    
+    // Add valid actions to the game state
+    gameState.validActions = validActions;
 
     // Calculate betting details
     const bettingDetails = this.calculateBettingDetails(currentPlayer);
@@ -442,6 +448,14 @@ export class GameEngine extends WildcardEventEmitter {
     // not the raise increment (raise BY)
     const proposedTotalBet = amount;
     // const raiseIncrement = proposedTotalBet - currentBet;
+
+    // Rule 5.2.2.2: Check if player has already acted and betting wasn't reopened
+    if (player.hasActed) {
+      return {
+        valid: false,
+        reason: 'Cannot re-raise - betting was not reopened by a full raise',
+      };
+    }
 
     if (proposedTotalBet > player.chips + player.bet) {
       return {
@@ -673,6 +687,13 @@ export class GameEngine extends WildcardEventEmitter {
 
     // Use the same betting logic as handleBet
     this.handleBet(player, amount);
+
+    // Check if this raise reopens betting (Rule 5.2.2.2)
+    const minRaiseIncrement = this.getMinimumRaiseIncrement();
+    if (raiseIncrement >= minRaiseIncrement) {
+      // This is a full raise - reopen betting for all active players who already acted
+      this.reopenBetting(player);
+    }
   }
 
   /**
@@ -681,12 +702,42 @@ export class GameEngine extends WildcardEventEmitter {
   handleAllIn(player) {
     const allInAmount = player.chips;
     const totalBet = player.bet + allInAmount;
+    const currentBet = this.getCurrentBet();
     
     // Let PotManager handle the all-in logic for side pot creation
     this.potManager.handleAllIn(player, totalBet);
     
     // Now do the actual bet
     this.handleBet(player, allInAmount);
+    
+    // Check if this all-in reopens betting (Rule 5.2.2.2)
+    // An all-in less than a full raise does not reopen betting
+    const raiseIncrement = totalBet - currentBet;
+    const minRaiseIncrement = this.getMinimumRaiseIncrement();
+    
+    if (raiseIncrement >= minRaiseIncrement) {
+      // This is a full raise - reopen betting for all active players who already acted
+      this.reopenBetting(player);
+      // Also track this as a raise for future minimum calculations
+      this.raiseHistory.push(raiseIncrement);
+    }
+  }
+
+  /**
+   * Reopen betting for players who have already acted
+   * Called when a raise is large enough to constitute a full raise
+   */
+  reopenBetting(raisingPlayer) {
+    // Reset hasActed for all active players except the one who just raised
+    for (const player of this.players) {
+      if (
+        player.state === PlayerState.ACTIVE &&
+        player.id !== raisingPlayer.id &&
+        player.hasActed
+      ) {
+        player.hasActed = false;
+      }
+    }
   }
 
   /**
@@ -968,6 +1019,54 @@ export class GameEngine extends WildcardEventEmitter {
     this.currentPlayerIndex = this.getNextActivePlayerIndex(
       this.currentPlayerIndex,
     );
+  }
+
+  /**
+   * Calculate valid actions for a player
+   */
+  calculateValidActions(player) {
+    const validActions = [];
+    const currentBet = this.getCurrentBet();
+    const toCall = currentBet - player.bet;
+    
+    // FOLD is always valid
+    validActions.push(Action.FOLD);
+    
+    // CHECK is valid if nothing to call
+    if (toCall === 0) {
+      validActions.push(Action.CHECK);
+    }
+    
+    // CALL is valid if there's something to call and player has chips
+    if (toCall > 0 && player.chips >= toCall) {
+      validActions.push(Action.CALL);
+    }
+    
+    // BET is valid if no current bet and player has chips
+    if (currentBet === 0 && player.chips >= this.config.bigBlind) {
+      validActions.push(Action.BET);
+    }
+    
+    // RAISE is valid if there's a bet, player has chips, and hasn't already acted (or betting was reopened)
+    if (currentBet > 0 && player.chips > toCall) {
+      // Check if player can raise (hasn't acted or betting was reopened)
+      if (!player.hasActed) {
+        const minRaiseIncrement = this.getMinimumRaiseIncrement();
+        const minTotalBet = currentBet + minRaiseIncrement;
+        const maxRaise = player.chips + player.bet;
+        
+        if (maxRaise >= minTotalBet) {
+          validActions.push(Action.RAISE);
+        }
+      }
+    }
+    
+    // ALL_IN is always valid if player has chips
+    if (player.chips > 0) {
+      validActions.push(Action.ALL_IN);
+    }
+    
+    return validActions;
   }
 
   /**

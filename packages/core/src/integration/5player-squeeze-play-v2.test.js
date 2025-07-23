@@ -74,42 +74,52 @@ describe('5-Player Squeeze Play (v2)', () => {
     // Set up event capture
     events = setupEventCapture(table);
 
-    // Create squeeze play strategy
-    const squeezePlayStrategy = ({ player, gameState, toCall }) => {
-      const stackSize = player.stackSize;
+    // Create array to hold players (will be populated below)
+    const players = [];
 
-      // UTG (1000 chips) raises to 60
+    // Create squeeze play strategy
+    const squeezePlayStrategy = ({ player, gameState, myState, toCall }) => {
+      // Use player ID to determine role since positions are fixed with dealerButton=0
+      const playerId = player.id;
+      const playerIndex = players.findIndex(p => p.id === playerId);
+      
+      // Map player index to their role based on the expected chip stacks
+      // Player 0: Button (800 chips)
+      // Player 1: SB (600 chips)
+      // Player 2: BB (700 chips)
+      // Player 3: UTG (1000 chips)
+      // Player 4: MP (900 chips)
+      
+      // UTG (Player 3 with 1000 chips) raises to 60
       if (
-        stackSize === 'utg' &&
+        playerIndex === 3 &&
         gameState.currentBet === 20 &&
-        !player.hasActed
+        !myState.hasActed
       ) {
-        player.hasActed = true;
         return { action: Action.RAISE, amount: 60 };
       }
 
-      // MP (900 chips) folds to UTG raise
-      if (stackSize === 'mp' && toCall > 0 && gameState.currentBet > 20) {
+      // MP (Player 4 with 900 chips) folds to UTG raise
+      if (playerIndex === 4 && toCall > 0 && gameState.currentBet > 20) {
         return { action: Action.FOLD };
       }
 
-      // Button (800 chips) calls the raise
+      // Button (Player 0 with 800 chips) calls the raise
       if (
-        stackSize === 'button' &&
+        playerIndex === 0 &&
         toCall > 0 &&
         toCall <= 60 &&
         gameState.currentBet === 60 &&
-        !player.hasActed
+        !myState.hasActed
       ) {
-        player.hasActed = true;
         return { action: Action.CALL, amount: toCall };
       }
 
-      // SB (600 chips) squeezes after detecting raise and call
+      // SB (Player 1 with 600 chips) squeezes after detecting raise and call
       if (
-        stackSize === 'sb' &&
+        playerIndex === 1 &&
         gameState.currentBet === 60 &&
-        !player.hasActed
+        !myState.hasActed
       ) {
         // Use lastAction tracking to detect squeeze opportunity
         const playerStates = Object.values(gameState.players);
@@ -121,7 +131,6 @@ describe('5-Player Squeeze Play (v2)', () => {
         );
 
         if (hasRaiser && hasCaller) {
-          player.hasActed = true;
           return { action: Action.RAISE, amount: 180 }; // Squeeze size: 3x the original raise
         }
       }
@@ -131,8 +140,8 @@ describe('5-Player Squeeze Play (v2)', () => {
         return { action: Action.FOLD };
       }
 
-      // BB (700 chips) folds to any raise
-      if (stackSize === 'bb' && toCall > 0 && gameState.currentBet > 20) {
+      // BB (Player 2 with 700 chips) folds to any raise
+      if (playerIndex === 2 && toCall > 0 && gameState.currentBet > 20) {
         return { action: Action.FOLD };
       }
 
@@ -154,14 +163,15 @@ describe('5-Player Squeeze Play (v2)', () => {
       { name: 'MP Player', stackSize: 'mp' },
     ];
 
-    const players = playerConfigs.map((config) => {
+    // Populate the players array
+    playerConfigs.forEach((config) => {
       const player = new StrategicPlayer({
         name: config.name,
         strategy: squeezePlayStrategy,
       });
       // Set stackSize property directly on player instance
       player.stackSize = config.stackSize;
-      return player;
+      players.push(player);
     });
 
     // Add players to table

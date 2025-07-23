@@ -29,7 +29,6 @@ import {
   StrategicPlayer,
   Action,
   cleanupTables,
-  assignPositions,
 } from '../test-utils/index.js';
 
 describe('4-Player Multiple All-In Side Pots (v2)', () => {
@@ -74,19 +73,17 @@ describe('4-Player Multiple All-In Side Pots (v2)', () => {
       gameState,
       toCall,
       myState,
-      position,
     }) => {
       const stackSize = player.stackSize;
 
-      // In 4-player game, UTG is first to act preflop
-      // Big stack (UTG) raises to start action
+      // In 4-player game with dealerButton=0:
+      // Position 0: Button, Position 1: SB, Position 2: BB, Position 3: UTG
+      // UTG (Big Stack at index 3) is first to act preflop
       if (
         stackSize === 'big' &&
-        position === 'utg' &&
         gameState.currentBet === 20 &&
-        !player.hasActed
+        !myState.hasActed
       ) {
-        player.hasActed = true;
         return { action: Action.RAISE, amount: 150 };
       }
 
@@ -97,8 +94,8 @@ describe('4-Player Multiple All-In Side Pots (v2)', () => {
           return { action: Action.ALL_IN, amount: myState.chips };
         }
 
-        // Big stack calls if facing all-ins
-        if (stackSize === 'big' && gameState.currentBet > 150) {
+        // Big stack calls if facing all-ins (after their initial raise)
+        if (stackSize === 'big' && toCall > 0) {
           return { action: Action.CALL, amount: toCall };
         }
       }
@@ -125,10 +122,6 @@ describe('4-Player Multiple All-In Side Pots (v2)', () => {
       return player;
     });
 
-    // Add position assignment listener
-    table.on('hand:started', ({ dealerButton }) => {
-      assignPositions(players, dealerButton, 4);
-    });
 
     // Add players to table
     players.forEach((p) => table.addPlayer(p));

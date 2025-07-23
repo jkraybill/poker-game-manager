@@ -38,5 +38,7 @@ export default defineConfig({
     // fileParallelism: false,
     // Force exit after tests complete
     teardownTimeout: 1000,
+    // Add test timeout to identify slow tests
+    testTimeout: 10000, // 10 seconds per test
   },
 })

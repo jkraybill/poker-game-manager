@@ -349,35 +349,40 @@ describe('7-Player Poker Scenarios (v2)', () => {
 
     // Track squeeze play
     let squeezePlayed = false;
+    
+    // Create players array that will be populated below
+    const players = [];
 
     // Squeeze play strategy
-    const squeezeStrategy = ({ player, gameState, toCall }) => {
+    const squeezeStrategy = ({ player, gameState, myState, toCall }) => {
       const playerStates = Object.values(gameState.players);
+      const playerIndex = players.findIndex(p => p.id === player.id);
+      
+      // With dealerButton: 0, positions are:
+      // Index 0: Button, Index 1: SB, Index 2: BB, Index 3: UTG, Index 4: MP1, Index 5: MP2, Index 6: CO
 
-      // UTG raises
+      // UTG (index 3) raises
       if (
-        player.position === 'utg' &&
+        playerIndex === 3 &&
         gameState.currentBet === 20 &&
-        !player.hasActed
+        !myState.hasActed
       ) {
-        player.hasActed = true;
         return { action: Action.RAISE, amount: 60 };
       }
 
-      // MP1 calls the raise
+      // MP1 (index 4) calls the raise
       if (
-        player.position === 'mp1' &&
+        playerIndex === 4 &&
         gameState.currentBet === 60 &&
-        !player.hasActed
+        !myState.hasActed
       ) {
-        player.hasActed = true;
         return { action: Action.CALL, amount: toCall };
       }
 
-      // CO executes squeeze play
+      // CO (index 6) executes squeeze play
       if (
-        player.position === 'co' &&
-        !player.hasActed &&
+        playerIndex === 6 &&
+        !myState.hasActed &&
         gameState.currentBet > 20
       ) {
         const raisers = playerStates.filter(
@@ -386,7 +391,6 @@ describe('7-Player Poker Scenarios (v2)', () => {
         const callers = playerStates.filter((p) => p.lastAction === Action.CALL);
 
         if (raisers.length === 1 && callers.length >= 1) {
-          player.hasActed = true;
           squeezePlayed = true;
           return { action: Action.RAISE, amount: 220 }; // Large squeeze
         }
@@ -403,14 +407,14 @@ describe('7-Player Poker Scenarios (v2)', () => {
 
     // Create players
     const positions = ['button', 'sb', 'bb', 'utg', 'mp1', 'mp2', 'co'];
-    const players = positions.map((pos, idx) => {
+    positions.forEach((pos, idx) => {
       const player = new StrategicPlayer({
         name: `Player ${idx + 1} (${pos.toUpperCase()})`,
         strategy: squeezeStrategy,
       });
       player.position = pos;
       player.hasActed = false;
-      return player;
+      players.push(player);
     });
 
     // Add players and start

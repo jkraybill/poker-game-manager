@@ -60,33 +60,41 @@ describe('8-Player Poker Scenarios (v2)', () => {
     // Set up event capture
     events = setupEventCapture(table);
 
+    // Create players array that will be populated below
+    const players = [];
+
     // Early position aggressive strategy
     const earlyPositionStrategy = ({ player, gameState, myState, toCall }) => {
-      // UTG opens tight
+      // Get player index to determine position
+      const playerIndex = players.findIndex(p => p.id === player.id);
+      
+      // With dealerButton: 0, positions are:
+      // Index 0: Button, Index 1: SB, Index 2: BB, Index 3: UTG, Index 4: UTG+1, etc.
+      
+      // UTG (index 3) opens tight
       if (
-        player.position === 'utg' &&
+        playerIndex === 3 &&
         gameState.currentBet === 20 &&
-        !player.hasActed
+        !myState.hasActed
       ) {
-        player.hasActed = true;
         return { action: Action.RAISE, amount: 60 };
       }
 
-      // UTG+1 3-bets UTG (positional advantage)
+      // UTG+1 (index 4) 3-bets UTG (positional advantage)
       if (
-        player.position === 'utg+1' &&
+        playerIndex === 4 &&
         gameState.currentBet === 60 &&
-        !player.hasActed
+        !myState.hasActed
       ) {
-        player.hasActed = true;
         return { action: Action.RAISE, amount: 180 };
       }
 
-      // UTG 4-bets (showing strength)
+      // UTG 4-bets (showing strength) - check if we can raise
       if (
-        player.position === 'utg' &&
+        playerIndex === 3 &&
         gameState.currentBet === 180 &&
-        myState.lastAction === Action.RAISE
+        myState.lastAction === Action.RAISE &&
+        gameState.validActions && gameState.validActions.includes(Action.RAISE)
       ) {
         return { action: Action.RAISE, amount: 450 };
       }
@@ -101,14 +109,14 @@ describe('8-Player Poker Scenarios (v2)', () => {
 
     // Create players
     const positions = ['button', 'sb', 'bb', 'utg', 'utg+1', 'mp1', 'mp2', 'co'];
-    const players = positions.map((pos, idx) => {
+    positions.forEach((pos, idx) => {
       const player = new StrategicPlayer({
         name: `Player ${idx + 1} (${pos.toUpperCase()})`,
         strategy: earlyPositionStrategy,
       });
       player.position = pos;
       player.hasActed = false;
-      return player;
+      players.push(player);
     });
 
     // Add players and start
@@ -123,7 +131,9 @@ describe('8-Player Poker Scenarios (v2)', () => {
 
     // Verify early position battle
     const raises = actions.filter((a) => a.action === Action.RAISE);
-    expect(raises.length).toBeGreaterThanOrEqual(2);
+    // UTG+1's 3-bet from 60 to 180 is a full raise (120 increment > 40 minimum)
+    // So betting is reopened and UTG can 4-bet, expecting 3 raises total
+    expect(raises.length).toBe(3);
 
     const utgPlayer = players.find((p) => p.position === 'utg');
     const utgPlusOnePlayer = players.find((p) => p.position === 'utg+1');
@@ -133,8 +143,15 @@ describe('8-Player Poker Scenarios (v2)', () => {
       (r) => r.playerId === utgPlusOnePlayer.id,
     );
 
+    // UTG opens, UTG+1 3-bets, UTG 4-bets
     expect(utgRaise).toBeDefined();
     expect(utgPlusOneRaise).toBeDefined();
+    expect(utgRaise.amount).toBe(60);
+    expect(utgPlusOneRaise.amount).toBe(180);
+    
+    // Verify UTG's 4-bet
+    const utg4Bet = raises.find((r) => r.playerId === utgPlayer.id && r.amount === 450);
+    expect(utg4Bet).toBeDefined();
   });
 
   it('should handle 8-way family pot with minimal raising', async () => {
