@@ -3,24 +3,18 @@
 ## Current State (2025-07-23)
 
 ### Status Summary
-- ✅ **Critical Issues**: Issue #32 (betting reopening) FIXED!
-- ✅ **Tests**: 183 passing, 1 failing (split pot expectation), 1 skipped
+- ✅ **Tests**: 185 passing (was 184 + 1 skipped)
 - ✅ **Code Quality**: ESLint clean, CI passing
-- ✅ **Performance**: Test suite ~10.5s (fixed timeout issues)
+- ✅ **Side Pots**: Basic functionality verified working
 
 ### Recent Session Work
-- ✅ Fixed Issue #32: Betting reopening rules now correct
-- ✅ Added validActions to gameState 
-- ✅ Fixed test suite timeout (4player-side-pots infinite loop)
-- ✅ Fixed failing position-based strategy tests
-
-### 🐛 Active Issues
-- **Test failure**: 5player-family-pot expects 1 winner, gets split (likely correct)
-- **Issue #11**: Pot distribution $0 (90% fixed, edge cases remain)
+- ✅ Enabled skipped PotManager split pot test
+- ✅ Created poker-101 test demonstrating side pot basics
+- ✅ Verified PotManager handles side pots correctly when used properly
 
 ### Next Priorities
 1. Fix event ordering (Issue #33)
-2. Fix eliminated players display (Issue #34)
+2. Fix eliminated players display (Issue #34)  
 3. Create multi-hand examples (Issue #23)
 
 ## Architecture Notes

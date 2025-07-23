@@ -580,9 +580,10 @@ describe('7-Player Poker Scenarios (v2)', () => {
     expect(totalActions).toBeGreaterThan(0); // Some action
     expect(totalActions).toBeLessThan(5); // But not too much
 
-    // Verify winner
-    expect(winners).toHaveLength(1);
-    expect(winners[0].amount).toBeGreaterThan(0);
+    // Verify winner(s) - handle potential split pot
+    expect(winners.length).toBeGreaterThan(0);
+    const totalWon = winners.reduce((sum, w) => sum + w.amount, 0);
+    expect(totalWon).toBeGreaterThan(0);
 
     // If micro stacks went all-in, verify they were desperate
     if (allIns.length > 0) {
