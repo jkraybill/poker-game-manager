@@ -2,8 +2,8 @@
 
 ## 🎉 CURRENT STATE
 
-**Status**: 194 tests passing, 0 ESLint errors, fully clean codebase
-**Latest**: V2 test migration complete + ESLint fully clean 
+**Status**: 195 tests (1 failing - Issue #11 repro), 0 ESLint errors
+**Latest**: Created minimal reproduction test for Issue #11 pot distribution bug 
 
 ### Key Facts:
 - Player class is single source of truth for state
@@ -14,9 +14,10 @@
 ## 🔥 Next Session Priorities
 
 ### 1. Fix Pot Distribution Bug
-- **🐛 Issue #11**: With Player as single source of truth, this should be easier to fix
-- Run comprehensive tests on pot distribution
-- Verify no winners get 0 chips OR more than pot total
+- **🐛 Issue #11**: Successfully reproduced with minimal test!
+- **Root Cause Found**: All-in player not marked as eligible for pot they contributed to
+- **Scenario**: Multiple all-ins with different amounts causes eligibility tracking failure
+- **Test**: `issue-11-minimal-repro.test.js` reliably reproduces the bug
 
 ### 2. Complete 6-8 Player Scenarios
 - **🎯 Issue #5**: Finish remaining betting scenarios
