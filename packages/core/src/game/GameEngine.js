@@ -87,7 +87,16 @@ export class GameEngine extends WildcardEventEmitter {
     this.raiseHistory = []; // Reset raise history for new hand
 
     // Initialize pot manager with Player instances directly
-    this.potManager = new PotManager(this.players, this.config.smallBlind);
+    this.potManager = new PotManager(this.players);
+    
+    // Listen for pot events to forward
+    this.potManager.on('pot:updated', (data) => {
+      this.emit('pot:updated', data);
+    });
+    
+    this.potManager.on('sidepot:created', (data) => {
+      this.emit('sidepot:created', data);
+    });
 
     // Reset player states directly on Player instances
     for (const player of this.players) {
@@ -564,9 +573,14 @@ export class GameEngine extends WildcardEventEmitter {
     );
 
     if (activePlayers.length === 1) {
-      // Last player wins the pot - PotManager expects playerData property
-      const winners = activePlayers.map((p) => ({ playerData: p }));
-      const payouts = this.potManager.calculatePayouts(winners);
+      // Last player wins by default
+      const lastPlayer = activePlayers[0];
+      const mockHand = { 
+        playerData: lastPlayer, 
+        hand: { rank: 999, description: 'Won by fold' },
+        cards: this.playerHands.get(lastPlayer.id) || [],
+      };
+      const payouts = this.potManager.calculatePayouts([mockHand]);
       this.distributeWinnings(payouts);
 
       // Build winners array with amounts
@@ -645,11 +659,6 @@ export class GameEngine extends WildcardEventEmitter {
     if (!blindType) {
       this.lastBettor = player;
     }
-
-    this.emit('pot:updated', {
-      total: this.potManager.getTotal(),
-      playerBet: { playerId: player.id, amount: actualAmount },
-    });
   }
 
   /**
@@ -671,6 +680,12 @@ export class GameEngine extends WildcardEventEmitter {
    */
   handleAllIn(player) {
     const allInAmount = player.chips;
+    const totalBet = player.bet + allInAmount;
+    
+    // Let PotManager handle the all-in logic for side pot creation
+    this.potManager.handleAllIn(player, totalBet);
+    
+    // Now do the actual bet
     this.handleBet(player, allInAmount);
   }
 
@@ -732,11 +747,6 @@ export class GameEngine extends WildcardEventEmitter {
    */
   endBettingRound() {
     this.potManager.endBettingRound();
-
-    // Emit pot update after side pots are created
-    this.emit('pot:updated', {
-      total: this.potManager.getTotal(),
-    });
 
     // Clear option flags
     for (const player of this.players) {
@@ -855,24 +865,22 @@ export class GameEngine extends WildcardEventEmitter {
       };
     });
 
-    // Determine winners
-    const winners = HandEvaluator.findWinners(playerHands);
-    const payouts = this.potManager.calculatePayouts(winners);
+    // Calculate payouts for all pots
+    const payouts = this.potManager.calculatePayouts(playerHands);
     this.distributeWinnings(payouts);
 
-    // Build winners array with amounts
+    // Build winners array with amounts from payouts
     const winnersWithAmounts = [];
-    for (const winner of winners) {
-      const amount =
-        Array.from(payouts).find(([p]) => {
-          return p.id === winner.playerData.id;
-        })?.[1] || 0;
-      winnersWithAmounts.push({
-        playerId: winner.playerData.id,
-        hand: winner.hand,
-        cards: winner.cards,
-        amount,
-      });
+    for (const [player, amount] of payouts) {
+      if (amount > 0) {
+        const playerHandInfo = playerHands.find(ph => ph.playerData.id === player.id);
+        winnersWithAmounts.push({
+          playerId: player.id,
+          hand: playerHandInfo.hand,
+          cards: playerHandInfo.cards,
+          amount,
+        });
+      }
     }
 
     this.emit('hand:complete', {
@@ -881,23 +889,20 @@ export class GameEngine extends WildcardEventEmitter {
       sidePots: this.getSidePotInfo(),
     });
 
-    this.endHand(winners.map((w) => w.playerData));
+    this.endHand(winnersWithAmounts.map((w) => 
+      this.players.find(p => p.id === w.playerId),
+    ));
   }
 
   /**
    * Get side pot information for display/testing
    */
   getSidePotInfo() {
-    if (!this.potManager || !this.potManager.pots) {
+    if (!this.potManager) {
       return [];
     }
 
-    return this.potManager.pots.map((pot, index) => ({
-      potId: index,
-      amount: pot.amount,
-      eligiblePlayers: pot.eligiblePlayers.map((p) => p.id),
-      isMain: index === 0,
-    }));
+    return this.potManager.getPotsInfo();
   }
 
   /**

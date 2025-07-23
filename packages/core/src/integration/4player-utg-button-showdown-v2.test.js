@@ -170,15 +170,18 @@ describe('4-Player UTG Button Showdown (v2)', () => {
     // Someone should win a reasonable pot (or split pot)
     expect(winners.length).toBeGreaterThanOrEqual(1);
     
+    // Pot calculation:
+    // UTG raises to 60, Button calls 60, SB 10 (folded), BB 20 (folded)
+    // Total: 60 + 60 + 10 + 20 = 150
     if (winners.length === 1) {
       // Single winner gets full pot
-      expect(winners[0].amount).toBe(80);
+      expect(winners[0].amount).toBe(150);
     } else {
       // Split pot scenario - each winner gets half
       const totalWon = winners.reduce((sum, w) => sum + w.amount, 0);
-      expect(totalWon).toBe(80);
+      expect(totalWon).toBe(150);
       winners.forEach(w => {
-        expect(w.amount).toBe(40); // 80 / 2
+        expect(w.amount).toBe(75); // 150 / 2
       });
     }
   });

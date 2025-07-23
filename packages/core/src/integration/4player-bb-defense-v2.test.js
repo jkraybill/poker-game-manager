@@ -198,8 +198,8 @@ describe('4-Player Big Blind Defense (v2)', () => {
     // Verify winner and pot amount
     // Pre-flop: Button 60 + BB 60 + SB 10 = 130
     // Flop: Button 80 + BB 80 = 160
-    // Total: 290 (but actual is 260, likely due to blind posting mechanics)
+    // Total: 290
     expect(winners).toHaveLength(1);
-    expect(winners[0].amount).toBe(260);
+    expect(winners[0].amount).toBe(290);
   });
 });

@@ -22,7 +22,7 @@ class TestPlayer extends Player {
     this.actionIndex = 0;
   }
 
-  getAction(gameState) {
+  getAction() {
     if (this.actionIndex < this.actions.length) {
       const action = this.actions[this.actionIndex++];
       console.log(`${this.name}: ${action.action} ${action.amount || ''}`);
@@ -47,20 +47,48 @@ describe('Issue #11 - Minimal Pot Distribution Bug', () => {
 
     // Same deck as complex scenario
     const customDeck = [
-      { rank: 'A', suit: 's', toString() { return 'As'; } }, // P1
-      { rank: 'K', suit: 'd', toString() { return 'Kd'; } }, // P2
-      { rank: 'Q', suit: 'c', toString() { return 'Qc'; } }, // P3
-      { rank: 'A', suit: 'h', toString() { return 'Ah'; } }, // P1
-      { rank: 'K', suit: 'h', toString() { return 'Kh'; } }, // P2
-      { rank: 'Q', suit: 'h', toString() { return 'Qh'; } }, // P3
-      { rank: '2', suit: 'c', toString() { return '2c'; } },
-      { rank: '3', suit: 'd', toString() { return '3d'; } },
-      { rank: '5', suit: 's', toString() { return '5s'; } },
-      { rank: '7', suit: 'h', toString() { return '7h'; } },
-      { rank: '2', suit: 'd', toString() { return '2d'; } },
-      { rank: '9', suit: 'h', toString() { return '9h'; } },
-      { rank: '2', suit: 'h', toString() { return '2h'; } },
-      { rank: 'J', suit: 'c', toString() { return 'Jc'; } },
+      { rank: 'A', suit: 's', toString() {
+ return 'As'; 
+} }, // P1
+      { rank: 'K', suit: 'd', toString() {
+ return 'Kd'; 
+} }, // P2
+      { rank: 'Q', suit: 'c', toString() {
+ return 'Qc'; 
+} }, // P3
+      { rank: 'A', suit: 'h', toString() {
+ return 'Ah'; 
+} }, // P1
+      { rank: 'K', suit: 'h', toString() {
+ return 'Kh'; 
+} }, // P2
+      { rank: 'Q', suit: 'h', toString() {
+ return 'Qh'; 
+} }, // P3
+      { rank: '2', suit: 'c', toString() {
+ return '2c'; 
+} },
+      { rank: '3', suit: 'd', toString() {
+ return '3d'; 
+} },
+      { rank: '5', suit: 's', toString() {
+ return '5s'; 
+} },
+      { rank: '7', suit: 'h', toString() {
+ return '7h'; 
+} },
+      { rank: '2', suit: 'd', toString() {
+ return '2d'; 
+} },
+      { rank: '9', suit: 'h', toString() {
+ return '9h'; 
+} },
+      { rank: '2', suit: 'h', toString() {
+ return '2h'; 
+} },
+      { rank: 'J', suit: 'c', toString() {
+ return 'Jc'; 
+} },
     ];
 
     table.setCustomDeck(customDeck);
@@ -69,19 +97,19 @@ describe('Issue #11 - Minimal Pot Distribution Bug', () => {
     const p1 = new TestPlayer({
       id: 'p1',
       name: 'Short Stack',
-      actions: [{ action: Action.ALL_IN, amount: 100 }]
+      actions: [{ action: Action.ALL_IN, amount: 100 }],
     });
 
     const p2 = new TestPlayer({
       id: 'p2',
       name: 'Medium Stack',
-      actions: [{ action: Action.ALL_IN, amount: 300 }]
+      actions: [{ action: Action.ALL_IN, amount: 300 }],
     });
 
     const p3 = new TestPlayer({
       id: 'p3',
       name: 'Big Stack',
-      actions: [{ action: Action.CALL, amount: 280 }]
+      actions: [{ action: Action.CALL, amount: 280 }],
     });
 
     await table.addPlayer(p1);
@@ -103,18 +131,33 @@ describe('Issue #11 - Minimal Pot Distribution Bug', () => {
       handResult = data;
     });
 
+    // Debug: track pot events
+    table.on('pot:updated', (data) => {
+      console.log('pot:updated event:', data);
+    });
+    
+    table.on('sidepot:created', (data) => {
+      console.log('sidepot:created event:', data);
+    });
+    
+    // Track player actions to see when all-ins happen
+    table.on('player:action', (data) => {
+      console.log(`\nPlayer action: ${data.playerId} ${data.action} ${data.amount || ''}`);
+    });
+
     table.tryStartGame();
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     console.log('\n=== RESULTS ===');
     console.log('Winners:', handResult.winners.map(w => ({
       id: w.playerId,
-      amount: w.amount
+      amount: w.amount,
+      hand: w.hand.description,
     })));
     
     console.log('\nActual Pots:', handResult.sidePots.map(pot => ({
       amount: pot.amount,
-      eligible: pot.eligiblePlayers
+      eligible: pot.eligiblePlayers,
     })));
     
     // Expected pot structure:
@@ -154,12 +197,16 @@ describe('Issue #11 - Minimal Pot Distribution Bug', () => {
     // Main pot: 100 * 3 = 300 (all players eligible)
     // Side pot: 200 * 2 = 400 (only P2 and P3 eligible)
     // Winners: P1 (AA) wins main pot, P2 (KK) beats P3 (QQ) for side pot
-    expect(p1.chips).toBe(400);  // Started 100 + won 300
-    expect(p2.chips).toBe(400);  // Started 300 - bet 300 + won 400
-    expect(p3.chips).toBe(700);  // Started 1000 - bet 300
+    expect(p1.chips).toBe(300);  // Started 100 - bet 100 + won 300 = 300
+    expect(p2.chips).toBe(400);  // Started 300 - bet 300 + won 400 = 400
+    expect(p3.chips).toBe(700);  // Started 1000 - bet 300 = 700
   });
+});
 
-  it.skip('FAILS: all-in winner gets 0 chips with side pots', async () => {
+// The deprecated test below has been removed since Issue #11 is now fixed
+// The test above verifies the fix works correctly
+/*
+  it.skip('DEPRECATED: all-in winner gets 0 chips with side pots', async () => {
     const manager = new PokerGameManager();
     
     const table = manager.createTable({
@@ -232,6 +279,11 @@ describe('Issue #11 - Minimal Pot Distribution Bug', () => {
       handResult = data;
     });
 
+    // Hook into pot updates to debug
+    table.on('pot:updated', (data) => {
+      console.log('💰 Pot update:', data);
+    });
+
     // Start game
     table.tryStartGame();
 
@@ -258,4 +310,4 @@ describe('Issue #11 - Minimal Pot Distribution Bug', () => {
     // But actually gets 0 due to the bug!
     console.log('\n🐛 BUG: Winner received', winner.amount, 'chips instead of 300!');
   });
-});
+*/

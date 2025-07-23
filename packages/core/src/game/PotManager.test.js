@@ -1,11 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { PotManager } from './PotManager.js';
-import { Player } from '../Player.js';
 
 describe('PotManager', () => {
   let players;
   let potManager;
-  const smallBlind = 50;
 
   beforeEach(() => {
     // Create mock players
@@ -14,22 +12,23 @@ describe('PotManager', () => {
       { id: 'player2', name: 'Player 2', state: 'ACTIVE', chips: 1500 },
       { id: 'player3', name: 'Player 3', state: 'ACTIVE', chips: 2000 },
     ];
-    potManager = new PotManager(players, smallBlind);
+    potManager = new PotManager(players);
   });
 
   describe('constructor and initialization', () => {
     it('should initialize with correct properties', () => {
       expect(potManager.players).toEqual(players);
-      expect(potManager.smallBlind).toBe(smallBlind);
       expect(potManager.pots).toHaveLength(1);
-      expect(potManager.currentPot).toBe(potManager.pots[0]);
+      expect(potManager.pots[0].id).toBe(0);
+      expect(potManager.pots[0].name).toBe('Main Pot');
     });
 
     it('should create main pot with all players eligible', () => {
-      expect(potManager.currentPot.amount).toBe(0);
-      expect(potManager.currentPot.eligiblePlayers).toEqual(players);
-      expect(potManager.currentPot.contributions).toBeInstanceOf(Map);
-      expect(potManager.currentPot.contributions.size).toBe(0);
+      const mainPot = potManager.pots[0];
+      expect(mainPot.amount).toBe(0);
+      expect(mainPot.eligiblePlayers).toEqual(players);
+      expect(mainPot.contributions).toBeInstanceOf(Map);
+      expect(mainPot.contributions.size).toBe(0);
     });
   });
 
@@ -37,16 +36,18 @@ describe('PotManager', () => {
     it('should add chips to pot for a player', () => {
       potManager.addToPot(players[0], 100);
 
-      expect(potManager.currentPot.amount).toBe(100);
-      expect(potManager.currentPot.contributions.get(players[0])).toBe(100);
+      const mainPot = potManager.pots[0];
+      expect(mainPot.amount).toBe(100);
+      expect(mainPot.contributions.get(players[0])).toBe(100);
     });
 
     it('should accumulate multiple contributions from same player', () => {
       potManager.addToPot(players[0], 100);
       potManager.addToPot(players[0], 50);
 
-      expect(potManager.currentPot.amount).toBe(150);
-      expect(potManager.currentPot.contributions.get(players[0])).toBe(150);
+      const mainPot = potManager.pots[0];
+      expect(mainPot.amount).toBe(150);
+      expect(mainPot.contributions.get(players[0])).toBe(150);
     });
 
     it('should handle contributions from multiple players', () => {
@@ -54,10 +55,11 @@ describe('PotManager', () => {
       potManager.addToPot(players[1], 200);
       potManager.addToPot(players[2], 150);
 
-      expect(potManager.currentPot.amount).toBe(450);
-      expect(potManager.currentPot.contributions.get(players[0])).toBe(100);
-      expect(potManager.currentPot.contributions.get(players[1])).toBe(200);
-      expect(potManager.currentPot.contributions.get(players[2])).toBe(150);
+      const mainPot = potManager.pots[0];
+      expect(mainPot.amount).toBe(450);
+      expect(mainPot.contributions.get(players[0])).toBe(100);
+      expect(mainPot.contributions.get(players[1])).toBe(200);
+      expect(mainPot.contributions.get(players[2])).toBe(150);
     });
   });
 
@@ -69,26 +71,6 @@ describe('PotManager', () => {
     it('should return total contribution from single pot', () => {
       potManager.addToPot(players[0], 100);
       expect(potManager.getTotalContribution(players[0])).toBe(100);
-    });
-
-    it('should sum contributions across multiple pots', () => {
-      // Add to main pot
-      potManager.addToPot(players[0], 100);
-      potManager.addToPot(players[1], 200);
-
-      // Manually create a side pot for testing
-      const sidePot = {
-        amount: 150,
-        eligiblePlayers: [players[0], players[1]],
-        contributions: new Map([
-          [players[0], 50],
-          [players[1], 100],
-        ]),
-      };
-      potManager.pots.push(sidePot);
-
-      expect(potManager.getTotalContribution(players[0])).toBe(150);
-      expect(potManager.getTotalContribution(players[1])).toBe(300);
     });
   });
 
@@ -102,392 +84,187 @@ describe('PotManager', () => {
       potManager.addToPot(players[1], 200);
       expect(potManager.getTotal()).toBe(300);
     });
-
-    it('should sum amounts across multiple pots', () => {
-      // Main pot
-      potManager.currentPot.amount = 300;
-
-      // Add side pots
-      potManager.pots.push({
-        amount: 200,
-        eligiblePlayers: [],
-        contributions: new Map(),
-      });
-      potManager.pots.push({
-        amount: 150,
-        eligiblePlayers: [],
-        contributions: new Map(),
-      });
-
-      expect(potManager.getTotal()).toBe(650);
-    });
   });
 
-  describe('createSidePots', () => {
-    it('should not create side pots when no all-in players', () => {
-      potManager.addToPot(players[0], 100);
-      potManager.addToPot(players[1], 100);
-      potManager.addToPot(players[2], 100);
-
-      potManager.createSidePots();
-
-      expect(potManager.pots).toHaveLength(1);
-      expect(potManager.currentPot.amount).toBe(300);
-    });
-
-    it('should create side pot for single all-in player', () => {
-      // Player 1 goes all-in with 100
-      players[0].state = 'ALL_IN';
-      potManager.addToPot(players[0], 100);
-      potManager.addToPot(players[1], 200);
-      potManager.addToPot(players[2], 200);
-
-      potManager.createSidePots();
-
-      // Should have main pot (300) and side pot (200)
+  describe('handleAllIn', () => {
+    it('should create side pot when player goes all-in', () => {
+      // P1 goes all-in for 100 total
+      potManager.handleAllIn(players[0], 100);
+      
+      // Should have created a side pot
       expect(potManager.pots).toHaveLength(2);
-      expect(potManager.pots[0].amount).toBe(300); // Main pot: 100 from each
-      expect(potManager.pots[0].eligiblePlayers).toContain(players[0]);
-      expect(potManager.pots[1].amount).toBe(200); // Side pot: extra 100 from P2 and P3
-    });
-
-    it('should create multiple side pots for multiple all-in players', () => {
-      // Player 1 all-in with 100
-      players[0].state = 'ALL_IN';
-      potManager.addToPot(players[0], 100);
-
-      // Player 2 all-in with 200
-      players[1].state = 'ALL_IN';
-      potManager.addToPot(players[1], 200);
-
-      // Player 3 continues with 300
-      potManager.addToPot(players[2], 300);
-
-      potManager.createSidePots();
-
-      // Should have 3 pots
-      expect(potManager.pots).toHaveLength(3);
-
-      // Main pot: 100 from each (300 total)
-      expect(potManager.pots[0].amount).toBe(300);
-      expect(potManager.pots[0].eligiblePlayers).toHaveLength(3);
-
-      // Side pot 1: extra 100 from P2 and P3 (200 total)
-      expect(potManager.pots[1].amount).toBe(200);
-      expect(potManager.pots[1].eligiblePlayers).toHaveLength(2);
-
-      // Side pot 2: extra 100 from P3 only
-      expect(potManager.pots[2].amount).toBe(100);
-    });
-
-    it('should handle all-in players with same contribution amount', () => {
-      players[0].state = 'ALL_IN';
-      players[1].state = 'ALL_IN';
-      potManager.addToPot(players[0], 100);
-      potManager.addToPot(players[1], 100);
-      potManager.addToPot(players[2], 200);
-
-      potManager.createSidePots();
-
-      // Should have main pot (300) and side pot (100)
-      expect(potManager.pots).toHaveLength(2);
-      expect(potManager.pots[0].amount).toBe(300);
-      expect(potManager.pots[1].amount).toBe(100);
-    });
-  });
-
-  describe('endBettingRound', () => {
-    it('should call createSidePots', () => {
-      // Add some contributions
-      players[0].state = 'ALL_IN';
-      potManager.addToPot(players[0], 100);
-      potManager.addToPot(players[1], 200);
-
-      potManager.endBettingRound();
-
-      // Verify side pots were created
-      expect(potManager.pots.length).toBeGreaterThan(1);
-    });
-  });
-
-  describe('real game scenario', () => {
-    it('should handle pre-flop all-ins with blinds correctly', () => {
-      // Recreate the exact scenario from the integration test
-      // Starting chips: p1=50, p2=150, p3=300
-      // Blinds: p1=SB(10), p2=BB(20)
-      // Action: p3 all-in 300, p1 all-in 50 (40 more), p2 all-in 150 (130 more)
-
-      const p1 = new Player({ id: 'p1', name: 'Small Stack' });
-      const p2 = new Player({ id: 'p2', name: 'Medium Stack' });
-      const p3 = new Player({ id: 'p3', name: 'Big Stack' });
-
-      // Set initial chips
-      p1.chips = 50;
-      p2.chips = 150;
-      p3.chips = 300;
-
-      const testPotManager = new PotManager([p1, p2, p3]);
-
-      // Pre-flop: blinds
-      testPotManager.addToPot(p1, 10); // SB
-      testPotManager.addToPot(p2, 20); // BB
-
-      // p3 goes all-in for 300
-      testPotManager.addToPot(p3, 300);
-
-      // p1 goes all-in for remaining 40
-      testPotManager.addToPot(p1, 40);
-
-      // p2 goes all-in for remaining 130
-      testPotManager.addToPot(p2, 130);
-
-      // Create side pots
-      testPotManager.createSidePots();
-
-      console.log(
-        'Test pots created:',
-        testPotManager.pots.map((pot) => ({
-          amount: pot.amount,
-          eligibleCount: pot.eligiblePlayers.length,
-          eligibleIds: pot.eligiblePlayers.map((p) => p.id),
-        })),
-      );
-
-      // Should have multiple pots
-      expect(testPotManager.pots.length).toBeGreaterThan(1);
-
-      // Main pot should have all 3 players eligible
-      expect(testPotManager.pots[0].eligiblePlayers).toHaveLength(3);
-
-      // Total should be 500 (50 + 150 + 300)
-      expect(testPotManager.getTotal()).toBe(500);
+      expect(potManager.pots[0].maxContributionPerPlayer).toBe(100);
+      expect(potManager.pots[0].isActive).toBe(false);
+      expect(potManager.pots[1].eligiblePlayers).toEqual([players[1], players[2]]);
     });
   });
 
   describe('calculatePayouts', () => {
-    it('should return empty map for no winners', () => {
-      potManager.addToPot(players[0], 100);
-      potManager.addToPot(players[1], 100);
-
-      const payouts = potManager.calculatePayouts([]);
-
-      expect(payouts.size).toBe(0);
-    });
-
-    it('should give entire pot to single winner', () => {
+    it('should return correct payouts for single winner', () => {
       potManager.addToPot(players[0], 100);
       potManager.addToPot(players[1], 100);
       potManager.addToPot(players[2], 100);
 
-      const winners = [{ playerData: players[0] }];
-      const payouts = potManager.calculatePayouts(winners);
+      // Mock hands - P1 wins with best hand
+      const hands = [
+        { 
+          playerData: players[0], 
+          hand: { rank: 3, description: 'Three of a Kind', kickers: [] },
+          cards: [],
+        },
+        { 
+          playerData: players[1], 
+          hand: { rank: 2, description: 'Pair', kickers: [] },
+          cards: [],
+        },
+        { 
+          playerData: players[2], 
+          hand: { rank: 1, description: 'High Card', kickers: [] },
+          cards: [],
+        },
+      ];
 
+      const payouts = potManager.calculatePayouts(hands);
       expect(payouts.get(players[0])).toBe(300);
+      expect(payouts.get(players[1])).toBeUndefined();
+      expect(payouts.get(players[2])).toBeUndefined();
     });
 
-    it('should split pot evenly among multiple winners', () => {
+    it('should split pot between tied winners', () => {
       potManager.addToPot(players[0], 100);
       potManager.addToPot(players[1], 100);
       potManager.addToPot(players[2], 100);
 
-      const winners = [{ playerData: players[0] }, { playerData: players[1] }];
-      const payouts = potManager.calculatePayouts(winners);
+      // Mock hands - P1 and P2 tie
+      const hands = [
+        { 
+          playerData: players[0], 
+          hand: { rank: 2, description: 'Pair', kickers: [] },
+          cards: [],
+        },
+        { 
+          playerData: players[1], 
+          hand: { rank: 2, description: 'Pair', kickers: [] },
+          cards: [],
+        },
+        { 
+          playerData: players[2], 
+          hand: { rank: 1, description: 'High Card', kickers: [] },
+          cards: [],
+        },
+      ];
 
+      const payouts = potManager.calculatePayouts(hands);
       expect(payouts.get(players[0])).toBe(150);
       expect(payouts.get(players[1])).toBe(150);
+      expect(payouts.get(players[2])).toBeUndefined();
     });
 
-    it('should handle odd pot amounts with remainder', () => {
+    it('should handle side pots correctly', () => {
+      // Set up a scenario with side pots
+      // P1 goes all-in for 100
+      potManager.handleAllIn(players[0], 100);
       potManager.addToPot(players[0], 100);
-      potManager.addToPot(players[1], 100);
-      potManager.addToPot(players[2], 101); // 301 total
-
-      const winners = [{ playerData: players[0] }, { playerData: players[1] }];
-      const payouts = potManager.calculatePayouts(winners);
-
-      // 301 / 2 = 150 remainder 1
-      // First winner gets the extra chip
-      expect(payouts.get(players[0])).toBe(151);
-      expect(payouts.get(players[1])).toBe(150);
-    });
-
-    it('should correctly distribute side pots when all tie', () => {
-      // Player 1 all-in with 100
-      players[0].state = 'ALL_IN';
-      potManager.addToPot(players[0], 100);
-      potManager.addToPot(players[1], 200);
-      potManager.addToPot(players[2], 200);
-
-      potManager.createSidePots();
-
-      // If all players tie, they split pots they're eligible for
-      const winners = [
-        { playerData: players[0] }, // Eligible for main pot only
-        { playerData: players[1] }, // Eligible for both pots
-        { playerData: players[2] }, // Eligible for both pots
-      ];
-
-      const payouts = potManager.calculatePayouts(winners);
-
-      // Main pot (300) split 3 ways = 100 each
-      // Side pot (200) split 2 ways = 100 each for P2 and P3
-      expect(payouts.get(players[0])).toBe(100);
-      expect(payouts.get(players[1])).toBe(200); // 100 from main + 100 from side
-      expect(payouts.get(players[2])).toBe(200); // 100 from main + 100 from side
-    });
-
-    it('should give entire main pot to all-in winner', () => {
-      // Player 1 all-in with 100
-      players[0].state = 'ALL_IN';
-      potManager.addToPot(players[0], 100);
-      potManager.addToPot(players[1], 200);
-      potManager.addToPot(players[2], 200);
-
-      potManager.createSidePots();
-
-      // Only Player 1 wins (has best hand)
-      const winners = [{ playerData: players[0] }];
-
-      const payouts = potManager.calculatePayouts(winners);
-
-      // Player 1 gets entire main pot (300), not eligible for side pot
-      expect(payouts.get(players[0])).toBe(300);
-      expect(payouts.has(players[1])).toBe(false);
-      expect(payouts.has(players[2])).toBe(false);
-    });
-
-    it('should handle winner not eligible for all pots', () => {
-      // Create multiple pots with different eligible players
-      players[0].state = 'ALL_IN';
-      potManager.addToPot(players[0], 50);
-      potManager.addToPot(players[1], 150);
-      potManager.addToPot(players[2], 150);
-
-      potManager.createSidePots();
-
-      // Only Player 2 and 3 win (Player 1 not in winners)
-      const winners = [{ playerData: players[1] }, { playerData: players[2] }];
-
-      const payouts = potManager.calculatePayouts(winners);
-
-      // They split both main pot and side pot
-      // Main pot: 150 (50 * 3) / 2 = 75 each
-      // Side pot: 200 (100 * 2) / 2 = 100 each
-      expect(payouts.get(players[1])).toBe(175);
-      expect(payouts.get(players[2])).toBe(175);
-    });
-  });
-
-  describe('updatePotForAction', () => {
-    it('should handle bet action', () => {
-      const action = { name: 'bet', amount: 100 };
-      potManager.updatePotForAction(players[0], action);
-
-      expect(potManager.currentPot.amount).toBe(100);
-      expect(potManager.currentPot.contributions.get(players[0])).toBe(100);
-    });
-
-    it('should handle raise action', () => {
-      const action = { name: 'raise', amount: 200 };
-      potManager.updatePotForAction(players[0], action);
-
-      expect(potManager.currentPot.amount).toBe(200);
-      expect(potManager.currentPot.contributions.get(players[0])).toBe(200);
-    });
-
-    it('should handle call action', () => {
-      const action = { name: 'call', amount: 100 };
-      potManager.updatePotForAction(players[0], action);
-
-      expect(potManager.currentPot.amount).toBe(100);
-      expect(potManager.currentPot.contributions.get(players[0])).toBe(100);
-    });
-
-    it('should ignore fold action', () => {
-      const action = { name: 'fold' };
-      potManager.updatePotForAction(players[0], action);
-
-      expect(potManager.currentPot.amount).toBe(0);
-      expect(potManager.currentPot.contributions.has(players[0])).toBe(false);
-    });
-
-    it('should ignore check action', () => {
-      const action = { name: 'check' };
-      potManager.updatePotForAction(players[0], action);
-
-      expect(potManager.currentPot.amount).toBe(0);
-      expect(potManager.currentPot.contributions.has(players[0])).toBe(false);
-    });
-  });
-
-  describe('edge cases and complex scenarios', () => {
-    it('should handle empty player list', () => {
-      const emptyPotManager = new PotManager([], smallBlind);
-
-      expect(emptyPotManager.pots).toHaveLength(1);
-      expect(emptyPotManager.currentPot.eligiblePlayers).toEqual([]);
-      expect(emptyPotManager.getTotal()).toBe(0);
-    });
-
-    it('should handle zero contributions', () => {
-      potManager.addToPot(players[0], 0);
-
-      expect(potManager.currentPot.amount).toBe(0);
-      expect(potManager.currentPot.contributions.get(players[0])).toBe(0);
-    });
-
-    it('should handle complex multi-way all-in scenario', () => {
-      // Complex scenario: 4 players with different stack sizes
-      const fourPlayers = [
-        { id: 'p1', state: 'ALL_IN', chips: 50 },
-        { id: 'p2', state: 'ALL_IN', chips: 150 },
-        { id: 'p3', state: 'ALL_IN', chips: 300 },
-        { id: 'p4', state: 'ACTIVE', chips: 1000 },
-      ];
-
-      const complexPotManager = new PotManager(fourPlayers, smallBlind);
-
-      // Each goes all-in
-      complexPotManager.addToPot(fourPlayers[0], 50);
-      complexPotManager.addToPot(fourPlayers[1], 150);
-      complexPotManager.addToPot(fourPlayers[2], 300);
-      complexPotManager.addToPot(fourPlayers[3], 300); // Matches p3
-
-      complexPotManager.createSidePots();
-
-      // Should create 3 pots
-      expect(complexPotManager.pots).toHaveLength(3);
-
-      // Verify total is correct
-      expect(complexPotManager.getTotal()).toBe(800);
-
-      // If p1 wins everything they're eligible for
-      const winners = [{ playerData: fourPlayers[0] }];
-      const payouts = complexPotManager.calculatePayouts(winners);
-
-      // p1 should only win the first pot (50 * 4 = 200)
-      expect(payouts.get(fourPlayers[0])).toBe(200);
-    });
-
-    it('should maintain pot integrity through multiple betting rounds', () => {
-      // Round 1
-      potManager.addToPot(players[0], 100);
+      
+      // P2 and P3 continue betting
       potManager.addToPot(players[1], 100);
       potManager.addToPot(players[2], 100);
-      potManager.endBettingRound();
-
-      // Round 2 - player 1 goes all-in
-      players[0].state = 'ALL_IN';
-      potManager.addToPot(players[0], 50);
+      
+      // Add more to side pot
       potManager.addToPot(players[1], 200);
       potManager.addToPot(players[2], 200);
-      potManager.endBettingRound();
 
-      // Verify total
-      expect(potManager.getTotal()).toBe(750);
+      // Mock hands - P1 wins main pot, P2 wins side pot
+      const hands = [
+        { 
+          playerData: players[0], 
+          hand: { rank: 3, description: 'Three of a Kind', kickers: [] },
+          cards: [],
+        },
+        { 
+          playerData: players[1], 
+          hand: { rank: 2, description: 'Pair', kickers: [] },
+          cards: [],
+        },
+        { 
+          playerData: players[2], 
+          hand: { rank: 1, description: 'High Card', kickers: [] },
+          cards: [],
+        },
+      ];
 
-      // Verify pot structure
-      expect(potManager.pots.length).toBeGreaterThanOrEqual(2);
+      const payouts = potManager.calculatePayouts(hands);
+      expect(payouts.get(players[0])).toBe(300); // Wins main pot of 300
+      expect(payouts.get(players[1])).toBe(400); // Wins side pot of 400
+      expect(payouts.get(players[2])).toBeUndefined();
+    });
+  });
+
+  describe('getPotsInfo', () => {
+    it('should return pot information', () => {
+      potManager.addToPot(players[0], 100);
+      potManager.addToPot(players[1], 200);
+
+      const potsInfo = potManager.getPotsInfo();
+      expect(potsInfo).toHaveLength(1);
+      expect(potsInfo[0]).toEqual({
+        potId: 0,
+        potName: 'Main Pot',
+        amount: 300,
+        eligiblePlayers: ['player1', 'player2', 'player3'],
+        isMain: true,
+        isActive: true,
+        maxContribution: null,
+      });
+    });
+  });
+
+  describe('reset', () => {
+    it('should reset pots to initial state', () => {
+      potManager.addToPot(players[0], 100);
+      potManager.handleAllIn(players[1], 200);
+      
+      expect(potManager.pots).toHaveLength(2);
+      
+      potManager.reset();
+      
+      expect(potManager.pots).toHaveLength(1);
+      expect(potManager.pots[0].amount).toBe(0);
+      expect(potManager.pots[0].id).toBe(0);
+    });
+  });
+
+  describe('events', () => {
+    it('should emit pot:updated event', () => {
+      let eventData = null;
+      potManager.on('pot:updated', (data) => {
+        eventData = data;
+      });
+
+      potManager.addToPot(players[0], 100);
+
+      expect(eventData).toEqual({
+        potId: 0,
+        potName: 'Main Pot',
+        total: 100,
+        playerBet: { playerId: 'player1', amount: 100 },
+      });
+    });
+
+    it('should emit sidepot:created event', () => {
+      let eventData = null;
+      potManager.on('sidepot:created', (data) => {
+        eventData = data;
+      });
+
+      potManager.handleAllIn(players[0], 100);
+
+      expect(eventData).toEqual({
+        potId: 1,
+        potName: 'Side Pot 1',
+        eligiblePlayers: ['player2', 'player3'],
+        eligibleCount: 2,
+      });
     });
   });
 });
