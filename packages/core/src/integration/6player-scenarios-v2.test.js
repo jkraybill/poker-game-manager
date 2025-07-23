@@ -332,4 +332,251 @@ describe('6-Player Poker Scenarios (v2)', () => {
       expect(totalPot).toBeGreaterThan(0);
     }
   });
+
+  it('should handle 6-player bubble play simulation with 4 players remaining', async () => {
+    // Create 6-player table with bubble blinds (high pressure)
+    const result = createTestTable('standard', {
+      blinds: { small: 100, big: 200 },
+      minBuyIn: 500,
+      maxBuyIn: 5000,
+      minPlayers: 6,
+      dealerButton: 0,
+    });
+    manager = result.manager;
+    table = result.table;
+
+    // Set up event capture
+    events = setupEventCapture(table);
+
+    // Bubble strategy - very tight play
+    const bubbleStrategy = ({ player, gameState, myState, toCall }) => {
+      const mRatio = myState.chips / 300; // Total blinds
+      const stackType = player.stackType;
+
+      // Only 4 players active (bubble) - others already eliminated
+      if (player.isEliminated) {
+        return { action: Action.FOLD };
+      }
+
+      // Short stacks must push or fold
+      if (stackType === 'short' && mRatio < 5) {
+        // Push from button with any reasonable hand
+        if (player.position === 'button' && toCall <= 200) {
+          return { action: Action.ALL_IN, amount: myState.chips };
+        }
+        // Call all-in if getting good price
+        if (toCall >= myState.chips * 0.8) {
+          return { action: Action.ALL_IN, amount: myState.chips };
+        }
+        return { action: Action.FOLD };
+      }
+
+      // Chip leaders apply pressure
+      if (stackType === 'big' && gameState.currentBet <= 200) {
+        // Steal from late position
+        if (
+          (player.position === 'button' || player.position === 'co') &&
+          !myState.hasActed
+        ) {
+          return { action: Action.RAISE, amount: 500 }; // 2.5x pressure
+        }
+      }
+
+      // Medium stacks play ultra-tight
+      if (stackType === 'medium') {
+        // Only play premium hands
+        if (toCall > 300) {
+          return { action: Action.FOLD };
+        }
+      }
+
+      // Default bubble play is very tight
+      if (toCall > myState.chips * 0.15) {
+        return { action: Action.FOLD };
+      }
+
+      return { action: toCall > 0 ? Action.FOLD : Action.CHECK };
+    };
+
+    // Override addPlayer for custom chips
+    const originalAddPlayer = table.addPlayer.bind(table);
+    table.addPlayer = function (player) {
+      const result = originalAddPlayer(player);
+      const playerData = this.players.get(player.id);
+      if (playerData && player.targetChips) {
+        playerData.chips = player.targetChips;
+      }
+      return result;
+    };
+
+    // Bubble configuration - 4 active players with ICM pressure
+    const stackConfigs = [
+      { name: 'Big Stack (Button)', chips: 4500, stackType: 'big', position: 'button', isEliminated: false },
+      { name: 'Eliminated 1 (SB)', chips: 1000, stackType: 'medium', position: 'sb', isEliminated: true },
+      { name: 'Medium Stack (BB)', chips: 2000, stackType: 'medium', position: 'bb', isEliminated: false },
+      { name: 'Short Stack (UTG)', chips: 800, stackType: 'short', position: 'utg', isEliminated: false },
+      { name: 'Eliminated 2 (MP)', chips: 1000, stackType: 'medium', position: 'mp', isEliminated: true },
+      { name: 'Medium Stack 2 (CO)', chips: 1700, stackType: 'medium', position: 'co', isEliminated: false },
+    ];
+
+    const players = stackConfigs.map((config) => {
+      const player = new StrategicPlayer({
+        name: config.name,
+        strategy: bubbleStrategy,
+      });
+      Object.assign(player, config);
+      return player;
+    });
+
+    // Add players and start
+    players.forEach((p) => table.addPlayer(p));
+    table.tryStartGame();
+
+    // Wait for hand to complete
+    await waitForHandEnd(events);
+
+    // Extract results
+    const { actions, winners } = events;
+
+    // Verify bubble dynamics
+    const allIns = actions.filter((a) => a.action === Action.ALL_IN);
+    const folds = actions.filter((a) => a.action === Action.FOLD);
+    const raises = actions.filter((a) => a.action === Action.RAISE);
+
+    // Should see cautious play
+    expect(folds.length).toBeGreaterThan(0);
+
+    // Either pressure from big stack or desperation from short stack
+    const totalAggression = allIns.length + raises.length;
+    expect(totalAggression).toBeGreaterThan(0);
+
+    // Verify the hand completed
+    expect(winners).toHaveLength(1);
+    expect(winners[0].amount).toBeGreaterThan(0);
+  });
+
+  it('should handle 6-player short stack all-in scenarios with players under 10BB', async () => {
+    // Create 6-player table
+    const result = createTestTable('standard', {
+      blinds: { small: 50, big: 100 },
+      minBuyIn: 200,
+      maxBuyIn: 2000,
+      minPlayers: 6,
+      dealerButton: 0,
+    });
+    manager = result.manager;
+    table = result.table;
+
+    // Set up event capture
+    events = setupEventCapture(table);
+
+    // Push/fold strategy for short stacks
+    const shortStackStrategy = ({ player, gameState, myState, toCall }) => {
+      const bbCount = myState.chips / 100; // Number of big blinds
+
+      // Under 10BB - push/fold mode
+      if (bbCount < 10) {
+        // Push from late position with wide range
+        if (
+          (player.position === 'button' || player.position === 'co' || player.position === 'sb') &&
+          toCall <= 100
+        ) {
+          return { action: Action.ALL_IN, amount: myState.chips };
+        }
+
+        // Push from middle position with tighter range
+        if (player.position === 'mp' && toCall <= 100 && bbCount < 6) {
+          return { action: Action.ALL_IN, amount: myState.chips };
+        }
+
+        // Call all-in if pot odds are good
+        if (toCall > 0 && toCall < myState.chips) {
+          const potOdds = toCall / (gameState.pot + toCall);
+          if (potOdds < 0.4 && bbCount < 5) {
+            return { action: Action.ALL_IN, amount: myState.chips };
+          }
+        }
+
+        // Otherwise fold
+        return { action: Action.FOLD };
+      }
+
+      // 10-15BB - still push/fold but more selective
+      if (bbCount < 15) {
+        if (player.position === 'button' && toCall <= 100) {
+          return { action: Action.ALL_IN, amount: myState.chips };
+        }
+      }
+
+      // Deeper stacks play normally
+      if (toCall > myState.chips * 0.3) {
+        return { action: Action.FOLD };
+      }
+
+      return { action: toCall > 0 ? Action.CALL : Action.CHECK };
+    };
+
+    // Override addPlayer for custom chips
+    const originalAddPlayer = table.addPlayer.bind(table);
+    table.addPlayer = function (player) {
+      const result = originalAddPlayer(player);
+      const playerData = this.players.get(player.id);
+      if (playerData && player.targetChips) {
+        playerData.chips = player.targetChips;
+      }
+      return result;
+    };
+
+    // Create players with various short stacks
+    const stackConfigs = [
+      { name: 'Player 1 (Button)', chips: 450, position: 'button' }, // 4.5BB
+      { name: 'Player 2 (SB)', chips: 300, position: 'sb' }, // 3BB
+      { name: 'Player 3 (BB)', chips: 800, position: 'bb' }, // 8BB
+      { name: 'Player 4 (UTG)', chips: 1500, position: 'utg' }, // 15BB
+      { name: 'Player 5 (MP)', chips: 600, position: 'mp' }, // 6BB
+      { name: 'Player 6 (CO)', chips: 350, position: 'co' }, // 3.5BB
+    ];
+
+    const players = stackConfigs.map((config) => {
+      const player = new StrategicPlayer({
+        name: config.name,
+        strategy: shortStackStrategy,
+      });
+      Object.assign(player, config);
+      return player;
+    });
+
+    // Add players and start
+    players.forEach((p) => table.addPlayer(p));
+    table.tryStartGame();
+
+    // Wait for hand to complete
+    await waitForHandEnd(events);
+
+    // Extract results
+    const { actions, sidePots } = events;
+
+    // Verify push/fold dynamics
+    const allIns = actions.filter((a) => a.action === Action.ALL_IN);
+    const folds = actions.filter((a) => a.action === Action.FOLD);
+
+    // With multiple short stacks, we should see several all-ins
+    expect(allIns.length).toBeGreaterThan(0);
+
+    // Some players should fold to the pressure
+    expect(folds.length).toBeGreaterThan(0);
+
+    // With different stack sizes going all-in, we might have side pots
+    // (but not guaranteed depending on action order)
+    if (allIns.length > 1) {
+      // Multiple all-ins could create side pots
+      const differentAllInAmounts = new Set(allIns.map((a) => a.amount)).size;
+      if (differentAllInAmounts > 1 && sidePots.length > 0) {
+        expect(sidePots.length).toBeGreaterThanOrEqual(1);
+      }
+    }
+
+    // Verify the hand completed successfully
+    expect(events.handEnded).toBe(true);
+  });
 });

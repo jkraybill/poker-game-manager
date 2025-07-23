@@ -106,7 +106,7 @@ export class HandEvaluator {
       // Original logic for unevaluated hands
       // Convert all hands to pokersolver format
       const solvedHands = playerHands.map((ph) => {
-        // The playerHands array has objects with: playerData, cards
+        // The playerHands array has objects with: player, cards
         const allCards = ph.cards;
         const pokersolverCards = allCards.map((card) =>
           this.cardToPokersolverFormat(card),

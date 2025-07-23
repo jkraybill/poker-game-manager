@@ -217,6 +217,13 @@ export class Table extends WildcardEventEmitter {
     // Remove broke players
     for (const [playerId, playerData] of this.players.entries()) {
       if (playerData.player.chips <= 0) {
+        // Emit elimination event before removing player
+        this.emit('player:eliminated', {
+          playerId,
+          tableId: this.id,
+          finalChips: 0,
+          gameNumber: this.gameCount,
+        });
         this.removePlayer(playerId);
       }
     }

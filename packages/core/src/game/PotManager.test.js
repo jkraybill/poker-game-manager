@@ -108,17 +108,17 @@ describe('PotManager', () => {
       // Mock hands - P1 wins with best hand
       const hands = [
         { 
-          playerData: players[0], 
+          player: players[0], 
           hand: { rank: 3, description: 'Three of a Kind', kickers: [] },
           cards: [],
         },
         { 
-          playerData: players[1], 
+          player: players[1], 
           hand: { rank: 2, description: 'Pair', kickers: [] },
           cards: [],
         },
         { 
-          playerData: players[2], 
+          player: players[2], 
           hand: { rank: 1, description: 'High Card', kickers: [] },
           cards: [],
         },
@@ -138,17 +138,17 @@ describe('PotManager', () => {
       // Mock hands - P1 and P2 tie
       const hands = [
         { 
-          playerData: players[0], 
+          player: players[0], 
           hand: { rank: 2, description: 'Pair', kickers: [] },
           cards: [],
         },
         { 
-          playerData: players[1], 
+          player: players[1], 
           hand: { rank: 2, description: 'Pair', kickers: [] },
           cards: [],
         },
         { 
-          playerData: players[2], 
+          player: players[2], 
           hand: { rank: 1, description: 'High Card', kickers: [] },
           cards: [],
         },
@@ -177,17 +177,17 @@ describe('PotManager', () => {
       // Mock hands - P1 wins main pot, P2 wins side pot
       const hands = [
         { 
-          playerData: players[0], 
+          player: players[0], 
           hand: { rank: 3, description: 'Three of a Kind', kickers: [] },
           cards: [],
         },
         { 
-          playerData: players[1], 
+          player: players[1], 
           hand: { rank: 2, description: 'Pair', kickers: [] },
           cards: [],
         },
         { 
-          playerData: players[2], 
+          player: players[2], 
           hand: { rank: 1, description: 'High Card', kickers: [] },
           cards: [],
         },

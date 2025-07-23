@@ -576,7 +576,7 @@ export class GameEngine extends WildcardEventEmitter {
       // Last player wins by default
       const lastPlayer = activePlayers[0];
       const mockHand = { 
-        playerData: lastPlayer, 
+        player: lastPlayer, 
         hand: { rank: 999, description: 'Won by fold' },
         cards: this.playerHands.get(lastPlayer.id) || [],
       };
@@ -853,13 +853,13 @@ export class GameEngine extends WildcardEventEmitter {
       (p) => p.state === PlayerState.ACTIVE || p.state === PlayerState.ALL_IN,
     );
 
-    // Evaluate hands - PotManager expects playerData property
+    // Evaluate hands
     const playerHands = activePlayers.map((player) => {
       const holeCards = this.playerHands.get(player.id);
       const hand = HandEvaluator.evaluate([...holeCards, ...this.board]);
 
       return {
-        playerData: player,
+        player,
         hand,
         cards: holeCards,
       };
@@ -873,7 +873,7 @@ export class GameEngine extends WildcardEventEmitter {
     const winnersWithAmounts = [];
     for (const [player, amount] of payouts) {
       if (amount > 0) {
-        const playerHandInfo = playerHands.find(ph => ph.playerData.id === player.id);
+        const playerHandInfo = playerHands.find(ph => ph.player.id === player.id);
         winnersWithAmounts.push({
           playerId: player.id,
           hand: playerHandInfo.hand,

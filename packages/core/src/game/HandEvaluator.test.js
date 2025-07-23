@@ -225,7 +225,7 @@ describe('HandEvaluator', () => {
     it('should return single player if only one', () => {
       const playerHands = [
         {
-          playerData: { player: { id: 'player1' } },
+          player: { id: 'player1' },
           cards: [
             card('A', 's'),
             card('K', 's'),
@@ -238,13 +238,13 @@ describe('HandEvaluator', () => {
       ];
       const winners = HandEvaluator.findWinners(playerHands);
       expect(winners).toHaveLength(1);
-      expect(winners[0].playerData.player.id).toBe('player1');
+      expect(winners[0].player.id).toBe('player1');
     });
 
     it('should find winner with better hand', () => {
       const playerHands = [
         {
-          playerData: { player: { id: 'player1' } },
+          player: { id: 'player1' },
           cards: [
             card('A', 's'),
             card('A', 'h'),
@@ -254,7 +254,7 @@ describe('HandEvaluator', () => {
           ],
         },
         {
-          playerData: { player: { id: 'player2' } },
+          player: { id: 'player2' },
           cards: [
             card('J', 's'),
             card('J', 'h'),
@@ -266,13 +266,13 @@ describe('HandEvaluator', () => {
       ];
       const winners = HandEvaluator.findWinners(playerHands);
       expect(winners).toHaveLength(1);
-      expect(winners[0].playerData.player.id).toBe('player1');
+      expect(winners[0].player.id).toBe('player1');
     });
 
     it('should handle ties correctly', () => {
       const playerHands = [
         {
-          playerData: { player: { id: 'player1' } },
+          player: { id: 'player1' },
           cards: [
             card('A', 's'),
             card('K', 'h'),
@@ -282,7 +282,7 @@ describe('HandEvaluator', () => {
           ],
         },
         {
-          playerData: { player: { id: 'player2' } },
+          player: { id: 'player2' },
           cards: [
             card('A', 'h'),
             card('K', 's'),
@@ -294,7 +294,7 @@ describe('HandEvaluator', () => {
       ];
       const winners = HandEvaluator.findWinners(playerHands);
       expect(winners).toHaveLength(2);
-      expect(winners.map((w) => w.playerData.player.id).sort()).toEqual([
+      expect(winners.map((w) => w.player.id).sort()).toEqual([
         'player1',
         'player2',
       ]);

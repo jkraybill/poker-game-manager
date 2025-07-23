@@ -159,7 +159,7 @@ break;
 
   /**
    * Calculate payouts for winners
-   * @param {Array} allPlayerHands - Array of ALL player hand objects with playerData and hand info
+   * @param {Array} allPlayerHands - Array of player hand objects with player, hand, and cards info
    * @returns {Map<Player, number>} Map of player to payout amount
    */
   calculatePayouts(allPlayerHands) {
@@ -169,12 +169,12 @@ break;
     for (const pot of this.pots) {
       // Find players eligible for this pot who are still in the hand
       const eligibleHands = allPlayerHands.filter(ph =>
-        pot.eligiblePlayers.some(ep => ep.id === ph.playerData.id),
+        pot.eligiblePlayers.some(ep => ep.id === ph.player.id),
       );
       
       if (eligibleHands.length === 0) {
-continue;
-}
+        continue;
+      }
       
       // Find the best hand(s) among eligible players for this pot
       // Use HandEvaluator to compare hands properly
@@ -194,8 +194,8 @@ continue;
             remainder--;
           }
           
-          const currentPayout = payouts.get(winner.playerData) || 0;
-          payouts.set(winner.playerData, currentPayout + winAmount);
+          const currentPayout = payouts.get(winner.player) || 0;
+          payouts.set(winner.player, currentPayout + winAmount);
         }
       }
     }

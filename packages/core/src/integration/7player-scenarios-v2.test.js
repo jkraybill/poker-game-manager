@@ -434,4 +434,163 @@ describe('7-Player Poker Scenarios (v2)', () => {
     expect(coRaise).toBeDefined();
     expect(coRaise.amount).toBeGreaterThan(180); // Large squeeze size
   });
+
+  it('should handle 7-player tournament bubble with conservative play', async () => {
+    // Create 7-player table with tournament bubble blinds
+    const result = createTestTable('standard', {
+      blinds: { small: 75, big: 150 },
+      minBuyIn: 500,
+      maxBuyIn: 5000,
+      minPlayers: 7,
+      dealerButton: 0,
+    });
+    manager = result.manager;
+    table = result.table;
+
+    // Set up event capture
+    events = setupEventCapture(table);
+
+    // Tournament bubble strategy - extremely conservative
+    const tournamentBubbleStrategy = ({ player, gameState, myState, toCall }) => {
+      const mRatio = myState.chips / 225; // Total blinds
+      const stackType = player.stackType;
+
+      // Micro stacks (< 5M) - desperation mode
+      if (stackType === 'micro' && mRatio < 5) {
+        // Push from button/CO with any two
+        if (
+          (player.position === 'button' || player.position === 'co') &&
+          toCall <= 150
+        ) {
+          return { action: Action.ALL_IN, amount: myState.chips };
+        }
+        // Call all-in if committed
+        if (toCall >= myState.chips * 0.7) {
+          return { action: Action.ALL_IN, amount: myState.chips };
+        }
+        return { action: Action.FOLD };
+      }
+
+      // Short stacks (5-10M) - selective aggression
+      if (stackType === 'short' && mRatio < 10) {
+        // Push from late position
+        if (
+          ['button', 'co', 'mp2'].includes(player.position) &&
+          toCall <= 150
+        ) {
+          return { action: Action.ALL_IN, amount: myState.chips };
+        }
+        return { action: Action.FOLD };
+      }
+
+      // Medium stacks (10-20M) - avoid confrontation
+      if (stackType === 'medium') {
+        // Only play premium hands
+        if (toCall > 225) {
+          return { action: Action.FOLD };
+        }
+        // Steal attempt only from button
+        if (player.position === 'button' && toCall === 150 && !myState.hasActed) {
+          return { action: Action.RAISE, amount: 375 }; // Min-raise steal
+        }
+      }
+
+      // Big stacks (20M+) - apply ICM pressure
+      if (stackType === 'big') {
+        // Abuse bubble dynamics
+        if (
+          ['button', 'co'].includes(player.position) &&
+          gameState.currentBet <= 150 &&
+          !myState.hasActed
+        ) {
+          // Look for short stacks behind
+          const shortStacksBehind = Object.values(gameState.players).filter(
+            (p) => p.state === 'ACTIVE' && p.chips < 1500,
+          ).length;
+          
+          if (shortStacksBehind > 0) {
+            return { action: Action.RAISE, amount: 450 }; // 3x pressure
+          }
+        }
+      }
+
+      // Default ultra-conservative play
+      if (toCall > myState.chips * 0.1) {
+        return { action: Action.FOLD };
+      }
+
+      return { action: toCall > 0 ? Action.FOLD : Action.CHECK };
+    };
+
+    // Override addPlayer for custom chips
+    const originalAddPlayer = table.addPlayer.bind(table);
+    table.addPlayer = function (player) {
+      const result = originalAddPlayer(player);
+      const playerData = this.players.get(player.id);
+      if (playerData && player.targetChips) {
+        playerData.chips = player.targetChips;
+      }
+      return result;
+    };
+
+    // Tournament bubble stack distribution (5 players remain, top 4 get paid)
+    const stackConfigs = [
+      { position: 'button', chips: 4500, stackType: 'big' }, // Chip leader
+      { position: 'sb', chips: 700, stackType: 'micro' }, // Desperate
+      { position: 'bb', chips: 2200, stackType: 'medium' }, // Safe middle
+      { position: 'utg', chips: 900, stackType: 'short' }, // At risk
+      { position: 'mp1', chips: 3200, stackType: 'big' }, // Co-leader
+      { position: 'mp2', chips: 1800, stackType: 'medium' }, // Comfortable
+      { position: 'co', chips: 700, stackType: 'micro' }, // Desperate
+    ];
+
+    const players = stackConfigs.map((config, idx) => {
+      const player = new StrategicPlayer({
+        name: `Player ${idx + 1} (${config.position.toUpperCase()})`,
+        strategy: tournamentBubbleStrategy,
+      });
+      Object.assign(player, config);
+      return player;
+    });
+
+    // Add players and start
+    players.forEach((p) => table.addPlayer(p));
+    table.tryStartGame();
+
+    // Wait for hand to complete
+    await waitForHandEnd(events);
+
+    // Extract results
+    const { actions, winners } = events;
+
+    // Verify bubble dynamics
+    const allIns = actions.filter((a) => a.action === Action.ALL_IN);
+    const folds = actions.filter((a) => a.action === Action.FOLD);
+    const raises = actions.filter((a) => a.action === Action.RAISE);
+
+    // Should see many folds (conservative play)
+    expect(folds.length).toBeGreaterThan(2);
+
+    // Total aggression should be limited
+    const totalActions = allIns.length + raises.length;
+    expect(totalActions).toBeGreaterThan(0); // Some action
+    expect(totalActions).toBeLessThan(5); // But not too much
+
+    // Verify winner
+    expect(winners).toHaveLength(1);
+    expect(winners[0].amount).toBeGreaterThan(0);
+
+    // If micro stacks went all-in, verify they were desperate
+    if (allIns.length > 0) {
+      const allInPlayers = allIns.map(a => {
+        return players.find(p => p.id === a.playerId);
+      });
+      
+      // At least one all-in should be from a short/micro stack
+      const desperateAllIns = allInPlayers.filter(p => 
+        p && (p.stackType === 'micro' || p.stackType === 'short'),
+      );
+      expect(desperateAllIns.length).toBeGreaterThan(0);
+    }
+  });
 });

@@ -39,7 +39,7 @@ describe('Simple Split Pot Test (v2)', () => {
     // Test HandEvaluator directly first
     const playerHands = [
       {
-        playerData: { player: { id: 'player1' } },
+        player: { id: 'player1' },
         hand: {
           rank: 5, // Straight
           kickers: [9, 8, 7, 6, 5],
@@ -49,7 +49,7 @@ describe('Simple Split Pot Test (v2)', () => {
         cards: [],
       },
       {
-        playerData: { player: { id: 'player2' } },
+        player: { id: 'player2' },
         hand: {
           rank: 5, // Straight
           kickers: [9, 8, 7, 6, 5], // Same kickers
@@ -62,8 +62,8 @@ describe('Simple Split Pot Test (v2)', () => {
 
     const winners = HandEvaluator.findWinners(playerHands);
     expect(winners).toHaveLength(2); // Both should win
-    expect(winners.map((w) => w.playerData.player.id)).toContain('player1');
-    expect(winners.map((w) => w.playerData.player.id)).toContain('player2');
+    expect(winners.map((w) => w.player.id)).toContain('player1');
+    expect(winners.map((w) => w.player.id)).toContain('player2');
   });
 
   it('should handle 2-player all-in split pot scenario', async () => {

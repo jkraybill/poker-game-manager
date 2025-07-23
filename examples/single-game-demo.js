@@ -111,7 +111,7 @@ async function runSingleGame() {
   table.gameEngine?.on('hand:complete', ({ winners, payouts }) => {
     console.log('\n--- SHOWDOWN ---');
     winners.forEach(winner => {
-      const player = players.find(p => p.id === winner.playerData.player.id);
+      const player = players.find(p => p.id === winner.playerId);
       console.log(`${player.name} wins $${payouts[player.id]} with ${winner.hand.description}`);
       console.log(`Winning hand: ${winner.hand.cards.map(c => c.toString()).join(' ')}`);
     });

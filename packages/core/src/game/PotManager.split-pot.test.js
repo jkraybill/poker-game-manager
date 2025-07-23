@@ -33,9 +33,9 @@ describe('PotManager Split Pot Distribution', () => {
 
     // Players 0 and 1 tie with same hand rank
     const hands = [
-      { playerData: players[0], hand: { rank: 2, description: 'Pair', kickers: [] }, cards: [] },
-      { playerData: players[1], hand: { rank: 2, description: 'Pair', kickers: [] }, cards: [] },
-      { playerData: players[2], hand: { rank: 1, description: 'High Card', kickers: [] }, cards: [] },
+      { player: players[0], hand: { rank: 2, description: 'Pair', kickers: [] }, cards: [] },
+      { player: players[1], hand: { rank: 2, description: 'Pair', kickers: [] }, cards: [] },
+      { player: players[2], hand: { rank: 1, description: 'High Card', kickers: [] }, cards: [] },
     ];
 
     const payouts = potManager.calculatePayouts(hands);
@@ -55,9 +55,9 @@ describe('PotManager Split Pot Distribution', () => {
 
     // All players tie
     const hands = [
-      { playerData: players[0], hand: { rank: 2, description: 'Pair', kickers: [] }, cards: [] },
-      { playerData: players[1], hand: { rank: 2, description: 'Pair', kickers: [] }, cards: [] },
-      { playerData: players[2], hand: { rank: 2, description: 'Pair', kickers: [] }, cards: [] },
+      { player: players[0], hand: { rank: 2, description: 'Pair', kickers: [] }, cards: [] },
+      { player: players[1], hand: { rank: 2, description: 'Pair', kickers: [] }, cards: [] },
+      { player: players[2], hand: { rank: 2, description: 'Pair', kickers: [] }, cards: [] },
     ];
 
     const payouts = potManager.calculatePayouts(hands);
@@ -77,9 +77,9 @@ describe('PotManager Split Pot Distribution', () => {
 
     // Players 0 and 1 tie
     const hands = [
-      { playerData: players[0], hand: { rank: 2, description: 'Pair', kickers: [] }, cards: [] },
-      { playerData: players[1], hand: { rank: 2, description: 'Pair', kickers: [] }, cards: [] },
-      { playerData: players[2], hand: { rank: 1, description: 'High Card', kickers: [] }, cards: [] },
+      { player: players[0], hand: { rank: 2, description: 'Pair', kickers: [] }, cards: [] },
+      { player: players[1], hand: { rank: 2, description: 'Pair', kickers: [] }, cards: [] },
+      { player: players[2], hand: { rank: 1, description: 'High Card', kickers: [] }, cards: [] },
     ];
 
     const payouts = potManager.calculatePayouts(hands);
@@ -108,9 +108,9 @@ describe('PotManager Split Pot Distribution', () => {
 
     // Player 0 and 1 tie for main pot, Player 1 wins side pot
     const hands = [
-      { playerData: players[0], hand: { rank: 2, description: 'Pair', kickers: [] }, cards: [] },
-      { playerData: players[1], hand: { rank: 2, description: 'Pair', kickers: [] }, cards: [] },
-      { playerData: players[2], hand: { rank: 1, description: 'High Card', kickers: [] }, cards: [] },
+      { player: players[0], hand: { rank: 2, description: 'Pair', kickers: [] }, cards: [] },
+      { player: players[1], hand: { rank: 2, description: 'Pair', kickers: [] }, cards: [] },
+      { player: players[2], hand: { rank: 1, description: 'High Card', kickers: [] }, cards: [] },
     ];
 
     const payouts = potManager.calculatePayouts(hands);
