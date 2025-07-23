@@ -120,7 +120,7 @@ describe('PokerGameManager', () => {
 
     it('should throw error when max tables reached', () => {
       const smallManager = new PokerGameManager({ maxTables: 2 });
-      
+
       smallManager.createTable();
       smallManager.createTable();
 
@@ -133,7 +133,10 @@ describe('PokerGameManager', () => {
       const table = manager.createTable();
 
       expect(table.on).toHaveBeenCalledWith('*', expect.any(Function));
-      expect(table.on).toHaveBeenCalledWith('table:closed', expect.any(Function));
+      expect(table.on).toHaveBeenCalledWith(
+        'table:closed',
+        expect.any(Function),
+      );
     });
 
     it('should forward table events', () => {
@@ -141,7 +144,9 @@ describe('PokerGameManager', () => {
       manager.on('table:event', eventSpy);
 
       const table = manager.createTable();
-      const eventHandler = table.on.mock.calls.find(call => call[0] === '*')[1];
+      const eventHandler = table.on.mock.calls.find(
+        (call) => call[0] === '*',
+      )[1];
 
       // Simulate a table event
       eventHandler('game:started', { gameId: 123 });
@@ -161,8 +166,10 @@ describe('PokerGameManager', () => {
       expect(manager.tables.size).toBe(1);
 
       // Get the table:closed handler
-      const closedHandler = table.on.mock.calls.find(call => call[0] === 'table:closed')[1];
-      
+      const closedHandler = table.on.mock.calls.find(
+        (call) => call[0] === 'table:closed',
+      )[1];
+
       // Simulate table closing
       closedHandler();
 
@@ -208,7 +215,7 @@ describe('PokerGameManager', () => {
 
     it('should return a new array each time', () => {
       manager.createTable();
-      
+
       const tables1 = manager.getTables();
       const tables2 = manager.getTables();
 
@@ -243,7 +250,9 @@ describe('PokerGameManager', () => {
       manager.closeTable(table.id);
 
       // Simulate the table emitting closed event
-      const closedHandler = table.on.mock.calls.find(call => call[0] === 'table:closed')[1];
+      const closedHandler = table.on.mock.calls.find(
+        (call) => call[0] === 'table:closed',
+      )[1];
       closedHandler();
 
       expect(manager.tables.size).toBe(0);
@@ -270,7 +279,7 @@ describe('PokerGameManager', () => {
 
     it('should work with single table', () => {
       const table = manager.createTable();
-      
+
       manager.closeAllTables();
 
       expect(table.close).toHaveBeenCalled();
@@ -346,7 +355,9 @@ describe('PokerGameManager', () => {
       manager.on('table:removed', removedSpy);
 
       const table = manager.createTable();
-      const closedHandler = table.on.mock.calls.find(call => call[0] === 'table:closed')[1];
+      const closedHandler = table.on.mock.calls.find(
+        (call) => call[0] === 'table:closed',
+      )[1];
       closedHandler();
 
       expect(removedSpy).toHaveBeenCalledTimes(1);
@@ -360,7 +371,9 @@ describe('PokerGameManager', () => {
       manager.on('table:event', eventSpy);
 
       const table = manager.createTable();
-      const eventHandler = table.on.mock.calls.find(call => call[0] === '*')[1];
+      const eventHandler = table.on.mock.calls.find(
+        (call) => call[0] === '*',
+      )[1];
 
       // Test various events
       eventHandler('game:started', { gameId: 1 });
@@ -423,21 +436,23 @@ describe('PokerGameManager', () => {
 
       // Get stats shouldn't throw
       expect(() => manager.getStats()).not.toThrow();
-      
+
       // Get tables shouldn't throw
       expect(() => manager.getTables()).not.toThrow();
     });
 
     it('should prevent memory leaks by cleaning up event listeners', () => {
       const table = manager.createTable();
-      
+
       // Simulate table closed event
-      const closedHandler = table.on.mock.calls.find(call => call[0] === 'table:closed')[1];
+      const closedHandler = table.on.mock.calls.find(
+        (call) => call[0] === 'table:closed',
+      )[1];
       closedHandler();
 
       // Table should be removed from manager
       expect(manager.tables.has(table.id)).toBe(false);
-      
+
       // No references should remain
       expect(manager.getTables()).not.toContain(table);
     });

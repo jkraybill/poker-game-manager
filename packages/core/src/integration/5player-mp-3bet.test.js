@@ -1,9 +1,9 @@
 /**
  * 5-Player Middle Position 3-Bet Scenario
- * 
+ *
  * Tests advanced pre-flop aggression in 5-player games with raise and 3-bet action.
  * This scenario demonstrates positional play, 3-betting strategy, and fold equity.
- * 
+ *
  * Expected flow:
  * 1. UTG folds (weak hand or tight play)
  * 2. Middle Position raises to 60 (3x BB)
@@ -13,7 +13,7 @@
  * 6. Big Blind folds to 3-bet
  * 7. Middle Position folds to 3-bet
  * 8. Cutoff wins pot (180 + 10 + 20 + 60 = 270)
- * 
+ *
  * This tests:
  * - 5-player position dynamics (UTG, MP, CO, Button, Blinds)
  * - 3-betting for value and as a bluff
@@ -36,7 +36,7 @@ describe('5-Player MP 3-Bet', () => {
 
   afterEach(() => {
     // Clean up any open tables
-    manager.tables.forEach(table => table.close());
+    manager.tables.forEach((table) => table.close());
   });
 
   it('should handle Middle Position raising, Cutoff 3-betting, everyone folds', async () => {
@@ -146,7 +146,7 @@ describe('5-Player MP 3-Bet', () => {
     // Set up remaining event listeners
     table.on('hand:started', ({ dealerButton: db }) => {
       dealerButton = db;
-      
+
       // In 5-player game with dealerButton = 0:
       // Position 0 = Button/Cutoff
       // Position 1 = Small Blind
@@ -178,37 +178,37 @@ describe('5-Player MP 3-Bet', () => {
     });
 
     // Add players and start game
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for game to start
-    await vi.waitFor(() => gameStarted, { 
+    await vi.waitFor(() => gameStarted, {
       timeout: 500,
-      interval: 50, 
+      interval: 50,
     });
-    
+
     // Wait for dealer button to be set
-    await vi.waitFor(() => dealerButton >= 0, { 
+    await vi.waitFor(() => dealerButton >= 0, {
       timeout: 500,
-      interval: 50, 
+      interval: 50,
     });
-    
+
     // Wait for hand to complete
     await vi.waitFor(() => handEnded, { timeout: 1000 });
-    
+
     // Wait for all actions to be captured
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // Find cutoff player (3-bettor) - Button position in 5-player
     const coPlayer = players[dealerButton];
 
     // Verify results: Cutoff should win the pot
     expect(winnerId).toBe(coPlayer.id);
-    
+
     // Pot calculation:
     // - UTG folded (no contribution)
     // - MP raised to 60 then folded to 3-bet
-    // - CO 3-bet to 180 
+    // - CO 3-bet to 180
     // - Button folded (no contribution)
     // - SB folded after posting 10
     // - BB folded after posting 20
@@ -216,7 +216,7 @@ describe('5-Player MP 3-Bet', () => {
     expect(winnerAmount).toBe(270);
 
     // Verify action sequence
-    const raises = actions.filter(a => a.action === Action.RAISE);
+    const raises = actions.filter((a) => a.action === Action.RAISE);
     expect(raises).toHaveLength(2); // MP raise and CO 3-bet
 
     const mpRaise = raises[0];
@@ -226,15 +226,19 @@ describe('5-Player MP 3-Bet', () => {
     expect(co3Bet.amount).toBe(180);
 
     // Everyone else should fold (UTG, MP after 3-bet, Button, SB, BB)
-    const folds = actions.filter(a => a.action === Action.FOLD);
+    const folds = actions.filter((a) => a.action === Action.FOLD);
     expect(folds.length).toBeGreaterThanOrEqual(3); // At least UTG, MP, SB, BB
 
     // Verify proper action sequence: UTG fold, MP raise, CO 3-bet, then folds
     const firstAction = actions[0];
     expect(firstAction.action).toBe(Action.FOLD); // UTG folds first
 
-    const raiseIndex = actions.findIndex(a => a.action === Action.RAISE && a.amount === 60);
-    const threeBetIndex = actions.findIndex(a => a.action === Action.RAISE && a.amount === 180);
+    const raiseIndex = actions.findIndex(
+      (a) => a.action === Action.RAISE && a.amount === 60,
+    );
+    const threeBetIndex = actions.findIndex(
+      (a) => a.action === Action.RAISE && a.amount === 180,
+    );
     expect(raiseIndex).toBeLessThan(threeBetIndex); // MP raises before CO 3-bets
 
     table.close();

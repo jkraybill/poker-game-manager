@@ -1,12 +1,12 @@
 /**
  * 4-Player UTG Raise All Fold Scenario
- * 
+ *
  * Tests the specific case where UTG (Under The Gun) raises and all other players fold.
  * This tests early position aggression and fold equity in 4-player games.
- * 
+ *
  * Expected flow:
  * 1. UTG raises to 60 (3x BB)
- * 2. Button folds to raise  
+ * 2. Button folds to raise
  * 3. SB folds to raise
  * 4. BB folds to raise
  * 5. UTG wins pot (60 + 10 + 20 = 90)
@@ -26,7 +26,7 @@ describe('4-Player UTG Raise All Fold', () => {
 
   afterEach(() => {
     // Clean up any open tables
-    manager.tables.forEach(table => table.close());
+    manager.tables.forEach((table) => table.close());
   });
 
   it('should handle UTG raising and everyone folding', async () => {
@@ -117,10 +117,10 @@ describe('4-Player UTG Raise All Fold', () => {
     // Set up remaining event listeners
     table.on('hand:started', ({ dealerButton: db }) => {
       dealerButton = db;
-      
+
       // In 4-player game with dealerButton = 0:
       // Position 0 = Button
-      // Position 1 = SB  
+      // Position 1 = SB
       // Position 2 = BB
       // Position 3 = UTG (acts first pre-flop)
       const utgPos = (db + 3) % 4;
@@ -145,26 +145,26 @@ describe('4-Player UTG Raise All Fold', () => {
     });
 
     // Add players and start game manually
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for game to start
-    await vi.waitFor(() => gameStarted, { 
+    await vi.waitFor(() => gameStarted, {
       timeout: 1000,
       interval: 50,
     });
 
     // Wait for dealer button to be set
-    await vi.waitFor(() => dealerButton >= 0, { 
+    await vi.waitFor(() => dealerButton >= 0, {
       timeout: 500,
-      interval: 50, 
+      interval: 50,
     });
-    
+
     // Wait for hand to complete
     await vi.waitFor(() => handEnded, { timeout: 1000 });
-    
+
     // Wait a bit for all actions to be captured
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // Find UTG player
     const utgPos = (dealerButton + 3) % 4;
@@ -175,13 +175,13 @@ describe('4-Player UTG Raise All Fold', () => {
     expect(winnerAmount).toBe(90); // UTG's $60 + SB $10 + BB $20
 
     // Verify action sequence
-    const raiseAction = actions.find(a => a.action === Action.RAISE);
+    const raiseAction = actions.find((a) => a.action === Action.RAISE);
     expect(raiseAction).toBeDefined();
     expect(raiseAction.amount).toBe(60);
     expect(raiseAction.playerId).toBe(utgPlayer.id);
 
     // Should have exactly 3 folds (Button, SB, BB)
-    const foldActions = actions.filter(a => a.action === Action.FOLD);
+    const foldActions = actions.filter((a) => a.action === Action.FOLD);
     expect(foldActions).toHaveLength(3);
 
     table.close();

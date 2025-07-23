@@ -8,10 +8,10 @@ export class WildcardEventEmitter extends EventEmitter {
   emit(event, ...args) {
     // First emit the specific event
     const result = super.emit(event, ...args);
-    
+
     // Then emit the wildcard event with the event name as first argument
     super.emit('*', event, ...args);
-    
+
     return result;
   }
 }

@@ -1,6 +1,6 @@
 /**
  * Chopped Blinds Test
- * 
+ *
  * Tests the scenario where all players fold to the big blind,
  * resulting in the BB winning the pot without showing cards.
  * This is one of the most common scenarios in poker.
@@ -19,7 +19,7 @@ describe('Chopped Blinds Scenarios', () => {
   });
 
   afterEach(() => {
-    manager.tables.forEach(table => table.close());
+    manager.tables.forEach((table) => table.close());
   });
 
   it('should handle everyone folding to BB in 6-handed game', async () => {
@@ -67,7 +67,7 @@ describe('Chopped Blinds Scenarios', () => {
     });
 
     table.on('player:action', ({ playerId, action }) => {
-      const player = players.find(p => p.id === playerId);
+      const player = players.find((p) => p.id === playerId);
       actions.push({
         position: player?.position,
         action,
@@ -86,35 +86,36 @@ describe('Chopped Blinds Scenarios', () => {
 
     // Create 6 players
     const positions = ['BUTTON', 'SB', 'BB', 'UTG', 'MP', 'CO'];
-    const players = positions.map(pos => 
-      new TightPlayer({ 
-        name: `Player (${pos})`,
-        position: pos,
-      }),
+    const players = positions.map(
+      (pos) =>
+        new TightPlayer({
+          name: `Player (${pos})`,
+          position: pos,
+        }),
     );
 
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 500 });
     await vi.waitFor(() => handEnded, { timeout: 1000 });
-    
+
     // Wait for actions to be captured
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // Verify BB won
     expect(winner).toBeDefined();
-    const bbPlayer = players.find(p => p.position === 'BB');
+    const bbPlayer = players.find((p) => p.position === 'BB');
     expect(winner.playerId).toBe(bbPlayer.id);
-    
+
     // BB should win SB + BB = 30 chips
     expect(winner.amount).toBe(30);
-    
+
     // Cards should not be shown
     expect(winnerShowedCards).toBe(false);
-    
+
     // Count folds - should be 5 (everyone except BB)
-    const folds = actions.filter(a => a.action === Action.FOLD);
+    const folds = actions.filter((a) => a.action === Action.FOLD);
     expect(folds).toHaveLength(5);
 
     table.close();
@@ -180,19 +181,19 @@ describe('Chopped Blinds Scenarios', () => {
       new HeadsUpPlayer({ name: 'BB', isButton: false }),
     ];
 
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 500 });
     await vi.waitFor(() => handEnded, { timeout: 1000 });
-    
+
     // Wait for actions to be captured
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // BB should win
     expect(winner).toBeDefined();
     expect(winner.amount).toBe(75); // SB (25) + BB (50)
-    
+
     // Only one action - SB folding
     expect(actions).toHaveLength(1);
     expect(actions[0].action).toBe(Action.FOLD);
@@ -267,22 +268,22 @@ describe('Chopped Blinds Scenarios', () => {
       new WalkPlayer({ name: 'BB', isButton: false }),
     ];
 
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 500 });
     await vi.waitFor(() => handEnded, { timeout: 1000 });
-    
+
     // Wait for actions to be captured
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // Should go to showdown
     expect(showdownOccurred).toBe(true);
-    
+
     // Should have 1 call and many checks
-    const calls = actions.filter(a => a === Action.CALL);
-    const checks = actions.filter(a => a === Action.CHECK);
-    
+    const calls = actions.filter((a) => a === Action.CALL);
+    const checks = actions.filter((a) => a === Action.CHECK);
+
     expect(calls).toHaveLength(1); // SB completes
     expect(checks.length).toBeGreaterThan(6); // Both check pre-flop, flop, turn, river
 
@@ -305,9 +306,13 @@ describe('Chopped Blinds Scenarios', () => {
     class SimpleFoldPlayer extends Player {
       getAction(gameState) {
         const myState = gameState.players[this.id];
-        
+
         // If I'm not BB and haven't acted, fold
-        if (gameState.phase === 'PRE_FLOP' && !myState.hasActed && gameState.currentBet > myState.bet) {
+        if (
+          gameState.phase === 'PRE_FLOP' &&
+          !myState.hasActed &&
+          gameState.currentBet > myState.bet
+        ) {
           return {
             playerId: this.id,
             action: Action.FOLD,
@@ -336,23 +341,24 @@ describe('Chopped Blinds Scenarios', () => {
     });
 
     // Create 4 players
-    const players = Array.from({ length: 4 }, (_, i) => 
-      new SimpleFoldPlayer({ name: `Player ${i + 1}` }),
+    const players = Array.from(
+      { length: 4 },
+      (_, i) => new SimpleFoldPlayer({ name: `Player ${i + 1}` }),
     );
 
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     await vi.waitFor(() => gameStarted, { timeout: 500 });
     await vi.waitFor(() => handEnded, { timeout: 1000 });
-    
+
     // Wait for actions to be captured
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // Winner should get SB + BB = 300
     expect(winner).toBeDefined();
     expect(winner.amount).toBe(300);
-    
+
     // Should be won by fold
     expect(winner.hand).toBe('Won by fold');
 

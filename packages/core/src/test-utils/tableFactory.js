@@ -1,6 +1,6 @@
 /**
  * Table Factory Utility
- * 
+ *
  * Provides standardized table creation and configuration for poker tests.
  * Eliminates duplication of table setup code across test files.
  */
@@ -19,7 +19,7 @@ export const TABLE_CONFIGS = {
     minPlayers: 2,
     dealerButton: 0,
   },
-  
+
   // Heads-up specific configuration
   headsUp: {
     blinds: { small: 10, big: 20 },
@@ -29,7 +29,7 @@ export const TABLE_CONFIGS = {
     maxPlayers: 2,
     dealerButton: 0,
   },
-  
+
   // Multi-table tournament style
   tournament: {
     blinds: { small: 25, big: 50 },
@@ -38,7 +38,7 @@ export const TABLE_CONFIGS = {
     minPlayers: 6,
     dealerButton: 0,
   },
-  
+
   // High stakes table
   highStakes: {
     blinds: { small: 50, big: 100 },
@@ -47,7 +47,7 @@ export const TABLE_CONFIGS = {
     minPlayers: 3,
     dealerButton: 0,
   },
-  
+
   // Short stack focused table
   shortStack: {
     blinds: { small: 10, big: 20 },
@@ -56,7 +56,7 @@ export const TABLE_CONFIGS = {
     minPlayers: 3,
     dealerButton: 0,
   },
-  
+
   // Odd chip scenarios (for split pot testing)
   oddChip: {
     blinds: { small: 5, big: 10 },
@@ -65,7 +65,7 @@ export const TABLE_CONFIGS = {
     minPlayers: 3,
     dealerButton: 0,
   },
-  
+
   // Large field tournament
   largeTournament: {
     blinds: { small: 10, big: 20 },
@@ -74,7 +74,7 @@ export const TABLE_CONFIGS = {
     minPlayers: 8,
     dealerButton: 0,
   },
-  
+
   // Side pot testing (different stack sizes)
   sidePot: {
     blinds: { small: 10, big: 20 },
@@ -93,18 +93,20 @@ export const TABLE_CONFIGS = {
  */
 export function createTestTable(config = 'standard', overrides = {}) {
   const manager = new PokerGameManager();
-  
+
   // Get base config
   const baseConfig = typeof config === 'string' ? TABLE_CONFIGS[config] : config;
   if (!baseConfig) {
-    throw new Error(`Unknown table config: ${config}. Available configs: ${Object.keys(TABLE_CONFIGS).join(', ')}`);
+    throw new Error(
+      `Unknown table config: ${config}. Available configs: ${Object.keys(TABLE_CONFIGS).join(', ')}`,
+    );
   }
-  
+
   // Apply overrides
   const finalConfig = { ...baseConfig, ...overrides };
-  
+
   const table = manager.createTable(finalConfig);
-  
+
   return {
     manager,
     table,
@@ -119,26 +121,34 @@ export function createTestTable(config = 'standard', overrides = {}) {
  * @param {Object} overrides - Optional config overrides
  * @returns {Object} Table setup with chip override capability
  */
-export function createChipStackTable(config = 'standard', chipAmounts = [], overrides = {}) {
-  const { manager, table, config: finalConfig } = createTestTable(config, overrides);
-  
+export function createChipStackTable(
+  config = 'standard',
+  chipAmounts = [],
+  overrides = {},
+) {
+  const {
+    manager,
+    table,
+    config: finalConfig,
+  } = createTestTable(config, overrides);
+
   // Store original addPlayer method
   const originalAddPlayer = table.addPlayer.bind(table);
   let playerIndex = 0;
-  
+
   // Override addPlayer to set custom chip amounts
-  table.addPlayer = function(player) {
+  table.addPlayer = function (player) {
     const result = originalAddPlayer(player);
     const playerData = this.players.get(player.id);
-    
+
     if (playerData && chipAmounts[playerIndex] !== undefined) {
       playerData.chips = chipAmounts[playerIndex];
     }
-    
+
     playerIndex++;
     return result;
   };
-  
+
   return {
     manager,
     table,
@@ -159,7 +169,7 @@ export function createHeadsUpTable(options = {}) {
     blinds = { small: 10, big: 20 },
     ...otherOptions
   } = options;
-  
+
   return createChipStackTable('headsUp', [buttonChips, bbChips], {
     blinds,
     ...otherOptions,
@@ -182,7 +192,7 @@ export function createAllInTable(playerCount, chipAmounts, options = {}) {
     dealerButton: 0,
     ...options,
   };
-  
+
   return createChipStackTable(config, chipAmounts);
 }
 
@@ -198,9 +208,9 @@ export function createSplitPotTable(playerCount = 3, options = {}) {
     chipAmounts = new Array(playerCount).fill(1000),
     ...otherOptions
   } = options;
-  
+
   const configName = useOddChips ? 'oddChip' : 'standard';
-  
+
   return createChipStackTable(configName, chipAmounts, {
     minPlayers: playerCount,
     ...otherOptions,
@@ -219,7 +229,7 @@ export function createTournamentTable(options = {}) {
     startingChips = 1500,
     ...otherOptions
   } = options;
-  
+
   // Blind progression (typical tournament structure)
   const blindLevels = [
     { small: 25, big: 50 },
@@ -228,10 +238,10 @@ export function createTournamentTable(options = {}) {
     { small: 100, big: 200 },
     { small: 150, big: 300 },
   ];
-  
+
   const blinds = blindLevels[blindLevel - 1] || blindLevels[0];
   const chipAmounts = new Array(playerCount).fill(startingChips);
-  
+
   return createChipStackTable('tournament', chipAmounts, {
     blinds,
     minPlayers: playerCount,
@@ -245,7 +255,7 @@ export function createTournamentTable(options = {}) {
  */
 export function cleanupTables(manager) {
   if (manager && manager.tables) {
-    manager.tables.forEach(table => {
+    manager.tables.forEach((table) => {
       try {
         table.close();
       } catch (error) {
@@ -262,17 +272,22 @@ export function cleanupTables(manager) {
  * @param {Object} overrides - Config overrides
  * @returns {Object} Multi-table setup
  */
-export function createMultiTableSetup(tableCount = 2, config = 'standard', overrides = {}) {
+export function createMultiTableSetup(
+  tableCount = 2,
+  config = 'standard',
+  overrides = {},
+) {
   const manager = new PokerGameManager();
   const tables = [];
-  
+
   for (let i = 0; i < tableCount; i++) {
-    const baseConfig = typeof config === 'string' ? TABLE_CONFIGS[config] : config;
+    const baseConfig =
+      typeof config === 'string' ? TABLE_CONFIGS[config] : config;
     const finalConfig = { ...baseConfig, ...overrides, id: `table-${i + 1}` };
     const table = manager.createTable(finalConfig);
     tables.push(table);
   }
-  
+
   return {
     manager,
     tables,
@@ -289,7 +304,7 @@ export function createMultiTableSetup(tableCount = 2, config = 'standard', overr
 export function createWaitHelper(conditions = {}, timeout = 5000) {
   return {
     gameStart: timeout * 0.4, // 40% of total timeout for game start
-    handEnd: timeout,         // Full timeout for hand completion
+    handEnd: timeout, // Full timeout for hand completion
     playerAction: timeout * 0.2, // 20% for individual actions
     ...conditions,
   };

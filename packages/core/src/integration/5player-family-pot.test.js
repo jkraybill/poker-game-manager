@@ -1,10 +1,10 @@
 /**
  * 5-Player Family Pot Scenario
- * 
+ *
  * Tests a "family pot" situation where all players limp in pre-flop (call the big blind)
  * and then check down all streets to showdown. This creates a multi-way pot with
  * minimal betting action, testing showdown mechanics with many players.
- * 
+ *
  * Expected flow:
  * Pre-flop:
  * 1. UTG calls big blind (20)
@@ -13,12 +13,12 @@
  * 4. Button calls big blind (20)
  * 5. SB calls (10 more to complete)
  * 6. BB checks (already posted 20)
- * 
+ *
  * Flop, Turn, River:
  * 7. All 5 players check each street
  * 8. Hand goes to showdown
  * 9. Best hand wins the pot (5 × 20 = 100 chips)
- * 
+ *
  * This tests:
  * - Multi-way limped pots
  * - Check-down scenarios
@@ -41,7 +41,7 @@ describe('5-Player Family Pot', () => {
 
   afterEach(() => {
     // Clean up any open tables
-    manager.tables.forEach(table => table.close());
+    manager.tables.forEach((table) => table.close());
   });
 
   it('should handle family pot where everyone calls to see flop and checks to showdown', async () => {
@@ -74,7 +74,7 @@ describe('5-Player Family Pot', () => {
     });
 
     let currentPhase = 'PRE_FLOP';
-    
+
     table.on('round:started', ({ phase }) => {
       currentPhase = phase;
     });
@@ -159,42 +159,41 @@ describe('5-Player Family Pot', () => {
     });
 
     // Add players and start game
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for game to start
-    await vi.waitFor(() => gameStarted, { 
+    await vi.waitFor(() => gameStarted, {
       timeout: 500,
-      interval: 50, 
+      interval: 50,
     });
-    
+
     // Wait for hand to complete
     await vi.waitFor(() => handEnded, { timeout: 1000 });
-    
+
     // Wait for all actions to be captured and async operations to complete
-    await new Promise(resolve => setTimeout(resolve, 800));
+    await new Promise((resolve) => setTimeout(resolve, 800));
 
     // Verify a showdown occurred (hand went to river)
     expect(showdownOccurred).toBe(true);
 
     // Verify we had the right mix of calls and checks
-    const calls = actions.filter(a => a.action === Action.CALL);
-    const checks = actions.filter(a => a.action === Action.CHECK);
-    
+    const calls = actions.filter((a) => a.action === Action.CALL);
+    const checks = actions.filter((a) => a.action === Action.CHECK);
+
     // Should have 4 calls (UTG, MP, CO, SB) - BB already posted blind
     expect(calls.length).toBeGreaterThanOrEqual(4);
-    
+
     // Should have many checks (all post-flop action)
     expect(checks.length).toBeGreaterThanOrEqual(15); // 5 players × 3 streets minimum
-
 
     // Verify we had a true 5-way pot
     // Each player puts in 20 chips (BB), so total pot = 5 × 20 = 100
     expect(winnerAmount).toBe(100);
 
     // Verify no raises or folds occurred (pure family pot)
-    const raises = actions.filter(a => a.action === Action.RAISE);
-    const folds = actions.filter(a => a.action === Action.FOLD);
+    const raises = actions.filter((a) => a.action === Action.RAISE);
+    const folds = actions.filter((a) => a.action === Action.FOLD);
     expect(raises).toHaveLength(0); // No raises in a family pot
     expect(folds).toHaveLength(0); // No folds in a family pot
 

@@ -1,13 +1,13 @@
 /**
  * Chopped Blinds Test (Using Test Utilities)
- * 
+ *
  * Tests the scenario where all players fold to the big blind,
  * resulting in the BB winning the pot without showing cards.
  * This is one of the most common scenarios in poker.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { 
+import {
   createTestTable,
   createHeadsUpTable,
   setupEventCapture,
@@ -59,11 +59,13 @@ describe('Chopped Blinds Scenarios (v2)', () => {
     };
 
     // Create 6 players and assign positions
-    const players = Array.from({ length: 6 }, (_, i) => 
-      new StrategicPlayer({
-        name: `Player ${i + 1}`,
-        strategy: tightStrategy,
-      })
+    const players = Array.from(
+      { length: 6 },
+      (_, i) =>
+        new StrategicPlayer({
+          name: `Player ${i + 1}`,
+          strategy: tightStrategy,
+        }),
     );
 
     // Track winner's cards shown status
@@ -86,7 +88,7 @@ describe('Chopped Blinds Scenarios (v2)', () => {
     });
 
     // Add players and start
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for hand to complete
@@ -97,17 +99,17 @@ describe('Chopped Blinds Scenarios (v2)', () => {
 
     // Verify BB won
     expect(winners).toHaveLength(1);
-    const bbPlayer = players.find(p => p.position === 'bb');
+    const bbPlayer = players.find((p) => p.position === 'bb');
     expect(winners[0].playerId).toBe(bbPlayer.id);
-    
+
     // BB should win SB + BB = 30 chips
     expect(winners[0].amount).toBe(30);
-    
+
     // Cards should not be shown
     expect(winnerShowedCards).toBe(false);
-    
+
     // Count folds - should be 5 (everyone except BB)
-    const folds = actions.filter(a => a.action === Action.FOLD);
+    const folds = actions.filter((a) => a.action === Action.FOLD);
     expect(folds).toHaveLength(5);
   });
 
@@ -146,7 +148,7 @@ describe('Chopped Blinds Scenarios (v2)', () => {
     });
 
     // Add players and start
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for hand to complete
@@ -158,7 +160,7 @@ describe('Chopped Blinds Scenarios (v2)', () => {
     // BB should win
     expect(winners).toHaveLength(1);
     expect(winners[0].amount).toBe(75); // SB (25) + BB (50)
-    
+
     // Only one action - SB folding
     expect(actions).toHaveLength(1);
     expect(actions[0].action).toBe(Action.FOLD);
@@ -209,7 +211,7 @@ describe('Chopped Blinds Scenarios (v2)', () => {
     });
 
     // Add players and start
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for hand to complete
@@ -220,11 +222,11 @@ describe('Chopped Blinds Scenarios (v2)', () => {
 
     // Should go to showdown
     expect(showdownOccurred).toBe(true);
-    
+
     // Should have 1 call and many checks
-    const calls = actions.filter(a => a.action === Action.CALL);
-    const checks = actions.filter(a => a.action === Action.CHECK);
-    
+    const calls = actions.filter((a) => a.action === Action.CALL);
+    const checks = actions.filter((a) => a.action === Action.CHECK);
+
     expect(calls).toHaveLength(1); // SB completes
     expect(checks.length).toBeGreaterThan(6); // Both check pre-flop, flop, turn, river
   });
@@ -247,22 +249,28 @@ describe('Chopped Blinds Scenarios (v2)', () => {
     // Strategy: Everyone folds pre-flop
     const foldStrategy = ({ gameState, myState }) => {
       // If I'm not BB and haven't acted, fold
-      if (gameState.phase === 'PRE_FLOP' && !myState.hasActed && gameState.currentBet > myState.bet) {
+      if (
+        gameState.phase === 'PRE_FLOP' &&
+        !myState.hasActed &&
+        gameState.currentBet > myState.bet
+      ) {
         return { action: Action.FOLD };
       }
       return { action: Action.CHECK };
     };
 
     // Create 4 players
-    const players = Array.from({ length: 4 }, (_, i) => 
-      new StrategicPlayer({
-        name: `Player ${i + 1}`,
-        strategy: foldStrategy,
-      })
+    const players = Array.from(
+      { length: 4 },
+      (_, i) =>
+        new StrategicPlayer({
+          name: `Player ${i + 1}`,
+          strategy: foldStrategy,
+        }),
     );
 
     // Add players and start
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for hand to complete
@@ -274,7 +282,7 @@ describe('Chopped Blinds Scenarios (v2)', () => {
     // Winner should get SB + BB = 300
     expect(winners).toHaveLength(1);
     expect(winners[0].amount).toBe(300);
-    
+
     // Should be won by fold
     expect(winners[0].hand).toBe('Won by fold');
   });

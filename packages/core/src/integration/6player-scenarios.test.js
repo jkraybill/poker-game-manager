@@ -1,6 +1,6 @@
 /**
  * 6-Player Poker Scenarios
- * 
+ *
  * Tests poker dynamics with 6 players at the table, introducing more complex
  * positional play and multi-way dynamics. With 6 players, we have:
  * - More defined positions: UTG, MP, CO, BTN, SB, BB
@@ -22,7 +22,7 @@ describe('6-Player Poker Scenarios', () => {
   });
 
   afterEach(() => {
-    manager.tables.forEach(table => table.close());
+    manager.tables.forEach((table) => table.close());
   });
 
   it('should handle UTG open, MP 3-bet, CO cold 4-bet scenario', async () => {
@@ -54,7 +54,11 @@ describe('6-Player Poker Scenarios', () => {
         const toCall = gameState.currentBet - myState.bet;
 
         // UTG: Open raise
-        if (this.targetBehavior === 'utg-raise' && gameState.currentBet === 20 && !this.hasActed) {
+        if (
+          this.targetBehavior === 'utg-raise' &&
+          gameState.currentBet === 20 &&
+          !this.hasActed
+        ) {
           this.hasActed = true;
           return {
             playerId: this.id,
@@ -65,7 +69,11 @@ describe('6-Player Poker Scenarios', () => {
         }
 
         // MP: 3-bet against UTG open
-        if (this.targetBehavior === 'mp-3bet' && gameState.currentBet === 60 && !this.hasActed) {
+        if (
+          this.targetBehavior === 'mp-3bet' &&
+          gameState.currentBet === 60 &&
+          !this.hasActed
+        ) {
           this.hasActed = true;
           return {
             playerId: this.id,
@@ -76,7 +84,11 @@ describe('6-Player Poker Scenarios', () => {
         }
 
         // CO: Cold 4-bet
-        if (this.targetBehavior === 'co-4bet' && gameState.currentBet === 180 && !this.hasActed) {
+        if (
+          this.targetBehavior === 'co-4bet' &&
+          gameState.currentBet === 180 &&
+          !this.hasActed
+        ) {
           this.hasActed = true;
           return {
             playerId: this.id,
@@ -115,7 +127,7 @@ describe('6-Player Poker Scenarios', () => {
       });
 
       table.on('player:action', ({ playerId, action, amount }) => {
-        const player = players.find(p => p.id === playerId);
+        const player = players.find((p) => p.id === playerId);
         actions.push({
           behavior: player?.targetBehavior,
           action,
@@ -158,7 +170,7 @@ describe('6-Player Poker Scenarios', () => {
     await handResult;
 
     // Verify the aggressive action sequence
-    const raises = actions.filter(a => a.action === Action.RAISE);
+    const raises = actions.filter((a) => a.action === Action.RAISE);
     expect(raises.length).toBe(3); // UTG open, MP 3-bet, CO 4-bet
     expect(raises[0].behavior).toBe('utg-raise');
     expect(raises[0].amount).toBe(60);
@@ -168,7 +180,7 @@ describe('6-Player Poker Scenarios', () => {
     expect(raises[2].amount).toBe(450);
 
     // Verify others folded
-    const folds = actions.filter(a => a.action === Action.FOLD);
+    const folds = actions.filter((a) => a.action === Action.FOLD);
     expect(folds.length).toBeGreaterThanOrEqual(5); // Everyone else folds
 
     // CO should win the pot
@@ -199,7 +211,11 @@ describe('6-Player Poker Scenarios', () => {
         const toCall = gameState.currentBet - myState.bet;
 
         // Call any bet up to the big blind preflop (everyone limps)
-        if (gameState.phase === 'PRE_FLOP' && toCall > 0 && gameState.currentBet <= 20) {
+        if (
+          gameState.phase === 'PRE_FLOP' &&
+          toCall > 0 &&
+          gameState.currentBet <= 20
+        ) {
           return {
             playerId: this.id,
             action: Action.CALL,
@@ -250,13 +266,13 @@ describe('6-Player Poker Scenarios', () => {
           handEnded = true;
           captureActions = false; // Stop capturing actions
           winnerAmount = winners?.[0]?.amount || 0;
-          
+
           // Clean up event listeners
           table.off('game:started', handleGameStarted);
           table.off('player:action', handlePlayerAction);
           table.off('pot:updated', handlePotUpdated);
           table.off('hand:ended', handleHandEnded);
-          
+
           // Delay resolve to ensure all state updates are complete
           setTimeout(() => resolve(), 50);
         }
@@ -269,27 +285,28 @@ describe('6-Player Poker Scenarios', () => {
     });
 
     // Create 6 passive players
-    const players = Array.from({ length: 6 }, (_, i) => 
-      new CallingStationPlayer({ name: `Station ${i + 1}` }),
+    const players = Array.from(
+      { length: 6 },
+      (_, i) => new CallingStationPlayer({ name: `Station ${i + 1}` }),
     );
 
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for game to complete
     await vi.waitFor(() => gameStarted, { timeout: 500 });
     await handResult;
-    
+
     // Add delay to let async operations complete
-    await new Promise(resolve => setTimeout(resolve, 600));
+    await new Promise((resolve) => setTimeout(resolve, 600));
 
     // Verify result: All active players should be in the pot
     // Count how many players called/checked
-    const calls = playerActions.filter(a => a.action === Action.CALL);
-    
+    const calls = playerActions.filter((a) => a.action === Action.CALL);
+
     // Everyone should limp (5 calls + BB checks)
     expect(calls.length).toBe(5); // 5 players call the BB
-    
+
     // The pot should be 6 * 20 = 120
     expect(potSize).toBe(120);
     expect(winnerAmount).toBe(120);
@@ -393,7 +410,7 @@ describe('6-Player Poker Scenarios', () => {
 
     // Override addPlayer to set custom chip amounts
     const originalAddPlayer = table.addPlayer.bind(table);
-    table.addPlayer = function(player) {
+    table.addPlayer = function (player) {
       const result = originalAddPlayer(player);
       const playerData = this.players.get(player.id);
       if (playerData && player.targetChips) {
@@ -405,15 +422,19 @@ describe('6-Player Poker Scenarios', () => {
     // Create 6 players with varying stack sizes
     // With dealerButton: 0, index 0 is the button
     const players = [
-      new VariableStackPlayer({ name: 'Player 1 (Button)', chips: 1000, isButton: true }),
-      new VariableStackPlayer({ name: 'Player 2 (SB)', chips: 80 }),      // Micro stack
-      new VariableStackPlayer({ name: 'Player 3 (BB)', chips: 150 }),     // Short stack
-      new VariableStackPlayer({ name: 'Player 4 (UTG)', chips: 300 }),    // Medium stack
-      new VariableStackPlayer({ name: 'Player 5 (MP)', chips: 500 }),     // Large stack
-      new VariableStackPlayer({ name: 'Player 6 (CO)', chips: 250 }),     // Medium-short stack
+      new VariableStackPlayer({
+        name: 'Player 1 (Button)',
+        chips: 1000,
+        isButton: true,
+      }),
+      new VariableStackPlayer({ name: 'Player 2 (SB)', chips: 80 }), // Micro stack
+      new VariableStackPlayer({ name: 'Player 3 (BB)', chips: 150 }), // Short stack
+      new VariableStackPlayer({ name: 'Player 4 (UTG)', chips: 300 }), // Medium stack
+      new VariableStackPlayer({ name: 'Player 5 (MP)', chips: 500 }), // Large stack
+      new VariableStackPlayer({ name: 'Player 6 (CO)', chips: 250 }), // Medium-short stack
     ];
 
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for game to complete
@@ -424,14 +445,17 @@ describe('6-Player Poker Scenarios', () => {
     if (sidePots.length === 0 && totalPot === 0) {
       // The game might have ended differently than expected
     }
-    
+
     // For now, just verify the game ran
     expect(handEnded).toBe(true);
     expect(sidePots.length).toBeGreaterThanOrEqual(1); // At least one pot
     expect(totalPot).toBeGreaterThan(0); // Pot should have chips
-    
+
     // Verify pot integrity
-    const totalChipsInPlay = players.reduce((sum, player) => sum + player.targetChips, 0);
+    const totalChipsInPlay = players.reduce(
+      (sum, player) => sum + player.targetChips,
+      0,
+    );
     expect(totalPot).toBeLessThanOrEqual(totalChipsInPlay);
 
     table.close();

@@ -10,7 +10,7 @@ export const TableEvents = {
   REMOVED: 'table:removed',
 };
 
-// Player Events  
+// Player Events
 export const PlayerEvents = {
   JOINED: 'player:joined',
   LEFT: 'player:left',

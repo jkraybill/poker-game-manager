@@ -1,12 +1,12 @@
 /**
  * 6-Player Simple Test (Using Test Utilities)
- * 
+ *
  * Basic test to ensure a 6-player game can complete successfully
  * with simple fold/check behavior.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { 
+import {
   createTestTable,
   setupEventCapture,
   waitForHandEnd,
@@ -47,15 +47,17 @@ describe('6-Player Simple Test (v2)', () => {
     events = setupEventCapture(table);
 
     // Create 6 players using the built-in always fold strategy
-    const players = Array.from({ length: 6 }, (_, i) => 
-      new StrategicPlayer({
-        name: `Player ${i + 1}`,
-        strategy: STRATEGIES.alwaysFold,
-      })
+    const players = Array.from(
+      { length: 6 },
+      (_, i) =>
+        new StrategicPlayer({
+          name: `Player ${i + 1}`,
+          strategy: STRATEGIES.alwaysFold,
+        }),
     );
 
     // Add players
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
 
     // Start game
     table.tryStartGame();

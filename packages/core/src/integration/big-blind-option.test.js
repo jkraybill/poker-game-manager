@@ -1,6 +1,6 @@
 /**
  * Test for Issue #18: Double action:requested event when big blind can check
- * 
+ *
  * This test verifies that the action:requested event is only fired once
  * when the big blind has the option to check (no raises pre-flop).
  */
@@ -18,7 +18,7 @@ describe('Big Blind Option Events', () => {
   });
 
   afterEach(() => {
-    manager.tables.forEach(table => table.close());
+    manager.tables.forEach((table) => table.close());
   });
 
   it('should only emit action:requested once when big blind has option to check', async () => {
@@ -66,7 +66,9 @@ describe('Big Blind Option Events', () => {
         const myState = gameState.players[this.id];
         const toCall = gameState.currentBet - myState.bet;
 
-        console.log(`${this.name} getAction called - strategy: ${this.strategy}, toCall: ${toCall}`);
+        console.log(
+          `${this.name} getAction called - strategy: ${this.strategy}, toCall: ${toCall}`,
+        );
 
         if (this.strategy === 'fold' && toCall > 0) {
           return {
@@ -96,9 +98,21 @@ describe('Big Blind Option Events', () => {
 
     // Create players - positions with dealerButton: 0
     // P0: Button/SB (in 3-player), P1: SB/BB, P2: BB
-    const buttonPlayer = new SimplePlayer({ id: 'button', name: 'Button', strategy: 'fold' });
-    const sbPlayer = new SimplePlayer({ id: 'sb', name: 'Small Blind', strategy: 'call' });
-    const bbPlayer = new SimplePlayer({ id: 'bb', name: 'Big Blind', strategy: 'check' });
+    const buttonPlayer = new SimplePlayer({
+      id: 'button',
+      name: 'Button',
+      strategy: 'fold',
+    });
+    const sbPlayer = new SimplePlayer({
+      id: 'sb',
+      name: 'Small Blind',
+      strategy: 'call',
+    });
+    const bbPlayer = new SimplePlayer({
+      id: 'bb',
+      name: 'Big Blind',
+      strategy: 'check',
+    });
 
     table.addPlayer(buttonPlayer);
     table.addPlayer(sbPlayer);
@@ -108,7 +122,7 @@ describe('Big Blind Option Events', () => {
     table.tryStartGame();
 
     // Wait for hand to complete
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     expect(handStarted).toBe(true);
     expect(handEnded).toBe(true);
@@ -116,16 +130,18 @@ describe('Big Blind Option Events', () => {
     // Log all action requested events
     console.log('\nAll action:requested events:');
     actionRequestedEvents.forEach((event, i) => {
-      console.log(`${i + 1}. Player: ${event.playerId}, Phase: ${event.phase}, CurrentBet: ${event.currentBet}`);
+      console.log(
+        `${i + 1}. Player: ${event.playerId}, Phase: ${event.phase}, CurrentBet: ${event.currentBet}`,
+      );
     });
 
     // Find all events for the big blind in PRE_FLOP
-    const bbPreFlopEvents = actionRequestedEvents.filter(event => 
-      event.playerId === 'bb' && event.phase === 'PRE_FLOP'
+    const bbPreFlopEvents = actionRequestedEvents.filter(
+      (event) => event.playerId === 'bb' && event.phase === 'PRE_FLOP',
     );
 
     console.log(`\nBig blind PRE_FLOP events: ${bbPreFlopEvents.length}`);
-    
+
     // The bug is that we get 2 events when big blind has option
     // Expected: 1 event, Actual: 2 events
     expect(bbPreFlopEvents.length).toBe(1);
@@ -156,7 +172,9 @@ describe('Big Blind Option Events', () => {
         action: event.action,
         amount: event.amount,
       });
-      console.log(`Player action: ${event.playerId} ${event.action} ${event.amount || ''}`);
+      console.log(
+        `Player action: ${event.playerId} ${event.action} ${event.amount || ''}`,
+      );
     });
 
     // All players call/check
@@ -193,12 +211,14 @@ describe('Big Blind Option Events', () => {
     table.tryStartGame();
 
     // Wait for hand to complete
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     // The big blind (p3) should only get ONE action:requested event
-    const p3Events = actionRequestedEvents.filter(e => e.playerId === 'p3' && e.phase === 'PRE_FLOP');
+    const p3Events = actionRequestedEvents.filter(
+      (e) => e.playerId === 'p3' && e.phase === 'PRE_FLOP',
+    );
     console.log(`\nPlayer 3 (BB) PRE_FLOP events: ${p3Events.length}`);
-    
+
     expect(p3Events.length).toBe(1);
   });
 });

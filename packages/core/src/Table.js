@@ -9,7 +9,7 @@ import { TableState, PlayerState } from './types/index.js';
 export class Table extends WildcardEventEmitter {
   constructor(config = {}) {
     super();
-    
+
     this.id = config.id || nanoid();
     this.config = {
       variant: config.variant || 'texas-holdem',
@@ -21,7 +21,7 @@ export class Table extends WildcardEventEmitter {
       timeout: config.timeout || 30000,
       ...config,
     };
-    
+
     this.players = new Map();
     this.waitingList = [];
     this.state = TableState.WAITING;
@@ -48,21 +48,24 @@ export class Table extends WildcardEventEmitter {
 
     // Set player's initial chips
     player.buyIn(this.config.minBuyIn);
-    
+
     this.players.set(player.id, {
       player,
       state: PlayerState.WAITING,
       seatNumber: this.getNextAvailableSeat(),
     });
 
-    this.emit('player:joined', { 
+    this.emit('player:joined', {
       player,
       tableId: this.id,
       seatNumber: this.players.get(player.id).seatNumber,
     });
 
     // Emit event when minimum players first reached (consumer can decide to start)
-    if (this.players.size === this.config.minPlayers && this.state === TableState.WAITING) {
+    if (
+      this.players.size === this.config.minPlayers &&
+      this.state === TableState.WAITING
+    ) {
       this.emit('table:ready', {
         playerCount: this.players.size,
         minPlayers: this.config.minPlayers,
@@ -84,7 +87,7 @@ export class Table extends WildcardEventEmitter {
     }
 
     this.players.delete(playerId);
-    this.emit('player:left', { 
+    this.emit('player:left', {
       playerId,
       tableId: this.id,
       chips: playerData.player.chips,
@@ -97,7 +100,10 @@ export class Table extends WildcardEventEmitter {
     }
 
     // Check if game should end
-    if (this.players.size < this.config.minPlayers && this.state === TableState.IN_PROGRESS) {
+    if (
+      this.players.size < this.config.minPlayers &&
+      this.state === TableState.IN_PROGRESS
+    ) {
       this.endGame('Not enough players');
     }
 
@@ -133,12 +139,13 @@ export class Table extends WildcardEventEmitter {
     try {
       // Initialize game engine
       // Sort players by seat number to ensure correct position order
-      const sortedPlayers = Array.from(this.players.values())
-        .sort((a, b) => a.seatNumber - b.seatNumber);
-      
+      const sortedPlayers = Array.from(this.players.values()).sort(
+        (a, b) => a.seatNumber - b.seatNumber,
+      );
+
       this.gameEngine = new GameEngine({
         variant: this.config.variant,
-        players: sortedPlayers.map(pd => pd.player), // Pass Player instances directly
+        players: sortedPlayers.map((pd) => pd.player), // Pass Player instances directly
         blinds: this.config.blinds,
         timeout: this.config.timeout,
         dealerButton: this.config.dealerButton,
@@ -147,15 +154,24 @@ export class Table extends WildcardEventEmitter {
 
       // Forward specific game events we care about
       const eventsToForward = [
-        'game:started', 'hand:started', 'cards:dealt', 'cards:community',
-        'action:requested', 'action:performed', 'player:action', 'pot:updated',
-        'round:ended', 'hand:complete', 'chips:awarded',
+        'game:started',
+        'hand:started',
+        'cards:dealt',
+        'cards:community',
+        'action:requested',
+        'action:performed',
+        'player:action',
+        'pot:updated',
+        'round:ended',
+        'hand:complete',
+        'chips:awarded',
       ];
-      
-      eventsToForward.forEach(eventName => {
+
+      eventsToForward.forEach((eventName) => {
         this.gameEngine.on(eventName, (data) => {
           // Map hand:complete to hand:ended for backward compatibility
-          const emitEventName = eventName === 'hand:complete' ? 'hand:ended' : eventName;
+          const emitEventName =
+            eventName === 'hand:complete' ? 'hand:ended' : eventName;
           this.emit(emitEventName, {
             ...data,
             tableId: this.id,
@@ -175,14 +191,14 @@ export class Table extends WildcardEventEmitter {
       });
 
       this.gameEngine.start();
-      
+
       // Clear custom deck after use
       this.customDeck = null;
     } catch (error) {
       // If game fails to start, revert state
       this.state = TableState.WAITING;
       this.gameEngine = null;
-      this.emit('game:error', { 
+      this.emit('game:error', {
         tableId: this.id,
         error: error.message,
       });
@@ -194,10 +210,10 @@ export class Table extends WildcardEventEmitter {
    */
   handleGameEnd(_result) {
     this.state = TableState.WAITING;
-    
+
     // Update chip counts are already handled by GameEngine via player.chips setter
     // No need to update here since Player instances are shared
-    
+
     // Remove broke players
     for (const [playerId, playerData] of this.players.entries()) {
       if (playerData.player.chips <= 0) {
@@ -219,15 +235,15 @@ export class Table extends WildcardEventEmitter {
    */
   getNextAvailableSeat() {
     const occupiedSeats = new Set(
-      Array.from(this.players.values()).map(p => p.seatNumber),
+      Array.from(this.players.values()).map((p) => p.seatNumber),
     );
-    
+
     for (let i = 1; i <= this.config.maxPlayers; i++) {
       if (!occupiedSeats.has(i)) {
         return i;
       }
     }
-    
+
     throw new Error('No available seats');
   }
 
@@ -240,7 +256,7 @@ export class Table extends WildcardEventEmitter {
       this.gameEngine = null;
     }
     this.state = TableState.WAITING;
-    this.emit('game:ended', { 
+    this.emit('game:ended', {
       tableId: this.id,
       reason,
     });
@@ -283,7 +299,7 @@ export class Table extends WildcardEventEmitter {
     if (this.gameEngine) {
       this.gameEngine.abort();
     }
-    
+
     this.state = TableState.CLOSED;
     this.emit('table:closed', { tableId: this.id });
     this.removeAllListeners();

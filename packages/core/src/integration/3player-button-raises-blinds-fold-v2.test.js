@@ -1,17 +1,17 @@
 /**
  * 3-Player Button Raises Blinds Fold Test (Using Test Utilities)
- * 
+ *
  * Tests a simple 3-player scenario where:
  * 1. Button raises to $100
  * 2. Small blind folds
  * 3. Big blind folds
  * 4. Button wins the pot
- * 
+ *
  * This tests basic positional raising and folding.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { 
+import {
   createTestTable,
   setupEventCapture,
   waitForHandEnd,
@@ -77,30 +77,32 @@ describe('3-player: Button raises, blinds fold (v2)', () => {
 
     // Create players with the same strategy
     // Button will raise, blinds will fold
-    const players = Array.from({ length: 3 }, (_, i) => 
-      new StrategicPlayer({
-        name: `Player ${i + 1}`,
-        strategy: positionalRaiseStrategy,
-      })
+    const players = Array.from(
+      { length: 3 },
+      (_, i) =>
+        new StrategicPlayer({
+          name: `Player ${i + 1}`,
+          strategy: positionalRaiseStrategy,
+        }),
     );
 
     // Track positions and button player
     let buttonPlayer = null;
     const positions = {};
-    
+
     table.on('hand:started', ({ dealerButton }) => {
       const sbPos = (dealerButton + 1) % 3;
       const bbPos = (dealerButton + 2) % 3;
-      
+
       positions[dealerButton] = 'Button/UTG';
       positions[sbPos] = 'Small Blind';
       positions[bbPos] = 'Big Blind';
-      
+
       buttonPlayer = players[dealerButton];
     });
 
     // Add players and start
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for hand to complete
@@ -115,18 +117,18 @@ describe('3-player: Button raises, blinds fold (v2)', () => {
     expect(winners[0].amount).toBe(130); // Button's $100 + SB's $10 + BB's $20
 
     // Verify action sequence
-    const raiseAction = actions.find(a => a.action === Action.RAISE);
+    const raiseAction = actions.find((a) => a.action === Action.RAISE);
     expect(raiseAction).toBeDefined();
     expect(raiseAction.amount).toBe(100);
     expect(raiseAction.playerId).toBe(buttonPlayer.id);
 
-    const foldActions = actions.filter(a => a.action === Action.FOLD);
+    const foldActions = actions.filter((a) => a.action === Action.FOLD);
     expect(foldActions).toHaveLength(2);
-    
+
     // Verify blinds folded
     const sbPlayer = players[(0 + 1) % 3];
     const bbPlayer = players[(0 + 2) % 3];
-    expect(foldActions.some(a => a.playerId === sbPlayer.id)).toBe(true);
-    expect(foldActions.some(a => a.playerId === bbPlayer.id)).toBe(true);
+    expect(foldActions.some((a) => a.playerId === sbPlayer.id)).toBe(true);
+    expect(foldActions.some((a) => a.playerId === bbPlayer.id)).toBe(true);
   });
 });

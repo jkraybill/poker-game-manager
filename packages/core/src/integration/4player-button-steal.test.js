@@ -1,17 +1,17 @@
 /**
  * 4-Player Button Steal Scenario
- * 
+ *
  * Tests the classic "button steal" move where the Button position attempts to steal
- * the blinds by raising after all players before them have folded. This is a 
+ * the blinds by raising after all players before them have folded. This is a
  * fundamental positional play concept in poker.
- * 
+ *
  * Expected flow:
  * 1. UTG folds (weak hand)
  * 2. Button raises to 50 (2.5x BB) to steal blinds
  * 3. Small Blind folds to the raise
  * 4. Big Blind folds to the raise
  * 5. Button wins pot (50 + 10 + 20 = 80 chips)
- * 
+ *
  * This tests:
  * - Position-based decision making
  * - Fold equity in late position
@@ -33,7 +33,7 @@ describe('4-Player Button Steal', () => {
 
   afterEach(() => {
     // Clean up any open tables
-    manager.tables.forEach(table => table.close());
+    manager.tables.forEach((table) => table.close());
   });
 
   it('should handle Button stealing blinds after UTG folds', async () => {
@@ -96,7 +96,11 @@ describe('4-Player Button Steal', () => {
         }
 
         // Blinds fold to button steal attempt
-        if (['sb', 'bb'].includes(this.position) && toCall > 0 && gameState.currentBet > 20) {
+        if (
+          ['sb', 'bb'].includes(this.position) &&
+          toCall > 0 &&
+          gameState.currentBet > 20
+        ) {
           return {
             playerId: this.id,
             action: Action.FOLD,
@@ -133,11 +137,11 @@ describe('4-Player Button Steal', () => {
     // Set up remaining event listeners
     table.on('hand:started', ({ dealerButton: db }) => {
       dealerButton = db;
-      
+
       // In 4-player game with dealerButton = 0:
       // Position 0 = Button
       // Position 1 = Small Blind
-      // Position 2 = Big Blind  
+      // Position 2 = Big Blind
       // Position 3 = UTG (acts first pre-flop)
       const utgPos = (db + 3) % 4;
       const sbPos = (db + 1) % 4;
@@ -161,33 +165,33 @@ describe('4-Player Button Steal', () => {
     });
 
     // Add players and start game manually
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for game to start
-    await vi.waitFor(() => gameStarted, { 
+    await vi.waitFor(() => gameStarted, {
       timeout: 1000,
-      interval: 50, 
+      interval: 50,
     });
-    
+
     // Wait for dealer button to be set
-    await vi.waitFor(() => dealerButton >= 0, { 
+    await vi.waitFor(() => dealerButton >= 0, {
       timeout: 500,
-      interval: 50, 
+      interval: 50,
     });
-    
+
     // Wait for hand to complete
     await vi.waitFor(() => handEnded, { timeout: 1000 });
-    
+
     // Wait a bit for all actions to be captured
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // Find button player
     const buttonPlayer = players[dealerButton];
 
     // Verify results: Button should win the pot
     expect(winnerId).toBe(buttonPlayer.id);
-    
+
     // Pot calculation for button steal:
     // - UTG folded (no contribution)
     // - Button raised to 50
@@ -197,21 +201,23 @@ describe('4-Player Button Steal', () => {
     expect(winnerAmount).toBe(80);
 
     // Verify action sequence
-    const raiseAction = actions.find(a => a.action === Action.RAISE);
+    const raiseAction = actions.find((a) => a.action === Action.RAISE);
     expect(raiseAction).toBeDefined();
     expect(raiseAction.amount).toBe(50);
     expect(raiseAction.playerId).toBe(buttonPlayer.id);
 
     // Should have exactly 3 folds (UTG, SB, BB)
-    const foldActions = actions.filter(a => a.action === Action.FOLD);
+    const foldActions = actions.filter((a) => a.action === Action.FOLD);
     expect(foldActions).toHaveLength(3);
 
     // Verify proper action sequence: UTG fold, then Button raise, then SB/BB folds
     const firstAction = actions[0];
     expect(firstAction.action).toBe(Action.FOLD); // UTG folds first
 
-    const raiseIndex = actions.findIndex(a => a.action === Action.RAISE);
-    const foldsAfterRaise = actions.slice(raiseIndex + 1).filter(a => a.action === Action.FOLD);
+    const raiseIndex = actions.findIndex((a) => a.action === Action.RAISE);
+    const foldsAfterRaise = actions
+      .slice(raiseIndex + 1)
+      .filter((a) => a.action === Action.FOLD);
     expect(foldsAfterRaise).toHaveLength(2); // SB and BB fold after Button raise
 
     table.close();

@@ -21,7 +21,11 @@ class PhaseAwarePlayer extends Player {
     // Button strategy
     if (this.isButton) {
       // Pre-flop: raise to 100
-      if (gameState.phase === GamePhase.PRE_FLOP && !this.hasRaisedPreflop && gameState.currentBet === 20) {
+      if (
+        gameState.phase === GamePhase.PRE_FLOP &&
+        !this.hasRaisedPreflop &&
+        gameState.currentBet === 20
+      ) {
         this.hasRaisedPreflop = true;
         return {
           playerId: this.id,
@@ -30,9 +34,13 @@ class PhaseAwarePlayer extends Player {
           timestamp: Date.now(),
         };
       }
-      
+
       // Flop: bet 200 if checked to
-      if (gameState.phase === GamePhase.FLOP && !this.hasBetFlop && gameState.currentBet === 0) {
+      if (
+        gameState.phase === GamePhase.FLOP &&
+        !this.hasBetFlop &&
+        gameState.currentBet === 0
+      ) {
         this.hasBetFlop = true;
         return {
           playerId: this.id,
@@ -42,11 +50,15 @@ class PhaseAwarePlayer extends Player {
         };
       }
     }
-    
+
     // BB strategy: call pre-flop raise, check/fold flop
     if (this.isBB) {
       // Pre-flop: call raises up to 100
-      if (gameState.phase === GamePhase.PRE_FLOP && toCall > 0 && toCall <= 80) {
+      if (
+        gameState.phase === GamePhase.PRE_FLOP &&
+        toCall > 0 &&
+        toCall <= 80
+      ) {
         return {
           playerId: this.id,
           action: Action.CALL,
@@ -54,7 +66,7 @@ class PhaseAwarePlayer extends Player {
           timestamp: Date.now(),
         };
       }
-      
+
       // Pre-flop: check when having the option (toCall = 0 after calling a raise)
       if (gameState.phase === GamePhase.PRE_FLOP && toCall === 0) {
         return {
@@ -63,7 +75,7 @@ class PhaseAwarePlayer extends Player {
           timestamp: Date.now(),
         };
       }
-      
+
       // Flop: fold to any bet
       if (gameState.phase === GamePhase.FLOP && toCall > 0) {
         return {
@@ -73,9 +85,14 @@ class PhaseAwarePlayer extends Player {
         };
       }
     }
-    
+
     // SB always folds to raises
-    if (!this.isButton && !this.isBB && gameState.currentBet > 20 && toCall > 0) {
+    if (
+      !this.isButton &&
+      !this.isBB &&
+      gameState.currentBet > 20 &&
+      toCall > 0
+    ) {
       return {
         playerId: this.id,
         action: Action.FOLD,
@@ -91,7 +108,7 @@ class PhaseAwarePlayer extends Player {
         timestamp: Date.now(),
       };
     }
-    
+
     if (toCall > 0 && toCall <= myState.chips) {
       return {
         playerId: this.id,
@@ -115,7 +132,7 @@ describe('3-player: Button raises, BB calls, then folds to flop bet', () => {
 
   afterEach(() => {
     if (manager) {
-      manager.tables.forEach(table => table.close());
+      manager.tables.forEach((table) => table.close());
     }
   });
 
@@ -144,40 +161,39 @@ describe('3-player: Button raises, BB calls, then folds to flop bet', () => {
     table.on('cards:community', ({ phase }) => {
       currentPhase = phase;
     });
-    
+
     table.on('hand:started', () => {
       currentPhase = GamePhase.PRE_FLOP;
     });
 
-
     table.on('hand:started', ({ dealerButton }) => {
       const dealerButtonPos = dealerButton;
-      
+
       // Determine positions and assign roles
       const sbPos = (dealerButton + 1) % 3;
       const bbPos = (dealerButton + 2) % 3;
-      
+
       positions[dealerButton] = 'Button/UTG';
       positions[sbPos] = 'Small Blind';
       positions[bbPos] = 'Big Blind';
-      
+
       // Assign roles to players
       players.forEach((p, idx) => {
-        p.isButton = (idx === dealerButton);
-        p.isBB = (idx === bbPos);
+        p.isButton = idx === dealerButton;
+        p.isBB = idx === bbPos;
       });
-      
+
       buttonPlayer = players[dealerButtonPos];
     });
 
     table.on('player:action', ({ playerId, action, amount }) => {
-      const player = players.find(p => p.id === playerId);
+      const player = players.find((p) => p.id === playerId);
       const pos = players.indexOf(player);
-      const actionData = { 
+      const actionData = {
         playerId,
-        playerName: player?.name, 
-        position: positions[pos], 
-        action, 
+        playerName: player?.name,
+        position: positions[pos],
+        action,
         amount,
         phase: currentPhase,
       };
@@ -195,7 +211,7 @@ describe('3-player: Button raises, BB calls, then folds to flop bet', () => {
     });
 
     // Add players
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for hand to complete
@@ -207,35 +223,45 @@ describe('3-player: Button raises, BB calls, then folds to flop bet', () => {
     expect(winnerAmount).toBe(410);
 
     // Verify pre-flop action sequence
-    const preflopActions = actions.filter(a => a.phase === GamePhase.PRE_FLOP);
-    const raiseAction = preflopActions.find(a => a.action === Action.RAISE);
+    const preflopActions = actions.filter((a) => a.phase === GamePhase.PRE_FLOP);
+    const raiseAction = preflopActions.find((a) => a.action === Action.RAISE);
     expect(raiseAction).toBeDefined();
     expect(raiseAction.amount).toBe(100);
     expect(raiseAction.position).toBe('Button/UTG');
 
     // SB should fold
-    const sbFold = preflopActions.find(a => a.position === 'Small Blind' && a.action === Action.FOLD);
+    const sbFold = preflopActions.find(
+      (a) => a.position === 'Small Blind' && a.action === Action.FOLD,
+    );
     expect(sbFold).toBeDefined();
 
     // BB should call
-    const bbCall = preflopActions.find(a => a.position === 'Big Blind' && a.action === Action.CALL);
+    const bbCall = preflopActions.find(
+      (a) => a.position === 'Big Blind' && a.action === Action.CALL,
+    );
     expect(bbCall).toBeDefined();
     expect(bbCall.amount).toBe(80); // BB already has 20 in, needs 80 more
 
     // Verify flop action sequence
-    const flopActions = actions.filter(a => a.phase === GamePhase.FLOP);
-    
+    const flopActions = actions.filter((a) => a.phase === GamePhase.FLOP);
+
     // BB should check
-    const bbCheck = flopActions.find(a => a.position === 'Big Blind' && a.action === Action.CHECK);
+    const bbCheck = flopActions.find(
+      (a) => a.position === 'Big Blind' && a.action === Action.CHECK,
+    );
     expect(bbCheck).toBeDefined();
 
     // Button should bet
-    const buttonBet = flopActions.find(a => a.position === 'Button/UTG' && a.action === Action.BET);
+    const buttonBet = flopActions.find(
+      (a) => a.position === 'Button/UTG' && a.action === Action.BET,
+    );
     expect(buttonBet).toBeDefined();
     expect(buttonBet.amount).toBe(200);
 
     // BB should fold
-    const bbFold = flopActions.find(a => a.position === 'Big Blind' && a.action === Action.FOLD);
+    const bbFold = flopActions.find(
+      (a) => a.position === 'Big Blind' && a.action === Action.FOLD,
+    );
     expect(bbFold).toBeDefined();
 
     table.close();

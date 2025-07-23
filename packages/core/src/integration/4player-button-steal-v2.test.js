@@ -1,17 +1,17 @@
 /**
  * 4-Player Button Steal Scenario (Using Test Utilities)
- * 
+ *
  * Tests the classic "button steal" move where the Button position attempts to steal
- * the blinds by raising after all players before them have folded. This is a 
+ * the blinds by raising after all players before them have folded. This is a
  * fundamental positional play concept in poker.
- * 
+ *
  * Expected flow:
  * 1. UTG folds (weak hand)
  * 2. Button raises to 50 (2.5x BB) to steal blinds
  * 3. Small Blind folds to the raise
  * 4. Big Blind folds to the raise
  * 5. Button wins pot (50 + 10 + 20 = 80 chips)
- * 
+ *
  * This tests:
  * - Position-based decision making
  * - Fold equity in late position
@@ -20,7 +20,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { 
+import {
   createTestScenario,
   StrategicPlayer,
   STRATEGIES,
@@ -68,7 +68,11 @@ describe('4-Player Button Steal (v2)', () => {
       }
 
       // Blinds fold to button steal attempt
-      if (['sb', 'bb'].includes(position) && toCall > 0 && gameState.currentBet > 20) {
+      if (
+        ['sb', 'bb'].includes(position) &&
+        toCall > 0 &&
+        gameState.currentBet > 20
+      ) {
         return { action: Action.FOLD };
       }
 
@@ -81,11 +85,13 @@ describe('4-Player Button Steal (v2)', () => {
     };
 
     // Create 4 players with the button steal strategy
-    const players = Array.from({ length: 4 }, (_, i) => 
-      new StrategicPlayer({
-        name: `Player ${i + 1}`,
-        strategy: buttonStealStrategy,
-      })
+    const players = Array.from(
+      { length: 4 },
+      (_, i) =>
+        new StrategicPlayer({
+          name: `Player ${i + 1}`,
+          strategy: buttonStealStrategy,
+        }),
     );
 
     // Add position assignment listener
@@ -104,12 +110,12 @@ describe('4-Player Button Steal (v2)', () => {
 
     // Extract results
     const { winners, actions } = scenario.events;
-    const buttonPlayer = players.find(p => p.position === 'button');
+    const buttonPlayer = players.find((p) => p.position === 'button');
 
     // Verify results: Button should win the pot
     expect(winners).toHaveLength(1);
     expect(winners[0].playerId).toBe(buttonPlayer.id);
-    
+
     // Pot calculation for button steal:
     // - UTG folded (no contribution)
     // - Button raised to 50
@@ -119,21 +125,21 @@ describe('4-Player Button Steal (v2)', () => {
     expect(winners[0].amount).toBe(80);
 
     // Verify action sequence using assertion helper
-    const raiseAction = actions.find(a => a.action === Action.RAISE);
+    const raiseAction = actions.find((a) => a.action === Action.RAISE);
     expect(raiseAction).toBeDefined();
     expect(raiseAction.amount).toBe(50);
     expect(raiseAction.playerId).toBe(buttonPlayer.id);
 
     // Should have exactly 3 folds (UTG, SB, BB)
-    const foldActions = actions.filter(a => a.action === Action.FOLD);
+    const foldActions = actions.filter((a) => a.action === Action.FOLD);
     expect(foldActions).toHaveLength(3);
 
     // Verify proper action sequence: UTG fold, then Button raise, then SB/BB folds
     assertActionSequence(actions.slice(0, 4), [
-      Action.FOLD,  // UTG folds first
+      Action.FOLD, // UTG folds first
       Action.RAISE, // Button raises
-      Action.FOLD,  // SB folds
-      Action.FOLD,  // BB folds
+      Action.FOLD, // SB folds
+      Action.FOLD, // BB folds
     ]);
   });
 });

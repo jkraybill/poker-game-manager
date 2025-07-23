@@ -24,7 +24,9 @@ export class PokerGameManager extends WildcardEventEmitter {
    */
   createTable(config = {}) {
     if (this.tables.size >= this.config.maxTables) {
-      throw new Error(`Maximum number of tables (${this.config.maxTables}) reached`);
+      throw new Error(
+        `Maximum number of tables (${this.config.maxTables}) reached`,
+      );
     }
 
     const tableId = config.id || nanoid();
@@ -103,7 +105,7 @@ export class PokerGameManager extends WildcardEventEmitter {
     const tables = this.getTables();
     return {
       totalTables: tables.length,
-      activeTables: tables.filter(t => t.isGameInProgress()).length,
+      activeTables: tables.filter((t) => t.isGameInProgress()).length,
       totalPlayers: tables.reduce((sum, t) => sum + t.getPlayerCount(), 0),
       memoryUsage: process.memoryUsage().heapUsed,
     };

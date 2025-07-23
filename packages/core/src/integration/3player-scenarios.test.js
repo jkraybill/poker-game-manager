@@ -1,6 +1,6 @@
 /**
  * 3-Player Poker Scenarios
- * 
+ *
  * Tests for 3-player games covering position dynamics, button raises, and blind defense.
  * In 3-player, the button is also UTG (under the gun).
  */
@@ -19,7 +19,7 @@ describe('3-Player Scenarios', () => {
 
   afterEach(() => {
     // Clean up any open tables
-    manager.tables.forEach(table => table.close());
+    manager.tables.forEach((table) => table.close());
   });
 
   describe('Button raise dynamics', () => {
@@ -54,13 +54,13 @@ describe('3-Player Scenarios', () => {
           actions.push({ playerId, action, amount });
         }
       });
-      
+
       class PositionAwarePlayer extends Player {
         constructor(config) {
           super(config);
           this.targetAmount = 100;
           this.hasRaised = false;
-          this.position = null;  // Will be set when hand starts
+          this.position = null; // Will be set when hand starts
         }
 
         getAction(gameState) {
@@ -68,7 +68,11 @@ describe('3-Player Scenarios', () => {
           const toCall = gameState.currentBet - myState.bet;
 
           // Only raise if we're the button/UTG and haven't raised yet
-          if (this.position === 'button' && !this.hasRaised && gameState.currentBet <= 20) {
+          if (
+            this.position === 'button' &&
+            !this.hasRaised &&
+            gameState.currentBet <= 20
+          ) {
             this.hasRaised = true;
             return {
               playerId: this.id,
@@ -79,7 +83,11 @@ describe('3-Player Scenarios', () => {
           }
 
           // If we're not button and face a raise, fold
-          if (this.position !== 'button' && toCall > 0 && gameState.currentBet > 20) {
+          if (
+            this.position !== 'button' &&
+            toCall > 0 &&
+            gameState.currentBet > 20
+          ) {
             return {
               playerId: this.id,
               action: Action.FOLD,
@@ -92,7 +100,8 @@ describe('3-Player Scenarios', () => {
             const callAmount = Math.min(toCall, myState.chips);
             return {
               playerId: this.id,
-              action: callAmount === myState.chips ? Action.ALL_IN : Action.CALL,
+              action:
+                callAmount === myState.chips ? Action.ALL_IN : Action.CALL,
               amount: callAmount,
               timestamp: Date.now(),
             };
@@ -110,7 +119,7 @@ describe('3-Player Scenarios', () => {
       const player1 = new PositionAwarePlayer({ name: 'Player 1' });
       const player2 = new PositionAwarePlayer({ name: 'Player 2' });
       const player3 = new PositionAwarePlayer({ name: 'Player 3' });
-      
+
       players.push(player1, player2, player3);
 
       // Set up hand:started listener
@@ -121,9 +130,10 @@ describe('3-Player Scenarios', () => {
         players[(db + 1) % 3].position = 'sb';
         players[(db + 2) % 3].position = 'bb';
       });
-      
+
       table.on('hand:ended', ({ winners }) => {
-        if (!handEnded) {  // Only capture first hand
+        if (!handEnded) {
+          // Only capture first hand
           handEnded = true;
           if (winners && winners.length > 0) {
             winnerId = winners[0].playerId;
@@ -143,7 +153,7 @@ describe('3-Player Scenarios', () => {
       table.tryStartGame();
 
       // Wait for game to start
-      await vi.waitFor(() => gameStarted, { 
+      await vi.waitFor(() => gameStarted, {
         timeout: 1000,
         interval: 50,
       });
@@ -155,26 +165,26 @@ describe('3-Player Scenarios', () => {
       });
 
       // Wait for hand to complete first
-      await vi.waitFor(() => handEnded, { 
+      await vi.waitFor(() => handEnded, {
         timeout: 1000,
         interval: 50,
       });
-      
+
       // Then wait a bit for any remaining actions to be processed
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
       // Ensure dealerButton was set
       expect(dealerButton).toBeGreaterThanOrEqual(0);
       expect(dealerButton).toBeLessThan(3);
 
       // Check that we had exactly one raise and two folds
-      const raiseAction = actions.find(a => a.action === Action.RAISE);
+      const raiseAction = actions.find((a) => a.action === Action.RAISE);
       expect(raiseAction).toBeDefined();
       expect(raiseAction.amount).toBe(100);
 
-      const foldActions = actions.filter(a => a.action === Action.FOLD);
+      const foldActions = actions.filter((a) => a.action === Action.FOLD);
       expect(foldActions).toHaveLength(2);
-      
+
       // The winner should be whoever raised (since others folded)
       expect(winnerId).toBe(raiseAction.playerId);
       expect(winnerAmount).toBe(130); // Raiser's $100 + SB $10 + BB $20

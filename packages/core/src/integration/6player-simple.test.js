@@ -11,7 +11,7 @@ describe('6-Player Simple Test', () => {
   });
 
   afterEach(() => {
-    manager.tables.forEach(table => table.close());
+    manager.tables.forEach((table) => table.close());
   });
 
   it('should complete a simple 6-player game', { timeout: 10000 }, async () => {
@@ -33,7 +33,7 @@ describe('6-Player Simple Test', () => {
       getAction(gameState) {
         const myState = gameState.players[this.id];
         const toCall = gameState.currentBet - myState.bet;
-        
+
         if (toCall > 0) {
           return {
             playerId: this.id,
@@ -41,7 +41,7 @@ describe('6-Player Simple Test', () => {
             timestamp: Date.now(),
           };
         }
-        
+
         return {
           playerId: this.id,
           action: Action.CHECK,
@@ -63,36 +63,38 @@ describe('6-Player Simple Test', () => {
         handEnded = true;
       }
     });
-    
+
     table.on('error', (error) => {
       errorOccurred = error;
     });
-    
+
     table.on('game:error', (error) => {
       errorOccurred = error;
     });
 
     // Add 6 players
     for (let i = 0; i < 6; i++) {
-      table.addPlayer(new FoldPlayer({ 
-        name: `Player ${i + 1}`,
-      }));
+      table.addPlayer(
+        new FoldPlayer({
+          name: `Player ${i + 1}`,
+        }),
+      );
     }
     table.tryStartGame();
 
     // Wait for game to start
     await vi.waitFor(() => gameStarted, { timeout: 1000 });
-    
+
     if (errorOccurred) {
       throw new Error(`Game error occurred: ${errorOccurred}`);
     }
-    
+
     // Wait for hand to end
     await new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error('Hand did not end in time'));
       }, 5000);
-      
+
       const checkInterval = setInterval(() => {
         if (handEnded) {
           clearInterval(checkInterval);

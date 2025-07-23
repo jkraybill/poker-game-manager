@@ -1,6 +1,6 @@
 /**
  * 6-Player Poker Scenarios (Using Test Utilities)
- * 
+ *
  * Tests poker dynamics with 6 players at the table, introducing more complex
  * positional play and multi-way dynamics. With 6 players, we have:
  * - More defined positions: UTG, MP, CO, BTN, SB, BB
@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { 
+import {
   createTestTable,
   setupEventCapture,
   waitForHandEnd,
@@ -56,17 +56,29 @@ describe('6-Player Poker Scenarios (v2)', () => {
       const toCall = gameState.currentBet - myState.bet;
 
       // UTG: Open raise
-      if (position === 'utg' && gameState.currentBet === 20 && !myState.hasActed) {
+      if (
+        position === 'utg' &&
+        gameState.currentBet === 20 &&
+        !myState.hasActed
+      ) {
         return { action: Action.RAISE, amount: 60 };
       }
 
       // MP: 3-bet against UTG open
-      if (position === 'mp' && gameState.currentBet === 60 && !myState.hasActed) {
+      if (
+        position === 'mp' &&
+        gameState.currentBet === 60 &&
+        !myState.hasActed
+      ) {
         return { action: Action.RAISE, amount: 180 };
       }
 
       // CO: Cold 4-bet
-      if (position === 'co' && gameState.currentBet === 180 && !myState.hasActed) {
+      if (
+        position === 'co' &&
+        gameState.currentBet === 180 &&
+        !myState.hasActed
+      ) {
         return { action: Action.RAISE, amount: 450 };
       }
 
@@ -82,7 +94,14 @@ describe('6-Player Poker Scenarios (v2)', () => {
     // Create 6 players with specific behaviors
     // With dealerButton: 0, positions will be:
     // Index 0: Button, Index 1: SB, Index 2: BB, Index 3: UTG, Index 4: MP, Index 5: CO
-    const behaviors = ['fold', 'fold', 'fold', 'utg-raise', 'mp-3bet', 'co-4bet'];
+    const behaviors = [
+      'fold',
+      'fold',
+      'fold',
+      'utg-raise',
+      'mp-3bet',
+      'co-4bet',
+    ];
     const players = behaviors.map((behavior, i) => {
       const player = new StrategicPlayer({
         name: `Player ${i + 1}`,
@@ -100,7 +119,7 @@ describe('6-Player Poker Scenarios (v2)', () => {
     });
 
     // Add players and start
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for hand to complete
@@ -110,14 +129,14 @@ describe('6-Player Poker Scenarios (v2)', () => {
     const { winners, actions } = events;
 
     // Verify the aggressive action sequence
-    const raises = actions.filter(a => a.action === Action.RAISE);
+    const raises = actions.filter((a) => a.action === Action.RAISE);
     expect(raises).toHaveLength(3);
-    
+
     // Verify raise sequence by finding players
     const utgPlayer = players[3];
     const mpPlayer = players[4];
     const coPlayer = players[5];
-    
+
     expect(raises[0].playerId).toBe(utgPlayer.id);
     expect(raises[0].amount).toBe(60);
     expect(raises[1].playerId).toBe(mpPlayer.id);
@@ -126,7 +145,7 @@ describe('6-Player Poker Scenarios (v2)', () => {
     expect(raises[2].amount).toBe(450);
 
     // Verify others folded
-    const folds = actions.filter(a => a.action === Action.FOLD);
+    const folds = actions.filter((a) => a.action === Action.FOLD);
     expect(folds.length).toBeGreaterThanOrEqual(5);
 
     // CO should win the pot
@@ -150,7 +169,11 @@ describe('6-Player Poker Scenarios (v2)', () => {
     // Passive calling station strategy
     const callingStationStrategy = ({ gameState, myState, toCall }) => {
       // Call any bet up to the big blind preflop (everyone limps)
-      if (gameState.phase === 'PRE_FLOP' && toCall > 0 && gameState.currentBet <= 20) {
+      if (
+        gameState.phase === 'PRE_FLOP' &&
+        toCall > 0 &&
+        gameState.currentBet <= 20
+      ) {
         return { action: Action.CALL, amount: toCall };
       }
 
@@ -164,15 +187,17 @@ describe('6-Player Poker Scenarios (v2)', () => {
     };
 
     // Create 6 passive players
-    const players = Array.from({ length: 6 }, (_, i) => 
-      new StrategicPlayer({
-        name: `Station ${i + 1}`,
-        strategy: callingStationStrategy,
-      })
+    const players = Array.from(
+      { length: 6 },
+      (_, i) =>
+        new StrategicPlayer({
+          name: `Station ${i + 1}`,
+          strategy: callingStationStrategy,
+        }),
     );
 
     // Add players and start
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for hand to complete
@@ -182,11 +207,11 @@ describe('6-Player Poker Scenarios (v2)', () => {
     const { winners, actions, totalPot } = events;
 
     // Verify result: All active players should be in the pot
-    const calls = actions.filter(a => a.action === Action.CALL);
-    
+    const calls = actions.filter((a) => a.action === Action.CALL);
+
     // Everyone should limp (5 calls + BB checks)
     expect(calls).toHaveLength(5);
-    
+
     // The pot should be 6 * 20 = 120
     expect(totalPot).toBe(120);
     expect(winners).toHaveLength(1);
@@ -235,7 +260,7 @@ describe('6-Player Poker Scenarios (v2)', () => {
 
     // Override addPlayer to set custom chip amounts
     const originalAddPlayer = table.addPlayer.bind(table);
-    table.addPlayer = function(player) {
+    table.addPlayer = function (player) {
       const result = originalAddPlayer(player);
       const playerData = this.players.get(player.id);
       if (playerData && player.targetChips) {
@@ -247,11 +272,11 @@ describe('6-Player Poker Scenarios (v2)', () => {
     // Create 6 players with varying stack sizes
     const stackConfigs = [
       { name: 'Player 1 (Button)', chips: 1000, isButton: true },
-      { name: 'Player 2 (SB)', chips: 80 },      // Micro stack
-      { name: 'Player 3 (BB)', chips: 150 },     // Short stack
-      { name: 'Player 4 (UTG)', chips: 300 },    // Medium stack
-      { name: 'Player 5 (MP)', chips: 500 },     // Large stack
-      { name: 'Player 6 (CO)', chips: 250 },     // Medium-short stack
+      { name: 'Player 2 (SB)', chips: 80 }, // Micro stack
+      { name: 'Player 3 (BB)', chips: 150 }, // Short stack
+      { name: 'Player 4 (UTG)', chips: 300 }, // Medium stack
+      { name: 'Player 5 (MP)', chips: 500 }, // Large stack
+      { name: 'Player 6 (CO)', chips: 250 }, // Medium-short stack
     ];
 
     const players = stackConfigs.map((config, i) => {
@@ -266,7 +291,7 @@ describe('6-Player Poker Scenarios (v2)', () => {
     });
 
     // Add players and start
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for hand to complete
@@ -277,17 +302,20 @@ describe('6-Player Poker Scenarios (v2)', () => {
 
     // Verify multiple side pots created
     expect(handEnded).toBe(true);
-    
+
     // For now, just verify the game ran
     if (sidePots.length > 0) {
       expect(sidePots.length).toBeGreaterThanOrEqual(1);
-      
+
       // Calculate total from side pots
       const sidePotTotal = sidePots.reduce((sum, pot) => sum + pot.amount, 0);
       expect(sidePotTotal).toBeGreaterThan(0);
-      
+
       // Verify pot integrity
-      const totalChipsInPlay = players.reduce((sum, player) => sum + player.targetChips, 0);
+      const totalChipsInPlay = players.reduce(
+        (sum, player) => sum + player.targetChips,
+        0,
+      );
       expect(sidePotTotal).toBeLessThanOrEqual(totalChipsInPlay);
     } else {
       // If no side pots info, at least verify we have a total pot

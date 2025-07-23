@@ -58,7 +58,7 @@ describe('3-player: Button raises, blinds fold', () => {
 
   afterEach(() => {
     if (manager) {
-      manager.tables.forEach(table => table.close());
+      manager.tables.forEach((table) => table.close());
     }
   });
 
@@ -85,32 +85,32 @@ describe('3-player: Button raises, blinds fold', () => {
 
     table.on('hand:started', ({ dealerButton }) => {
       const dealerButtonPos = dealerButton;
-      
+
       // Determine positions and mark the button player
       const sbPos = (dealerButton + 1) % 3;
       const bbPos = (dealerButton + 2) % 3;
-      
+
       positions[dealerButton] = 'Button/UTG';
       positions[sbPos] = 'Small Blind';
       positions[bbPos] = 'Big Blind';
-      
+
       // Mark who is the button
       players.forEach((p, idx) => {
-        p.isButton = (idx === dealerButton);
+        p.isButton = idx === dealerButton;
       });
-      
+
       buttonPlayer = players[dealerButtonPos];
     });
 
     table.on('player:action', ({ playerId, action, amount }) => {
-      const player = players.find(p => p.id === playerId);
+      const player = players.find((p) => p.id === playerId);
       const pos = players.indexOf(player);
-      actions.push({ 
+      actions.push({
         playerId,
-        playerName: player?.name, 
-        position: positions[pos], 
-        action, 
-        amount, 
+        playerName: player?.name,
+        position: positions[pos],
+        action,
+        amount,
       });
     });
 
@@ -125,7 +125,7 @@ describe('3-player: Button raises, blinds fold', () => {
     });
 
     // Add players
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for hand to complete
@@ -136,12 +136,12 @@ describe('3-player: Button raises, blinds fold', () => {
     expect(winnerAmount).toBe(130); // Button's $100 + SB's $10 + BB's $20
 
     // Verify action sequence
-    const raiseAction = actions.find(a => a.action === Action.RAISE);
+    const raiseAction = actions.find((a) => a.action === Action.RAISE);
     expect(raiseAction).toBeDefined();
     expect(raiseAction.amount).toBe(100);
     expect(raiseAction.position).toBe('Button/UTG');
 
-    const foldActions = actions.filter(a => a.action === Action.FOLD);
+    const foldActions = actions.filter((a) => a.action === Action.FOLD);
     expect(foldActions).toHaveLength(2);
     expect(foldActions[0].position).toBe('Small Blind');
     expect(foldActions[1].position).toBe('Big Blind');

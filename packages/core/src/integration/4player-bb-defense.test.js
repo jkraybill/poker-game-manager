@@ -1,25 +1,25 @@
 /**
  * 4-Player Big Blind Defense Scenario
- * 
+ *
  * Tests the Big Blind defending against a Button steal attempt by calling the raise
  * and playing post-flop. This demonstrates blind defense strategy and multi-street play.
- * 
+ *
  * Expected flow:
  * Pre-flop:
  * 1. UTG folds (weak hand)
  * 2. Button raises to 60 (3x BB) attempting to steal
  * 3. Small Blind folds to the raise
  * 4. Big Blind calls (defends with pot odds)
- * 
+ *
  * Flop:
  * 5. Big Blind checks
  * 6. Button continuation bets 80
  * 7. Big Blind calls the c-bet
- * 
+ *
  * Turn & River:
  * 8. Both players check to showdown
  * 9. Best hand wins at showdown
- * 
+ *
  * This tests:
  * - Blind defense decision making
  * - Multi-street post-flop play
@@ -41,7 +41,7 @@ describe('4-Player Big Blind Defense', () => {
 
   afterEach(() => {
     // Clean up any open tables
-    manager.tables.forEach(table => table.close());
+    manager.tables.forEach((table) => table.close());
   });
 
   it('should handle Big Blind defending against Button raise and playing to showdown', async () => {
@@ -74,7 +74,7 @@ describe('4-Player Big Blind Defense', () => {
     });
 
     let currentPhase = 'PRE_FLOP';
-    
+
     table.on('round:started', ({ phase }) => {
       currentPhase = phase;
     });
@@ -114,7 +114,11 @@ describe('4-Player Big Blind Defense', () => {
           }
 
           // Button raises after UTG folds (steal attempt)
-          if (this.position === 'button' && !this.hasRaisedPreflop && gameState.currentBet === 20) {
+          if (
+            this.position === 'button' &&
+            !this.hasRaisedPreflop &&
+            gameState.currentBet === 20
+          ) {
             this.hasRaisedPreflop = true;
             return {
               playerId: this.id,
@@ -125,7 +129,11 @@ describe('4-Player Big Blind Defense', () => {
           }
 
           // SB folds to button raise (common vs steal)
-          if (this.position === 'sb' && toCall > 0 && gameState.currentBet > 20) {
+          if (
+            this.position === 'sb' &&
+            toCall > 0 &&
+            gameState.currentBet > 20
+          ) {
             return {
               playerId: this.id,
               action: Action.FOLD,
@@ -134,7 +142,11 @@ describe('4-Player Big Blind Defense', () => {
           }
 
           // BB calls button raise (defends with pot odds)
-          if (this.position === 'bb' && toCall > 0 && gameState.currentBet > 20) {
+          if (
+            this.position === 'bb' &&
+            toCall > 0 &&
+            gameState.currentBet > 20
+          ) {
             return {
               playerId: this.id,
               action: Action.CALL,
@@ -147,7 +159,11 @@ describe('4-Player Big Blind Defense', () => {
         // Flop: BB checks, Button c-bets, BB calls
         if (gameState.phase === 'FLOP') {
           // Button continuation bets when checked to
-          if (this.position === 'button' && !this.hasBetFlop && gameState.currentBet === 0) {
+          if (
+            this.position === 'button' &&
+            !this.hasBetFlop &&
+            gameState.currentBet === 0
+          ) {
             this.hasBetFlop = true;
             return {
               playerId: this.id,
@@ -197,7 +213,7 @@ describe('4-Player Big Blind Defense', () => {
     // Set up remaining event listeners
     table.on('hand:started', ({ dealerButton: db }) => {
       dealerButton = db;
-      
+
       // In 4-player game with dealerButton = 0:
       // Position 0 = Button
       // Position 1 = Small Blind
@@ -229,78 +245,81 @@ describe('4-Player Big Blind Defense', () => {
     });
 
     // Add players and start game
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for game to start
-    await vi.waitFor(() => gameStarted, { 
+    await vi.waitFor(() => gameStarted, {
       timeout: 500,
-      interval: 50, 
+      interval: 50,
     });
-    
+
     // Wait for dealer button to be set
-    await vi.waitFor(() => dealerButton >= 0, { 
+    await vi.waitFor(() => dealerButton >= 0, {
       timeout: 500,
-      interval: 50, 
+      interval: 50,
     });
-    
+
     // Wait for hand to complete
     await vi.waitFor(() => handEnded, { timeout: 1000 });
-    
+
     // Wait for all actions to be captured
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // Verify a showdown occurred (hand went to river)
     expect(showdownOccurred).toBe(true);
 
     // Verify action sequence
     // Should have: UTG fold, Button raise, SB fold, BB call
-    const folds = actions.filter(a => a.action === Action.FOLD);
+    const folds = actions.filter((a) => a.action === Action.FOLD);
     expect(folds).toHaveLength(2); // UTG and SB fold
 
-    const raiseAction = actions.find(a => a.action === Action.RAISE);
+    const raiseAction = actions.find((a) => a.action === Action.RAISE);
     expect(raiseAction).toBeDefined();
     expect(raiseAction.amount).toBe(60);
 
-    const calls = actions.filter(a => a.action === Action.CALL);
+    const calls = actions.filter((a) => a.action === Action.CALL);
     expect(calls.length).toBeGreaterThanOrEqual(2); // BB calls pre-flop and flop
 
     // Verify we had a continuation bet on flop
-    const betAction = actions.find(a => a.action === Action.BET);
+    const betAction = actions.find((a) => a.action === Action.BET);
     expect(betAction).toBeDefined();
     expect(betAction.amount).toBe(80);
 
     // Verify we had multiple checks (turn and river)
-    const checks = actions.filter(a => a.action === Action.CHECK);
+    const checks = actions.filter((a) => a.action === Action.CHECK);
     expect(checks.length).toBeGreaterThanOrEqual(4); // At least 2 on turn and 2 on river
 
     // Calculate expected pot based on actual actions
     let expectedPot = 0;
-    
+
     // Pre-flop contributions:
     // - Small blind: 10 (then folds)
-    // - Big blind: 20 (initial) + 40 (call) = 60  
+    // - Big blind: 20 (initial) + 40 (call) = 60
     // - Button: 60 (raise)
     // Total pre-flop: 10 + 60 + 60 = 130
     expectedPot += 130;
-    
+
     // Check if flop betting happened
-    const flopBet = actions.find(a => a.action === Action.BET && a.amount === 80);
-    const flopCall = actions.find((a, idx) => 
-      a.action === Action.CALL && 
-      a.amount === 80 && 
-      idx > actions.findIndex(act => act.action === Action.BET),
+    const flopBet = actions.find(
+      (a) => a.action === Action.BET && a.amount === 80,
     );
-    
+    const flopCall = actions.find(
+      (a, idx) =>
+        a.action === Action.CALL &&
+        a.amount === 80 &&
+        idx > actions.findIndex((act) => act.action === Action.BET),
+    );
+
     if (flopBet && flopCall) {
       // Flop: Button bets 80, BB calls 80
       expectedPot += 160;
     }
-    
+
     console.log('Expected pot:', expectedPot);
     console.log('Actual winner amount:', winnerAmount);
     console.log('Difference:', expectedPot - winnerAmount);
-    
+
     // The winner gets 260 instead of 290 - this is likely due to the SB folding
     // and getting back their uncalled portion (30 chips)
     // Actually, let's check the math:
@@ -308,7 +327,7 @@ describe('4-Player Big Blind Defense', () => {
     // Flop pot: 80 + 80 = 160
     // Total: 290
     // But winner gets 260, suggesting 30 chips went somewhere else
-    
+
     // This might be a pot distribution issue or the way uncalled bets are handled
     // For now, let's accept the actual game engine calculation
     expect(winnerAmount).toBe(260);

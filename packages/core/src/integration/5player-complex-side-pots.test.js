@@ -1,24 +1,24 @@
 /**
  * 5-Player Complex Side Pots Scenario
- * 
+ *
  * Tests extremely complex side pot creation with 5 players having different stack sizes.
- * This scenario forces multiple all-ins at different amounts, creating a complex 
+ * This scenario forces multiple all-ins at different amounts, creating a complex
  * side pot structure that thoroughly tests the pot management system.
- * 
+ *
  * Expected flow:
  * 1. Huge Stack (1000 chips) raises to 400 to force action
  * 2. Tiny Stack (50 chips) folds to the large raise
  * 3. Small Stack (100 chips) goes all-in
- * 4. Medium Stack (300 chips) goes all-in 
+ * 4. Medium Stack (300 chips) goes all-in
  * 5. Large Stack (500 chips) calls (not all-in)
  * 6. Huge Stack calls all the all-ins
- * 
+ *
  * Side pot structure should be:
  * - Main pot: 100 * 4 players = 400 chips (Small, Medium, Large, Huge eligible)
- * - Side pot 1: (300-100) * 3 = 600 chips (Medium, Large, Huge eligible)  
+ * - Side pot 1: (300-100) * 3 = 600 chips (Medium, Large, Huge eligible)
  * - Side pot 2: (400-300) * 2 = 200 chips (Large, Huge eligible)
  * - Plus original blinds and folded chips
- * 
+ *
  * This tests:
  * - Complex multi-way all-in scenarios
  * - Side pot calculation with 3+ pots
@@ -41,7 +41,7 @@ describe('5-Player Complex Side Pots', () => {
 
   afterEach(() => {
     // Clean up any open tables
-    manager.tables.forEach(table => table.close());
+    manager.tables.forEach((table) => table.close());
   });
 
   it('should handle complex side pot with multiple all-ins at different amounts', async () => {
@@ -125,16 +125,14 @@ describe('5-Player Complex Side Pots', () => {
     // Index 0: Button, Index 1: SB, Index 2: BB, Index 3: UTG (first to act), Index 4: MP
     // Put Huge Stack at index 3 (UTG) so it acts first pre-flop
     const playerConfigs = [
-      { name: 'Tiny Stack', chips: 50, stackSize: 'tiny' },      // Button
-      { name: 'Small Stack', chips: 100, stackSize: 'small' },   // SB
-      { name: 'Medium Stack', chips: 300, stackSize: 'medium' },  // BB
-      { name: 'Huge Stack', chips: 1000, stackSize: 'huge' },    // UTG (acts first)
-      { name: 'Large Stack', chips: 500, stackSize: 'large' },   // MP
+      { name: 'Tiny Stack', chips: 50, stackSize: 'tiny' }, // Button
+      { name: 'Small Stack', chips: 100, stackSize: 'small' }, // SB
+      { name: 'Medium Stack', chips: 300, stackSize: 'medium' }, // BB
+      { name: 'Huge Stack', chips: 1000, stackSize: 'huge' }, // UTG (acts first)
+      { name: 'Large Stack', chips: 500, stackSize: 'large' }, // MP
     ];
 
-    const players = playerConfigs.map(config => 
-      new MultiStackPlayer(config),
-    );
+    const players = playerConfigs.map((config) => new MultiStackPlayer(config));
 
     // Set up event listeners
     table.on('game:started', () => {
@@ -143,7 +141,7 @@ describe('5-Player Complex Side Pots', () => {
 
     table.on('player:action', ({ playerId, action, amount }) => {
       if (captureActions) {
-        const player = players.find(p => p.id === playerId);
+        const player = players.find((p) => p.id === playerId);
         actions.push({
           playerId,
           playerName: player?.name,
@@ -174,7 +172,7 @@ describe('5-Player Complex Side Pots', () => {
         handEnded = true;
         // Don't stop capturing actions immediately - the event might fire before all actions are processed
         winners = result.winners || [];
-        
+
         // Get side pots from the game engine
         if (table.gameEngine && table.gameEngine.potManager) {
           sidePots = table.gameEngine.potManager.pots;
@@ -189,7 +187,7 @@ describe('5-Player Complex Side Pots', () => {
 
     // Override addPlayer to set specific chip amounts
     const originalAddPlayer = table.addPlayer.bind(table);
-    table.addPlayer = function(player) {
+    table.addPlayer = function (player) {
       const result = originalAddPlayer(player);
       if (player.chipAmount) {
         // Set chips directly on the Player instance
@@ -199,36 +197,43 @@ describe('5-Player Complex Side Pots', () => {
     };
 
     // Add players
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for game to complete
     await vi.waitFor(() => gameStarted, { timeout: 500 });
     await vi.waitFor(() => handEnded, { timeout: 1000 });
-    
+
     // Wait a bit more to ensure all actions are captured
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Verify complex all-in action occurred
-    const allIns = actions.filter(a => a.action === Action.ALL_IN);
+    const allIns = actions.filter((a) => a.action === Action.ALL_IN);
     expect(allIns.length).toBe(2); // Small and Medium stacks go all-in
-    console.log('All-in actions:', allIns.map(a => ({ name: a.playerName, chips: a.chips, amount: a.amount })));
-    
+    console.log(
+      'All-in actions:',
+      allIns.map((a) => ({
+        name: a.playerName,
+        chips: a.chips,
+        amount: a.amount,
+      })),
+    );
+
     // Verify the all-ins are from the expected stacks
-    const allInChips = allIns.map(a => a.chips).sort((a, b) => a - b);
+    const allInChips = allIns.map((a) => a.chips).sort((a, b) => a - b);
     expect(allInChips).toEqual([100, 300]);
 
     // Verify initial large raise
-    const raises = actions.filter(a => a.action === Action.RAISE);
+    const raises = actions.filter((a) => a.action === Action.RAISE);
     expect(raises.length).toBeGreaterThanOrEqual(1);
-    const bigRaise = raises.find(a => a.amount === 400);
+    const bigRaise = raises.find((a) => a.amount === 400);
     expect(bigRaise).toBeDefined();
     expect(bigRaise.stackSize).toBe('huge');
 
     // Verify side pots were created
     expect(sidePots.length).toBeGreaterThanOrEqual(1);
     console.log('Side pots created:', sidePots.length);
-    
+
     // Verify total pot amount is reasonable
     const totalPotAmount = sidePots.reduce((sum, pot) => sum + pot.amount, 0);
     expect(totalPotAmount).toBeGreaterThan(0);
@@ -236,22 +241,27 @@ describe('5-Player Complex Side Pots', () => {
 
     // Verify winners were determined
     expect(winners.length).toBeGreaterThan(0);
-    console.log('Winners:', winners.map(w => ({ playerId: w.playerId, amount: w.amount })));
+    console.log(
+      'Winners:',
+      winners.map((w) => ({ playerId: w.playerId, amount: w.amount })),
+    );
 
     // Verify tiny stack folded
-    const folds = actions.filter(a => a.action === Action.FOLD);
+    const folds = actions.filter((a) => a.action === Action.FOLD);
     expect(folds).toHaveLength(1);
     expect(folds[0].chips).toBe(50);
     expect(folds[0].stackSize).toBe('tiny');
-    
+
     // Verify all players took actions
-    const uniquePlayers = new Set(actions.map(a => a.playerName));
+    const uniquePlayers = new Set(actions.map((a) => a.playerName));
     expect(uniquePlayers.size).toBe(5); // All 5 players acted
 
     // Check for pot distribution bug (Issue #11)
     const totalWinnings = winners.reduce((sum, w) => sum + w.amount, 0);
     if (totalWinnings === 0 && sidePots.length > 0) {
-      console.warn('⚠️  DETECTED POT DISTRIBUTION BUG: Side pots exist but no chips distributed');
+      console.warn(
+        '⚠️  DETECTED POT DISTRIBUTION BUG: Side pots exist but no chips distributed',
+      );
       console.warn('   This is the known Issue #11 - pot distribution bug');
       console.warn('   Pots:', sidePots);
       console.warn('   Winners:', winners);

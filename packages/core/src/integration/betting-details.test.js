@@ -1,6 +1,6 @@
 /**
  * Test for Issue #19: Add betting details to action:requested event
- * 
+ *
  * This test verifies that the action:requested event includes comprehensive
  * betting information including toCall, minRaise, maxRaise, potSize, and validActions.
  */
@@ -18,7 +18,7 @@ describe('Betting Details in action:requested Event', () => {
   });
 
   afterEach(() => {
-    manager.tables.forEach(table => table.close());
+    manager.tables.forEach((table) => table.close());
   });
 
   it('should include betting details in action:requested event', async () => {
@@ -103,7 +103,7 @@ describe('Betting Details in action:requested Event', () => {
     table.tryStartGame();
 
     // Wait for some actions
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     expect(handStarted).toBe(true);
     expect(actionRequests.length).toBeGreaterThan(0);
@@ -125,8 +125,11 @@ describe('Betting Details in action:requested Event', () => {
     expect(details.validActions).toContain(Action.RAISE);
 
     // Find the action request after a raise
-    const postRaiseRequest = actionRequests.find(req => 
-      req.playerId === 'p2' && req.bettingDetails && req.bettingDetails.currentBet > 20
+    const postRaiseRequest = actionRequests.find(
+      (req) =>
+        req.playerId === 'p2' &&
+        req.bettingDetails &&
+        req.bettingDetails.currentBet > 20,
     );
 
     if (postRaiseRequest) {
@@ -170,7 +173,7 @@ describe('Betting Details in action:requested Event', () => {
       getAction(gameState) {
         const myState = gameState.players[this.id];
         const toCall = gameState.currentBet - myState.bet;
-        
+
         if (toCall > 0) {
           return {
             playerId: this.id,
@@ -179,7 +182,7 @@ describe('Betting Details in action:requested Event', () => {
             timestamp: Date.now(),
           };
         }
-        
+
         return {
           playerId: this.id,
           action: Action.CHECK,
@@ -188,7 +191,10 @@ describe('Betting Details in action:requested Event', () => {
       }
     }
 
-    const shortStack = new ShortStackPlayer({ id: 'short', name: 'Short Stack' });
+    const shortStack = new ShortStackPlayer({
+      id: 'short',
+      name: 'Short Stack',
+    });
     const bigStack = new BigStackPlayer({ id: 'big', name: 'Big Stack' });
 
     table.addPlayer(shortStack);
@@ -201,21 +207,21 @@ describe('Betting Details in action:requested Event', () => {
     table.tryStartGame();
 
     // Wait for action
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     expect(capturedRequest).toBeDefined();
-    
+
     const details = capturedRequest.bettingDetails;
     expect(details.currentBet).toBe(10); // Big blind
     expect(details.toCall).toBe(5); // SB already posted 5, needs 5 more
     expect(details.potSize).toBe(15); // SB + BB
-    
+
     // With 25 chips, after calling 5, player has 20 left
     // They can call or raise (but raising would put them all-in)
     expect(details.validActions).toContain(Action.CALL);
     expect(details.validActions).toContain(Action.RAISE);
     expect(details.maxRaise).toBe(25); // All chips
-    
+
     // Min raise would be 20 (BB * 2) but player only has 25 total
     expect(details.minRaise).toBe(20); // Double the BB
   });
@@ -247,9 +253,9 @@ describe('Betting Details in action:requested Event', () => {
       getAction(gameState) {
         const myState = gameState.players[this.id];
         const toCall = gameState.currentBet - myState.bet;
-        
+
         this.actionCount++;
-        
+
         // Mix up actions to test different scenarios
         if (this.actionCount === 1 && toCall > 0) {
           // First action - call
@@ -260,7 +266,7 @@ describe('Betting Details in action:requested Event', () => {
             timestamp: Date.now(),
           };
         }
-        
+
         // Default check
         return {
           playerId: this.id,
@@ -279,10 +285,12 @@ describe('Betting Details in action:requested Event', () => {
     table.tryStartGame();
 
     // Wait for several actions
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     // Check various scenarios
-    const checkScenario = actionRequests.find(req => req.toCall === 0 && req.phase === 'FLOP');
+    const checkScenario = actionRequests.find(
+      (req) => req.toCall === 0 && req.phase === 'FLOP',
+    );
     if (checkScenario) {
       expect(checkScenario.validActions).toContain(Action.CHECK);
       // If it's a new betting round (currentBet = 0), we can BET
@@ -293,7 +301,7 @@ describe('Betting Details in action:requested Event', () => {
       expect(checkScenario.validActions).not.toContain(Action.CALL);
     }
 
-    const callScenario = actionRequests.find(req => req.toCall > 0);
+    const callScenario = actionRequests.find((req) => req.toCall > 0);
     if (callScenario) {
       expect(callScenario.validActions).toContain(Action.FOLD);
       expect(callScenario.validActions).toContain(Action.CALL);

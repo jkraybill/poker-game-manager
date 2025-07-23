@@ -20,7 +20,7 @@ export class SimpleBot extends Player {
     const myState = gameState.players[this.id];
     const currentBet = gameState.currentBet;
     const potOdds = this.calculatePotOdds(gameState);
-    
+
     // Simple decision logic
     if (currentBet === 0) {
       // No bet to match
@@ -43,11 +43,11 @@ export class SimpleBot extends Player {
    */
   decideBetOrCheck(gameState) {
     const shouldBet = Math.random() < this.aggressiveness;
-    
+
     if (shouldBet) {
       const myChips = gameState.players[this.id].chips;
       const betAmount = Math.floor(gameState.pot * (0.5 + Math.random() * 0.5));
-      
+
       return {
         action: Action.BET,
         amount: Math.min(betAmount, myChips),
@@ -55,7 +55,7 @@ export class SimpleBot extends Player {
         timestamp: Date.now(),
       };
     }
-    
+
     return {
       action: Action.CHECK,
       playerId: this.id,
@@ -69,10 +69,10 @@ export class SimpleBot extends Player {
   decideCallOrFold(gameState, potOdds) {
     const myState = gameState.players[this.id];
     const callAmount = gameState.currentBet - myState.bet;
-    
+
     // Simple logic: call if pot odds are favorable or we're aggressive
     const shouldCall = potOdds > 0.3 || Math.random() < this.aggressiveness;
-    
+
     if (shouldCall && callAmount <= myState.chips) {
       return {
         action: Action.CALL,
@@ -80,7 +80,7 @@ export class SimpleBot extends Player {
         timestamp: Date.now(),
       };
     }
-    
+
     return {
       action: Action.FOLD,
       playerId: this.id,
@@ -94,11 +94,11 @@ export class SimpleBot extends Player {
   calculatePotOdds(gameState) {
     const myState = gameState.players[this.id];
     const callAmount = gameState.currentBet - myState.bet;
-    
+
     if (callAmount === 0) {
-return 1;
-}
-    
+      return 1;
+    }
+
     return gameState.pot / (gameState.pot + callAmount);
   }
 
@@ -107,7 +107,7 @@ return 1;
    */
   async simulateThinking() {
     const thinkTime = 1000 + Math.random() * 3000; // 1-4 seconds
-    await new Promise(resolve => setTimeout(resolve, thinkTime));
+    await new Promise((resolve) => setTimeout(resolve, thinkTime));
   }
 
   /**

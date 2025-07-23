@@ -1,25 +1,25 @@
 /**
  * 4-Player Big Blind Defense Scenario (Using Test Utilities)
- * 
+ *
  * Tests the Big Blind defending against a Button steal attempt by calling the raise
  * and playing post-flop. This demonstrates blind defense strategy and multi-street play.
- * 
+ *
  * Expected flow:
  * Pre-flop:
  * 1. UTG folds (weak hand)
  * 2. Button raises to 60 (3x BB) attempting to steal
  * 3. Small Blind folds to the raise
  * 4. Big Blind calls (defends with pot odds)
- * 
+ *
  * Flop:
  * 5. Big Blind checks
  * 6. Button continuation bets 80
  * 7. Big Blind calls the c-bet
- * 
+ *
  * Turn & River:
  * 8. Both players check to showdown
  * 9. Best hand wins at showdown
- * 
+ *
  * This tests:
  * - Blind defense decision making
  * - Multi-street post-flop play
@@ -28,7 +28,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { 
+import {
   createTestTable,
   setupEventCapture,
   waitForHandEnd,
@@ -79,7 +79,11 @@ describe('4-Player Big Blind Defense (v2)', () => {
         }
 
         // Button raises after UTG folds (steal attempt)
-        if (position === 'button' && !player.hasRaisedPreflop && gameState.currentBet === 20) {
+        if (
+          position === 'button' &&
+          !player.hasRaisedPreflop &&
+          gameState.currentBet === 20
+        ) {
           player.hasRaisedPreflop = true;
           return { action: Action.RAISE, amount: 60 }; // 3x BB steal sizing
         }
@@ -98,7 +102,11 @@ describe('4-Player Big Blind Defense (v2)', () => {
       // Flop: BB checks, Button c-bets, BB calls
       if (gameState.phase === 'FLOP') {
         // Button continuation bets when checked to
-        if (position === 'button' && !player.hasBetFlop && gameState.currentBet === 0) {
+        if (
+          position === 'button' &&
+          !player.hasBetFlop &&
+          gameState.currentBet === 0
+        ) {
           player.hasBetFlop = true;
           return { action: Action.BET, amount: 80 }; // ~2/3 pot c-bet
         }
@@ -119,17 +127,19 @@ describe('4-Player Big Blind Defense (v2)', () => {
     };
 
     // Create 4 players
-    const players = Array.from({ length: 4 }, (_, i) => 
-      new StrategicPlayer({
-        name: `Player ${i + 1}`,
-        strategy: bbDefenseStrategy,
-      })
+    const players = Array.from(
+      { length: 4 },
+      (_, i) =>
+        new StrategicPlayer({
+          name: `Player ${i + 1}`,
+          strategy: bbDefenseStrategy,
+        }),
     );
 
     // Track dealer button and showdown
     let dealerButtonPos = -1;
     let showdownOccurred = false;
-    
+
     table.on('hand:started', ({ dealerButton }) => {
       dealerButtonPos = dealerButton;
       assignPositions(players, dealerButton, 4);
@@ -143,7 +153,7 @@ describe('4-Player Big Blind Defense (v2)', () => {
     });
 
     // Add players
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
 
     // Start game
     table.tryStartGame();
@@ -164,21 +174,31 @@ describe('4-Player Big Blind Defense (v2)', () => {
     const riverActions = events.getActionsByPhase('RIVER');
 
     // Pre-flop: UTG fold, Button raise, SB fold, BB call
-    expect(preflopActions.filter(a => a.action === Action.FOLD)).toHaveLength(2);
-    expect(preflopActions.find(a => a.action === Action.RAISE && a.amount === 60)).toBeDefined();
-    expect(preflopActions.find(a => a.action === Action.CALL)).toBeDefined();
+    expect(preflopActions.filter((a) => a.action === Action.FOLD)).toHaveLength(
+      2,
+    );
+    expect(
+      preflopActions.find((a) => a.action === Action.RAISE && a.amount === 60),
+    ).toBeDefined();
+    expect(preflopActions.find((a) => a.action === Action.CALL)).toBeDefined();
 
     // Flop: BB check, Button bet, BB call
-    expect(flopActions.find(a => a.action === Action.CHECK)).toBeDefined();
-    expect(flopActions.find(a => a.action === Action.BET && a.amount === 80)).toBeDefined();
-    expect(flopActions.find(a => a.action === Action.CALL && a.amount === 80)).toBeDefined();
+    expect(flopActions.find((a) => a.action === Action.CHECK)).toBeDefined();
+    expect(
+      flopActions.find((a) => a.action === Action.BET && a.amount === 80),
+    ).toBeDefined();
+    expect(
+      flopActions.find((a) => a.action === Action.CALL && a.amount === 80),
+    ).toBeDefined();
 
     // Turn and River: both check
-    expect(turnActions.filter(a => a.action === Action.CHECK)).toHaveLength(2);
-    expect(riverActions.filter(a => a.action === Action.CHECK)).toHaveLength(2);
+    expect(turnActions.filter((a) => a.action === Action.CHECK)).toHaveLength(2);
+    expect(riverActions.filter((a) => a.action === Action.CHECK)).toHaveLength(
+      2,
+    );
 
     // Verify winner and pot amount
-    // Pre-flop: Button 60 + BB 60 + SB 10 = 130  
+    // Pre-flop: Button 60 + BB 60 + SB 10 = 130
     // Flop: Button 80 + BB 80 = 160
     // Total: 290 (but actual is 260, likely due to blind posting mechanics)
     expect(winners).toHaveLength(1);

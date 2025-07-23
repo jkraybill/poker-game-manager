@@ -1,10 +1,10 @@
 /**
  * 5-Player Family Pot Scenario (Using Test Utilities)
- * 
+ *
  * Tests a "family pot" situation where all players limp in pre-flop (call the big blind)
  * and then check down all streets to showdown. This creates a multi-way pot with
  * minimal betting action, testing showdown mechanics with many players.
- * 
+ *
  * Expected flow:
  * Pre-flop:
  * 1. UTG calls big blind (20)
@@ -13,12 +13,12 @@
  * 4. Button calls big blind (20)
  * 5. SB calls (10 more to complete)
  * 6. BB checks (already posted 20)
- * 
+ *
  * Flop, Turn, River:
  * 7. All 5 players check each street
  * 8. Hand goes to showdown
  * 9. Best hand wins the pot (5 × 20 = 100 chips)
- * 
+ *
  * This tests:
  * - Multi-way limped pots
  * - Check-down scenarios
@@ -28,7 +28,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { 
+import {
   createTestTable,
   setupEventCapture,
   waitForHandEnd,
@@ -87,11 +87,13 @@ describe('5-Player Family Pot (v2)', () => {
     };
 
     // Create 5 players for family pot
-    const players = Array.from({ length: 5 }, (_, i) => 
-      new StrategicPlayer({
-        name: `Player ${i + 1}`,
-        strategy: familyPotStrategy,
-      })
+    const players = Array.from(
+      { length: 5 },
+      (_, i) =>
+        new StrategicPlayer({
+          name: `Player ${i + 1}`,
+          strategy: familyPotStrategy,
+        }),
     );
 
     // Track showdown
@@ -103,7 +105,7 @@ describe('5-Player Family Pot (v2)', () => {
     });
 
     // Add players
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
 
     // Start game
     table.tryStartGame();
@@ -118,13 +120,13 @@ describe('5-Player Family Pot (v2)', () => {
     expect(showdownOccurred).toBe(true);
 
     // Verify action breakdown
-    const calls = actions.filter(a => a.action === Action.CALL);
-    const checks = actions.filter(a => a.action === Action.CHECK);
-    
+    const calls = actions.filter((a) => a.action === Action.CALL);
+    const checks = actions.filter((a) => a.action === Action.CHECK);
+
     // Should have 4 calls (UTG, MP, CO, Button) + SB completing
     // BB already posted and just checks
     expect(calls.length).toBeGreaterThanOrEqual(4);
-    
+
     // Should have many checks (all post-flop action)
     // 5 players × 3 streets = 15 checks minimum
     expect(checks.length).toBeGreaterThanOrEqual(15);
@@ -136,12 +138,14 @@ describe('5-Player Family Pot (v2)', () => {
     const riverActions = events.getActionsByPhase('RIVER');
 
     // Pre-flop should have calls and maybe one check (BB)
-    expect(preflopActions.filter(a => a.action === Action.CALL).length).toBeGreaterThanOrEqual(4);
-    
+    expect(
+      preflopActions.filter((a) => a.action === Action.CALL).length,
+    ).toBeGreaterThanOrEqual(4);
+
     // Post-flop streets should have only checks
-    expect(flopActions.every(a => a.action === Action.CHECK)).toBe(true);
-    expect(turnActions.every(a => a.action === Action.CHECK)).toBe(true);
-    expect(riverActions.every(a => a.action === Action.CHECK)).toBe(true);
+    expect(flopActions.every((a) => a.action === Action.CHECK)).toBe(true);
+    expect(turnActions.every((a) => a.action === Action.CHECK)).toBe(true);
+    expect(riverActions.every((a) => a.action === Action.CHECK)).toBe(true);
 
     // Verify we had a true 5-way pot
     // Each player puts in 20 chips (BB), so total pot = 5 × 20 = 100
@@ -149,8 +153,8 @@ describe('5-Player Family Pot (v2)', () => {
     expect(winners[0].amount).toBe(100);
 
     // Verify no raises or folds occurred (pure family pot)
-    const raises = actions.filter(a => a.action === Action.RAISE);
-    const folds = actions.filter(a => a.action === Action.FOLD);
+    const raises = actions.filter((a) => a.action === Action.RAISE);
+    const folds = actions.filter((a) => a.action === Action.FOLD);
     expect(raises).toHaveLength(0);
     expect(folds).toHaveLength(0);
   });

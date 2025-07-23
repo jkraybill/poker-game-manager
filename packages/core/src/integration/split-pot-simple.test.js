@@ -1,6 +1,6 @@
 /**
  * Simple Split Pot Test
- * 
+ *
  * A minimal test to verify split pot functionality works
  * without complex deck manipulation.
  */
@@ -19,7 +19,7 @@ describe('Simple Split Pot Test', () => {
   });
 
   afterEach(() => {
-    manager.tables.forEach(table => table.close());
+    manager.tables.forEach((table) => table.close());
   });
 
   it('should properly detect split pot winners in HandEvaluator', () => {
@@ -49,8 +49,8 @@ describe('Simple Split Pot Test', () => {
 
     const winners = HandEvaluator.findWinners(playerHands);
     expect(winners).toHaveLength(2); // Both should win
-    expect(winners.map(w => w.playerData.player.id)).toContain('player1');
-    expect(winners.map(w => w.playerData.player.id)).toContain('player2');
+    expect(winners.map((w) => w.playerData.player.id)).toContain('player1');
+    expect(winners.map((w) => w.playerData.player.id)).toContain('player2');
   });
 
   it('should handle 2-player all-in split pot scenario', async () => {
@@ -66,7 +66,7 @@ describe('Simple Split Pot Test', () => {
     class AllInPlayer extends Player {
       getAction(gameState) {
         const myState = gameState.players[this.id];
-        
+
         // Both players go all-in preflop
         if (gameState.phase === 'PRE_FLOP') {
           return {
@@ -94,15 +94,18 @@ describe('Simple Split Pot Test', () => {
       table.on('hand:ended', (event) => {
         console.log('hand:ended event received:', event);
         const handWinners = event.winners;
-        
+
         console.log('Hand ended with winners:', handWinners?.length || 0);
-        console.log('Winner details:', handWinners?.map(w => ({
-          playerId: w.playerId,
-          handRank: w.hand?.rank,
-          handKickers: w.hand?.kickers,
-          amount: w.amount,
-        })) || []);
-        
+        console.log(
+          'Winner details:',
+          handWinners?.map((w) => ({
+            playerId: w.playerId,
+            handRank: w.hand?.rank,
+            handKickers: w.hand?.kickers,
+            amount: w.amount,
+          })) || [],
+        );
+
         resolve(handWinners || []);
       });
     });
@@ -113,8 +116,8 @@ describe('Simple Split Pot Test', () => {
       new AllInPlayer({ name: 'Player 2' }),
     ];
 
-    players.forEach(p => table.addPlayer(p));
-    
+    players.forEach((p) => table.addPlayer(p));
+
     // Explicitly start the game (new API)
     table.tryStartGame();
 
@@ -123,11 +126,11 @@ describe('Simple Split Pot Test', () => {
 
     console.log('Final winners array:', winners);
     console.log('Winners length:', winners.length);
-    
+
     // With random cards, we can't guarantee a split pot
     // But we can verify the game completes and someone wins
     expect(winners.length).toBeGreaterThan(0);
-    
+
     // Total winnings should equal the pot (200 chips)
     const totalWon = winners.reduce((sum, w) => sum + w.amount, 0);
     expect(totalWon).toBe(200);

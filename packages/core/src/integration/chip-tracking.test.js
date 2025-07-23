@@ -1,6 +1,6 @@
 /**
  * Chip Tracking Integration Test
- * 
+ *
  * Verifies that player chip counts are correctly tracked and updated
  * throughout the game, including after pot distribution.
  */
@@ -18,7 +18,7 @@ describe('Chip Tracking', () => {
   });
 
   afterEach(() => {
-    manager.tables.forEach(table => table.close());
+    manager.tables.forEach((table) => table.close());
   });
 
   it('should correctly track chip counts after a simple hand', async () => {
@@ -32,7 +32,7 @@ describe('Chip Tracking', () => {
 
     let gameStarted = false;
     let handEnded = false;
-    let chipUpdates = [];
+    const chipUpdates = [];
 
     table.on('game:started', () => {
       gameStarted = true;
@@ -109,7 +109,10 @@ describe('Chip Tracking', () => {
       }
     }
 
-    const aggressive = new AggressivePlayer({ id: 'aggressive', name: 'Aggressive Player' });
+    const aggressive = new AggressivePlayer({
+      id: 'aggressive',
+      name: 'Aggressive Player',
+    });
     const passive = new PassivePlayer({ id: 'passive', name: 'Passive Player' });
 
     table.addPlayer(aggressive);
@@ -122,7 +125,7 @@ describe('Chip Tracking', () => {
     table.tryStartGame();
 
     // Wait for hand to complete
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     expect(gameStarted).toBe(true);
     expect(handEnded).toBe(true);
@@ -139,11 +142,11 @@ describe('Chip Tracking', () => {
     expect(someoneWon).toBe(true);
 
     // Verify chip update events match final chip counts
-    chipUpdates.forEach(update => {
+    chipUpdates.forEach((update) => {
       const player = update.playerId === 'aggressive' ? aggressive : passive;
       // The last update for a player should match their final chip count
       const lastUpdateForPlayer = chipUpdates
-        .filter(u => u.playerId === update.playerId)
+        .filter((u) => u.playerId === update.playerId)
         .pop();
       if (update === lastUpdateForPlayer) {
         expect(player.chips).toBe(update.total);
@@ -186,7 +189,7 @@ describe('Chip Tracking', () => {
 
         return {
           playerId: this.id,
-            action: Action.CHECK,
+          action: Action.CHECK,
           timestamp: Date.now(),
         };
       }
@@ -208,7 +211,7 @@ describe('Chip Tracking', () => {
     table.tryStartGame();
 
     // Wait for hand
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     expect(handEnded).toBe(true);
 
@@ -222,8 +225,10 @@ describe('Chip Tracking', () => {
       expect(totalWinnings).toBeGreaterThan(0);
 
       // Verify winner's chips increased
-      winners.forEach(winner => {
-        const player = [player1, player2, player3].find(p => p.id === winner.playerId);
+      winners.forEach((winner) => {
+        const player = [player1, player2, player3].find(
+          (p) => p.id === winner.playerId,
+        );
         expect(player.chips).toBeGreaterThan(initialChips);
       });
     }
@@ -270,14 +275,14 @@ describe('Chip Tracking', () => {
     table.tryStartGame();
 
     // Wait for hand
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     expect(handEnded).toBe(true);
 
     // Due to Issue #11 (pot distribution bug), the total chips might not be preserved
     // in certain side pot scenarios. For now, we'll verify the basic mechanics work.
     const totalChips = shortStack.chips + bigStack.chips;
-    
+
     // Verify no negative chips
     expect(shortStack.chips).toBeGreaterThanOrEqual(0);
     expect(bigStack.chips).toBeGreaterThanOrEqual(0);
@@ -295,9 +300,9 @@ describe('Chip Tracking', () => {
     //   expect(shortStack.chips).toBe(0);
     //   expect(bigStack.chips).toBe(400);
     // }
-    
+
     // For now, just verify the winner has more chips than they started with
-    if (winners.some(w => w.playerId === 'short')) {
+    if (winners.some((w) => w.playerId === 'short')) {
       expect(shortStack.chips).toBeGreaterThan(100);
     } else {
       expect(bigStack.chips).toBeGreaterThan(0); // Should be 400 when bug is fixed

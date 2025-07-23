@@ -14,19 +14,35 @@ const card = (rank, suit) => ({
 describe('HandEvaluator', () => {
   describe('cardToPokersolverFormat', () => {
     it('should convert card format correctly', () => {
-      const card1 = { rank: 'A', suit: 's', toString() {
- return `${this.rank}${this.suit}`; 
-} };
-      const card2 = { rank: 'T', suit: 'h', toString() {
- return `${this.rank}${this.suit}`; 
-} };
-      const card3 = { rank: 'K', suit: 'd', toString() {
- return `${this.rank}${this.suit}`; 
-} };
-      const card4 = { rank: '2', suit: 'c', toString() {
- return `${this.rank}${this.suit}`; 
-} };
-      
+      const card1 = {
+        rank: 'A',
+        suit: 's',
+        toString() {
+          return `${this.rank}${this.suit}`;
+        },
+      };
+      const card2 = {
+        rank: 'T',
+        suit: 'h',
+        toString() {
+          return `${this.rank}${this.suit}`;
+        },
+      };
+      const card3 = {
+        rank: 'K',
+        suit: 'd',
+        toString() {
+          return `${this.rank}${this.suit}`;
+        },
+      };
+      const card4 = {
+        rank: '2',
+        suit: 'c',
+        toString() {
+          return `${this.rank}${this.suit}`;
+        },
+      };
+
       expect(HandEvaluator.cardToPokersolverFormat(card1)).toBe('As');
       expect(HandEvaluator.cardToPokersolverFormat(card2)).toBe('Th'); // Pokersolver uses T for 10
       expect(HandEvaluator.cardToPokersolverFormat(card3)).toBe('Kd');
@@ -42,7 +58,9 @@ describe('HandEvaluator', () => {
         card('Q', 's'),
         card('J', 's'),
       ];
-      expect(() => HandEvaluator.evaluate(cards)).toThrow('Need at least 5 cards to evaluate');
+      expect(() => HandEvaluator.evaluate(cards)).toThrow(
+        'Need at least 5 cards to evaluate',
+      );
     });
 
     it('should detect royal flush', () => {
@@ -205,17 +223,19 @@ describe('HandEvaluator', () => {
     });
 
     it('should return single player if only one', () => {
-      const playerHands = [{
-        playerData: { player: { id: 'player1' } },
-        cards: [
-          card('A', 's'),
-          card('K', 's'),
-          card('Q', 's'),
-          card('J', 's'),
-          card('T', 's'),
-        ],
-        hand: {},
-      }];
+      const playerHands = [
+        {
+          playerData: { player: { id: 'player1' } },
+          cards: [
+            card('A', 's'),
+            card('K', 's'),
+            card('Q', 's'),
+            card('J', 's'),
+            card('T', 's'),
+          ],
+          hand: {},
+        },
+      ];
       const winners = HandEvaluator.findWinners(playerHands);
       expect(winners).toHaveLength(1);
       expect(winners[0].playerData.player.id).toBe('player1');
@@ -274,7 +294,10 @@ describe('HandEvaluator', () => {
       ];
       const winners = HandEvaluator.findWinners(playerHands);
       expect(winners).toHaveLength(2);
-      expect(winners.map(w => w.playerData.player.id).sort()).toEqual(['player1', 'player2']);
+      expect(winners.map((w) => w.playerData.player.id).sort()).toEqual([
+        'player1',
+        'player2',
+      ]);
     });
   });
 

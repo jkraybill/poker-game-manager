@@ -1,6 +1,6 @@
 /**
  * Table Test Helpers
- * 
+ *
  * Utilities for managing tables in tests with the new explicit start API
  */
 
@@ -12,12 +12,12 @@ import { vi } from 'vitest';
  */
 export function createAutoStartTable(manager, config) {
   const table = manager.createTable(config);
-  
+
   // Auto-start when ready (mimics old behavior for tests)
   table.on('table:ready', () => {
     table.tryStartGame();
   });
-  
+
   return table;
 }
 
@@ -28,11 +28,11 @@ export function createAutoStartTable(manager, config) {
 export function createManualTable(manager, config) {
   const table = manager.createTable(config);
   let isReady = false;
-  
+
   table.on('table:ready', () => {
     isReady = true;
   });
-  
+
   return {
     table,
     isReady: () => isReady,
@@ -54,7 +54,7 @@ export function waitForTableReadyAndStart(table, timeout = 2000) {
     const timer = setTimeout(() => {
       reject(new Error('Table did not become ready in time'));
     }, timeout);
-    
+
     table.once('table:ready', () => {
       clearTimeout(timer);
       table.tryStartGame();
@@ -68,12 +68,12 @@ export function waitForTableReadyAndStart(table, timeout = 2000) {
  */
 export async function setupTableWithPlayers(manager, config, players) {
   const table = createAutoStartTable(manager, config);
-  
+
   // Add all players
-  players.forEach(player => table.addPlayer(player));
-  
+  players.forEach((player) => table.addPlayer(player));
+
   // Wait for game to start
   await vi.waitFor(() => table.state === 'PLAYING', { timeout: 500 });
-  
+
   return table;
 }

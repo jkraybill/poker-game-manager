@@ -13,10 +13,10 @@ export class Player extends WildcardEventEmitter {
     this.name = config.name || `${this.id}`;
     this.avatar = config.avatar || null;
     this._chips = 0; // Private backing field for chips
-    
+
     // Game state properties - Player is THE source of truth
-    this.bet = 0;          // Current bet in the betting round
-    this.state = null;     // PlayerState enum (ACTIVE, FOLDED, ALL_IN, etc.)
+    this.bet = 0; // Current bet in the betting round
+    this.state = null; // PlayerState enum (ACTIVE, FOLDED, ALL_IN, etc.)
     this.hasActed = false; // Whether player has acted in current betting round
     this.lastAction = null; // Last action taken (Action enum)
     this.hasOption = false; // For big blind option tracking
@@ -90,7 +90,7 @@ export class Player extends WildcardEventEmitter {
   set chips(amount) {
     const oldAmount = this._chips;
     this._chips = Math.max(0, amount); // Never go negative
-    
+
     if (oldAmount !== this._chips) {
       this.emit('chips:changed', {
         playerId: this.id,

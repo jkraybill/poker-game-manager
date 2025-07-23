@@ -46,25 +46,24 @@ export class PotManager {
     if (this.currentPot.contributions.size === 0) {
       return;
     }
-    
+
     // Get all contributions for current pot
     const playerContributions = [];
     for (const [player, amount] of this.currentPot.contributions) {
       playerContributions.push({ player, amount });
     }
-    
+
     // Sort by contribution amount
     playerContributions.sort((a, b) => a.amount - b.amount);
-    
-    
+
     // Clear pots to rebuild
     this.pots = [];
     let previousAmount = 0;
-    
+
     for (let i = 0; i < playerContributions.length; i++) {
       const currentAmount = playerContributions[i].amount;
       const eligibleCount = playerContributions.length - i;
-      
+
       if (currentAmount > previousAmount) {
         // Create a pot for the difference
         const pot = {
@@ -72,19 +71,19 @@ export class PotManager {
           eligiblePlayers: [],
           contributions: new Map(),
         };
-        
+
         // All players who contributed any amount are eligible for this pot level
         for (let j = i; j < playerContributions.length; j++) {
           pot.eligiblePlayers.push(playerContributions[j].player);
           const contrib = currentAmount - previousAmount;
           pot.contributions.set(playerContributions[j].player, contrib);
         }
-        
+
         this.pots.push(pot);
         previousAmount = currentAmount;
       }
     }
-    
+
     // If no pots were created, keep the original pot
     if (this.pots.length === 0) {
       this.pots = [this.currentPot];
@@ -92,7 +91,6 @@ export class PotManager {
       // Set current pot to the last pot
       this.currentPot = this.pots[this.pots.length - 1];
     }
-    
   }
 
   /**
@@ -126,8 +124,8 @@ export class PotManager {
 
     // Distribute each pot
     for (const pot of this.pots) {
-      const eligibleWinners = winners.filter(w => 
-        pot.eligiblePlayers.some(ep => {
+      const eligibleWinners = winners.filter((w) =>
+        pot.eligiblePlayers.some((ep) => {
           // Both ep and w.playerData are Player instances now
           return ep.id === w.playerData.id;
         }),
@@ -139,7 +137,7 @@ export class PotManager {
 
         for (const winner of eligibleWinners) {
           let winAmount = share;
-          
+
           // Distribute remainder to first winners
           if (remainder > 0) {
             winAmount++;
@@ -160,7 +158,11 @@ export class PotManager {
    */
   updatePotForAction(player, action) {
     // This is called from legacy code - translate to new interface
-    if (action.name === 'bet' || action.name === 'raise' || action.name === 'call') {
+    if (
+      action.name === 'bet' ||
+      action.name === 'raise' ||
+      action.name === 'call'
+    ) {
       this.addToPot(player, action.amount);
     }
   }

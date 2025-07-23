@@ -1,12 +1,12 @@
 /**
  * 3-Player Poker Scenarios (Using Test Utilities)
- * 
+ *
  * Tests for 3-player games covering position dynamics, button raises, and blind defense.
  * In 3-player, the button is also UTG (under the gun).
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { 
+import {
   createTestTable,
   setupEventCapture,
   waitForHandEnd,
@@ -53,7 +53,11 @@ describe('3-Player Scenarios (v2)', () => {
         const myState = gameState.players[player.id];
 
         // Only raise if we're the button/UTG and haven't raised yet
-        if (position === 'button' && !player.hasRaised && gameState.currentBet <= 20) {
+        if (
+          position === 'button' &&
+          !player.hasRaised &&
+          gameState.currentBet <= 20
+        ) {
           player.hasRaised = true;
           return {
             action: Action.RAISE,
@@ -83,11 +87,13 @@ describe('3-Player Scenarios (v2)', () => {
       };
 
       // Create 3 position-aware players
-      const players = Array.from({ length: 3 }, (_, i) => 
-        new StrategicPlayer({
-          name: `Player ${i + 1}`,
-          strategy: positionStrategy,
-        })
+      const players = Array.from(
+        { length: 3 },
+        (_, i) =>
+          new StrategicPlayer({
+            name: `Player ${i + 1}`,
+            strategy: positionStrategy,
+          }),
       );
 
       // Track dealer button
@@ -98,7 +104,7 @@ describe('3-Player Scenarios (v2)', () => {
       });
 
       // Add players
-      players.forEach(p => table.addPlayer(p));
+      players.forEach((p) => table.addPlayer(p));
 
       // Start game
       table.tryStartGame();
@@ -114,13 +120,13 @@ describe('3-Player Scenarios (v2)', () => {
       expect(dealerButtonPos).toBeLessThan(3);
 
       // Check that we had exactly one raise and two folds
-      const raiseAction = actions.find(a => a.action === Action.RAISE);
+      const raiseAction = actions.find((a) => a.action === Action.RAISE);
       expect(raiseAction).toBeDefined();
       expect(raiseAction.amount).toBe(100);
 
-      const foldActions = actions.filter(a => a.action === Action.FOLD);
+      const foldActions = actions.filter((a) => a.action === Action.FOLD);
       expect(foldActions).toHaveLength(2);
-      
+
       // The winner should be whoever raised (since others folded)
       expect(winners).toHaveLength(1);
       expect(winners[0].playerId).toBe(raiseAction.playerId);

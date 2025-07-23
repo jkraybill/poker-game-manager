@@ -1,13 +1,13 @@
 /**
  * 8-Player Poker Scenarios (Using Test Utilities)
- * 
+ *
  * Tests full table dynamics with 8 players, representing common cash game
  * and tournament situations. With 8 players, we have:
  * - Full positional spectrum (UTG, UTG+1, MP1, MP2, CO, BTN, SB, BB)
  * - Tighter opening ranges required
  * - Complex multi-way dynamics
  * - Maximum side pot complexity potential
- * 
+ *
  * Positions (with dealerButton: 0):
  * - Index 0: Button
  * - Index 1: SB
@@ -20,7 +20,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { 
+import {
   createTestTable,
   setupEventCapture,
   waitForHandEnd,
@@ -63,19 +63,31 @@ describe('8-Player Poker Scenarios (v2)', () => {
     // Early position aggressive strategy
     const earlyPositionStrategy = ({ player, gameState, myState, toCall }) => {
       // UTG opens tight
-      if (player.position === 'utg' && gameState.currentBet === 20 && !player.hasActed) {
+      if (
+        player.position === 'utg' &&
+        gameState.currentBet === 20 &&
+        !player.hasActed
+      ) {
         player.hasActed = true;
         return { action: Action.RAISE, amount: 60 };
       }
 
       // UTG+1 3-bets UTG (positional advantage)
-      if (player.position === 'utg+1' && gameState.currentBet === 60 && !player.hasActed) {
+      if (
+        player.position === 'utg+1' &&
+        gameState.currentBet === 60 &&
+        !player.hasActed
+      ) {
         player.hasActed = true;
         return { action: Action.RAISE, amount: 180 };
       }
 
       // UTG 4-bets (showing strength)
-      if (player.position === 'utg' && gameState.currentBet === 180 && myState.lastAction === Action.RAISE) {
+      if (
+        player.position === 'utg' &&
+        gameState.currentBet === 180 &&
+        myState.lastAction === Action.RAISE
+      ) {
         return { action: Action.RAISE, amount: 450 };
       }
 
@@ -100,7 +112,7 @@ describe('8-Player Poker Scenarios (v2)', () => {
     });
 
     // Add players and start
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for hand to complete
@@ -110,15 +122,17 @@ describe('8-Player Poker Scenarios (v2)', () => {
     const { actions } = events;
 
     // Verify early position battle
-    const raises = actions.filter(a => a.action === Action.RAISE);
+    const raises = actions.filter((a) => a.action === Action.RAISE);
     expect(raises.length).toBeGreaterThanOrEqual(2);
-    
-    const utgPlayer = players.find(p => p.position === 'utg');
-    const utgPlusOnePlayer = players.find(p => p.position === 'utg+1');
-    
-    const utgRaise = raises.find(r => r.playerId === utgPlayer.id);
-    const utgPlusOneRaise = raises.find(r => r.playerId === utgPlusOnePlayer.id);
-    
+
+    const utgPlayer = players.find((p) => p.position === 'utg');
+    const utgPlusOnePlayer = players.find((p) => p.position === 'utg+1');
+
+    const utgRaise = raises.find((r) => r.playerId === utgPlayer.id);
+    const utgPlusOneRaise = raises.find(
+      (r) => r.playerId === utgPlusOnePlayer.id,
+    );
+
     expect(utgRaise).toBeDefined();
     expect(utgPlusOneRaise).toBeDefined();
   });
@@ -140,7 +154,11 @@ describe('8-Player Poker Scenarios (v2)', () => {
       // Pre-flop strategy
       if (gameState.phase === 'PRE_FLOP') {
         // CO makes a min-raise to build pot
-        if (player.position === 'co' && !myState.hasActed && gameState.currentBet === 20) {
+        if (
+          player.position === 'co' &&
+          !myState.hasActed &&
+          gameState.currentBet === 20
+        ) {
           return { action: Action.RAISE, amount: 40 }; // Min-raise
         }
 
@@ -166,7 +184,7 @@ describe('8-Player Poker Scenarios (v2)', () => {
     });
 
     // Add players and start
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for hand to complete
@@ -204,7 +222,10 @@ describe('8-Player Poker Scenarios (v2)', () => {
       // Micro stacks shove or fold based on position
       if (player.stackSize === 'micro') {
         // If in late position with no action, shove
-        if ((player.position === 'button' || player.position === 'co') && toCall <= 100) {
+        if (
+          (player.position === 'button' || player.position === 'co') &&
+          toCall <= 100
+        ) {
           return { action: Action.ALL_IN, amount: myState.chips };
         }
         // If facing a raise and desperate
@@ -221,7 +242,11 @@ describe('8-Player Poker Scenarios (v2)', () => {
       }
 
       // Big stacks apply pressure from late position
-      if (player.stackSize === 'big' && gameState.currentBet <= 100 && !myState.hasActed) {
+      if (
+        player.stackSize === 'big' &&
+        gameState.currentBet <= 100 &&
+        !myState.hasActed
+      ) {
         if (player.position === 'button' || player.position === 'co') {
           return { action: Action.RAISE, amount: 250 }; // Pressure raise
         }
@@ -242,7 +267,7 @@ describe('8-Player Poker Scenarios (v2)', () => {
 
     // Override addPlayer for custom chips
     const originalAddPlayer = table.addPlayer.bind(table);
-    table.addPlayer = function(player) {
+    table.addPlayer = function (player) {
       const result = originalAddPlayer(player);
       const playerData = this.players.get(player.id);
       if (playerData && player.targetChips) {
@@ -273,7 +298,7 @@ describe('8-Player Poker Scenarios (v2)', () => {
     });
 
     // Add players and start
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for hand to complete
@@ -283,9 +308,9 @@ describe('8-Player Poker Scenarios (v2)', () => {
     const { actions } = events;
 
     // Verify bubble dynamics
-    const allIns = actions.filter(a => a.action === Action.ALL_IN);
-    const folds = actions.filter(a => a.action === Action.FOLD);
-    
+    const allIns = actions.filter((a) => a.action === Action.ALL_IN);
+    const folds = actions.filter((a) => a.action === Action.FOLD);
+
     expect(allIns.length).toBeGreaterThan(0); // Some desperation
     expect(folds.length).toBeGreaterThan(2); // Cautious play
   });
@@ -315,7 +340,7 @@ describe('8-Player Poker Scenarios (v2)', () => {
       if (player.isAggressor && gameState.currentBet === 50) {
         // Find shortest stack
         const shortStack = Object.values(gameState.players)
-          .filter(p => p.state === 'ACTIVE' && p.chips < 300)
+          .filter((p) => p.state === 'ACTIVE' && p.chips < 300)
           .sort((a, b) => a.chips - b.chips)[0];
 
         if (shortStack) {
@@ -334,7 +359,8 @@ describe('8-Player Poker Scenarios (v2)', () => {
       // Medium stacks hunt carefully
       if (toCall > 0 && toCall < myState.chips * 0.4) {
         const potOdds = toCall / (gameState.pot + toCall);
-        if (potOdds < 0.3) { // Good pot odds
+        if (potOdds < 0.3) {
+          // Good pot odds
           return { action: Action.CALL, amount: toCall };
         }
       }
@@ -367,7 +393,7 @@ describe('8-Player Poker Scenarios (v2)', () => {
     // Give one player a short stack
     const originalAddPlayer = table.addPlayer.bind(table);
     let shortStackSet = false;
-    table.addPlayer = function(player) {
+    table.addPlayer = function (player) {
       const result = originalAddPlayer(player);
       if (!shortStackSet && player.position === 'mp1') {
         const playerData = this.players.get(player.id);
@@ -380,7 +406,7 @@ describe('8-Player Poker Scenarios (v2)', () => {
     };
 
     // Add players and start
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for hand to complete
@@ -388,7 +414,7 @@ describe('8-Player Poker Scenarios (v2)', () => {
 
     // In a bounty tournament, aggressive play is expected
     expect(events.handEnded).toBe(true);
-    
+
     // Check if any player was eliminated
     let knockoutOccurred = false;
     for (const [, chips] of playerChips) {

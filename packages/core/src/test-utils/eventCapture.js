@@ -1,6 +1,6 @@
 /**
  * Event Capture Utility
- * 
+ *
  * Provides standardized event handling and state tracking for poker tests.
  * Eliminates boilerplate event listener setup across test files.
  */
@@ -17,52 +17,52 @@ export function setupEventCapture(table, options = {}) {
     gameStarted: false,
     handEnded: false,
     gameEnded: false,
-    
+
     // Event collections
     actions: [],
     winners: [],
     events: [],
     potUpdates: [],
     sidePots: [],
-    
+
     // Game flow tracking
     phases: [],
     currentPhase: null,
-    
+
     // Convenience getters
     get isComplete() {
       return this.handEnded || this.gameEnded;
     },
-    
+
     get totalPot() {
-      return this.potUpdates.length > 0 
-        ? this.potUpdates[this.potUpdates.length - 1].total 
+      return this.potUpdates.length > 0
+        ? this.potUpdates[this.potUpdates.length - 1].total
         : 0;
     },
-    
+
     get lastAction() {
       return this.actions[this.actions.length - 1];
     },
-    
+
     get actionCount() {
       return this.actions.length;
     },
-    
+
     // Action filtering helpers
     getActionsByType(actionType) {
-      return this.actions.filter(a => a.action === actionType);
+      return this.actions.filter((a) => a.action === actionType);
     },
-    
+
     getActionsByPlayer(playerId) {
-      return this.actions.filter(a => a.playerId === playerId);
+      return this.actions.filter((a) => a.playerId === playerId);
     },
-    
+
     getActionsByPhase(phase) {
       return this.events
-        .filter(e => e.phase === phase && e.event === 'player:action')
-        .map(e => e.data);
+        .filter((e) => e.phase === phase && e.event === 'player:action')
+        .map((e) => e.data);
     },
-    
+
     // Reset method for test reuse
     reset() {
       this.gameStarted = false;
@@ -77,11 +77,11 @@ export function setupEventCapture(table, options = {}) {
       this.currentPhase = null;
     },
   };
-  
+
   // Default events to capture
   const defaultEvents = [
     'game:started',
-    'hand:started', 
+    'hand:started',
     'player:action',
     'hand:ended',
     'game:ended',
@@ -92,12 +92,12 @@ export function setupEventCapture(table, options = {}) {
     'chips:awarded',
     'side-pot:created',
   ];
-  
+
   const eventsToCapture = options.events || defaultEvents;
   const captureAll = options.captureAll || false;
-  
+
   // Set up event listeners
-  eventsToCapture.forEach(eventName => {
+  eventsToCapture.forEach((eventName) => {
     table.on(eventName, (data) => {
       const eventData = {
         event: eventName,
@@ -105,16 +105,16 @@ export function setupEventCapture(table, options = {}) {
         timestamp: Date.now(),
         phase: state.currentPhase,
       };
-      
+
       // Store in general events array
       state.events.push(eventData);
-      
+
       // Handle specific events
       switch (eventName) {
         case 'game:started':
           state.gameStarted = true;
           break;
-          
+
         case 'hand:started':
           state.handEnded = false;
           state.currentPhase = 'PRE_FLOP';
@@ -122,7 +122,7 @@ export function setupEventCapture(table, options = {}) {
             state.phases.push('PRE_FLOP');
           }
           break;
-          
+
         case 'cards:community':
           if (data.phase && data.phase !== state.currentPhase) {
             state.currentPhase = data.phase;
@@ -131,7 +131,7 @@ export function setupEventCapture(table, options = {}) {
             }
           }
           break;
-          
+
         case 'player:action':
           state.actions.push({
             playerId: data.playerId,
@@ -141,7 +141,7 @@ export function setupEventCapture(table, options = {}) {
             phase: state.currentPhase,
           });
           break;
-          
+
         case 'pot:updated':
           state.potUpdates.push({
             total: data.total,
@@ -149,19 +149,19 @@ export function setupEventCapture(table, options = {}) {
             phase: state.currentPhase,
           });
           break;
-          
+
         case 'hand:ended':
           state.handEnded = true;
           state.winners = data.winners || [];
           state.sidePots = data.sidePots || [];
           state.currentPhase = 'COMPLETE';
           break;
-          
+
         case 'game:ended':
           state.gameEnded = true;
           state.handEnded = true;
           break;
-          
+
         case 'side-pot:created':
           state.sidePots.push({
             potId: data.potId,
@@ -173,11 +173,11 @@ export function setupEventCapture(table, options = {}) {
       }
     });
   });
-  
+
   // Capture all events if requested (useful for debugging)
   if (captureAll) {
     const originalEmit = table.emit.bind(table);
-    table.emit = function(eventName, ...args) {
+    table.emit = function (eventName, ...args) {
       if (!eventsToCapture.includes(eventName)) {
         state.events.push({
           event: eventName,
@@ -190,7 +190,7 @@ export function setupEventCapture(table, options = {}) {
       return originalEmit(eventName, ...args);
     };
   }
-  
+
   return state;
 }
 
@@ -203,15 +203,19 @@ export function setupEventCapture(table, options = {}) {
  */
 export function waitForConditions(eventState, conditions, timeout = 5000) {
   const startTime = Date.now();
-  
+
   return new Promise((resolve, reject) => {
     const checkConditions = () => {
       // Check timeout
       if (Date.now() - startTime > timeout) {
-        reject(new Error(`Timeout waiting for conditions: ${JSON.stringify(conditions)}`));
+        reject(
+          new Error(
+            `Timeout waiting for conditions: ${JSON.stringify(conditions)}`,
+          ),
+        );
         return;
       }
-      
+
       // Check each condition
       let allMet = true;
       for (const [key, value] of Object.entries(conditions)) {
@@ -225,14 +229,14 @@ export function waitForConditions(eventState, conditions, timeout = 5000) {
           break;
         }
       }
-      
+
       if (allMet) {
         resolve(eventState);
       } else {
         setTimeout(checkConditions, 10);
       }
     };
-    
+
     checkConditions();
   });
 }
@@ -249,7 +253,7 @@ export function waitForHandEnd(eventState, timeout = 5000) {
 
 /**
  * Convenience function to wait for game start
- * @param {Object} eventState - State object from setupEventCapture  
+ * @param {Object} eventState - State object from setupEventCapture
  * @param {number} timeout - Timeout in milliseconds
  * @returns {Promise} Resolves when game starts
  */

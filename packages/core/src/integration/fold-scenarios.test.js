@@ -1,6 +1,6 @@
 /**
  * Fold Scenarios
- * 
+ *
  * Tests for scenarios where all players fold, testing the basic mechanics
  * of blind posting and automatic wins by the big blind.
  */
@@ -41,7 +41,7 @@ describe('Fold Scenarios', () => {
 
   afterEach(() => {
     // Clean up any open tables
-    manager.tables.forEach(table => table.close());
+    manager.tables.forEach((table) => table.close());
   });
 
   describe('All players fold', () => {
@@ -91,7 +91,7 @@ describe('Fold Scenarios', () => {
       table.tryStartGame();
 
       // Wait for game to start
-      await vi.waitFor(() => gameStarted, { 
+      await vi.waitFor(() => gameStarted, {
         timeout: 1000,
         interval: 50,
       });
@@ -104,9 +104,9 @@ describe('Fold Scenarios', () => {
 
       // Wait for hand to complete
       await vi.waitFor(() => handEnded, { timeout: 1000 });
-      
+
       // Wait a bit for all processing to complete
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Big blind should win (when everyone folds, BB wins by default)
       const players = [player1, player2, player3];

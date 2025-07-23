@@ -1,10 +1,10 @@
 /**
  * 4-Player UTG Button Showdown Scenario (Using Test Utilities)
- * 
+ *
  * Tests a complete multi-street hand where UTG raises, Button calls, blinds fold,
  * then both players check to showdown through all streets.
  * This tests multi-street play and showdown mechanics.
- * 
+ *
  * Expected flow:
  * Pre-flop: UTG raises to 60, Button calls, SB/BB fold
  * Flop/Turn/River: Both players check
@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { 
+import {
   createTestTable,
   setupEventCapture,
   waitForHandEnd,
@@ -58,18 +58,30 @@ describe('4-Player UTG Button Showdown (v2)', () => {
       // Pre-flop behavior
       if (gameState.phase === 'PRE_FLOP') {
         // UTG raises to 60
-        if (player.position === 'utg' && !player.hasRaisedPreflop && gameState.currentBet === 20) {
+        if (
+          player.position === 'utg' &&
+          !player.hasRaisedPreflop &&
+          gameState.currentBet === 20
+        ) {
           player.hasRaisedPreflop = true;
           return { action: Action.RAISE, amount: 60 };
         }
 
         // Button calls raises
-        if (player.position === 'button' && toCall > 0 && gameState.currentBet > 20) {
+        if (
+          player.position === 'button' &&
+          toCall > 0 &&
+          gameState.currentBet > 20
+        ) {
           return { action: Action.CALL, amount: toCall };
         }
 
         // Blinds fold to raises
-        if (['sb', 'bb'].includes(player.position) && toCall > 0 && gameState.currentBet > 20) {
+        if (
+          ['sb', 'bb'].includes(player.position) &&
+          toCall > 0 &&
+          gameState.currentBet > 20
+        ) {
           return { action: Action.FOLD };
         }
 
@@ -110,7 +122,7 @@ describe('4-Player UTG Button Showdown (v2)', () => {
     });
 
     // Add players and start
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for hand to complete
@@ -121,10 +133,10 @@ describe('4-Player UTG Button Showdown (v2)', () => {
 
     // Get phase-specific actions
     const phaseActions = {
-      PRE_FLOP: actions.filter(a => a.phase === 'PRE_FLOP'),
-      FLOP: actions.filter(a => a.phase === 'FLOP'),
-      TURN: actions.filter(a => a.phase === 'TURN'),
-      RIVER: actions.filter(a => a.phase === 'RIVER'),
+      PRE_FLOP: actions.filter((a) => a.phase === 'PRE_FLOP'),
+      FLOP: actions.filter((a) => a.phase === 'FLOP'),
+      TURN: actions.filter((a) => a.phase === 'TURN'),
+      RIVER: actions.filter((a) => a.phase === 'RIVER'),
     };
 
     // Find UTG player
@@ -133,30 +145,32 @@ describe('4-Player UTG Button Showdown (v2)', () => {
     const buttonPlayer = players[dealerButtonPos];
 
     // Verify pre-flop action sequence - UTG should raise
-    const utgRaise = phaseActions.PRE_FLOP.find(a => a.action === Action.RAISE);
+    const utgRaise = phaseActions.PRE_FLOP.find(
+      (a) => a.action === Action.RAISE,
+    );
     expect(utgRaise).toBeDefined();
     expect(utgRaise.amount).toBe(60);
     expect(utgRaise.playerId).toBe(utgPlayer.id);
 
     // Button should call the raise
     const buttonCall = phaseActions.PRE_FLOP.find(
-      a => a.action === Action.CALL && a.playerId === buttonPlayer.id
+      (a) => a.action === Action.CALL && a.playerId === buttonPlayer.id,
     );
     expect(buttonCall).toBeDefined();
     expect(buttonCall.amount).toBe(60);
 
     // Should have 2 folds (SB and BB)
-    const folds = actions.filter(a => a.action === Action.FOLD);
+    const folds = actions.filter((a) => a.action === Action.FOLD);
     expect(folds).toHaveLength(2);
 
     // Should have multiple checks post-flop
-    const checks = actions.filter(a => a.action === Action.CHECK);
+    const checks = actions.filter((a) => a.action === Action.CHECK);
     expect(checks.length).toBeGreaterThanOrEqual(4); // At least 2 players checking twice
 
     // Someone should win a reasonable pot
     expect(winners).toHaveLength(1);
     expect(winners[0].amount).toBeGreaterThan(0);
-    
+
     // Winner amount matches original test
     expect(winners[0].amount).toBe(80);
   });

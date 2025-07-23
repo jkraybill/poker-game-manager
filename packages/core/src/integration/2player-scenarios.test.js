@@ -1,6 +1,6 @@
 /**
  * 2-Player (Heads-Up) Poker Scenarios
- * 
+ *
  * Tests specific to heads-up play where one player is SB/Button and the other is BB.
  * These scenarios test the fundamental mechanics of poker betting in the simplest format.
  */
@@ -41,7 +41,7 @@ describe('2-Player (Heads-Up) Scenarios', () => {
 
   afterEach(() => {
     // Clean up any open tables
-    manager.tables.forEach(table => table.close());
+    manager.tables.forEach((table) => table.close());
   });
 
   describe('Basic heads-up mechanics', () => {
@@ -101,7 +101,7 @@ describe('2-Player (Heads-Up) Scenarios', () => {
       expect(winnerAmount).toBe(30); // SB $10 + BB $20
       expect(actions).toHaveLength(1);
       expect(actions[0].action).toBe(Action.FOLD);
-      
+
       // In heads-up, the SB/Button should fold
       const actualSbPlayer = dealerButton === 0 ? sbPlayer : bbPlayer;
       expect(actions[0].playerId).toBe(actualSbPlayer.id);

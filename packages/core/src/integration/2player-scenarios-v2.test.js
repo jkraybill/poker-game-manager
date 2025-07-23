@@ -1,12 +1,12 @@
 /**
  * 2-Player (Heads-Up) Poker Scenarios (Using Test Utilities)
- * 
+ *
  * Tests specific to heads-up play where one player is SB/Button and the other is BB.
  * These scenarios test the fundamental mechanics of poker betting in the simplest format.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { 
+import {
   createHeadsUpTable,
   setupEventCapture,
   waitForHandEnd,
@@ -48,11 +48,11 @@ describe('2-Player (Heads-Up) Scenarios (v2)', () => {
       events = setupEventCapture(table);
 
       // Create players using built-in fold strategy
-      const sbPlayer = new StrategicPlayer({ 
+      const sbPlayer = new StrategicPlayer({
         name: 'SB/Button',
         strategy: STRATEGIES.alwaysFold,
       });
-      const bbPlayer = new StrategicPlayer({ 
+      const bbPlayer = new StrategicPlayer({
         name: 'Big Blind',
         strategy: STRATEGIES.alwaysFold,
       });
@@ -84,10 +84,10 @@ describe('2-Player (Heads-Up) Scenarios (v2)', () => {
       expect(winners).toHaveLength(1);
       expect(winners[0].playerId).toBe(expectedWinner.id);
       expect(winners[0].amount).toBe(30); // SB $10 + BB $20
-      
+
       expect(actions).toHaveLength(1);
       expect(actions[0].action).toBe(Action.FOLD);
-      
+
       // In heads-up, the SB/Button should fold
       const actualSbPlayer = dealerButtonPos === 0 ? sbPlayer : bbPlayer;
       expect(actions[0].playerId).toBe(actualSbPlayer.id);

@@ -1,12 +1,12 @@
 /**
  * Fold Scenarios (Using Test Utilities)
- * 
+ *
  * Tests for scenarios where all players fold, testing the basic mechanics
  * of blind posting and automatic wins by the big blind.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { 
+import {
   createTestTable,
   setupEventCapture,
   waitForHandEnd,
@@ -54,15 +54,17 @@ describe('Fold Scenarios (v2)', () => {
       });
 
       // Create 3 players using the built-in always fold strategy
-      const players = Array.from({ length: 3 }, (_, i) => 
-        new StrategicPlayer({
-          name: `Player ${i + 1}`,
-          strategy: STRATEGIES.alwaysFold,
-        })
+      const players = Array.from(
+        { length: 3 },
+        (_, i) =>
+          new StrategicPlayer({
+            name: `Player ${i + 1}`,
+            strategy: STRATEGIES.alwaysFold,
+          }),
       );
 
       // Add players
-      players.forEach(p => table.addPlayer(p));
+      players.forEach((p) => table.addPlayer(p));
 
       // Start game
       table.tryStartGame();

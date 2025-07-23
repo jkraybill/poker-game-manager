@@ -13,8 +13,22 @@ export class Deck {
   reset() {
     this.cards = [];
     const suits = ['h', 'd', 'c', 's']; // Use pokersolver format
-    const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A']; // T instead of 10
-    
+    const ranks = [
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+      '9',
+      'T',
+      'J',
+      'Q',
+      'K',
+      'A',
+    ]; // T instead of 10
+
     for (const suit of suits) {
       for (const rank of ranks) {
         this.cards.push({
@@ -33,8 +47,8 @@ export class Deck {
    */
   shuffle() {
     for (let i = this.cards.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
     }
   }
 

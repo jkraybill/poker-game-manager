@@ -1,27 +1,27 @@
 /**
  * 5-Player Squeeze Play Scenario
- * 
+ *
  * Tests an advanced poker concept called "squeeze play" where a player in the blinds
  * re-raises (squeezes) after there has been a raise and a call, exploiting the fact
  * that both opponents are likely to have weaker holdings and will fold to pressure.
- * 
+ *
  * Expected flow:
  * 1. UTG (1000 chips) raises to 60
  * 2. MP (900 chips) folds to the raise
- * 3. Button (800 chips) calls the raise 
+ * 3. Button (800 chips) calls the raise
  * 4. SB (600 chips) squeezes to 180 (seeing raise + call weakness)
  * 5. BB (700 chips) folds to the squeeze
  * 6. UTG folds to the squeeze
  * 7. Button folds to the squeeze
  * 8. SB wins pot (180 + 20 + 60 + 60 + 10 = 330)
- * 
+ *
  * This tests:
  * - Advanced pre-flop strategy (squeeze play)
  * - lastAction tracking functionality
  * - Complex decision making based on action history
  * - Multi-way pot dynamics
  * - Fold equity exploitation
- * 
+ *
  * Technical note: This test uses lastAction data to detect when there has been
  * both a raise and a call, which is the key condition for a squeeze play.
  */
@@ -40,7 +40,7 @@ describe('5-Player Squeeze Play', () => {
 
   afterEach(() => {
     // Clean up any open tables
-    manager.tables.forEach(table => table.close());
+    manager.tables.forEach((table) => table.close());
   });
 
   it('should handle SB squeeze play after raise and call', async () => {
@@ -85,7 +85,11 @@ describe('5-Player Squeeze Play', () => {
         const toCall = gameState.currentBet - myState.bet;
 
         // UTG (1000 chips) raises to 60
-        if (this.stackSize === 'utg' && gameState.currentBet === 20 && !this.hasActed) {
+        if (
+          this.stackSize === 'utg' &&
+          gameState.currentBet === 20 &&
+          !this.hasActed
+        ) {
           this.hasActed = true;
           return {
             playerId: this.id,
@@ -96,7 +100,11 @@ describe('5-Player Squeeze Play', () => {
         }
 
         // MP (900 chips) folds to UTG raise
-        if (this.stackSize === 'mp' && toCall > 0 && gameState.currentBet > 20) {
+        if (
+          this.stackSize === 'mp' &&
+          toCall > 0 &&
+          gameState.currentBet > 20
+        ) {
           return {
             playerId: this.id,
             action: Action.FOLD,
@@ -105,7 +113,13 @@ describe('5-Player Squeeze Play', () => {
         }
 
         // Button (800 chips) calls the raise
-        if (this.stackSize === 'button' && toCall > 0 && toCall <= 60 && gameState.currentBet === 60 && !this.hasActed) {
+        if (
+          this.stackSize === 'button' &&
+          toCall > 0 &&
+          toCall <= 60 &&
+          gameState.currentBet === 60 &&
+          !this.hasActed
+        ) {
           this.hasActed = true;
           return {
             playerId: this.id,
@@ -116,12 +130,20 @@ describe('5-Player Squeeze Play', () => {
         }
 
         // SB (600 chips) squeezes after detecting raise and call
-        if (this.stackSize === 'sb' && gameState.currentBet === 60 && !this.hasActed) {
+        if (
+          this.stackSize === 'sb' &&
+          gameState.currentBet === 60 &&
+          !this.hasActed
+        ) {
           // Use lastAction tracking to detect squeeze opportunity
           const playerStates = Object.values(gameState.players);
-          const hasRaiser = playerStates.some(p => p.lastAction === Action.RAISE && p.bet === 60);
-          const hasCaller = playerStates.some(p => p.lastAction === Action.CALL && p.bet === 60);
-          
+          const hasRaiser = playerStates.some(
+            (p) => p.lastAction === Action.RAISE && p.bet === 60,
+          );
+          const hasCaller = playerStates.some(
+            (p) => p.lastAction === Action.CALL && p.bet === 60,
+          );
+
           if (hasRaiser && hasCaller) {
             this.hasActed = true;
             return {
@@ -143,7 +165,11 @@ describe('5-Player Squeeze Play', () => {
         }
 
         // BB (700 chips) folds to any raise
-        if (this.stackSize === 'bb' && toCall > 0 && gameState.currentBet > 20) {
+        if (
+          this.stackSize === 'bb' &&
+          toCall > 0 &&
+          gameState.currentBet > 20
+        ) {
           return {
             playerId: this.id,
             action: Action.FOLD,
@@ -172,7 +198,7 @@ describe('5-Player Squeeze Play', () => {
     // Create 5 players with specific stack sizes
     // With dealerButton=0, positions will be:
     // Player 0: Button (800 chips)
-    // Player 1: SB (600 chips)  
+    // Player 1: SB (600 chips)
     // Player 2: BB (700 chips)
     // Player 3: UTG (1000 chips)
     // Player 4: MP (900 chips)
@@ -184,13 +210,11 @@ describe('5-Player Squeeze Play', () => {
       { name: 'MP Player', chips: 900, stackSize: 'mp' },
     ];
 
-    const players = playerConfigs.map(config => 
-      new SqueezePlayPlayer(config),
-    );
+    const players = playerConfigs.map((config) => new SqueezePlayPlayer(config));
 
     // Override addPlayer to set specific chip amounts
     const originalAddPlayer = table.addPlayer.bind(table);
-    table.addPlayer = function(player) {
+    table.addPlayer = function (player) {
       const result = originalAddPlayer(player);
       const playerData = this.players.get(player.id);
       if (playerData && player.chipAmount) {
@@ -212,24 +236,28 @@ describe('5-Player Squeeze Play', () => {
     });
 
     // Add players
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for game to complete
-    await vi.waitFor(() => gameStarted, { 
+    await vi.waitFor(() => gameStarted, {
       timeout: 500,
-      interval: 50, 
+      interval: 50,
     });
     await vi.waitFor(() => handEnded, { timeout: 1000 });
-    
+
     // Give a moment for all events to process
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Verify the squeeze play sequence occurred
-    const raiseAction = actions.find(a => a.action === Action.RAISE && a.amount === 60);
-    const callAction = actions.find(a => a.action === Action.CALL);
-    const squeezeAction = actions.find(a => a.action === Action.RAISE && a.amount === 180);
-    
+    const raiseAction = actions.find(
+      (a) => a.action === Action.RAISE && a.amount === 60,
+    );
+    const callAction = actions.find((a) => a.action === Action.CALL);
+    const squeezeAction = actions.find(
+      (a) => a.action === Action.RAISE && a.amount === 180,
+    );
+
     expect(raiseAction).toBeDefined();
     expect(callAction).toBeDefined();
     expect(squeezeAction).toBeDefined();
@@ -238,17 +266,19 @@ describe('5-Player Squeeze Play', () => {
     const raiseIndex = actions.indexOf(raiseAction);
     const callIndex = actions.indexOf(callAction);
     const squeezeIndex = actions.indexOf(squeezeAction);
-    
+
     expect(raiseIndex).toBeLessThan(callIndex);
     expect(callIndex).toBeLessThan(squeezeIndex);
 
     // After the squeeze, everyone should fold
     const actionsAfterSqueeze = actions.slice(squeezeIndex + 1);
-    const foldsAfterSqueeze = actionsAfterSqueeze.filter(a => a.action === Action.FOLD);
+    const foldsAfterSqueeze = actionsAfterSqueeze.filter(
+      (a) => a.action === Action.FOLD,
+    );
     expect(foldsAfterSqueeze.length).toBeGreaterThanOrEqual(2); // At least BB and UTG fold
 
     // SB (600 chip player) should win the pot
-    const sbPlayer = players.find(p => p.chipAmount === 600);
+    const sbPlayer = players.find((p) => p.chipAmount === 600);
     expect(winnerId).toBe(sbPlayer.id);
 
     // Verify pot calculation:
@@ -256,7 +286,7 @@ describe('5-Player Squeeze Play', () => {
     expect(winnerAmount).toBe(330);
 
     // Verify we had the expected number of folds (MP, BB, UTG, Button all fold)
-    const totalFolds = actions.filter(a => a.action === Action.FOLD);
+    const totalFolds = actions.filter((a) => a.action === Action.FOLD);
     expect(totalFolds.length).toBeGreaterThanOrEqual(4);
 
     table.close();

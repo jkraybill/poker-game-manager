@@ -21,13 +21,13 @@ describe('GameEngine', () => {
     // Create mock players with chips
     const player1 = new MockPlayer({ id: 'player1', name: 'Alice' });
     player1.buyIn(1000);
-    
+
     const player2 = new MockPlayer({ id: 'player2', name: 'Bob' });
     player2.buyIn(1000);
-    
+
     const player3 = new MockPlayer({ id: 'player3', name: 'Charlie' });
     player3.buyIn(1000);
-    
+
     mockPlayers = [
       {
         player: player1,
@@ -110,7 +110,7 @@ describe('GameEngine', () => {
   describe('player actions', () => {
     beforeEach(() => {
       // Reset all mocks before each test
-      mockPlayers.forEach(mp => {
+      mockPlayers.forEach((mp) => {
         mp.player.getAction.mockReset();
         mp.player.receivePrivateCards.mockReset();
         mp.player.receiveMessage.mockReset();
@@ -141,12 +141,14 @@ describe('GameEngine', () => {
     it('should handle check action when valid', async () => {
       // In a simpler test, just verify that check works when current bet matches player bet
       // Skip to a state where everyone has acted and it's time for someone to check
-      
+
       // Find the big blind player
-      const sbIndex = gameEngine.getNextActivePlayerIndex(gameEngine.dealerButtonIndex);
+      const sbIndex = gameEngine.getNextActivePlayerIndex(
+        gameEngine.dealerButtonIndex,
+      );
       const bbIndex = gameEngine.getNextActivePlayerIndex(sbIndex);
       const bbPlayer = gameEngine.players[bbIndex];
-      
+
       // Manually set up the state where everyone has matched the big blind
       gameEngine.players.forEach((player, index) => {
         if (index !== bbIndex) {
@@ -155,14 +157,14 @@ describe('GameEngine', () => {
           player.chips = 980;
         }
       });
-      
+
       // Set current player to big blind who can check
       gameEngine.currentPlayerIndex = bbIndex;
       bbPlayer.hasActed = false;
-      
+
       const actionSpy = vi.fn();
       gameEngine.on('player:action', actionSpy);
-      
+
       bbPlayer.getAction.mockResolvedValue({
         action: Action.CHECK,
         playerId: bbPlayer.id,
@@ -181,8 +183,8 @@ describe('GameEngine', () => {
     it('should handle timeout by folding', async () => {
       const currentPlayer = mockPlayers[gameEngine.currentPlayerIndex];
       // Make getAction take longer than timeout
-      currentPlayer.player.getAction.mockImplementation(() => 
-        new Promise(resolve => setTimeout(resolve, 2000)),
+      currentPlayer.player.getAction.mockImplementation(
+        () => new Promise((resolve) => setTimeout(resolve, 2000)),
       );
 
       const actionSpy = vi.fn();
@@ -204,7 +206,7 @@ describe('GameEngine', () => {
       gameEngine.on('cards:community', communityCardsSpy);
 
       // Mock all players to check/call
-      mockPlayers.forEach(player => {
+      mockPlayers.forEach((player) => {
         player.player.getAction.mockResolvedValue({
           action: Action.CHECK,
           playerId: player.player.id,

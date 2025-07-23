@@ -64,10 +64,10 @@ export const TournamentTypes = {
 
 // Time limits (in milliseconds)
 export const TimeLimits = {
-  QUICK: 15000,    // 15 seconds
+  QUICK: 15000, // 15 seconds
   STANDARD: 30000, // 30 seconds
-  SLOW: 60000,     // 60 seconds
-  UNLIMITED: 0,    // No time limit
+  SLOW: 60000, // 60 seconds
+  UNLIMITED: 0, // No time limit
 };
 
 // Error messages

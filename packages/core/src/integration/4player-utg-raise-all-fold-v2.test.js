@@ -1,19 +1,19 @@
 /**
  * 4-Player UTG Raise All Fold Scenario (Using Test Utilities)
- * 
+ *
  * Tests the specific case where UTG (Under The Gun) raises and all other players fold.
  * This tests early position aggression and fold equity in 4-player games.
- * 
+ *
  * Expected flow:
  * 1. UTG raises to 60 (3x BB)
- * 2. Button folds to raise  
+ * 2. Button folds to raise
  * 3. SB folds to raise
  * 4. BB folds to raise
  * 5. UTG wins pot (60 + 10 + 20 = 90)
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { 
+import {
   createTestTable,
   setupEventCapture,
   waitForHandEnd,
@@ -75,11 +75,13 @@ describe('4-Player UTG Raise All Fold (v2)', () => {
     };
 
     // Create 4 players
-    const players = Array.from({ length: 4 }, (_, i) => 
-      new StrategicPlayer({
-        name: `Player ${i + 1}`,
-        strategy: utgRaiseStrategy,
-      })
+    const players = Array.from(
+      { length: 4 },
+      (_, i) =>
+        new StrategicPlayer({
+          name: `Player ${i + 1}`,
+          strategy: utgRaiseStrategy,
+        }),
     );
 
     // Track dealer button and assign positions
@@ -90,7 +92,7 @@ describe('4-Player UTG Raise All Fold (v2)', () => {
     });
 
     // Add players and start
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for hand to complete
@@ -109,13 +111,13 @@ describe('4-Player UTG Raise All Fold (v2)', () => {
     expect(winners[0].amount).toBe(90); // UTG's $60 + SB $10 + BB $20
 
     // Verify action sequence
-    const raiseAction = actions.find(a => a.action === Action.RAISE);
+    const raiseAction = actions.find((a) => a.action === Action.RAISE);
     expect(raiseAction).toBeDefined();
     expect(raiseAction.amount).toBe(60);
     expect(raiseAction.playerId).toBe(utgPlayer.id);
 
     // Should have exactly 3 folds (Button, SB, BB)
-    const foldActions = actions.filter(a => a.action === Action.FOLD);
+    const foldActions = actions.filter((a) => a.action === Action.FOLD);
     expect(foldActions).toHaveLength(3);
   });
 });

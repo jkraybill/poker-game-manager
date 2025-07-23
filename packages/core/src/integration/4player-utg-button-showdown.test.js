@@ -1,10 +1,10 @@
 /**
  * 4-Player UTG Button Showdown Scenario
- * 
+ *
  * Tests a complete multi-street hand where UTG raises, Button calls, blinds fold,
  * then both players check to showdown through all streets.
  * This tests multi-street play and showdown mechanics.
- * 
+ *
  * Expected flow:
  * Pre-flop: UTG raises to 60, Button calls, SB/BB fold
  * Flop/Turn/River: Both players check
@@ -25,7 +25,7 @@ describe('4-Player UTG Button Showdown', () => {
 
   afterEach(() => {
     // Clean up any open tables
-    manager.tables.forEach(table => table.close());
+    manager.tables.forEach((table) => table.close());
   });
 
   it('should handle UTG raising, Button calling, blinds folding, check-check to showdown', async () => {
@@ -60,7 +60,7 @@ describe('4-Player UTG Button Showdown', () => {
     });
 
     let currentPhase = 'PRE_FLOP';
-    
+
     table.on('round:started', ({ phase }) => {
       currentPhase = phase;
     });
@@ -90,7 +90,11 @@ describe('4-Player UTG Button Showdown', () => {
         // Pre-flop behavior
         if (gameState.phase === 'PRE_FLOP') {
           // UTG raises to 60
-          if (this.position === 'utg' && !this.hasRaisedPreflop && gameState.currentBet === 20) {
+          if (
+            this.position === 'utg' &&
+            !this.hasRaisedPreflop &&
+            gameState.currentBet === 20
+          ) {
             this.hasRaisedPreflop = true;
             return {
               playerId: this.id,
@@ -101,7 +105,11 @@ describe('4-Player UTG Button Showdown', () => {
           }
 
           // Button calls raises
-          if (this.position === 'button' && toCall > 0 && gameState.currentBet > 20) {
+          if (
+            this.position === 'button' &&
+            toCall > 0 &&
+            gameState.currentBet > 20
+          ) {
             return {
               playerId: this.id,
               action: Action.CALL,
@@ -111,7 +119,11 @@ describe('4-Player UTG Button Showdown', () => {
           }
 
           // Blinds fold to raises
-          if (['sb', 'bb'].includes(this.position) && toCall > 0 && gameState.currentBet > 20) {
+          if (
+            ['sb', 'bb'].includes(this.position) &&
+            toCall > 0 &&
+            gameState.currentBet > 20
+          ) {
             return {
               playerId: this.id,
               action: Action.FOLD,
@@ -168,7 +180,7 @@ describe('4-Player UTG Button Showdown', () => {
     // Set up remaining event listeners
     table.on('hand:started', ({ dealerButton: db }) => {
       dealerButton = db;
-      
+
       // In 4-player game with dealerButton = 0:
       // Position 0 = Button, Position 1 = SB, Position 2 = BB, Position 3 = UTG
       const utgPos = (db + 3) % 4;
@@ -195,43 +207,47 @@ describe('4-Player UTG Button Showdown', () => {
     });
 
     // Add players and start game
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for game to start
-    await vi.waitFor(() => gameStarted, { 
+    await vi.waitFor(() => gameStarted, {
       timeout: 500,
-      interval: 50, 
+      interval: 50,
     });
-    
+
     // Wait for dealer button to be set
-    await vi.waitFor(() => dealerButton >= 0, { 
+    await vi.waitFor(() => dealerButton >= 0, {
       timeout: 500,
-      interval: 50, 
+      interval: 50,
     });
-    
+
     // Wait for hand to complete
     await vi.waitFor(() => handEnded, { timeout: 1500 }); // Slightly longer timeout for showdown
-    
+
     // Wait for all actions to be captured
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // Verify pre-flop action sequence - UTG should raise
-    const utgRaise = phaseActions.PRE_FLOP.find(a => a.action === Action.RAISE);
+    const utgRaise = phaseActions.PRE_FLOP.find(
+      (a) => a.action === Action.RAISE,
+    );
     expect(utgRaise).toBeDefined();
     expect(utgRaise.amount).toBe(60);
 
     // Button should call the raise
-    const buttonCall = phaseActions.PRE_FLOP.find(a => a.action === Action.CALL && a.playerId !== utgRaise.playerId);
+    const buttonCall = phaseActions.PRE_FLOP.find(
+      (a) => a.action === Action.CALL && a.playerId !== utgRaise.playerId,
+    );
     expect(buttonCall).toBeDefined();
     expect(buttonCall.amount).toBe(60);
 
     // Should have 2 folds (SB and BB)
-    const folds = actions.filter(a => a.action === Action.FOLD);
+    const folds = actions.filter((a) => a.action === Action.FOLD);
     expect(folds).toHaveLength(2);
 
     // Should have multiple checks post-flop
-    const checks = actions.filter(a => a.action === Action.CHECK);
+    const checks = actions.filter((a) => a.action === Action.CHECK);
     expect(checks.length).toBeGreaterThanOrEqual(4); // At least 2 players checking twice
 
     // Someone should win a reasonable pot

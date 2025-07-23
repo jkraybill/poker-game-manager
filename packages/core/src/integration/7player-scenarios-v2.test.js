@@ -1,13 +1,13 @@
 /**
  * 7-Player Poker Scenarios (Using Test Utilities)
- * 
+ *
  * Tests poker dynamics with 7 players at the table, representing common
  * tournament situations after a few eliminations. With 7 players, we see:
  * - More complex positional dynamics than 6-handed
  * - Still not quite full ring, allowing for wider ranges
  * - Common online tournament table size
  * - Interesting dynamics with MP1 and MP2 positions
- * 
+ *
  * Positions (with dealerButton: 0):
  * - Index 0: Button
  * - Index 1: SB
@@ -19,7 +19,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { 
+import {
   createTestTable,
   setupEventCapture,
   waitForHandEnd,
@@ -72,15 +72,17 @@ describe('7-Player Poker Scenarios (v2)', () => {
     };
 
     // Create 7 passive players
-    const players = Array.from({ length: 7 }, (_, i) => 
-      new StrategicPlayer({
-        name: `Player ${i + 1}`,
-        strategy: limpingStrategy,
-      })
+    const players = Array.from(
+      { length: 7 },
+      (_, i) =>
+        new StrategicPlayer({
+          name: `Player ${i + 1}`,
+          strategy: limpingStrategy,
+        }),
     );
 
     // Add players and start
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for hand to complete
@@ -93,13 +95,14 @@ describe('7-Player Poker Scenarios (v2)', () => {
     expect(totalPot).toBe(140); // 7 × 20 = 140
     expect(winners).toHaveLength(1);
     expect(winners[0].amount).toBe(140);
-    
+
     // Showdown should have been reached
-    const showdownReached = winners[0]?.hand !== null && winners[0]?.hand !== undefined;
+    const showdownReached =
+      winners[0]?.hand !== null && winners[0]?.hand !== undefined;
     expect(showdownReached).toBe(true);
-    
+
     // Count limps (excluding BB check)
-    const calls = actions.filter(a => a.action === Action.CALL);
+    const calls = actions.filter((a) => a.action === Action.CALL);
     expect(calls.length).toBeGreaterThanOrEqual(5); // At least 5 limpers
   });
 
@@ -118,19 +121,31 @@ describe('7-Player Poker Scenarios (v2)', () => {
     // Position-aware aggressive strategy
     const positionalStrategy = ({ player, gameState, myState, toCall }) => {
       // UTG opens
-      if (player.position === 'utg' && gameState.currentBet === 20 && !player.hasRaised) {
+      if (
+        player.position === 'utg' &&
+        gameState.currentBet === 20 &&
+        !player.hasRaised
+      ) {
         player.hasRaised = true;
         return { action: Action.RAISE, amount: 60 };
       }
 
-      // MP1 3-bets UTG  
-      if (player.position === 'mp1' && gameState.currentBet === 60 && !player.hasRaised) {
+      // MP1 3-bets UTG
+      if (
+        player.position === 'mp1' &&
+        gameState.currentBet === 60 &&
+        !player.hasRaised
+      ) {
         player.hasRaised = true;
         return { action: Action.RAISE, amount: 180 };
       }
 
       // CO cold 4-bets
-      if (player.position === 'co' && gameState.currentBet === 180 && !player.hasRaised) {
+      if (
+        player.position === 'co' &&
+        gameState.currentBet === 180 &&
+        !player.hasRaised
+      ) {
         player.hasRaised = true;
         return { action: Action.RAISE, amount: 450 };
       }
@@ -157,7 +172,7 @@ describe('7-Player Poker Scenarios (v2)', () => {
     });
 
     // Add players and start
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for hand to complete
@@ -167,14 +182,14 @@ describe('7-Player Poker Scenarios (v2)', () => {
     const { actions } = events;
 
     // Verify action sequence
-    const raises = actions.filter(a => a.action === Action.RAISE);
+    const raises = actions.filter((a) => a.action === Action.RAISE);
     expect(raises).toHaveLength(3);
-    
+
     // Find players by position
-    const utgPlayer = players.find(p => p.position === 'utg');
-    const mp1Player = players.find(p => p.position === 'mp1');
-    const coPlayer = players.find(p => p.position === 'co');
-    
+    const utgPlayer = players.find((p) => p.position === 'utg');
+    const mp1Player = players.find((p) => p.position === 'mp1');
+    const coPlayer = players.find((p) => p.position === 'co');
+
     expect(raises[0].playerId).toBe(utgPlayer.id);
     expect(raises[1].playerId).toBe(mp1Player.id);
     expect(raises[2].playerId).toBe(coPlayer.id);
@@ -206,7 +221,7 @@ describe('7-Player Poker Scenarios (v2)', () => {
 
         // Once someone is all-in, others follow
         const allInPlayers = Object.values(gameState.players).filter(
-          p => p.lastAction === Action.ALL_IN
+          (p) => p.lastAction === Action.ALL_IN,
         );
 
         if (allInPlayers.length > 0) {
@@ -226,7 +241,7 @@ describe('7-Player Poker Scenarios (v2)', () => {
 
     // Override addPlayer for custom chips
     const originalAddPlayer = table.addPlayer.bind(table);
-    table.addPlayer = function(player) {
+    table.addPlayer = function (player) {
       const result = originalAddPlayer(player);
       const playerData = this.players.get(player.id);
       if (playerData && player.targetChips) {
@@ -237,13 +252,13 @@ describe('7-Player Poker Scenarios (v2)', () => {
 
     // Create 7 players with varying stacks
     const stackConfigs = [
-      { position: 'button', chips: 1000 },  // Big stack
-      { position: 'sb', chips: 50 },        // Micro stack
-      { position: 'bb', chips: 120 },       // Short stack
-      { position: 'utg', chips: 200 },      // Medium-short
-      { position: 'mp1', chips: 350 },      // Medium
-      { position: 'mp2', chips: 150 },      // Short
-      { position: 'co', chips: 600 },       // Large stack
+      { position: 'button', chips: 1000 }, // Big stack
+      { position: 'sb', chips: 50 }, // Micro stack
+      { position: 'bb', chips: 120 }, // Short stack
+      { position: 'utg', chips: 200 }, // Medium-short
+      { position: 'mp1', chips: 350 }, // Medium
+      { position: 'mp2', chips: 150 }, // Short
+      { position: 'co', chips: 600 }, // Large stack
     ];
 
     const players = stackConfigs.map((config, idx) => {
@@ -260,14 +275,18 @@ describe('7-Player Poker Scenarios (v2)', () => {
     // Track side pots when flop is dealt
     let capturedSidePots = [];
     table.on('cards:community', ({ phase }) => {
-      if (phase === 'FLOP' && capturedSidePots.length === 0 && table.gameEngine?.potManager) {
+      if (
+        phase === 'FLOP' &&
+        capturedSidePots.length === 0 &&
+        table.gameEngine?.potManager
+      ) {
         // Capture the pots right after pre-flop ends
         capturedSidePots = [...table.gameEngine.potManager.pots];
       }
     });
 
     // Add players and start
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for hand to complete
@@ -277,25 +296,31 @@ describe('7-Player Poker Scenarios (v2)', () => {
     const { sidePots, totalPot } = events;
 
     // Use captured side pots if available
-    const potsToCheck = capturedSidePots.length > 0 ? capturedSidePots : sidePots;
-    
+    const potsToCheck =
+      capturedSidePots.length > 0 ? capturedSidePots : sidePots;
+
     expect(events.handEnded).toBe(true);
-    
+
     // With multiple all-ins of different stack sizes, we should get side pots
     // However, the exact number depends on the order of all-ins
     if (potsToCheck.length > 0) {
       expect(potsToCheck.length).toBeGreaterThanOrEqual(1);
-      
+
       // Calculate total from pots
-      const calculatedTotal = potsToCheck.reduce((sum, pot) => sum + pot.amount, 0);
+      const calculatedTotal = potsToCheck.reduce(
+        (sum, pot) => sum + pot.amount,
+        0,
+      );
       expect(calculatedTotal).toBeGreaterThan(0);
     } else {
       // If we don't have detailed pot info, at least verify we have a total pot
       expect(totalPot).toBeGreaterThan(0);
     }
-    
+
     // Verify that multiple all-ins occurred
-    const allInActions = events.actions.filter(a => a.action === Action.ALL_IN);
+    const allInActions = events.actions.filter(
+      (a) => a.action === Action.ALL_IN,
+    );
     expect(allInActions.length).toBeGreaterThanOrEqual(4); // Most players should go all-in
   });
 
@@ -319,22 +344,36 @@ describe('7-Player Poker Scenarios (v2)', () => {
       const playerStates = Object.values(gameState.players);
 
       // UTG raises
-      if (player.position === 'utg' && gameState.currentBet === 20 && !player.hasActed) {
+      if (
+        player.position === 'utg' &&
+        gameState.currentBet === 20 &&
+        !player.hasActed
+      ) {
         player.hasActed = true;
         return { action: Action.RAISE, amount: 60 };
       }
 
       // MP1 calls the raise
-      if (player.position === 'mp1' && gameState.currentBet === 60 && !player.hasActed) {
+      if (
+        player.position === 'mp1' &&
+        gameState.currentBet === 60 &&
+        !player.hasActed
+      ) {
         player.hasActed = true;
         return { action: Action.CALL, amount: toCall };
       }
 
       // CO executes squeeze play
-      if (player.position === 'co' && !player.hasActed && gameState.currentBet > 20) {
-        const raisers = playerStates.filter(p => p.lastAction === Action.RAISE);
-        const callers = playerStates.filter(p => p.lastAction === Action.CALL);
-        
+      if (
+        player.position === 'co' &&
+        !player.hasActed &&
+        gameState.currentBet > 20
+      ) {
+        const raisers = playerStates.filter(
+          (p) => p.lastAction === Action.RAISE,
+        );
+        const callers = playerStates.filter((p) => p.lastAction === Action.CALL);
+
         if (raisers.length === 1 && callers.length >= 1) {
           player.hasActed = true;
           squeezePlayed = true;
@@ -364,7 +403,7 @@ describe('7-Player Poker Scenarios (v2)', () => {
     });
 
     // Add players and start
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
     table.tryStartGame();
 
     // Wait for hand to complete
@@ -375,12 +414,12 @@ describe('7-Player Poker Scenarios (v2)', () => {
 
     // Verify squeeze sequence
     expect(squeezePlayed).toBe(true);
-    
-    const raises = actions.filter(a => a.action === Action.RAISE);
+
+    const raises = actions.filter((a) => a.action === Action.RAISE);
     expect(raises.length).toBeGreaterThanOrEqual(2); // UTG raise + CO squeeze
-    
-    const coPlayer = players.find(p => p.position === 'co');
-    const coRaise = raises.find(r => r.playerId === coPlayer.id);
+
+    const coPlayer = players.find((p) => p.position === 'co');
+    const coRaise = raises.find((r) => r.playerId === coPlayer.id);
     expect(coRaise).toBeDefined();
     expect(coRaise.amount).toBeGreaterThan(180); // Large squeeze size
   });

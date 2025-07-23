@@ -1,6 +1,6 @@
 /**
  * 3-Player Button Raises BB Calls Folds Flop Test (Using Test Utilities)
- * 
+ *
  * Tests a specific 3-player scenario where:
  * 1. Button raises pre-flop
  * 2. SB folds
@@ -8,12 +8,12 @@
  * 4. BB checks flop
  * 5. Button bets flop
  * 6. BB folds
- * 
+ *
  * This tests phase-aware strategy and continuation betting.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { 
+import {
   createTestTable,
   setupEventCapture,
   waitForHandEnd,
@@ -59,7 +59,7 @@ describe('3-player: Button raises, BB calls, then folds to flop bet (v2)', () =>
       // Use player's assigned position flags
       const isButton = player.isButton;
       const isBB = player.isBB;
-      
+
       // Button strategy
       if (isButton) {
         // Pre-flop: raise to 100 (whether opening or facing BB)
@@ -67,13 +67,17 @@ describe('3-player: Button raises, BB calls, then folds to flop bet (v2)', () =>
           player.hasRaisedPreflop = true;
           return { action: Action.RAISE, amount: 100 };
         }
-        
+
         // Flop: bet 200 if checked to
-        if (gameState.phase === 'FLOP' && !player.hasBetFlop && gameState.currentBet === 0) {
+        if (
+          gameState.phase === 'FLOP' &&
+          !player.hasBetFlop &&
+          gameState.currentBet === 0
+        ) {
           player.hasBetFlop = true;
           return { action: Action.BET, amount: 200 };
         }
-        
+
         // Default button action: check or call
         if (toCall === 0) {
           return { action: Action.CHECK };
@@ -82,30 +86,30 @@ describe('3-player: Button raises, BB calls, then folds to flop bet (v2)', () =>
           return { action: Action.CALL, amount: toCall };
         }
       }
-      
+
       // BB strategy: call pre-flop raise, check/fold flop
       if (isBB) {
         // Pre-flop: call raises up to 100
         if (gameState.phase === 'PRE_FLOP' && toCall > 0 && toCall <= 80) {
           return { action: Action.CALL, amount: toCall };
         }
-        
+
         // Pre-flop: check when having the option
         if (gameState.phase === 'PRE_FLOP' && toCall === 0) {
           return { action: Action.CHECK };
         }
-        
+
         // Flop: check if no bet
         if (gameState.phase === 'FLOP' && toCall === 0) {
           return { action: Action.CHECK };
         }
-        
+
         // Flop: fold to any bet
         if (gameState.phase === 'FLOP' && toCall > 0) {
           return { action: Action.FOLD };
         }
       }
-      
+
       // SB strategy: fold to raises
       if (!isButton && !isBB && toCall > 10) {
         return { action: Action.FOLD };
@@ -136,30 +140,30 @@ describe('3-player: Button raises, BB calls, then folds to flop bet (v2)', () =>
     // Track positions and button player
     let buttonPlayer = null;
     const positions = {};
-    
+
     // Assign positions when hand starts
     table.on('hand:started', ({ dealerButton }) => {
       const sbPos = (dealerButton + 1) % 3;
       const bbPos = (dealerButton + 2) % 3;
-      
+
       positions[dealerButton] = 'Button/UTG';
       positions[sbPos] = 'Small Blind';
       positions[bbPos] = 'Big Blind';
-      
+
       // Assign roles to players
       players.forEach((p, idx) => {
-        p.isButton = (idx === dealerButton);
-        p.isBB = (idx === bbPos);
+        p.isButton = idx === dealerButton;
+        p.isBB = idx === bbPos;
         p.hasRaisedPreflop = false; // Reset for new hand
         p.hasBetFlop = false;
       });
-      
+
       buttonPlayer = players[dealerButton];
     });
 
     // Add players
-    players.forEach(p => table.addPlayer(p));
-    
+    players.forEach((p) => table.addPlayer(p));
+
     // Pre-assign positions based on dealerButton: 0
     // In 3-player with dealerButton 0:
     // Position 0: Button/UTG
@@ -172,7 +176,7 @@ describe('3-player: Button raises, BB calls, then folds to flop bet (v2)', () =>
     players[2].isButton = false;
     players[2].isBB = true;
     buttonPlayer = players[0];
-    
+
     // Start game
     table.tryStartGame();
 
@@ -182,47 +186,58 @@ describe('3-player: Button raises, BB calls, then folds to flop bet (v2)', () =>
     // Extract results
     const { winners, actions } = events;
 
-
     // Verify the button player won
     expect(winners).toHaveLength(1);
     expect(winners[0].playerId).toBe(buttonPlayer.id);
-    // Button should win entire pot: 
+    // Button should win entire pot:
     // Pre-flop: Button $100 + SB $10 (folded) + BB $100 (called) = $210
     // Flop: Button bets $200, BB folds, so total pot = $210 + $200 = $410
     expect(winners[0].amount).toBe(410);
 
     // Verify pre-flop action sequence
-    const preflopActions = actions.filter(a => a.phase === 'PRE_FLOP');
-    const raiseAction = preflopActions.find(a => a.action === Action.RAISE);
+    const preflopActions = actions.filter((a) => a.phase === 'PRE_FLOP');
+    const raiseAction = preflopActions.find((a) => a.action === Action.RAISE);
     expect(raiseAction).toBeDefined();
     expect(raiseAction.amount).toBe(100);
     expect(raiseAction.playerId).toBe(buttonPlayer.id);
 
     // SB should fold
-    const sbPlayer = players.find(p => positions[players.indexOf(p)] === 'Small Blind');
-    const sbFold = preflopActions.find(a => a.playerId === sbPlayer.id && a.action === Action.FOLD);
+    const sbPlayer = players.find(
+      (p) => positions[players.indexOf(p)] === 'Small Blind',
+    );
+    const sbFold = preflopActions.find(
+      (a) => a.playerId === sbPlayer.id && a.action === Action.FOLD,
+    );
     expect(sbFold).toBeDefined();
 
     // BB should call
-    const bbPlayer = players.find(p => p.isBB);
-    const bbCall = preflopActions.find(a => a.playerId === bbPlayer.id && a.action === Action.CALL);
+    const bbPlayer = players.find((p) => p.isBB);
+    const bbCall = preflopActions.find(
+      (a) => a.playerId === bbPlayer.id && a.action === Action.CALL,
+    );
     expect(bbCall).toBeDefined();
     expect(bbCall.amount).toBe(80); // BB already has 20 in, needs 80 more
 
     // Verify flop action sequence
-    const flopActions = actions.filter(a => a.phase === 'FLOP');
-    
+    const flopActions = actions.filter((a) => a.phase === 'FLOP');
+
     // BB should check
-    const bbCheck = flopActions.find(a => a.playerId === bbPlayer.id && a.action === Action.CHECK);
+    const bbCheck = flopActions.find(
+      (a) => a.playerId === bbPlayer.id && a.action === Action.CHECK,
+    );
     expect(bbCheck).toBeDefined();
 
     // Button should bet
-    const buttonBet = flopActions.find(a => a.playerId === buttonPlayer.id && a.action === Action.BET);
+    const buttonBet = flopActions.find(
+      (a) => a.playerId === buttonPlayer.id && a.action === Action.BET,
+    );
     expect(buttonBet).toBeDefined();
     expect(buttonBet.amount).toBe(200);
 
     // BB should fold
-    const bbFold = flopActions.find(a => a.playerId === bbPlayer.id && a.action === Action.FOLD);
+    const bbFold = flopActions.find(
+      (a) => a.playerId === bbPlayer.id && a.action === Action.FOLD,
+    );
     expect(bbFold).toBeDefined();
   });
 });
