@@ -177,6 +177,14 @@ export class Table extends WildcardEventEmitter {
             tableId: this.id,
             gameNumber: this.gameCount,
           });
+          
+          // After hand:ended, check for eliminations to ensure proper event ordering
+          if (eventName === 'hand:complete') {
+            // Use process.nextTick to ensure hand:ended is fully processed first
+            process.nextTick(() => {
+              this.checkForEliminations();
+            });
+          }
         });
       });
 
@@ -206,6 +214,33 @@ export class Table extends WildcardEventEmitter {
   }
 
   /**
+   * Check for eliminated players and emit events
+   * This is called after hand:ended to ensure proper event ordering
+   */
+  checkForEliminations() {
+    const eliminatedPlayers = [];
+    
+    for (const [playerId, playerData] of this.players.entries()) {
+      if (playerData.player.chips <= 0) {
+        eliminatedPlayers.push({
+          playerId,
+          playerData,
+        });
+      }
+    }
+    
+    // Emit elimination events
+    for (const { playerId } of eliminatedPlayers) {
+      this.emit('player:eliminated', {
+        playerId,
+        tableId: this.id,
+        finalChips: 0,
+        gameNumber: this.gameCount,
+      });
+    }
+  }
+
+  /**
    * Handle game end
    */
   handleGameEnd(_result) {
@@ -214,18 +249,17 @@ export class Table extends WildcardEventEmitter {
     // Update chip counts are already handled by GameEngine via player.chips setter
     // No need to update here since Player instances are shared
 
-    // Remove broke players
+    // Remove broke players (elimination events already fired by checkForEliminations)
+    const playersToRemove = [];
     for (const [playerId, playerData] of this.players.entries()) {
       if (playerData.player.chips <= 0) {
-        // Emit elimination event before removing player
-        this.emit('player:eliminated', {
-          playerId,
-          tableId: this.id,
-          finalChips: 0,
-          gameNumber: this.gameCount,
-        });
-        this.removePlayer(playerId);
+        playersToRemove.push(playerId);
       }
+    }
+    
+    // Remove players after iteration to avoid modifying collection during iteration
+    for (const playerId of playersToRemove) {
+      this.removePlayer(playerId);
     }
 
     // Clean up game engine
