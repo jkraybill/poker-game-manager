@@ -116,16 +116,15 @@ describe('5-Player Complex Side Pots (v2)', () => {
       return player;
     });
 
-    // Override addPlayer to set specific chip amounts
-    const originalAddPlayer = table.addPlayer.bind(table);
-    table.addPlayer = function (player) {
-      const result = originalAddPlayer(player);
-      const playerData = this.players.get(player.id);
-      if (playerData && player.chipAmount) {
-        playerData.chips = player.chipAmount;
+    // Add players first
+    players.forEach((p) => table.addPlayer(p));
+    
+    // Then set chip amounts directly on players
+    players.forEach((p) => {
+      if (p.chipAmount) {
+        p.chips = p.chipAmount;
       }
-      return result;
-    };
+    });
 
     // Track side pots when hand ends
     let capturedSidePots = [];
@@ -135,8 +134,7 @@ describe('5-Player Complex Side Pots (v2)', () => {
       }
     });
 
-    // Add players and start
-    players.forEach((p) => table.addPlayer(p));
+    // Start the game
     table.tryStartGame();
 
     // Wait for hand to complete

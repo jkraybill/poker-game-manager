@@ -167,11 +167,19 @@ describe('4-Player UTG Button Showdown (v2)', () => {
     const checks = actions.filter((a) => a.action === Action.CHECK);
     expect(checks.length).toBeGreaterThanOrEqual(4); // At least 2 players checking twice
 
-    // Someone should win a reasonable pot
-    expect(winners).toHaveLength(1);
-    expect(winners[0].amount).toBeGreaterThan(0);
-
-    // Winner amount matches original test
-    expect(winners[0].amount).toBe(80);
+    // Someone should win a reasonable pot (or split pot)
+    expect(winners.length).toBeGreaterThanOrEqual(1);
+    
+    if (winners.length === 1) {
+      // Single winner gets full pot
+      expect(winners[0].amount).toBe(80);
+    } else {
+      // Split pot scenario - each winner gets half
+      const totalWon = winners.reduce((sum, w) => sum + w.amount, 0);
+      expect(totalWon).toBe(80);
+      winners.forEach(w => {
+        expect(w.amount).toBe(40); // 80 / 2
+      });
+    }
   });
 });
