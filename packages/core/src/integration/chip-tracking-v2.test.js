@@ -284,55 +284,33 @@ describe('Chip Tracking (v2)', () => {
     // Get final chip counts directly from players
     const finalShortChips = shortStack.chips;
     const finalBigChips = bigStack.chips;
-
-    // Due to Issue #11 (pot distribution bug), the total chips might not be preserved
-    // in certain side pot scenarios. For now, we'll verify the basic mechanics work.
-    // const totalChips = finalShortChips + finalBigChips;
+    
+    // Verify someone won chips
+    const { winners } = events;
 
     // Verify no negative chips
     expect(finalShortChips).toBeGreaterThanOrEqual(0);
     expect(finalBigChips).toBeGreaterThanOrEqual(0);
 
-    // Verify someone won chips
-    const { winners } = events;
+    // Verify someone won chips  
     const totalWinnings = winners.reduce((sum, w) => sum + w.amount, 0);
+    expect(totalWinnings).toBeGreaterThan(0);
 
-    // Due to Issue #11 (pot distribution bug) manifesting in test isolation scenarios,
-    // we need to handle the case where winners get 0 amount.
-    // The test passes when run in isolation but fails in suite due to test interference.
-    if (totalWinnings === 0) {
-      console.log(
-        'WARN: Pot distribution bug (Issue #11) manifested - winners got 0 chips',
-      );
-      console.log(
-        'This is a known issue that occurs with test isolation problems',
-      );
-      // For now, just verify the basic game mechanics worked (winner was determined)
-      expect(winners.length).toBeGreaterThan(0);
-      expect(winners[0].playerId).toBeDefined();
+    // In this all-in scenario:
+    // - Total pot is 400 chips (100 + 300)
+    // - If short stack wins: gets 200 chips (main pot), big stack gets 200 back
+    // - If big stack wins: gets 400 chips total
+    const totalChips = finalShortChips + finalBigChips;
+    expect(totalChips).toBe(400); // Chip conservation is now working!
+    
+    if (winners.some((w) => w.playerId === 'short')) {
+      // Short stack won the main pot (200 chips)
+      expect(finalShortChips).toBe(200);
+      expect(finalBigChips).toBe(200); // Big stack gets remaining chips back
     } else {
-      // Normal case - pot distribution worked correctly
-      expect(totalWinnings).toBeGreaterThan(0);
+      // Big stack won everything
+      expect(finalBigChips).toBe(400);
+      expect(finalShortChips).toBe(0);
     }
-
-    // Additional chip count verification - only when pot distribution works
-    if (totalWinnings > 0) {
-      // Verify the winner has more chips than they started with
-      if (winners.some((w) => w.playerId === 'short')) {
-        expect(finalShortChips).toBeGreaterThan(100);
-      } else {
-        expect(finalBigChips).toBeGreaterThan(0);
-      }
-    }
-
-    // When Issue #11 is fully fixed, these assertions should always pass:
-    // expect(totalChips).toBe(400);
-    // if (winners.some(w => w.playerId === 'short')) {
-    //   expect(finalShortChips).toBe(200);
-    //   expect(finalBigChips).toBe(200);
-    // } else {
-    //   expect(finalShortChips).toBe(0);
-    //   expect(finalBigChips).toBe(400);
-    // }
   });
 });

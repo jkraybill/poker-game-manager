@@ -22,18 +22,18 @@ export default defineConfig({
         '**/test-utils/**',
       ],
     },
-    // Re-enable default parallelism
-    // pool: 'forks',
-    // poolOptions: {
-    //   forks: {
-    //     singleFork: true,
-    //     maxForks: 1,
-    //     minForks: 1,
-    //   }
-    // },
-    // maxConcurrency: 1,
-    // maxWorkers: 1,
-    // minWorkers: 1,
+    // Re-enable single-threaded testing for CI stability
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true,
+        maxForks: 1,
+        minForks: 1,
+      }
+    },
+    maxConcurrency: 1,
+    maxWorkers: 1,
+    minWorkers: 1,
     isolate: true,
     // fileParallelism: false,
     // Force exit after tests complete

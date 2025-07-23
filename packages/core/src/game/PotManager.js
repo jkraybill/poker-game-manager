@@ -130,7 +130,14 @@ break;
         p.id !== player.id && p.state === 'ACTIVE',
       );
       
-      if (stillActivePlayers.length >= 2) {
+      // Create side pot based on the situation:
+      // - Always create if 2+ players remain
+      // - For heads-up game (total 2 players), create even with 1 remaining player
+      const isHeadsUpGame = this.players.length === 2;
+      const shouldCreateSidePot = stillActivePlayers.length >= 2 || 
+        (stillActivePlayers.length === 1 && isHeadsUpGame);
+        
+      if (shouldCreateSidePot) {
         this.createPot(stillActivePlayers);
       }
     }
