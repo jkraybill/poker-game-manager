@@ -8,3 +8,11 @@ export { HandEvaluator } from './game/HandEvaluator.js';
 export * from './types/index.js';
 export * from './events/index.js';
 export * from './constants.js';
+
+// Export utility functions
+export {
+  categorizePlayersByStatus,
+  getFormattedStandings,
+  getPlayerStatus,
+  isPlayerActive,
+} from './utils/playerStatus.js';

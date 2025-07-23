@@ -178,13 +178,7 @@ export class Table extends WildcardEventEmitter {
             gameNumber: this.gameCount,
           });
           
-          // After hand:ended, check for eliminations to ensure proper event ordering
-          if (eventName === 'hand:complete') {
-            // Use process.nextTick to ensure hand:ended is fully processed first
-            process.nextTick(() => {
-              this.checkForEliminations();
-            });
-          }
+          // Don't check here - it's too late, players are already removed
         });
       });
 
@@ -213,32 +207,6 @@ export class Table extends WildcardEventEmitter {
     }
   }
 
-  /**
-   * Check for eliminated players and emit events
-   * This is called after hand:ended to ensure proper event ordering
-   */
-  checkForEliminations() {
-    const eliminatedPlayers = [];
-    
-    for (const [playerId, playerData] of this.players.entries()) {
-      if (playerData.player.chips <= 0) {
-        eliminatedPlayers.push({
-          playerId,
-          playerData,
-        });
-      }
-    }
-    
-    // Emit elimination events
-    for (const { playerId } of eliminatedPlayers) {
-      this.emit('player:eliminated', {
-        playerId,
-        tableId: this.id,
-        finalChips: 0,
-        gameNumber: this.gameCount,
-      });
-    }
-  }
 
   /**
    * Handle game end
@@ -249,17 +217,32 @@ export class Table extends WildcardEventEmitter {
     // Update chip counts are already handled by GameEngine via player.chips setter
     // No need to update here since Player instances are shared
 
-    // Remove broke players (elimination events already fired by checkForEliminations)
-    const playersToRemove = [];
+    // Collect players to eliminate
+    const playersToEliminate = [];
     for (const [playerId, playerData] of this.players.entries()) {
       if (playerData.player.chips <= 0) {
-        playersToRemove.push(playerId);
+        playersToEliminate.push({ playerId, playerData });
       }
     }
     
-    // Remove players after iteration to avoid modifying collection during iteration
-    for (const playerId of playersToRemove) {
-      this.removePlayer(playerId);
+    // Use process.nextTick to ensure elimination events fire after hand:ended
+    if (playersToEliminate.length > 0) {
+      process.nextTick(() => {
+        // First emit all elimination events
+        for (const { playerId } of playersToEliminate) {
+          this.emit('player:eliminated', {
+            playerId,
+            tableId: this.id,
+            finalChips: 0,
+            gameNumber: this.gameCount,
+          });
+        }
+        
+        // Then remove the players
+        for (const { playerId } of playersToEliminate) {
+          this.removePlayer(playerId);
+        }
+      });
     }
 
     // Clean up game engine
