@@ -297,25 +297,44 @@ betting-scenarios.test.js (2157 lines)
    - **⚡ PERFORMANCE OPTIMIZATION**: Deterministic testing eliminates race conditions
    - **🎲 ADVANCED CONCEPTS**: Implement squeeze plays, button steals, family pots, complex side pots
 
-### 🚧 **NEXT POKER DOMINATION PHASE**:
-   - **🤖 AI EXCELLENCE**: Create world-class example player implementations
-   - **🏆 TOURNAMENT ENGINE**: Add comprehensive tournament management
-   - **📈 PERFORMANCE BENCHMARKS**: Sub-millisecond hand evaluation targets
-   - **🌟 6-8 PLAYER SCENARIOS**: Complete the poker complexity spectrum
+## 🎯 **2025 STRATEGIC ROADMAP** (Updated 2025-07-23)
 
-### 🎯 **IMMEDIATE PRIORITIES FOR POKER GREATNESS**:
-   - **🔥 CRITICAL**: Fix test suite failures - memory leaks and timing issues (GitHub Issue #16)
-   - **🔥 HOT**: Complete 6-8 player betting scenarios (GitHub Issue #5)
-   - **⚡ CRITICAL**: Final resolution of side pot edge cases (Issue #11 remaining 10%)
-   - **🏆 GAME CHANGER**: Tournament bracket management system
-   - **🤖 AI REVOLUTION**: GTO-inspired example players
-   - **📊 PERFORMANCE**: Sub-1ms hand evaluation benchmarks
+### **TIER 1 - IMMEDIATE PRIORITIES** (Next 1-2 weeks)
+   - **🔥 CRITICAL**: All-in betting reopening rules (Issue #32) - Tournament integrity
+   - **⚡ STABILITY**: Event ordering improvements (Issue #33) - Ecosystem stability
+   - **🎨 POLISH**: Eliminated player display fix (Issue #34) - Quick UX win
 
-### 🌟 **FUTURE POKER EMPIRE**:
+### **TIER 2 - HIGH PRIORITY** (Next 2-4 weeks)  
+   - **📚 SHOWCASE**: Multi-hand gameplay example (Issue #23) - Demonstrate capabilities
+   - **🏆 FOUNDATION**: Tournament elimination ordering (Issue #28) - Championship prep
+
+### **TIER 3 - DEVELOPER EXPERIENCE** (Next 1-2 months)
+   - **⚡ PRODUCTIVITY**: Extract test utilities (Issue #9) - 60% code duplication reduction
+   - **🎲 COVERAGE**: Complete 4-8 player scenarios (Issue #5) - Edge case validation
+
+### **TIER 4 - CHAMPIONSHIP VISION** (Next 3-6 months)
+   - **🏆 TOURNAMENT ENGINE**: Complete tournament system (Issue #14) - 10,000+ player MTTs
+   - **🎮 TRAINING MODE**: Scenario practice system (Issue #13) - Deliberate practice
+   - **📊 ANALYTICS ENGINE**: Decision tracking & learning (Issue #12) - Professional analysis
+
+### 🌟 **FUTURE EXPANSION** (6+ months)
    - **🎲 VARIANT MASTERY**: Omaha, Short Deck, Mixed Games
-   - **🧠 AI SOPHISTICATION**: Neural network player integration
+   - **🧠 AI SOPHISTICATION**: Neural network player integration  
    - **⚡ SPEED OPTIMIZATION**: Real-time tournament capability
    - **🌐 PLATFORM INTEGRATION**: WebSocket adapters for live play
+
+## 📊 **PRIORITY DECISION FRAMEWORK**
+
+### Issue Classification System
+- **Tier 1**: Core stability & game integrity (bugs, rule violations)
+- **Tier 2**: User experience & platform demonstration 
+- **Tier 3**: Developer productivity & platform robustness
+- **Tier 4**: Strategic differentiation & championship features
+
+### Current Issue Status (11 open issues)
+- **Critical Bugs Resolved**: Issues #11, #27, #29, #31 (all closed ✅)
+- **Meta Issue**: #35 can be closed (all sub-issues resolved)
+- **Active Development**: Focus on Tier 1-2 issues for immediate impact
 
 ## Key Technical Decisions
 
@@ -460,6 +479,20 @@ const strategy = ({ player, gameState, toCall }) => {
   if (toCall > 0) return { action: Action.FOLD };
 };
 ```
+
+### 9. PlayerData Wrapper Legacy Issues ⚠️
+**Problem**: Legacy `playerData` wrapper causes object reference bugs, $0 winners, state sync issues
+**Solution**: **NEVER** reintroduce playerData wrapper - always use Player instances directly:
+```javascript
+// Wrong - Creates state synchronization bugs
+const playerData = { player: playerInstance, chips: 1000 };
+potManager.calculatePayouts([{ playerData, hand, cards }]);
+
+// Correct - Direct Player instance usage
+player.chips = 1000;
+potManager.calculatePayouts([{ player, hand, cards }]);
+```
+**Critical**: This single architectural issue caused Issues #11, #27, #29, #31 simultaneously
 
 ## Session Continuity
 
