@@ -316,7 +316,7 @@ describe('Split Pot Deterministic Tests (v2)', () => {
     events = setupEventCapture(table);
 
     // Limping strategy
-    const limpingStrategy = ({ gameState, myState, toCall }) => {
+    const limpingStrategy = ({ gameState, toCall }) => {
       // Everyone limps/calls preflop
       if (gameState.phase === 'PRE_FLOP' && toCall > 0 && toCall <= 20) {
         return { action: Action.CALL, amount: toCall };

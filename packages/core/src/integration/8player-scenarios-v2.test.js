@@ -416,10 +416,9 @@ describe('8-Player Poker Scenarios (v2)', () => {
     expect(events.handEnded).toBe(true);
 
     // Check if any player was eliminated
-    let knockoutOccurred = false;
     for (const [, chips] of playerChips) {
       if (chips === 0) {
-        knockoutOccurred = true;
+        // A player was eliminated - expected in bounty tournaments
         break;
       }
     }

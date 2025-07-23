@@ -136,12 +136,10 @@ describe('4-Player Big Blind Defense (v2)', () => {
         }),
     );
 
-    // Track dealer button and showdown
-    let dealerButtonPos = -1;
+    // Track showdown
     let showdownOccurred = false;
 
     table.on('hand:started', ({ dealerButton }) => {
-      dealerButtonPos = dealerButton;
       assignPositions(players, dealerButton, 4);
     });
 
@@ -162,7 +160,7 @@ describe('4-Player Big Blind Defense (v2)', () => {
     await waitForHandEnd(events);
 
     // Extract results
-    const { winners, actions } = events;
+    const { winners } = events;
 
     // Verify a showdown occurred (hand went to river)
     expect(showdownOccurred).toBe(true);

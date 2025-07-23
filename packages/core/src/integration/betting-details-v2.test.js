@@ -10,22 +10,18 @@ import {
   createTestTable,
   createHeadsUpTable,
   setupEventCapture,
-  waitForHandEnd,
   StrategicPlayer,
   Action,
-  cleanupTables,
 } from '../test-utils/index.js';
 
 describe('Betting Details in action:requested Event (v2)', () => {
   let manager;
   let table;
-  let events;
 
   beforeEach(() => {
     // Initialize but don't create yet
     manager = null;
     table = null;
-    events = null;
   });
 
   afterEach(() => {
@@ -42,7 +38,6 @@ describe('Betting Details in action:requested Event (v2)', () => {
       });
       manager = null;
       table = null;
-      events = null;
     }
     console.log('=== afterEach: Done ===');
   });
@@ -58,7 +53,7 @@ describe('Betting Details in action:requested Event (v2)', () => {
     table = result.table;
 
     // Set up event capture
-    events = setupEventCapture(table);
+    setupEventCapture(table);
 
     const actionRequests = [];
 
@@ -72,7 +67,7 @@ describe('Betting Details in action:requested Event (v2)', () => {
     });
 
     // Simple test strategy
-    const testStrategy = ({ player, gameState, myState, toCall }) => {
+    const testStrategy = ({ player, gameState, toCall }) => {
       console.log(
         `[${player.name}] strategyType=${player.strategyType}, toCall=${toCall}, phase=${gameState.phase}`,
       );
@@ -181,7 +176,7 @@ describe('Betting Details in action:requested Event (v2)', () => {
     table = result.table;
 
     // Set up event capture
-    events = setupEventCapture(table);
+    setupEventCapture(table);
 
     let capturedRequest = null;
 
@@ -263,7 +258,7 @@ describe('Betting Details in action:requested Event (v2)', () => {
     table = result.table;
 
     // Set up event capture
-    events = setupEventCapture(table);
+    setupEventCapture(table);
 
     const actionRequests = [];
 

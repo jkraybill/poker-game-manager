@@ -78,7 +78,7 @@ describe('Chopped Blinds Scenarios (v2)', () => {
     });
 
     // Assign positions when hand starts
-    table.on('hand:started', ({ dealerButton }) => {
+    table.on('hand:started', () => {
       // In 6-player game with dealerButton = 0:
       // 0 = Button, 1 = SB, 2 = BB, 3 = UTG, 4 = MP, 5 = CO
       const positions = ['button', 'sb', 'bb', 'utg', 'mp', 'co'];

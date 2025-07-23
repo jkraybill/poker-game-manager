@@ -26,7 +26,6 @@ import {
   StrategicPlayer,
   Action,
   cleanupTables,
-  assignPositions,
 } from '../test-utils/index.js';
 
 describe('7-Player Poker Scenarios (v2)', () => {
@@ -61,7 +60,7 @@ describe('7-Player Poker Scenarios (v2)', () => {
     events = setupEventCapture(table);
 
     // Passive limping strategy
-    const limpingStrategy = ({ gameState, myState, toCall }) => {
+    const limpingStrategy = ({ gameState, toCall }) => {
       // Everyone limps preflop
       if (gameState.phase === 'PRE_FLOP' && toCall > 0 && toCall <= 20) {
         return { action: Action.CALL, amount: toCall };
@@ -131,7 +130,7 @@ describe('7-Player Poker Scenarios (v2)', () => {
     events = setupEventCapture(table);
 
     // Position-aware aggressive strategy
-    const positionalStrategy = ({ player, gameState, myState, toCall }) => {
+    const positionalStrategy = ({ player, gameState, toCall }) => {
       // UTG opens
       if (
         player.position === 'utg' &&
@@ -352,7 +351,7 @@ describe('7-Player Poker Scenarios (v2)', () => {
     let squeezePlayed = false;
 
     // Squeeze play strategy
-    const squeezeStrategy = ({ player, gameState, myState, toCall }) => {
+    const squeezeStrategy = ({ player, gameState, toCall }) => {
       const playerStates = Object.values(gameState.players);
 
       // UTG raises

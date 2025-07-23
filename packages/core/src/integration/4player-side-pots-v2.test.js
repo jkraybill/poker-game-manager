@@ -29,7 +29,6 @@ import {
   StrategicPlayer,
   Action,
   cleanupTables,
-  buildDeck,
   assignPositions,
 } from '../test-utils/index.js';
 
@@ -116,7 +115,7 @@ describe('4-Player Multiple All-In Side Pots (v2)', () => {
       { name: 'Big Stack', stackSize: 'big', chips: 1000 }, // Position 3: UTG
     ];
 
-    const players = playerConfigs.map((config, index) => {
+    const players = playerConfigs.map((config) => {
       const player = new StrategicPlayer({
         name: config.name,
         strategy: sidePotStrategy,

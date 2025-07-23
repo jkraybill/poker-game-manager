@@ -54,7 +54,7 @@ describe('4-Player UTG Button Showdown (v2)', () => {
     events = setupEventCapture(table);
 
     // Showdown-aware strategy
-    const showdownStrategy = ({ player, gameState, myState, toCall }) => {
+    const showdownStrategy = ({ player, gameState, toCall }) => {
       // Pre-flop behavior
       if (gameState.phase === 'PRE_FLOP') {
         // UTG raises to 60
@@ -129,7 +129,7 @@ describe('4-Player UTG Button Showdown (v2)', () => {
     await waitForHandEnd(events);
 
     // Extract results
-    const { winners, actions, phases } = events;
+    const { winners, actions } = events;
 
     // Get phase-specific actions
     const phaseActions = {

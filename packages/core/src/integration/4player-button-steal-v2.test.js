@@ -23,9 +23,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   createTestScenario,
   StrategicPlayer,
-  STRATEGIES,
   assignPositions,
-  waitForHandEnd,
   assertActionSequence,
   Action,
 } from '../test-utils/index.js';

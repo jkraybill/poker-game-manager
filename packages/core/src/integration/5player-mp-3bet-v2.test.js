@@ -65,7 +65,7 @@ describe('5-Player MP 3-Bet (v2)', () => {
     events = setupEventCapture(table);
 
     // 3-bet scenario strategy
-    const threeBetStrategy = ({ player, gameState, myState, toCall }) => {
+    const threeBetStrategy = ({ player, gameState, toCall }) => {
       // UTG folds (simulating tight early position play)
       if (player.position === 'utg') {
         return { action: Action.FOLD };

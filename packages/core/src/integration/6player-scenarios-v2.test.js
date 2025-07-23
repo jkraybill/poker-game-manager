@@ -112,9 +112,7 @@ describe('6-Player Poker Scenarios (v2)', () => {
     });
 
     // Track positions
-    let dealerButtonPos = -1;
     table.on('hand:started', ({ dealerButton }) => {
-      dealerButtonPos = dealerButton;
       assignPositions(players, dealerButton, 6);
     });
 
@@ -167,7 +165,7 @@ describe('6-Player Poker Scenarios (v2)', () => {
     events = setupEventCapture(table);
 
     // Passive calling station strategy
-    const callingStationStrategy = ({ gameState, myState, toCall }) => {
+    const callingStationStrategy = ({ gameState, toCall }) => {
       // Call any bet up to the big blind preflop (everyone limps)
       if (
         gameState.phase === 'PRE_FLOP' &&
@@ -291,7 +289,7 @@ describe('6-Player Poker Scenarios (v2)', () => {
       { name: 'Player 6 (CO)', chips: 250 }, // Medium-short stack
     ];
 
-    const players = stackConfigs.map((config, i) => {
+    const players = stackConfigs.map((config) => {
       const player = new StrategicPlayer({
         name: config.name,
         strategy: variableStackStrategy,

@@ -32,7 +32,6 @@ import {
   setupEventCapture,
   waitForHandEnd,
   StrategicPlayer,
-  STRATEGIES,
   Action,
   cleanupTables,
 } from '../test-utils/index.js';
@@ -155,7 +154,7 @@ describe('5-Player Squeeze Play (v2)', () => {
       { name: 'MP Player', stackSize: 'mp' },
     ];
 
-    const players = playerConfigs.map((config, index) => {
+    const players = playerConfigs.map((config) => {
       const player = new StrategicPlayer({
         name: config.name,
         strategy: squeezePlayStrategy,
