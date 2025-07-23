@@ -7,7 +7,9 @@ I'm working on the Poker Game Manager project - a pure poker library for Node.js
 
 Please read:
 1. SESSION_CONTEXT.md - Current state and priorities
-2. CLAUDE.md - Technical guide (if needed)
+2. TESTING_GUIDE.md - for writing unit tests etc.
+3. CLAUDE.md - Technical guide (if needed)
+
 
 Key facts:
 - Pure JavaScript, Node.js 22+, event-driven architecture
@@ -51,6 +53,7 @@ When wrapping up your session, please complete these steps:
    - Update these copypastas if they could be better
    - Prune obsolete sections from documentation
    - Update CLAUDE.md with new patterns/fixes
+   - Update TESTING_GUIDE.md with updates to testing methodology
    - Simplify SESSION_CONTEXT.md (remove old victories)
    - Delete or archive outdated files
 
