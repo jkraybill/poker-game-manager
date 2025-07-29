@@ -11,7 +11,17 @@ A basic example showing a single hand of poker with 3 players. Demonstrates:
 - Single hand gameplay
 - Final chip counts
 
-### 2. simple-game-multiple-hands.js
+### 2. simple-game-multi-hand.js
+A clean, educational example showing 5 hands of poker with 3 players. Demonstrates:
+- **Multi-hand gameplay** - Plays exactly 5 hands
+- **Dealer button rotation** - Tracks button movement across hands
+- **Chip persistence** - Shows chip counts between hands
+- **Player elimination** - Handles players running out of chips
+- **Final standings** - Shows tournament-style results with medals
+- **Game statistics** - Tracks hands played and chip conservation
+- **Proper hand restart** - Uses `table.tryStartGame()` between hands
+
+### 3. simple-game-multiple-hands.js
 An advanced example showing multi-hand gameplay with 6 players over 12 hands. Demonstrates:
 - **Comprehensive event listening** - All available events from both Manager and Table
 - **Multi-hand gameplay** - 12 consecutive hands with proper dealer rotation
@@ -26,7 +36,10 @@ An advanced example showing multi-hand gameplay with 6 players over 12 hands. De
 # Run single hand example
 node examples/simple-game.js
 
-# Run multi-hand example (12 hands with 6 players)
+# Run simple multi-hand example (5 hands with 3 players)
+node examples/simple-game-multi-hand.js
+
+# Run advanced multi-hand example (12 hands with 6 players)
 node examples/simple-game-multiple-hands.js
 ```
 

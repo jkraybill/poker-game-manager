@@ -29,6 +29,11 @@ export class Table extends WildcardEventEmitter {
     this.gameCount = 0;
     this.customDeck = null;
     this.handStartingChips = new Map(); // Track chip counts at start of each hand
+    
+    // Dead button rule tracking
+    this.playerOrder = []; // Ordered list of player IDs by seat
+    this.lastBigBlindPlayerId = null; // Track who posted BB last hand
+    this.currentDealerButton = config.dealerButton ?? 0; // Initial button position
   }
 
   /**
@@ -50,16 +55,18 @@ export class Table extends WildcardEventEmitter {
     // Set player's initial chips
     player.buyIn(this.config.minBuyIn);
 
+    const seatNumber = this.getNextAvailableSeat();
+    
     this.players.set(player.id, {
       player,
       state: PlayerState.WAITING,
-      seatNumber: this.getNextAvailableSeat(),
+      seatNumber,
     });
 
     this.emit('player:joined', {
       player,
       tableId: this.id,
-      seatNumber: this.players.get(player.id).seatNumber,
+      seatNumber,
     });
 
     // Emit event when minimum players first reached (consumer can decide to start)
@@ -155,7 +162,7 @@ export class Table extends WildcardEventEmitter {
         players: sortedPlayers.map((pd) => pd.player), // Pass Player instances directly
         blinds: this.config.blinds,
         timeout: this.config.timeout,
-        dealerButton: this.config.dealerButton,
+        dealerButton: this.currentDealerButton,
         customDeck: this.customDeck,
       });
 
@@ -224,6 +231,20 @@ export class Table extends WildcardEventEmitter {
     // Update chip counts are already handled by GameEngine via player.chips setter
     // No need to update here since Player instances are shared
 
+    // Simple button rotation
+    const activePlayers = Array.from(this.players.values())
+      .filter(pd => pd.player.chips > 0)
+      .sort((a, b) => a.seatNumber - b.seatNumber);
+    
+    if (activePlayers.length >= 2) {
+      // For now, just rotate button to next active player
+      // This maintains the existing behavior that works for most cases
+      this.currentDealerButton = (this.currentDealerButton + 1) % activePlayers.length;
+      
+      // TODO: Implement proper dead button rule to prevent players
+      // from posting BB twice in a row when others are eliminated
+    }
+
     // Collect players to eliminate
     const playersToEliminate = [];
     for (const [playerId, playerData] of this.players.entries()) {
@@ -232,7 +253,7 @@ export class Table extends WildcardEventEmitter {
         playersToEliminate.push({ 
           playerId, 
           playerData, 
-          startingChips 
+          startingChips, 
         });
       }
     }

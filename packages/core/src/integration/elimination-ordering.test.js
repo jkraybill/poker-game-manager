@@ -40,25 +40,53 @@ describe('Tournament Elimination Ordering (Issue #28)', () => {
     const riggedDeck = [
       // Hole cards - dealing order is player 0, 1, 2, then player 0, 1, 2 again
       // Player 0 (Small Stack) gets 7-2 offsuit (worst hand)
-      { rank: '7', suit: 'd', toString() { return '7d'; } },
+      { rank: '7', suit: 'd', toString() {
+ return '7d'; 
+} },
       // Player 1 (Medium Stack) gets 8-3 offsuit (bad hand)  
-      { rank: '8', suit: 's', toString() { return '8s'; } },
+      { rank: '8', suit: 's', toString() {
+ return '8s'; 
+} },
       // Player 2 (Big Stack) gets A-A (pocket aces - best hand)
-      { rank: 'A', suit: 'h', toString() { return 'Ah'; } },
+      { rank: 'A', suit: 'h', toString() {
+ return 'Ah'; 
+} },
       // Second hole card
-      { rank: '2', suit: 'c', toString() { return '2c'; } }, // Small Stack 7-2
-      { rank: '3', suit: 'h', toString() { return '3h'; } }, // Medium Stack 8-3
-      { rank: 'A', suit: 's', toString() { return 'As'; } }, // Big Stack A-A
+      { rank: '2', suit: 'c', toString() {
+ return '2c'; 
+} }, // Small Stack 7-2
+      { rank: '3', suit: 'h', toString() {
+ return '3h'; 
+} }, // Medium Stack 8-3
+      { rank: 'A', suit: 's', toString() {
+ return 'As'; 
+} }, // Big Stack A-A
       
       // Burn + Community cards that don't help the small stacks
-      { rank: '4', suit: 'd', toString() { return '4d'; } }, // Burn
-      { rank: 'K', suit: 'h', toString() { return 'Kh'; } }, // Flop 1
-      { rank: 'Q', suit: 'd', toString() { return 'Qd'; } }, // Flop 2  
-      { rank: 'J', suit: 'c', toString() { return 'Jc'; } }, // Flop 3
-      { rank: '5', suit: 's', toString() { return '5s'; } }, // Burn
-      { rank: 'T', suit: 'h', toString() { return 'Th'; } }, // Turn
-      { rank: '6', suit: 'd', toString() { return '6d'; } }, // Burn
-      { rank: '9', suit: 's', toString() { return '9s'; } }, // River
+      { rank: '4', suit: 'd', toString() {
+ return '4d'; 
+} }, // Burn
+      { rank: 'K', suit: 'h', toString() {
+ return 'Kh'; 
+} }, // Flop 1
+      { rank: 'Q', suit: 'd', toString() {
+ return 'Qd'; 
+} }, // Flop 2  
+      { rank: 'J', suit: 'c', toString() {
+ return 'Jc'; 
+} }, // Flop 3
+      { rank: '5', suit: 's', toString() {
+ return '5s'; 
+} }, // Burn
+      { rank: 'T', suit: 'h', toString() {
+ return 'Th'; 
+} }, // Turn
+      { rank: '6', suit: 'd', toString() {
+ return '6d'; 
+} }, // Burn
+      { rank: '9', suit: 's', toString() {
+ return '9s'; 
+} }, // River
     ];
 
     table.setCustomDeck(riggedDeck);
@@ -131,7 +159,7 @@ describe('Tournament Elimination Ordering (Issue #28)', () => {
         console.log('Hand ended, winners:', winners.map(w => ({ 
           name: playerNames.get(w.playerId), 
           id: w.playerId, 
-          amount: w.amount 
+          amount: w.amount, 
         })));
         // Give time for elimination events
         setTimeout(resolve, 200);
@@ -209,7 +237,7 @@ describe('Tournament Elimination Ordering (Issue #28)', () => {
         playerName, 
         finalChips, 
         startingChips: startChips,
-        timestamp 
+        timestamp, 
       });
       console.log(`[${timestamp}] ${playerName} eliminated (started with ${startChips} chips)`);
     });
@@ -273,25 +301,57 @@ describe('Tournament Elimination Ordering (Issue #28)', () => {
     // Use a rigged deck that gives winner the best hand
     const riggedDeck = [
       // Winner gets pocket aces
-      { rank: 'A', suit: 'h', toString() { return 'Ah'; } }, // Winner
-      { rank: '2', suit: 'd', toString() { return '2d'; } }, // Big Stack  
-      { rank: '3', suit: 's', toString() { return '3s'; } }, // Medium Stack
-      { rank: '4', suit: 'c', toString() { return '4c'; } }, // Small Stack
+      { rank: 'A', suit: 'h', toString() {
+ return 'Ah'; 
+} }, // Winner
+      { rank: '2', suit: 'd', toString() {
+ return '2d'; 
+} }, // Big Stack  
+      { rank: '3', suit: 's', toString() {
+ return '3s'; 
+} }, // Medium Stack
+      { rank: '4', suit: 'c', toString() {
+ return '4c'; 
+} }, // Small Stack
       // Second cards
-      { rank: 'A', suit: 's', toString() { return 'As'; } }, // Winner - AA
-      { rank: '7', suit: 'h', toString() { return '7h'; } }, // Big Stack - 27
-      { rank: '8', suit: 'd', toString() { return '8d'; } }, // Medium Stack - 38
-      { rank: '9', suit: 'c', toString() { return '9c'; } }, // Small Stack - 49
+      { rank: 'A', suit: 's', toString() {
+ return 'As'; 
+} }, // Winner - AA
+      { rank: '7', suit: 'h', toString() {
+ return '7h'; 
+} }, // Big Stack - 27
+      { rank: '8', suit: 'd', toString() {
+ return '8d'; 
+} }, // Medium Stack - 38
+      { rank: '9', suit: 'c', toString() {
+ return '9c'; 
+} }, // Small Stack - 49
       
       // Board that doesn't help anyone except winner  
-      { rank: '5', suit: 'h', toString() { return '5h'; } }, // Burn
-      { rank: 'K', suit: 'd', toString() { return 'Kd'; } }, // Flop
-      { rank: 'Q', suit: 's', toString() { return 'Qs'; } },
-      { rank: 'J', suit: 'h', toString() { return 'Jh'; } },
-      { rank: '6', suit: 'd', toString() { return '6d'; } }, // Burn  
-      { rank: 'T', suit: 'c', toString() { return 'Tc'; } }, // Turn
-      { rank: '7', suit: 's', toString() { return '7s'; } }, // Burn
-      { rank: '2', suit: 'h', toString() { return '2h'; } }, // River
+      { rank: '5', suit: 'h', toString() {
+ return '5h'; 
+} }, // Burn
+      { rank: 'K', suit: 'd', toString() {
+ return 'Kd'; 
+} }, // Flop
+      { rank: 'Q', suit: 's', toString() {
+ return 'Qs'; 
+} },
+      { rank: 'J', suit: 'h', toString() {
+ return 'Jh'; 
+} },
+      { rank: '6', suit: 'd', toString() {
+ return '6d'; 
+} }, // Burn  
+      { rank: 'T', suit: 'c', toString() {
+ return 'Tc'; 
+} }, // Turn
+      { rank: '7', suit: 's', toString() {
+ return '7s'; 
+} }, // Burn
+      { rank: '2', suit: 'h', toString() {
+ return '2h'; 
+} }, // River
     ];
 
     table.setCustomDeck(riggedDeck);
@@ -300,7 +360,7 @@ describe('Tournament Elimination Ordering (Issue #28)', () => {
       table.on('hand:ended', ({ winners }) => {
         console.log('\nHand ended, winners:', winners.map(w => ({ 
           name: playerNames.get(w.playerId), 
-          amount: w.amount 
+          amount: w.amount, 
         })));
         setTimeout(resolve, 200);
       });
