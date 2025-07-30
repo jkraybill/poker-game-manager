@@ -235,22 +235,33 @@ export class Table extends WildcardEventEmitter {
     const allPlayers = Array.from(this.players.values())
       .sort((a, b) => a.seatNumber - b.seatNumber);
     
-    // Button rotation: move to next position clockwise
-    if (allPlayers.length >= 2) {
-      // Always rotate button one position clockwise
-      this.currentDealerButton = (this.currentDealerButton + 1) % allPlayers.length;
+    // Get only active players (those who will remain after eliminations)
+    const activePlayers = allPlayers.filter(pd => pd.player.chips > 0);
+    
+    // Button rotation: move to next active player
+    if (activePlayers.length >= 2) {
+      // Find the next active player after current button
+      let nextButtonIndex = -1;
       
-      // Find next active player from new button position
-      let attempts = 0;
-      while (attempts < allPlayers.length) {
-        const playerAtButton = allPlayers[this.currentDealerButton];
-        if (playerAtButton && playerAtButton.player.chips > 0) {
-          // Found active player at button position
+      // Start searching from the position after current button
+      for (let i = 1; i <= allPlayers.length; i++) {
+        const checkIndex = (this.currentDealerButton + i) % allPlayers.length;
+        const playerData = allPlayers[checkIndex];
+        
+        // If this player will remain active, they get the button
+        if (playerData && playerData.player.chips > 0) {
+          // Find this player's index in the active players array
+          nextButtonIndex = activePlayers.findIndex(ap => ap.player.id === playerData.player.id);
           break;
         }
-        // Skip eliminated player, move to next position
-        this.currentDealerButton = (this.currentDealerButton + 1) % allPlayers.length;
-        attempts++;
+      }
+      
+      // Update button position to the active player index
+      if (nextButtonIndex >= 0) {
+        this.currentDealerButton = nextButtonIndex;
+      } else {
+        // Fallback: just move to next position in active players
+        this.currentDealerButton = 0;
       }
       
       // TODO: Implement proper dead button rule (Issue #37) to prevent players
