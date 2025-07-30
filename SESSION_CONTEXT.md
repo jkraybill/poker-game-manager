@@ -3,21 +3,17 @@
 ## Current Status (2025-07-30)
 - **✅ ALL TESTS PASSING**: 211 of 211 tests passing (100% success!)
 - **✅ All critical bugs fixed**: Issue #35 (bug summary) closed
-- **✅ Non-deterministic tests fixed**: Made failing tests deterministic with custom decks
-- **✅ Test count confusion resolved**: 209 total tests (56 in integration folder)
+- **✅ ESLint compliance**: Fixed 6204 semicolon errors across all files
 - **🚧 Test migration progress**: 29 of 42 integration tests migrated to use test utilities
 - **Partial implementation**: Dead button rules (Issue #37) - foundation complete but needs architectural changes
 
 ## Just Completed ✅
-1. **Fixed ALL failing tests** (Session 2025-07-30)
-   - Fixed `chip-tracking-v2.test.js` by adding custom deck with AA vs KQ
-   - Fixed `5player-family-pot-v2.test.js` by ensuring single winner with AA
-   - Fixed `elimination-ordering.test.js` by adding custom deck to ensure elimination
-   - All 209 tests now passing (was 208/209 with 1 failure)
-   - Ran ESLint and Prettier to ensure code quality
-   - Resolved test count confusion: 209 total tests across all folders
+1. **ESLint Fixes** (Latest - 2025-07-30)
+   - Fixed 6204 missing semicolon errors via auto-fix
+   - All 211 tests continue to pass
+   - Code now fully compliant with project ESLint configuration
 
-2. **Started Issue #9 - Test Migration** (Session 2025-07-30)
+2. **Test Migration Progress** (Session 2025-07-30)
    - Migrated `button-rotation.test.js` → `button-rotation-v2.test.js`
    - Migrated `standings-display.test.js` → `standings-display-v2.test.js`
    - Now 29 of 42 integration tests use test utilities
@@ -67,11 +63,11 @@ git status && git diff     # Check changes
 ```
 
 ## Recent Commits
+- `fix: add missing semicolons to pass ESLint checks (Issue #9)`
 - `chore: run prettier formatting on all files`
 - `fix: make non-deterministic tests deterministic with custom decks`
 - `fix: auto-fix ESLint errors (trailing commas, prefer-const)`
 - `test: simplify dealer button rotation test for player elimination`
-- `feat(core): partial implementation of dead button rules (Issue #37)`
 
 ## Architecture Insights
 The poker game manager is now stable with:
