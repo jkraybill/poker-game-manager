@@ -76,7 +76,7 @@ describe('Dead Button Simple Test', () => {
         hand: handInfo.length + 1,
         dealerButton: data.dealerButton,
         players: [...data.players],
-        blindPosts: { sb: null, bb: null }
+        blindPosts: { sb: null, bb: null },
       };
       handInfo.push(info);
     });
@@ -132,7 +132,7 @@ describe('Dead Button Simple Test', () => {
       button: handInfo[0].dealerButton,
       players: handInfo[0].players,
       sb: handInfo[0].blindPosts.sb,
-      bb: handInfo[0].blindPosts.bb
+      bb: handInfo[0].blindPosts.bb,
     });
     
     console.log('Eliminated:', eliminatedPlayers);
@@ -142,7 +142,7 @@ describe('Dead Button Simple Test', () => {
         button: handInfo[1].dealerButton,
         players: handInfo[1].players,
         sb: handInfo[1].blindPosts.sb,
-        bb: handInfo[1].blindPosts.bb
+        bb: handInfo[1].blindPosts.bb,
       });
     }
 

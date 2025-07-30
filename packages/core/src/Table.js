@@ -245,7 +245,7 @@ export class Table extends WildcardEventEmitter {
         smallBlindIndex: null,
         bigBlindIndex: null,
         isDeadButton: false,
-        isDeadSmallBlind: false
+        isDeadSmallBlind: false,
       };
     }
     
@@ -297,14 +297,14 @@ export class Table extends WildcardEventEmitter {
     const bbSeatIndex = allPlayers.indexOf(bbPlayerData);
     
     // Find button position (2 seats before BB by seat order)
-    let buttonSeatIndex = (bbSeatIndex - 2 + allPlayers.length) % allPlayers.length;
-    let buttonPlayerData = allPlayers[buttonSeatIndex];
-    let isDeadButton = buttonPlayerData.player.chips <= 0;
+    const buttonSeatIndex = (bbSeatIndex - 2 + allPlayers.length) % allPlayers.length;
+    const buttonPlayerData = allPlayers[buttonSeatIndex];
+    const isDeadButton = buttonPlayerData.player.chips <= 0;
     
     // Find SB position (1 seat before BB by seat order)
-    let sbSeatIndex = (bbSeatIndex - 1 + allPlayers.length) % allPlayers.length;
-    let sbPlayerData = allPlayers[sbSeatIndex];
-    let isDeadSmallBlind = sbPlayerData.player.chips <= 0;
+    const sbSeatIndex = (bbSeatIndex - 1 + allPlayers.length) % allPlayers.length;
+    const sbPlayerData = allPlayers[sbSeatIndex];
+    const isDeadSmallBlind = sbPlayerData.player.chips <= 0;
     
     // Special handling for heads-up
     if (activePlayers.length === 2) {
@@ -318,7 +318,7 @@ export class Table extends WildcardEventEmitter {
         bigBlindIndex: bbActiveIndex,
         isDeadButton: false,
         isDeadSmallBlind: false,
-        nextBBSeatNumber
+        nextBBSeatNumber,
       };
     }
     
@@ -364,7 +364,7 @@ export class Table extends WildcardEventEmitter {
       bigBlindIndex: bbActiveIndex,
       isDeadButton,
       isDeadSmallBlind,
-      nextBBSeatNumber
+      nextBBSeatNumber,
     };
   }
 
