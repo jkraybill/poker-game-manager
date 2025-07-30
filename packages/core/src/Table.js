@@ -231,17 +231,29 @@ export class Table extends WildcardEventEmitter {
     // Update chip counts are already handled by GameEngine via player.chips setter
     // No need to update here since Player instances are shared
 
-    // Simple button rotation
-    const activePlayers = Array.from(this.players.values())
-      .filter(pd => pd.player.chips > 0)
+    // Get all players sorted by seat number
+    const allPlayers = Array.from(this.players.values())
       .sort((a, b) => a.seatNumber - b.seatNumber);
     
-    if (activePlayers.length >= 2) {
-      // For now, just rotate button to next active player
-      // This maintains the existing behavior that works for most cases
-      this.currentDealerButton = (this.currentDealerButton + 1) % activePlayers.length;
+    // Button rotation: move to next position clockwise
+    if (allPlayers.length >= 2) {
+      // Always rotate button one position clockwise
+      this.currentDealerButton = (this.currentDealerButton + 1) % allPlayers.length;
       
-      // TODO: Implement proper dead button rule to prevent players
+      // Find next active player from new button position
+      let attempts = 0;
+      while (attempts < allPlayers.length) {
+        const playerAtButton = allPlayers[this.currentDealerButton];
+        if (playerAtButton && playerAtButton.player.chips > 0) {
+          // Found active player at button position
+          break;
+        }
+        // Skip eliminated player, move to next position
+        this.currentDealerButton = (this.currentDealerButton + 1) % allPlayers.length;
+        attempts++;
+      }
+      
+      // TODO: Implement proper dead button rule (Issue #37) to prevent players
       // from posting BB twice in a row when others are eliminated
     }
 
