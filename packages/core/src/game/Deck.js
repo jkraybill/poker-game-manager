@@ -3,16 +3,16 @@
  */
 export class Deck {
   constructor() {
-    this.cards = [];
-    this.reset();
+    this.cards = []
+    this.reset()
   }
 
   /**
    * Reset deck to full 52 cards
    */
   reset() {
-    this.cards = [];
-    const suits = ['h', 'd', 'c', 's']; // Use pokersolver format
+    this.cards = []
+    const suits = ['h', 'd', 'c', 's'] // Use pokersolver format
     const ranks = [
       '2',
       '3',
@@ -27,7 +27,7 @@ export class Deck {
       'Q',
       'K',
       'A',
-    ]; // T instead of 10
+    ] // T instead of 10
 
     for (const suit of suits) {
       for (const rank of ranks) {
@@ -35,9 +35,9 @@ export class Deck {
           rank,
           suit,
           toString() {
-            return `${rank}${suit}`;
+            return `${rank}${suit}`
           },
-        });
+        })
       }
     }
   }
@@ -48,7 +48,7 @@ export class Deck {
   shuffle() {
     for (let i = this.cards.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
-      ;[this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
+      ;[this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]]
     }
   }
 
@@ -57,15 +57,15 @@ export class Deck {
    */
   draw() {
     if (this.cards.length === 0) {
-      throw new Error('Cannot draw from empty deck');
+      throw new Error('Cannot draw from empty deck')
     }
-    return this.cards.shift();
+    return this.cards.shift()
   }
 
   /**
    * Get remaining card count
    */
   getRemaining() {
-    return this.cards.length;
+    return this.cards.length
   }
 }

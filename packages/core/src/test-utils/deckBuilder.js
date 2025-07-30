@@ -10,10 +10,10 @@
  */
 export class DeckBuilder {
   constructor(playerCount) {
-    this.playerCount = playerCount;
-    this.cards = [];
-    this.burnCardSuit = 'h'; // Default burn card suit
-    this.burnCardRank = '2'; // Default burn card rank
+    this.playerCount = playerCount
+    this.cards = []
+    this.burnCardSuit = 'h' // Default burn card suit
+    this.burnCardRank = '2' // Default burn card rank
   }
 
   /**
@@ -23,27 +23,27 @@ export class DeckBuilder {
    */
   dealHoleCards(hands) {
     if (hands.length !== this.playerCount) {
-      throw new Error(`Expected ${this.playerCount} hands, got ${hands.length}`);
+      throw new Error(`Expected ${this.playerCount} hands, got ${hands.length}`)
     }
 
     // Validate each hand has 2 cards
     hands.forEach((hand, index) => {
       if (hand.length !== 2) {
         throw new Error(
-          `Player ${index + 1} hand must have exactly 2 cards, got ${hand.length}`,
-        );
+          `Player ${index + 1} hand must have exactly 2 cards, got ${hand.length}`
+        )
       }
-    });
+    })
 
     // Deal first card to each player, then second card to each player
     for (let cardIndex = 0; cardIndex < 2; cardIndex++) {
       for (let playerIndex = 0; playerIndex < this.playerCount; playerIndex++) {
-        const cardStr = hands[playerIndex][cardIndex];
-        this.cards.push(this.createCard(cardStr));
+        const cardStr = hands[playerIndex][cardIndex]
+        this.cards.push(this.createCard(cardStr))
       }
     }
 
-    return this;
+    return this
   }
 
   /**
@@ -52,16 +52,16 @@ export class DeckBuilder {
    * @returns {DeckBuilder} For method chaining
    */
   addBurn(card = null) {
-    const burnCard = card || `${this.burnCardRank}${this.burnCardSuit}`;
-    this.cards.push(this.createCard(burnCard));
+    const burnCard = card || `${this.burnCardRank}${this.burnCardSuit}`
+    this.cards.push(this.createCard(burnCard))
 
     // Cycle burn card for variety if using defaults
     if (!card) {
-      this.burnCardRank = this.burnCardRank === '2' ? '3' : '2';
-      this.burnCardSuit = this.burnCardSuit === 'h' ? 'd' : 'h';
+      this.burnCardRank = this.burnCardRank === '2' ? '3' : '2'
+      this.burnCardSuit = this.burnCardSuit === 'h' ? 'd' : 'h'
     }
 
-    return this;
+    return this
   }
 
   /**
@@ -72,11 +72,11 @@ export class DeckBuilder {
    * @returns {DeckBuilder} For method chaining
    */
   addFlop(card1, card2, card3) {
-    this.addBurn(); // Burn before flop
-    this.cards.push(this.createCard(card1));
-    this.cards.push(this.createCard(card2));
-    this.cards.push(this.createCard(card3));
-    return this;
+    this.addBurn() // Burn before flop
+    this.cards.push(this.createCard(card1))
+    this.cards.push(this.createCard(card2))
+    this.cards.push(this.createCard(card3))
+    return this
   }
 
   /**
@@ -85,9 +85,9 @@ export class DeckBuilder {
    * @returns {DeckBuilder} For method chaining
    */
   addTurn(card) {
-    this.addBurn(); // Burn before turn
-    this.cards.push(this.createCard(card));
-    return this;
+    this.addBurn() // Burn before turn
+    this.cards.push(this.createCard(card))
+    return this
   }
 
   /**
@@ -96,9 +96,9 @@ export class DeckBuilder {
    * @returns {DeckBuilder} For method chaining
    */
   addRiver(card) {
-    this.addBurn(); // Burn before river
-    this.cards.push(this.createCard(card));
-    return this;
+    this.addBurn() // Burn before river
+    this.cards.push(this.createCard(card))
+    return this
   }
 
   /**
@@ -109,24 +109,24 @@ export class DeckBuilder {
   addCommunityCards(cards) {
     if (cards.length < 3 || cards.length > 5) {
       throw new Error(
-        'Community cards must be 3-5 cards (flop required, turn/river optional)',
-      );
+        'Community cards must be 3-5 cards (flop required, turn/river optional)'
+      )
     }
 
     // Add flop
-    this.addFlop(cards[0], cards[1], cards[2]);
+    this.addFlop(cards[0], cards[1], cards[2])
 
     // Add turn if provided
     if (cards.length >= 4) {
-      this.addTurn(cards[3]);
+      this.addTurn(cards[3])
     }
 
     // Add river if provided
     if (cards.length === 5) {
-      this.addRiver(cards[4]);
+      this.addRiver(cards[4])
     }
 
-    return this;
+    return this
   }
 
   /**
@@ -136,9 +136,9 @@ export class DeckBuilder {
    */
   addCards(...cards) {
     cards.forEach((card) => {
-      this.cards.push(this.createCard(card));
-    });
-    return this;
+      this.cards.push(this.createCard(card))
+    })
+    return this
   }
 
   /**
@@ -148,9 +148,9 @@ export class DeckBuilder {
    * @returns {DeckBuilder} For method chaining
    */
   setBurnPattern(rank = '2', suit = 'h') {
-    this.burnCardRank = rank;
-    this.burnCardSuit = suit;
-    return this;
+    this.burnCardRank = rank
+    this.burnCardSuit = suit
+    return this
   }
 
   /**
@@ -158,7 +158,7 @@ export class DeckBuilder {
    * @returns {number} Card count
    */
   getCardCount() {
-    return this.cards.length;
+    return this.cards.length
   }
 
   /**
@@ -166,7 +166,7 @@ export class DeckBuilder {
    * @returns {Array<string>} Array of card strings
    */
   preview() {
-    return this.cards.map((card) => card.toString());
+    return this.cards.map((card) => card.toString())
   }
 
   /**
@@ -175,9 +175,9 @@ export class DeckBuilder {
    */
   build() {
     if (this.cards.length === 0) {
-      throw new Error('Deck is empty. Add some cards before building.');
+      throw new Error('Deck is empty. Add some cards before building.')
     }
-    return [...this.cards]; // Return copy to prevent mutation
+    return [...this.cards] // Return copy to prevent mutation
   }
 
   /**
@@ -187,11 +187,11 @@ export class DeckBuilder {
    */
   createCard(cardStr) {
     if (!cardStr || cardStr.length < 2) {
-      throw new Error(`Invalid card string: ${cardStr}`);
+      throw new Error(`Invalid card string: ${cardStr}`)
     }
 
-    const rank = cardStr.slice(0, -1);
-    const suit = cardStr.slice(-1);
+    const rank = cardStr.slice(0, -1)
+    const suit = cardStr.slice(-1)
 
     // Validate rank
     const validRanks = [
@@ -208,28 +208,28 @@ export class DeckBuilder {
       'Q',
       'K',
       'A',
-    ];
+    ]
     if (!validRanks.includes(rank)) {
       throw new Error(
-        `Invalid card rank: ${rank}. Valid ranks: ${validRanks.join(', ')}`,
-      );
+        `Invalid card rank: ${rank}. Valid ranks: ${validRanks.join(', ')}`
+      )
     }
 
     // Validate suit
-    const validSuits = ['h', 'd', 'c', 's'];
+    const validSuits = ['h', 'd', 'c', 's']
     if (!validSuits.includes(suit)) {
       throw new Error(
-        `Invalid card suit: ${suit}. Valid suits: ${validSuits.join(', ')}`,
-      );
+        `Invalid card suit: ${suit}. Valid suits: ${validSuits.join(', ')}`
+      )
     }
 
     return {
       rank,
       suit,
       toString() {
-        return cardStr;
+        return cardStr
       },
-    };
+    }
   }
 
   /**
@@ -243,7 +243,7 @@ export class DeckBuilder {
     return new DeckBuilder(2)
       .dealHoleCards([p1Hand, p2Hand])
       .addCommunityCards(community)
-      .build();
+      .build()
   }
 
   /**
@@ -256,7 +256,7 @@ export class DeckBuilder {
     return new DeckBuilder(identicalHands.length)
       .dealHoleCards(identicalHands)
       .addCommunityCards(community)
-      .build();
+      .build()
   }
 
   /**
@@ -268,16 +268,16 @@ export class DeckBuilder {
    */
   static createBoardPlayDeck(playerCount, weakHands, strongBoard) {
     if (weakHands.length !== playerCount) {
-      throw new Error(`Need ${playerCount} weak hands, got ${weakHands.length}`);
+      throw new Error(`Need ${playerCount} weak hands, got ${weakHands.length}`)
     }
 
     // Convert single cards to pairs for hole cards
-    const hands = weakHands.map((card) => [card, '2c']); // Pair weak cards with 2c
+    const hands = weakHands.map((card) => [card, '2c']) // Pair weak cards with 2c
 
     return new DeckBuilder(playerCount)
       .dealHoleCards(hands)
       .addCommunityCards(strongBoard)
-      .build();
+      .build()
   }
 }
 
@@ -287,7 +287,7 @@ export class DeckBuilder {
  * @returns {DeckBuilder} New deck builder instance
  */
 export function createDeck(playerCount) {
-  return new DeckBuilder(playerCount);
+  return new DeckBuilder(playerCount)
 }
 
 /**
@@ -301,7 +301,7 @@ export const DECK_SCENARIOS = {
     DeckBuilder.createHeadsUpDeck(
       ['8h', '9h'],
       ['8d', '9d'],
-      ['5c', '6s', '7h', 'Tc', 'Jc'],
+      ['5c', '6s', '7h', 'Tc', 'Jc']
     ),
 
   /**
@@ -311,7 +311,7 @@ export const DECK_SCENARIOS = {
     DeckBuilder.createBoardPlayDeck(
       3,
       ['2h', '3d', '4c'],
-      ['As', 'Ks', 'Qs', 'Js', 'Ts'],
+      ['As', 'Ks', 'Qs', 'Js', 'Ts']
     ),
 
   /**
@@ -321,7 +321,7 @@ export const DECK_SCENARIOS = {
     DeckBuilder.createHeadsUpDeck(
       ['As', 'Ah'],
       ['Kh', 'Kd'],
-      ['Ac', 'Ad', '2c', '3h', '4s'],
+      ['Ac', 'Ad', '2c', '3h', '4s']
     ),
 
   /**
@@ -339,4 +339,4 @@ export const DECK_SCENARIOS = {
       .addTurn('7c')
       .addRiver('9c')
       .build(),
-};
+}

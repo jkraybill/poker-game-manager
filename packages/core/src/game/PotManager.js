@@ -1,6 +1,6 @@
-import { Pot } from './Pot.js';
-import { EventEmitter } from 'eventemitter3';
-import { HandEvaluator } from './HandEvaluator.js';
+import { Pot } from './Pot.js'
+import { EventEmitter } from 'eventemitter3'
+import { HandEvaluator } from './HandEvaluator.js'
 
 /**
  * Manages all pots in a poker game
@@ -8,13 +8,13 @@ import { HandEvaluator } from './HandEvaluator.js';
  */
 export class PotManager extends EventEmitter {
   constructor(players) {
-    super();
-    this.players = players;
-    this.pots = [];
-    this.nextPotId = 0;
-    
+    super()
+    this.players = players
+    this.pots = []
+    this.nextPotId = 0
+
     // Create initial main pot with all players eligible
-    this.createPot(players);
+    this.createPot(players)
   }
 
   /**
@@ -23,20 +23,20 @@ export class PotManager extends EventEmitter {
    * @returns {Pot} The created pot
    */
   createPot(eligiblePlayers) {
-    const pot = new Pot(this.nextPotId++, eligiblePlayers);
-    this.pots.push(pot);
-    
+    const pot = new Pot(this.nextPotId++, eligiblePlayers)
+    this.pots.push(pot)
+
     // Emit event for side pot creation (skip for main pot)
     if (pot.id > 0) {
       this.emit('sidepot:created', {
         potId: pot.id,
         potName: pot.name,
-        eligiblePlayers: eligiblePlayers.map(p => p.id),
+        eligiblePlayers: eligiblePlayers.map((p) => p.id),
         eligibleCount: eligiblePlayers.length,
-      });
+      })
     }
-    
-    return pot;
+
+    return pot
   }
 
   /**
@@ -47,10 +47,10 @@ export class PotManager extends EventEmitter {
     // Active pot is the last uncapped pot
     for (let i = this.pots.length - 1; i >= 0; i--) {
       if (this.pots[i].isActive) {
-        return this.pots[i];
+        return this.pots[i]
       }
     }
-    return null;
+    return null
   }
 
   /**
@@ -58,17 +58,17 @@ export class PotManager extends EventEmitter {
    * @param {number} amount - Amount to add
    */
   addDeadMoney(amount) {
-    const mainPot = this.pots[0];
+    const mainPot = this.pots[0]
     if (mainPot) {
-      mainPot.amount += amount;
-      
+      mainPot.amount += amount
+
       // Emit pot update event
       this.emit('pot:updated', {
         potId: mainPot.id,
         potName: mainPot.name,
         total: mainPot.amount,
         deadMoney: amount,
-      });
+      })
     }
   }
 
@@ -79,24 +79,24 @@ export class PotManager extends EventEmitter {
    * @returns {Object} Distribution details
    */
   addToPot(player, amount) {
-    let remainingAmount = amount;
-    const distributions = [];
-    
+    let remainingAmount = amount
+    const distributions = []
+
     // Distribute across pots in order
     for (const pot of this.pots) {
       if (remainingAmount <= 0) {
-break;
-}
-      
-      const contributed = pot.addContribution(player, remainingAmount);
+        break
+      }
+
+      const contributed = pot.addContribution(player, remainingAmount)
       if (contributed > 0) {
         distributions.push({
           potId: pot.id,
           potName: pot.name,
           amount: contributed,
-        });
-        remainingAmount -= contributed;
-        
+        })
+        remainingAmount -= contributed
+
         // Emit pot update event
         this.emit('pot:updated', {
           potId: pot.id,
@@ -106,21 +106,21 @@ break;
             playerId: player.id,
             amount: contributed,
           },
-        });
+        })
       }
     }
-    
+
     // If there's still money left and player is not in any active pot,
     // they might need a new pot (shouldn't happen in normal flow)
     if (remainingAmount > 0) {
       // This can happen in complex side pot scenarios - it's logged in stderr during tests
       // console.warn(`Player ${player.id} has ${remainingAmount} chips with nowhere to go`);
     }
-    
+
     return {
       totalContributed: amount - remainingAmount,
       distributions,
-    };
+    }
   }
 
   /**
@@ -131,33 +131,37 @@ break;
    */
   handleAllIn(player, totalAmount) {
     // Find the active pot this player can contribute to
-    const activePot = this.getActivePot();
+    const activePot = this.getActivePot()
     if (!activePot || !activePot.canAcceptFrom(player)) {
-      return;
+      return
     }
-    
+
     // The player's total contribution for this betting round
-    const currentPotContribution = activePot.getPlayerContribution(player);
-    const maxContributionThisRound = totalAmount;
-    
+    const currentPotContribution = activePot.getPlayerContribution(player)
+    const maxContributionThisRound = totalAmount
+
     // Cap the active pot at this player's maximum contribution
-    if (activePot.isActive && maxContributionThisRound > currentPotContribution) {
-      activePot.cap(maxContributionThisRound);
-      
+    if (
+      activePot.isActive &&
+      maxContributionThisRound > currentPotContribution
+    ) {
+      activePot.cap(maxContributionThisRound)
+
       // Create a side pot for remaining active players (excluding this all-in player)
-      const stillActivePlayers = activePot.eligiblePlayers.filter(p => 
-        p.id !== player.id && p.state === 'ACTIVE',
-      );
-      
+      const stillActivePlayers = activePot.eligiblePlayers.filter(
+        (p) => p.id !== player.id && p.state === 'ACTIVE'
+      )
+
       // Create side pot based on the situation:
       // - Always create if 2+ players remain
       // - For heads-up game (total 2 players), create even with 1 remaining player
-      const isHeadsUpGame = this.players.length === 2;
-      const shouldCreateSidePot = stillActivePlayers.length >= 2 || 
-        (stillActivePlayers.length === 1 && isHeadsUpGame);
-        
+      const isHeadsUpGame = this.players.length === 2
+      const shouldCreateSidePot =
+        stillActivePlayers.length >= 2 ||
+        (stillActivePlayers.length === 1 && isHeadsUpGame)
+
       if (shouldCreateSidePot) {
-        this.createPot(stillActivePlayers);
+        this.createPot(stillActivePlayers)
       }
     }
   }
@@ -167,7 +171,7 @@ break;
    * @returns {number}
    */
   getTotal() {
-    return this.pots.reduce((sum, pot) => sum + pot.amount, 0);
+    return this.pots.reduce((sum, pot) => sum + pot.amount, 0)
   }
 
   /**
@@ -176,11 +180,11 @@ break;
    * @returns {number}
    */
   getTotalContribution(player) {
-    let total = 0;
+    let total = 0
     for (const pot of this.pots) {
-      total += pot.getPlayerContribution(player);
+      total += pot.getPlayerContribution(player)
     }
-    return total;
+    return total
   }
 
   /**
@@ -189,44 +193,44 @@ break;
    * @returns {Map<Player, number>} Map of player to payout amount
    */
   calculatePayouts(allPlayerHands) {
-    const payouts = new Map();
-    
+    const payouts = new Map()
+
     // Process each pot separately
     for (const pot of this.pots) {
       // Find players eligible for this pot who are still in the hand
-      const eligibleHands = allPlayerHands.filter(ph =>
-        pot.eligiblePlayers.some(ep => ep.id === ph.player.id),
-      );
-      
+      const eligibleHands = allPlayerHands.filter((ph) =>
+        pot.eligiblePlayers.some((ep) => ep.id === ph.player.id)
+      )
+
       if (eligibleHands.length === 0) {
-        continue;
+        continue
       }
-      
+
       // Find the best hand(s) among eligible players for this pot
       // Use HandEvaluator to compare hands properly
-      const bestHands = HandEvaluator.findWinners(eligibleHands);
-      
+      const bestHands = HandEvaluator.findWinners(eligibleHands)
+
       // Distribute this pot among the winners
       if (bestHands.length > 0) {
-        const share = Math.floor(pot.amount / bestHands.length);
-        let remainder = pot.amount % bestHands.length;
-        
+        const share = Math.floor(pot.amount / bestHands.length)
+        let remainder = pot.amount % bestHands.length
+
         for (const winner of bestHands) {
-          let winAmount = share;
-          
+          let winAmount = share
+
           // Distribute remainder to first winners
           if (remainder > 0) {
-            winAmount++;
-            remainder--;
+            winAmount++
+            remainder--
           }
-          
-          const currentPayout = payouts.get(winner.player) || 0;
-          payouts.set(winner.player, currentPayout + winAmount);
+
+          const currentPayout = payouts.get(winner.player) || 0
+          payouts.set(winner.player, currentPayout + winAmount)
         }
       }
     }
-    
-    return payouts;
+
+    return payouts
   }
 
   /**
@@ -238,11 +242,11 @@ break;
       potId: pot.id,
       potName: pot.name,
       amount: pot.amount,
-      eligiblePlayers: pot.eligiblePlayers.map(p => p.id),
+      eligiblePlayers: pot.eligiblePlayers.map((p) => p.id),
       isMain: index === 0,
       isActive: pot.isActive,
       maxContribution: pot.maxContributionPerPlayer,
-    }));
+    }))
   }
 
   /**
@@ -253,7 +257,7 @@ break;
     // We just ensure any capped pots are properly closed
     for (const pot of this.pots) {
       if (pot.maxContributionPerPlayer !== null) {
-        pot.close();
+        pot.close()
       }
     }
   }
@@ -262,8 +266,8 @@ break;
    * Reset for a new hand
    */
   reset() {
-    this.pots = [];
-    this.nextPotId = 0;
-    this.createPot(this.players);
+    this.pots = []
+    this.nextPotId = 0
+    this.createPot(this.players)
   }
 }

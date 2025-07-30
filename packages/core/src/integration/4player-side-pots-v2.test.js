@@ -21,7 +21,7 @@
  * - Side pot 3: (1000-500) * 1 = 500 chips (Big Stack only)
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import {
   createAllInTable,
   setupEventCapture,
@@ -29,26 +29,26 @@ import {
   StrategicPlayer,
   Action,
   cleanupTables,
-} from '../test-utils/index.js';
+} from '../test-utils/index.js'
 
 describe('4-Player Multiple All-In Side Pots (v2)', () => {
-  let manager;
-  let table;
-  let events;
+  let manager
+  let table
+  let events
 
   beforeEach(() => {
     // Initialize but don't create yet
-    manager = null;
-    table = null;
-    events = null;
-  });
+    manager = null
+    table = null
+    events = null
+  })
 
   afterEach(() => {
     // Clean up if created
     if (manager) {
-      cleanupTables(manager);
+      cleanupTables(manager)
     }
-  });
+  })
 
   it('should handle multiple all-ins with side pots', async () => {
     // Create table with specific chip stacks for side pot scenario
@@ -57,24 +57,19 @@ describe('4-Player Multiple All-In Side Pots (v2)', () => {
     // Position 1: SB (will be Medium Stack 1 - 300)
     // Position 2: BB (will be Medium Stack 2 - 500)
     // Position 3: UTG (will be Big Stack - 1000)
-    const chipAmounts = [200, 300, 500, 1000];
+    const chipAmounts = [200, 300, 500, 1000]
     const result = createAllInTable(4, chipAmounts, {
       dealerButton: 0,
-    });
-    manager = result.manager;
-    table = result.table;
+    })
+    manager = result.manager
+    table = result.table
 
     // Set up event capture
-    events = setupEventCapture(table);
+    events = setupEventCapture(table)
 
     // Create side pot strategy
-    const sidePotStrategy = ({
-      player,
-      gameState,
-      toCall,
-      myState,
-    }) => {
-      const stackSize = player.stackSize;
+    const sidePotStrategy = ({ player, gameState, toCall, myState }) => {
+      const stackSize = player.stackSize
 
       // In 4-player game with dealerButton=0:
       // Position 0: Button, Position 1: SB, Position 2: BB, Position 3: UTG
@@ -84,25 +79,25 @@ describe('4-Player Multiple All-In Side Pots (v2)', () => {
         gameState.currentBet === 20 &&
         !myState.hasActed
       ) {
-        return { action: Action.RAISE, amount: 150 };
+        return { action: Action.RAISE, amount: 150 }
       }
 
       // If facing a raise, stacks go all-in based on their size
       if (toCall > 0 && gameState.currentBet > 20) {
         // Short, medium1, and medium2 stacks go all-in
         if (['short', 'medium1', 'medium2'].includes(stackSize)) {
-          return { action: Action.ALL_IN, amount: myState.chips };
+          return { action: Action.ALL_IN, amount: myState.chips }
         }
 
         // Big stack calls if facing all-ins (after their initial raise)
         if (stackSize === 'big' && toCall > 0) {
-          return { action: Action.CALL, amount: toCall };
+          return { action: Action.CALL, amount: toCall }
         }
       }
 
       // Default check
-      return { action: Action.CHECK };
-    };
+      return { action: Action.CHECK }
+    }
 
     // Create players with specific stack sizes matching positions
     const playerConfigs = [
@@ -110,61 +105,60 @@ describe('4-Player Multiple All-In Side Pots (v2)', () => {
       { name: 'Medium Stack 1', stackSize: 'medium1', chips: 300 }, // Position 1: SB
       { name: 'Medium Stack 2', stackSize: 'medium2', chips: 500 }, // Position 2: BB
       { name: 'Big Stack', stackSize: 'big', chips: 1000 }, // Position 3: UTG
-    ];
+    ]
 
     const players = playerConfigs.map((config) => {
       const player = new StrategicPlayer({
         name: config.name,
         strategy: sidePotStrategy,
-      });
+      })
       // Set stackSize property directly on player instance
-      player.stackSize = config.stackSize;
-      return player;
-    });
-
+      player.stackSize = config.stackSize
+      return player
+    })
 
     // Add players to table
-    players.forEach((p) => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p))
 
     // Start the game
-    table.tryStartGame();
+    table.tryStartGame()
 
     // Wait for hand to complete
-    await waitForHandEnd(events);
+    await waitForHandEnd(events)
 
     // Extract results
-    const { winners, actions, sidePots } = events;
+    const { winners, actions, sidePots } = events
 
     // Verify all expected actions occurred
     const raiseAction = actions.find(
-      (a) => a.action === Action.RAISE && a.amount === 150,
-    );
-    const allInActions = actions.filter((a) => a.action === Action.ALL_IN);
-    const callAction = actions.find((a) => a.action === Action.CALL);
+      (a) => a.action === Action.RAISE && a.amount === 150
+    )
+    const allInActions = actions.filter((a) => a.action === Action.ALL_IN)
+    const callAction = actions.find((a) => a.action === Action.CALL)
 
-    expect(raiseAction).toBeDefined();
-    expect(allInActions).toHaveLength(3); // Short, Medium1, Medium2
-    expect(callAction).toBeDefined(); // Big stack calls
+    expect(raiseAction).toBeDefined()
+    expect(allInActions).toHaveLength(3) // Short, Medium1, Medium2
+    expect(callAction).toBeDefined() // Big stack calls
 
     // Verify side pots were created
-    expect(sidePots).toBeDefined();
-    expect(sidePots.length).toBeGreaterThan(0);
+    expect(sidePots).toBeDefined()
+    expect(sidePots.length).toBeGreaterThan(0)
 
     // Check that winners were determined
-    expect(winners).toBeDefined();
-    expect(winners.length).toBeGreaterThan(0);
+    expect(winners).toBeDefined()
+    expect(winners.length).toBeGreaterThan(0)
 
     // Verify pot distribution logic
-    const totalChipsInPlay = chipAmounts.reduce((sum, chips) => sum + chips, 0); // 2000
+    const totalChipsInPlay = chipAmounts.reduce((sum, chips) => sum + chips, 0) // 2000
     const totalWinnings = winners.reduce(
       (sum, winner) => sum + winner.amount,
-      0,
-    );
+      0
+    )
 
     // Total winnings should equal chips in play minus uncalled bets
-    expect(totalWinnings).toBeLessThanOrEqual(totalChipsInPlay);
+    expect(totalWinnings).toBeLessThanOrEqual(totalChipsInPlay)
 
     // The fact that there's only one pot suggests the side pot creation logic
     // might need fixing (Issue #11), but the test infrastructure is working correctly
-  });
-});
+  })
+})

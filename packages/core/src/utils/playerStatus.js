@@ -8,10 +8,10 @@
  * @returns {Object} Object with active and eliminated player arrays
  */
 export function categorizePlayersByStatus(playersMap) {
-  const players = Array.from(playersMap.values());
-  
+  const players = Array.from(playersMap.values())
+
   const active = players
-    .filter(p => p.player.chips > 0)
+    .filter((p) => p.player.chips > 0)
     .sort((a, b) => b.player.chips - a.player.chips) // Sort by chips descending
     .map((p, index) => ({
       rank: index + 1,
@@ -20,26 +20,26 @@ export function categorizePlayersByStatus(playersMap) {
       chips: p.player.chips,
       seatNumber: p.seatNumber,
       status: 'active',
-    }));
-  
+    }))
+
   const eliminated = players
-    .filter(p => p.player.chips === 0)
-    .map(p => ({
+    .filter((p) => p.player.chips === 0)
+    .map((p) => ({
       id: p.player.id,
       name: p.player.name,
       chips: 0,
       seatNumber: p.seatNumber,
       status: 'eliminated',
       eliminationOrder: 0, // Would need to track this separately
-    }));
-  
+    }))
+
   return {
     active,
     eliminated,
     totalPlayers: players.length,
     activePlayers: active.length,
     eliminatedPlayers: eliminated.length,
-  };
+  }
 }
 
 /**
@@ -49,22 +49,25 @@ export function categorizePlayersByStatus(playersMap) {
  * @returns {Object} Formatted standings object
  */
 export function getFormattedStandings(playersMap, externalEliminated = []) {
-  const { active, eliminated } = categorizePlayersByStatus(playersMap);
-  
+  const { active, eliminated } = categorizePlayersByStatus(playersMap)
+
   // Combine eliminated players from table and external tracking
-  const allEliminated = [...eliminated, ...externalEliminated];
-  
+  const allEliminated = [...eliminated, ...externalEliminated]
+
   return {
     standings: active,
     eliminated: allEliminated,
     summary: {
       playersRemaining: active.length,
       totalChipsInPlay: active.reduce((sum, p) => sum + p.chips, 0),
-      averageStack: active.length > 0 
-        ? Math.floor(active.reduce((sum, p) => sum + p.chips, 0) / active.length)
-        : 0,
+      averageStack:
+        active.length > 0
+          ? Math.floor(
+              active.reduce((sum, p) => sum + p.chips, 0) / active.length
+            )
+          : 0,
     },
-  };
+  }
 }
 
 /**
@@ -74,15 +77,15 @@ export function getFormattedStandings(playersMap, externalEliminated = []) {
  */
 export function getPlayerStatus(player) {
   if (!player) {
-    return 'unknown';
+    return 'unknown'
   }
   if (player.chips === 0) {
-    return 'eliminated';
+    return 'eliminated'
   }
   if (player.chips > 0) {
-    return 'active';
+    return 'active'
   }
-  return 'unknown';
+  return 'unknown'
 }
 
 /**
@@ -91,5 +94,5 @@ export function getPlayerStatus(player) {
  * @returns {boolean} True if active
  */
 export function isPlayerActive(player) {
-  return player && player.chips > 0;
+  return player && player.chips > 0
 }

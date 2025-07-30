@@ -13,14 +13,14 @@ export const DEFAULT_CONFIG = {
   DEFAULT_MIN_BUY_IN: 1000,
   DEFAULT_MAX_BUY_IN: 10000,
   TIME_BETWEEN_HANDS: 5000, // 5 seconds
-};
+}
 
 // Poker variants
 export const Variants = {
   TEXAS_HOLDEM: 'texas-holdem',
   OMAHA: 'omaha',
   SEVEN_CARD_STUD: 'seven-card-stud',
-};
+}
 
 // Card suits
 export const Suits = {
@@ -28,7 +28,7 @@ export const Suits = {
   DIAMONDS: 'diamonds',
   CLUBS: 'clubs',
   SPADES: 'spades',
-};
+}
 
 // Card ranks
 export const Ranks = {
@@ -45,14 +45,14 @@ export const Ranks = {
   QUEEN: 'Q',
   KING: 'K',
   ACE: 'A',
-};
+}
 
 // Betting limits
 export const Limits = {
   NO_LIMIT: 'no-limit',
   POT_LIMIT: 'pot-limit',
   FIXED_LIMIT: 'fixed-limit',
-};
+}
 
 // Tournament types
 export const TournamentTypes = {
@@ -60,7 +60,7 @@ export const TournamentTypes = {
   MULTI_TABLE: 'multi-table',
   SIT_N_GO: 'sit-n-go',
   SCHEDULED: 'scheduled',
-};
+}
 
 // Time limits (in milliseconds)
 export const TimeLimits = {
@@ -68,7 +68,7 @@ export const TimeLimits = {
   STANDARD: 30000, // 30 seconds
   SLOW: 60000, // 60 seconds
   UNLIMITED: 0, // No time limit
-};
+}
 
 // Error messages
 export const ErrorMessages = {
@@ -79,4 +79,4 @@ export const ErrorMessages = {
   GAME_IN_PROGRESS: 'Game already in progress',
   NO_ADAPTER: 'No adapter configured for player',
   TIMEOUT: 'Action timeout',
-};
+}

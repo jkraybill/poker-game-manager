@@ -5,7 +5,7 @@
  * without complex deck manipulation.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import {
   createHeadsUpTable,
   setupEventCapture,
@@ -13,27 +13,27 @@ import {
   StrategicPlayer,
   Action,
   cleanupTables,
-} from '../test-utils/index.js';
-import { HandEvaluator } from '../game/HandEvaluator.js';
+} from '../test-utils/index.js'
+import { HandEvaluator } from '../game/HandEvaluator.js'
 
 describe('Simple Split Pot Test (v2)', () => {
-  let manager;
-  let table;
-  let events;
+  let manager
+  let table
+  let events
 
   beforeEach(() => {
     // Initialize but don't create yet
-    manager = null;
-    table = null;
-    events = null;
-  });
+    manager = null
+    table = null
+    events = null
+  })
 
   afterEach(() => {
     // Clean up if created
     if (manager) {
-      cleanupTables(manager);
+      cleanupTables(manager)
     }
-  });
+  })
 
   it('should properly detect split pot winners in HandEvaluator', () => {
     // Test HandEvaluator directly first
@@ -58,13 +58,13 @@ describe('Simple Split Pot Test (v2)', () => {
         },
         cards: [],
       },
-    ];
+    ]
 
-    const winners = HandEvaluator.findWinners(playerHands);
-    expect(winners).toHaveLength(2); // Both should win
-    expect(winners.map((w) => w.player.id)).toContain('player1');
-    expect(winners.map((w) => w.player.id)).toContain('player2');
-  });
+    const winners = HandEvaluator.findWinners(playerHands)
+    expect(winners).toHaveLength(2) // Both should win
+    expect(winners.map((w) => w.player.id)).toContain('player1')
+    expect(winners.map((w) => w.player.id)).toContain('player2')
+  })
 
   it('should handle 2-player all-in split pot scenario', async () => {
     // Create heads-up table
@@ -72,23 +72,23 @@ describe('Simple Split Pot Test (v2)', () => {
       minBuyIn: 100,
       maxBuyIn: 100,
       dealerButton: 0,
-    });
-    manager = result.manager;
-    table = result.table;
+    })
+    manager = result.manager
+    table = result.table
 
     // Set up event capture
-    events = setupEventCapture(table);
+    events = setupEventCapture(table)
 
     // Track game events for debugging
     table.on('game:started', () => {
-      console.log('Game started');
-    });
+      console.log('Game started')
+    })
 
     table.on('hand:ended', (event) => {
-      console.log('hand:ended event received:', event);
-      const handWinners = event.winners;
+      console.log('hand:ended event received:', event)
+      const handWinners = event.winners
 
-      console.log('Hand ended with winners:', handWinners?.length || 0);
+      console.log('Hand ended with winners:', handWinners?.length || 0)
       console.log(
         'Winner details:',
         handWinners?.map((w) => ({
@@ -96,50 +96,50 @@ describe('Simple Split Pot Test (v2)', () => {
           handRank: w.hand?.rank,
           handKickers: w.hand?.kickers,
           amount: w.amount,
-        })) || [],
-      );
-    });
+        })) || []
+      )
+    })
 
     // All-in strategy for preflop
     const allInStrategy = ({ gameState, myState }) => {
       // Both players go all-in preflop
       if (gameState.phase === 'PRE_FLOP') {
-        return { action: Action.ALL_IN, amount: myState.chips };
+        return { action: Action.ALL_IN, amount: myState.chips }
       }
-      return { action: Action.CHECK };
-    };
+      return { action: Action.CHECK }
+    }
 
     // Create 2 players with equal chips
     const player1 = new StrategicPlayer({
       name: 'Player 1',
       strategy: allInStrategy,
-    });
+    })
 
     const player2 = new StrategicPlayer({
       name: 'Player 2',
       strategy: allInStrategy,
-    });
+    })
 
-    table.addPlayer(player1);
-    table.addPlayer(player2);
+    table.addPlayer(player1)
+    table.addPlayer(player2)
 
     // Explicitly start the game
-    table.tryStartGame();
+    table.tryStartGame()
 
     // Wait for hand to complete
-    await waitForHandEnd(events);
+    await waitForHandEnd(events)
 
-    const { winners } = events;
+    const { winners } = events
 
-    console.log('Final winners array:', winners);
-    console.log('Winners length:', winners.length);
+    console.log('Final winners array:', winners)
+    console.log('Winners length:', winners.length)
 
     // With random cards, we can't guarantee a split pot
     // But we can verify the game completes and someone wins
-    expect(winners.length).toBeGreaterThan(0);
+    expect(winners.length).toBeGreaterThan(0)
 
     // Total winnings should equal the pot (200 chips)
-    const totalWon = winners.reduce((sum, w) => sum + w.amount, 0);
-    expect(totalWon).toBe(200);
-  });
-});
+    const totalWon = winners.reduce((sum, w) => sum + w.amount, 0)
+    expect(totalWon).toBe(200)
+  })
+})

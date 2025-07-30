@@ -1,4 +1,4 @@
-import { EventEmitter } from 'eventemitter3';
+import { EventEmitter } from 'eventemitter3'
 
 /**
  * Extended EventEmitter that automatically emits a wildcard "*" event
@@ -7,11 +7,11 @@ import { EventEmitter } from 'eventemitter3';
 export class WildcardEventEmitter extends EventEmitter {
   emit(event, ...args) {
     // First emit the specific event
-    const result = super.emit(event, ...args);
+    const result = super.emit(event, ...args)
 
     // Then emit the wildcard event with the event name as first argument
-    super.emit('*', event, ...args);
+    super.emit('*', event, ...args)
 
-    return result;
+    return result
   }
 }

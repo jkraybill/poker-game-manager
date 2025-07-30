@@ -5,26 +5,26 @@
  * Supports position-aware play, complex betting patterns, and tournament dynamics.
  */
 
-import { Player } from '../Player.js';
-import { Action } from '../types/index.js';
+import { Player } from '../Player.js'
+import { Action } from '../types/index.js'
 
 /**
  * Base class for strategic test players with position awareness
  */
 export class StrategicPlayer extends Player {
   constructor(config) {
-    super(config);
-    this.position = null;
-    this.strategy = config.strategy || (() => this.defaultStrategy());
-    this.hasActed = false;
-    this.actionCount = 0;
-    this.style = config.style || 'balanced';
-    this.debug = config.debug || false;
+    super(config)
+    this.position = null
+    this.strategy = config.strategy || (() => this.defaultStrategy())
+    this.hasActed = false
+    this.actionCount = 0
+    this.style = config.style || 'balanced'
+    this.debug = config.debug || false
   }
 
   getAction(gameState) {
-    const myState = gameState.players[this.id];
-    const toCall = gameState.currentBet - myState.bet;
+    const myState = gameState.players[this.id]
+    const toCall = gameState.currentBet - myState.bet
 
     // Debug logging available but disabled for tests
     // if (this.debug) {
@@ -35,7 +35,7 @@ export class StrategicPlayer extends Player {
     const baseAction = {
       playerId: this.id,
       timestamp: Date.now(),
-    };
+    }
 
     // Execute strategy
     const strategicAction = this.strategy({
@@ -45,15 +45,15 @@ export class StrategicPlayer extends Player {
       toCall,
       position: this.position,
       actionCount: this.actionCount++,
-    });
+    })
 
-    return { ...baseAction, ...strategicAction };
+    return { ...baseAction, ...strategicAction }
   }
 
   defaultStrategy() {
     return {
       action: Action.CHECK,
-    };
+    }
   }
 }
 
@@ -72,139 +72,139 @@ export const STRATEGIES = {
   // Position-based strategies
   buttonSteal: ({ position, gameState, toCall }) => {
     if (position === 'button' && gameState.currentBet <= gameState.blinds.big) {
-      return { action: Action.RAISE, amount: gameState.blinds.big * 3 };
+      return { action: Action.RAISE, amount: gameState.blinds.big * 3 }
     }
     if (toCall > 0) {
-      return { action: Action.FOLD };
+      return { action: Action.FOLD }
     }
-    return { action: Action.CHECK };
+    return { action: Action.CHECK }
   },
 
   blindDefense: ({ position, gameState, toCall }) => {
-    const isBigBlind = position === 'bb';
-    const isSmallBlind = position === 'sb';
-    const potOdds = toCall / (gameState.pot + toCall);
+    const isBigBlind = position === 'bb'
+    const isSmallBlind = position === 'sb'
+    const potOdds = toCall / (gameState.pot + toCall)
 
     if (isBigBlind && toCall <= gameState.blinds.big * 2 && potOdds < 0.33) {
-      return { action: Action.CALL, amount: toCall };
+      return { action: Action.CALL, amount: toCall }
     }
     if (isSmallBlind && toCall <= gameState.blinds.big && potOdds < 0.25) {
-      return { action: Action.CALL, amount: toCall };
+      return { action: Action.CALL, amount: toCall }
     }
     if (toCall > 0) {
-      return { action: Action.FOLD };
+      return { action: Action.FOLD }
     }
-    return { action: Action.CHECK };
+    return { action: Action.CHECK }
   },
 
   // Aggressive strategies
   threeBet: ({ gameState, myState, toCall }) => {
     const hasRaiser = Object.values(gameState.players).some(
-      (p) => p.lastAction === Action.RAISE,
-    );
+      (p) => p.lastAction === Action.RAISE
+    )
 
     if (hasRaiser && !myState.hasActed && toCall > 0) {
-      return { action: Action.RAISE, amount: toCall * 3 };
+      return { action: Action.RAISE, amount: toCall * 3 }
     }
     if (toCall > 0) {
-      return { action: Action.CALL, amount: toCall };
+      return { action: Action.CALL, amount: toCall }
     }
-    return { action: Action.CHECK };
+    return { action: Action.CHECK }
   },
 
   squeezePlay: ({ position, gameState, toCall }) => {
-    const players = Object.values(gameState.players);
-    const hasRaiser = players.some((p) => p.lastAction === Action.RAISE);
-    const hasCaller = players.some((p) => p.lastAction === Action.CALL);
+    const players = Object.values(gameState.players)
+    const hasRaiser = players.some((p) => p.lastAction === Action.RAISE)
+    const hasCaller = players.some((p) => p.lastAction === Action.CALL)
 
     if (hasRaiser && hasCaller && ['sb', 'bb'].includes(position)) {
-      return { action: Action.RAISE, amount: gameState.currentBet * 4 };
+      return { action: Action.RAISE, amount: gameState.currentBet * 4 }
     }
     if (toCall > 0) {
-      return { action: Action.FOLD };
+      return { action: Action.FOLD }
     }
-    return { action: Action.CHECK };
+    return { action: Action.CHECK }
   },
 
   // All-in strategies
   pushOrFold: ({ myState, toCall }) => {
     if (myState.chips <= myState.bet * 10) {
-      return { action: Action.ALL_IN, amount: myState.chips };
+      return { action: Action.ALL_IN, amount: myState.chips }
     }
     if (toCall > 0) {
-      return { action: Action.FOLD };
+      return { action: Action.FOLD }
     }
-    return { action: Action.CHECK };
+    return { action: Action.CHECK }
   },
 
   shortStackShove: ({ myState, gameState }) => {
-    const bigBlind = gameState.blinds.big;
+    const bigBlind = gameState.blinds.big
     if (myState.chips <= bigBlind * 15) {
-      return { action: Action.ALL_IN, amount: myState.chips };
+      return { action: Action.ALL_IN, amount: myState.chips }
     }
     if (gameState.currentBet > 0) {
-      return { action: Action.FOLD };
+      return { action: Action.FOLD }
     }
-    return { action: Action.CHECK };
+    return { action: Action.CHECK }
   },
 
   // Tournament-specific strategies
   bubblePlay: ({ myState, gameState, toCall }) => {
     // Ultra-tight on the bubble
-    const stackSizeInBB = myState.chips / gameState.blinds.big;
+    const stackSizeInBB = myState.chips / gameState.blinds.big
 
     if (stackSizeInBB < 10 && toCall === 0) {
-      return { action: Action.ALL_IN, amount: myState.chips };
+      return { action: Action.ALL_IN, amount: myState.chips }
     }
     if (toCall > gameState.blinds.big * 2) {
-      return { action: Action.FOLD };
+      return { action: Action.FOLD }
     }
     if (toCall > 0) {
-      return { action: Action.CALL, amount: toCall };
+      return { action: Action.CALL, amount: toCall }
     }
-    return { action: Action.CHECK };
+    return { action: Action.CHECK }
   },
 
   // Complex multi-street strategies
   floatAndBluff: ({ gameState, myState, player }) => {
     // Call flop, bet turn if checked to
     if (gameState.phase === 'flop' && gameState.currentBet > 0) {
-      return { action: Action.CALL, amount: gameState.currentBet - myState.bet };
+      return { action: Action.CALL, amount: gameState.currentBet - myState.bet }
     }
     if (
       gameState.phase === 'turn' &&
       gameState.currentBet === 0 &&
       !player.hasBetTurn
     ) {
-      player.hasBetTurn = true;
-      return { action: Action.BET, amount: gameState.pot * 0.75 };
+      player.hasBetTurn = true
+      return { action: Action.BET, amount: gameState.pot * 0.75 }
     }
     if (gameState.currentBet > 0) {
-      return { action: Action.FOLD };
+      return { action: Action.FOLD }
     }
-    return { action: Action.CHECK };
+    return { action: Action.CHECK }
   },
 
   // GTO-inspired mixed strategies
   mixedStrategy: ({ gameState, toCall }) => {
-    const random = Math.random();
+    const random = Math.random()
 
     if (toCall > 0) {
       if (random < 0.7) {
-        return { action: Action.CALL, amount: toCall };
+        return { action: Action.CALL, amount: toCall }
       }
       if (random < 0.9) {
-        return { action: Action.RAISE, amount: toCall * 2.5 };
+        return { action: Action.RAISE, amount: toCall * 2.5 }
       }
-      return { action: Action.FOLD };
+      return { action: Action.FOLD }
     }
 
     if (random < 0.75) {
-      return { action: Action.CHECK };
+      return { action: Action.CHECK }
     }
-    return { action: Action.BET, amount: gameState.pot * 0.66 };
+    return { action: Action.BET, amount: gameState.pot * 0.66 }
   },
-};
+}
 
 /**
  * Pre-configured player archetypes for quick test setup
@@ -247,12 +247,12 @@ export const PLAYER_TYPES = {
       name,
       strategy: ({ toCall, gameState }) => {
         if (toCall > gameState.blinds.big * 4) {
-          return { action: Action.FOLD };
+          return { action: Action.FOLD }
         }
         if (toCall > 0) {
-          return { action: Action.CALL, amount: toCall };
+          return { action: Action.CALL, amount: toCall }
         }
-        return { action: Action.CHECK };
+        return { action: Action.CHECK }
       },
       style: 'tight-passive',
     }),
@@ -263,20 +263,20 @@ export const PLAYER_TYPES = {
       strategy: STRATEGIES.alwaysCall,
       style: 'loose-passive',
     }),
-};
+}
 
 /**
  * Position assignment helper
  */
 export function assignPositions(players, dealerButton, tableSize) {
-  const positions = getPositionNames(tableSize);
+  const positions = getPositionNames(tableSize)
 
   players.forEach((player, index) => {
-    const positionIndex = (index - dealerButton + tableSize) % tableSize;
+    const positionIndex = (index - dealerButton + tableSize) % tableSize
     if (player.position !== undefined) {
-      player.position = positions[positionIndex];
+      player.position = positions[positionIndex]
     }
-  });
+  })
 }
 
 /**
@@ -285,23 +285,23 @@ export function assignPositions(players, dealerButton, tableSize) {
 function getPositionNames(tableSize) {
   switch (tableSize) {
     case 2:
-      return ['button/sb', 'bb'];
+      return ['button/sb', 'bb']
     case 3:
-      return ['button', 'sb', 'bb'];
+      return ['button', 'sb', 'bb']
     case 4:
-      return ['button', 'sb', 'bb', 'utg'];
+      return ['button', 'sb', 'bb', 'utg']
     case 5:
-      return ['button', 'sb', 'bb', 'utg', 'mp'];
+      return ['button', 'sb', 'bb', 'utg', 'mp']
     case 6:
-      return ['button', 'sb', 'bb', 'utg', 'mp', 'co'];
+      return ['button', 'sb', 'bb', 'utg', 'mp', 'co']
     case 7:
-      return ['button', 'sb', 'bb', 'utg', 'utg+1', 'mp', 'co'];
+      return ['button', 'sb', 'bb', 'utg', 'utg+1', 'mp', 'co']
     case 8:
-      return ['button', 'sb', 'bb', 'utg', 'utg+1', 'mp', 'mp+1', 'co'];
+      return ['button', 'sb', 'bb', 'utg', 'utg+1', 'mp', 'mp+1', 'co']
     case 9:
-      return ['button', 'sb', 'bb', 'utg', 'utg+1', 'utg+2', 'mp', 'mp+1', 'co'];
+      return ['button', 'sb', 'bb', 'utg', 'utg+1', 'utg+2', 'mp', 'mp+1', 'co']
     default:
-      throw new Error(`Unsupported table size: ${tableSize}`);
+      throw new Error(`Unsupported table size: ${tableSize}`)
   }
 }
 
@@ -310,16 +310,16 @@ function getPositionNames(tableSize) {
  */
 export class PhaseAwarePlayer extends StrategicPlayer {
   constructor(config) {
-    super(config);
-    this.phaseStrategies = config.phaseStrategies || {};
+    super(config)
+    this.phaseStrategies = config.phaseStrategies || {}
   }
 
   getAction(gameState) {
-    const phase = gameState.phase;
+    const phase = gameState.phase
     if (this.phaseStrategies[phase]) {
-      this.strategy = this.phaseStrategies[phase];
+      this.strategy = this.phaseStrategies[phase]
     }
-    return super.getAction(gameState);
+    return super.getAction(gameState)
   }
 }
 
@@ -328,19 +328,19 @@ export class PhaseAwarePlayer extends StrategicPlayer {
  */
 export class ConditionalPlayer extends StrategicPlayer {
   constructor(config) {
-    super(config);
-    this.conditions = config.conditions || [];
+    super(config)
+    this.conditions = config.conditions || []
   }
 
   getAction(gameState) {
     // Check conditions in order
     for (const condition of this.conditions) {
       if (condition.when(gameState, this)) {
-        this.strategy = condition.then;
-        break;
+        this.strategy = condition.then
+        break
       }
     }
-    return super.getAction(gameState);
+    return super.getAction(gameState)
   }
 }
 
@@ -349,23 +349,23 @@ export class ConditionalPlayer extends StrategicPlayer {
  */
 export class TournamentPlayer extends StrategicPlayer {
   constructor(config) {
-    super(config);
-    this.tournamentStage = config.tournamentStage || 'early';
-    this.playersRemaining = config.playersRemaining || 100;
-    this.avgStack = config.avgStack || 10000;
+    super(config)
+    this.tournamentStage = config.tournamentStage || 'early'
+    this.playersRemaining = config.playersRemaining || 100
+    this.avgStack = config.avgStack || 10000
   }
 
   getAction(gameState) {
-    const myState = gameState.players[this.id];
-    const stackRatio = myState.chips / this.avgStack;
+    const myState = gameState.players[this.id]
+    const stackRatio = myState.chips / this.avgStack
 
     // Adjust strategy based on tournament dynamics
     if (this.tournamentStage === 'bubble' && stackRatio < 1) {
-      this.strategy = STRATEGIES.bubblePlay;
+      this.strategy = STRATEGIES.bubblePlay
     } else if (stackRatio < 0.5) {
-      this.strategy = STRATEGIES.pushOrFold;
+      this.strategy = STRATEGIES.pushOrFold
     }
 
-    return super.getAction(gameState);
+    return super.getAction(gameState)
   }
 }
