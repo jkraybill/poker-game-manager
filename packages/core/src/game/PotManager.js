@@ -54,6 +54,25 @@ export class PotManager extends EventEmitter {
   }
 
   /**
+   * Add dead money to the main pot (e.g., dead small blind)
+   * @param {number} amount - Amount to add
+   */
+  addDeadMoney(amount) {
+    const mainPot = this.pots[0];
+    if (mainPot) {
+      mainPot.amount += amount;
+      
+      // Emit pot update event
+      this.emit('pot:updated', {
+        potId: mainPot.id,
+        potName: mainPot.name,
+        total: mainPot.amount,
+        deadMoney: amount,
+      });
+    }
+  }
+
+  /**
    * Add chips to pots from a player
    * @param {Player} player - The player betting
    * @param {number} amount - Amount being bet

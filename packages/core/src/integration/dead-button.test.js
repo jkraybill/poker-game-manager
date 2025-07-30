@@ -114,12 +114,23 @@ describe('Dead Button Rules', () => {
       }
     });
 
-    table.on('pot:updated', ({ playerBet }) => {
+    table.on('pot:updated', ({ playerBet, deadMoney }) => {
       if (playerBet && handCount === 1) {
         if (playerBet.amount === 10 && !blindTracking.hand1.sb) {
           blindTracking.hand1.sb = playerBet.playerId;
         } else if (playerBet.amount === 20 && !blindTracking.hand1.bb) {
           blindTracking.hand1.bb = playerBet.playerId;
+        }
+      } else if (handCount === 2) {
+        if (playerBet) {
+          if (playerBet.amount === 10 && !blindTracking.hand2.sb) {
+            blindTracking.hand2.sb = playerBet.playerId;
+          } else if (playerBet.amount === 20 && !blindTracking.hand2.bb) {
+            blindTracking.hand2.bb = playerBet.playerId;
+          }
+        }
+        if (deadMoney) {
+          blindTracking.hand2.deadSB = true;
         }
       }
     });

@@ -47,6 +47,8 @@ export class GameEngine extends WildcardEventEmitter {
     this.lastBettor = null;
     this.customDeck = config.customDeck || null;
     this.raiseHistory = []; // Track raise increments in current round
+    this.isDeadButton = config.isDeadButton || false;
+    this.isDeadSmallBlind = config.isDeadSmallBlind || false;
   }
 
   /**
@@ -173,10 +175,19 @@ export class GameEngine extends WildcardEventEmitter {
     const sbPlayer = this.players[sbIndex];
     const bbPlayer = this.players[bbIndex];
 
-    // Post small blind
-    this.handleBet(sbPlayer, this.config.smallBlind, 'small blind');
+    // Post small blind (unless it's dead)
+    if (!this.isDeadSmallBlind) {
+      this.handleBet(sbPlayer, this.config.smallBlind, 'small blind');
+    } else {
+      // Dead small blind - add to pot without attributing to any player
+      this.potManager.addDeadMoney(this.config.smallBlind);
+      this.emit('blind:dead', {
+        type: 'small',
+        amount: this.config.smallBlind,
+      });
+    }
 
-    // Post big blind
+    // Post big blind (always posted, never dead)
     this.handleBet(bbPlayer, this.config.bigBlind, 'big blind');
 
     // Big blind has option

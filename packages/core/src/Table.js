@@ -34,6 +34,10 @@ export class Table extends WildcardEventEmitter {
     this.playerOrder = []; // Ordered list of player IDs by seat
     this.lastBigBlindPlayerId = null; // Track who posted BB last hand
     this.currentDealerButton = config.dealerButton ?? 0; // Initial button position
+    this.nextBigBlindSeatNumber = null; // Track which seat posts BB next
+    this.lastHandBlinds = { small: null, big: null }; // Track who posted blinds last hand
+    this.isDeadButton = false; // Whether current button is on empty seat
+    this.isDeadSmallBlind = false; // Whether small blind is dead this hand
   }
 
   /**
@@ -164,6 +168,8 @@ export class Table extends WildcardEventEmitter {
         timeout: this.config.timeout,
         dealerButton: this.currentDealerButton,
         customDeck: this.customDeck,
+        isDeadButton: this.isDeadButton,
+        isDeadSmallBlind: this.isDeadSmallBlind,
       });
 
       // Forward specific game events we care about
@@ -223,6 +229,146 @@ export class Table extends WildcardEventEmitter {
 
 
   /**
+   * Calculate button and blind positions according to dead button rule
+   * @returns {Object} Position information including dead button/blind status
+   */
+  calculateDeadButtonPositions() {
+    const allPlayers = Array.from(this.players.values())
+      .sort((a, b) => a.seatNumber - b.seatNumber);
+    
+    const activePlayers = allPlayers.filter(pd => pd.player.chips > 0);
+    
+    // If less than 2 active players, no positions to calculate
+    if (activePlayers.length < 2) {
+      return {
+        buttonIndex: 0,
+        smallBlindIndex: null,
+        bigBlindIndex: null,
+        isDeadButton: false,
+        isDeadSmallBlind: false
+      };
+    }
+    
+    // CORE RULE: Big blind always advances forward one position each hand
+    // We need to find the next player (by seat order) who can post BB
+    
+    let nextBBPlayerId = null;
+    let nextBBSeatNumber = null;
+    
+    if (this.lastBigBlindPlayerId) {
+      // Find the player who posted BB last hand
+      const lastBBPlayerData = allPlayers.find(pd => pd.player.id === this.lastBigBlindPlayerId);
+      
+      if (lastBBPlayerData) {
+        // Find next active player clockwise from last BB
+        const startIndex = allPlayers.indexOf(lastBBPlayerData);
+        
+        for (let i = 1; i <= allPlayers.length; i++) {
+          const checkIndex = (startIndex + i) % allPlayers.length;
+          const checkPlayer = allPlayers[checkIndex];
+          
+          if (checkPlayer.player.chips > 0) {
+            nextBBPlayerId = checkPlayer.player.id;
+            nextBBSeatNumber = checkPlayer.seatNumber;
+            break;
+          }
+        }
+      }
+    }
+    
+    // Fallback for first hand or if last BB player not found
+    if (!nextBBPlayerId) {
+      // First hand - BB is 2 positions after initial button in active players
+      if (activePlayers.length === 2) {
+        // Heads-up: BB is opposite of button
+        const bbIndex = (this.currentDealerButton + 1) % 2;
+        nextBBPlayerId = activePlayers[bbIndex].player.id;
+        nextBBSeatNumber = activePlayers[bbIndex].seatNumber;
+      } else {
+        // Multi-way: BB is 2 positions after button
+        const bbIndex = (this.currentDealerButton + 2) % activePlayers.length;
+        nextBBPlayerId = activePlayers[bbIndex].player.id;
+        nextBBSeatNumber = activePlayers[bbIndex].seatNumber;
+      }
+    }
+    
+    // Now work backwards from BB to determine button and SB positions
+    const bbPlayerData = allPlayers.find(pd => pd.player.id === nextBBPlayerId);
+    const bbSeatIndex = allPlayers.indexOf(bbPlayerData);
+    
+    // Find button position (2 seats before BB by seat order)
+    let buttonSeatIndex = (bbSeatIndex - 2 + allPlayers.length) % allPlayers.length;
+    let buttonPlayerData = allPlayers[buttonSeatIndex];
+    let isDeadButton = buttonPlayerData.player.chips <= 0;
+    
+    // Find SB position (1 seat before BB by seat order)
+    let sbSeatIndex = (bbSeatIndex - 1 + allPlayers.length) % allPlayers.length;
+    let sbPlayerData = allPlayers[sbSeatIndex];
+    let isDeadSmallBlind = sbPlayerData.player.chips <= 0;
+    
+    // Special handling for heads-up
+    if (activePlayers.length === 2) {
+      // In heads-up, button = SB, and they're opposite of BB
+      const bbActiveIndex = activePlayers.findIndex(p => p.player.id === nextBBPlayerId);
+      const buttonActiveIndex = (bbActiveIndex + 1) % 2;
+      
+      return {
+        buttonIndex: buttonActiveIndex,
+        smallBlindIndex: buttonActiveIndex,
+        bigBlindIndex: bbActiveIndex,
+        isDeadButton: false,
+        isDeadSmallBlind: false,
+        nextBBSeatNumber
+      };
+    }
+    
+    // For multi-way, we need to map seat positions to active player indices
+    // But if button or SB is dead, we still track the "would-be" position
+    
+    // Find active player indices
+    const bbActiveIndex = activePlayers.findIndex(p => p.player.id === nextBBPlayerId);
+    
+    // For button: if dead, find next active player counter-clockwise
+    let buttonActiveIndex;
+    if (!isDeadButton) {
+      buttonActiveIndex = activePlayers.findIndex(p => p.player.id === buttonPlayerData.player.id);
+    } else {
+      // Dead button - find the active player who would act as if button was there
+      // This is the last active player before the dead button position
+      for (let i = 1; i <= allPlayers.length; i++) {
+        const checkIndex = (buttonSeatIndex - i + allPlayers.length) % allPlayers.length;
+        const checkPlayer = allPlayers[checkIndex];
+        if (checkPlayer.player.chips > 0) {
+          buttonActiveIndex = activePlayers.findIndex(p => p.player.id === checkPlayer.player.id);
+          break;
+        }
+      }
+      // But we still want to show button at the dead seat for display
+      buttonActiveIndex = buttonSeatIndex;
+    }
+    
+    // For SB: if dead, no one posts small blind
+    let smallBlindActiveIndex;
+    if (!isDeadSmallBlind) {
+      smallBlindActiveIndex = activePlayers.findIndex(p => p.player.id === sbPlayerData.player.id);
+    } else {
+      smallBlindActiveIndex = null; // No one posts SB
+    }
+    
+    // Store the next BB seat number for next hand
+    this.nextBigBlindSeatNumber = nextBBSeatNumber;
+    
+    return {
+      buttonIndex: isDeadButton ? buttonSeatIndex : buttonActiveIndex,
+      smallBlindIndex: smallBlindActiveIndex,
+      bigBlindIndex: bbActiveIndex,
+      isDeadButton,
+      isDeadSmallBlind,
+      nextBBSeatNumber
+    };
+  }
+
+  /**
    * Handle game end
    */
   handleGameEnd(_result) {
@@ -238,34 +384,33 @@ export class Table extends WildcardEventEmitter {
     // Get only active players (those who will remain after eliminations)
     const activePlayers = allPlayers.filter(pd => pd.player.chips > 0);
     
-    // Button rotation: move to next active player
+    // Track who posted big blind this hand before updating for next hand
+    const gameEngine = this.gameEngine;
+    if (gameEngine && activePlayers.length >= 2) {
+      // Find who posted BB this hand
+      const bbIndex = activePlayers.length === 2 ? 
+        (this.currentDealerButton + 1) % 2 : 
+        (this.currentDealerButton + 2) % activePlayers.length;
+      
+      if (bbIndex >= 0 && bbIndex < activePlayers.length) {
+        this.lastBigBlindPlayerId = activePlayers[bbIndex].player.id;
+      }
+    }
+    
+    // Calculate dead button positions for next hand
     if (activePlayers.length >= 2) {
-      // Find the next active player after current button
-      let nextButtonIndex = -1;
+      const positions = this.calculateDeadButtonPositions();
       
-      // Start searching from the position after current button
-      for (let i = 1; i <= allPlayers.length; i++) {
-        const checkIndex = (this.currentDealerButton + i) % allPlayers.length;
-        const playerData = allPlayers[checkIndex];
-        
-        // If this player will remain active, they get the button
-        if (playerData && playerData.player.chips > 0) {
-          // Find this player's index in the active players array
-          nextButtonIndex = activePlayers.findIndex(ap => ap.player.id === playerData.player.id);
-          break;
-        }
+      // Update button position for next hand
+      this.currentDealerButton = positions.buttonIndex;
+      this.isDeadButton = positions.isDeadButton;
+      this.isDeadSmallBlind = positions.isDeadSmallBlind;
+      
+      // Store who should post BB next
+      if (positions.bigBlindIndex >= 0 && positions.bigBlindIndex < activePlayers.length) {
+        const nextBBPlayer = activePlayers[positions.bigBlindIndex];
+        this.nextBigBlindSeatNumber = nextBBPlayer.seatNumber;
       }
-      
-      // Update button position to the active player index
-      if (nextButtonIndex >= 0) {
-        this.currentDealerButton = nextButtonIndex;
-      } else {
-        // Fallback: just move to next position in active players
-        this.currentDealerButton = 0;
-      }
-      
-      // TODO: Implement proper dead button rule (Issue #37) to prevent players
-      // from posting BB twice in a row when others are eliminated
     }
 
     // Collect players to eliminate
