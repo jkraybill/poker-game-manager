@@ -5,7 +5,7 @@
  * Eliminates duplication of table setup code across test files.
  */
 
-import { PokerGameManager } from '../PokerGameManager.js'
+import { PokerGameManager } from '../PokerGameManager.js';
 
 /**
  * Common table configurations used across tests
@@ -83,7 +83,7 @@ export const TABLE_CONFIGS = {
     minPlayers: 3,
     dealerButton: 0,
   },
-}
+};
 
 /**
  * Creates a poker game manager and table with specified configuration
@@ -92,26 +92,26 @@ export const TABLE_CONFIGS = {
  * @returns {Object} Object containing manager and table
  */
 export function createTestTable(config = 'standard', overrides = {}) {
-  const manager = new PokerGameManager()
+  const manager = new PokerGameManager();
 
   // Get base config
-  const baseConfig = typeof config === 'string' ? TABLE_CONFIGS[config] : config
+  const baseConfig = typeof config === 'string' ? TABLE_CONFIGS[config] : config;
   if (!baseConfig) {
     throw new Error(
-      `Unknown table config: ${config}. Available configs: ${Object.keys(TABLE_CONFIGS).join(', ')}`
-    )
+      `Unknown table config: ${config}. Available configs: ${Object.keys(TABLE_CONFIGS).join(', ')}`,
+    );
   }
 
   // Apply overrides
-  const finalConfig = { ...baseConfig, ...overrides }
+  const finalConfig = { ...baseConfig, ...overrides };
 
-  const table = manager.createTable(finalConfig)
+  const table = manager.createTable(finalConfig);
 
   return {
     manager,
     table,
     config: finalConfig,
-  }
+  };
 }
 
 /**
@@ -124,37 +124,37 @@ export function createTestTable(config = 'standard', overrides = {}) {
 export function createChipStackTable(
   config = 'standard',
   chipAmounts = [],
-  overrides = {}
+  overrides = {},
 ) {
   const {
     manager,
     table,
     config: finalConfig,
-  } = createTestTable(config, overrides)
+  } = createTestTable(config, overrides);
 
   // Store original addPlayer method
-  const originalAddPlayer = table.addPlayer.bind(table)
-  let playerIndex = 0
+  const originalAddPlayer = table.addPlayer.bind(table);
+  let playerIndex = 0;
 
   // Override addPlayer to set custom chip amounts
   table.addPlayer = function (player) {
-    const result = originalAddPlayer(player)
-    const playerData = this.players.get(player.id)
+    const result = originalAddPlayer(player);
+    const playerData = this.players.get(player.id);
 
     if (playerData && chipAmounts[playerIndex] !== undefined) {
-      playerData.chips = chipAmounts[playerIndex]
+      playerData.chips = chipAmounts[playerIndex];
     }
 
-    playerIndex++
-    return result
-  }
+    playerIndex++;
+    return result;
+  };
 
   return {
     manager,
     table,
     config: finalConfig,
     chipAmounts,
-  }
+  };
 }
 
 /**
@@ -168,12 +168,12 @@ export function createHeadsUpTable(options = {}) {
     bbChips = 1000,
     blinds = { small: 10, big: 20 },
     ...otherOptions
-  } = options
+  } = options;
 
   return createChipStackTable('headsUp', [buttonChips, bbChips], {
     blinds,
     ...otherOptions,
-  })
+  });
 }
 
 /**
@@ -191,9 +191,9 @@ export function createAllInTable(playerCount, chipAmounts, options = {}) {
     minPlayers: playerCount,
     dealerButton: 0,
     ...options,
-  }
+  };
 
-  return createChipStackTable(config, chipAmounts)
+  return createChipStackTable(config, chipAmounts);
 }
 
 /**
@@ -207,14 +207,14 @@ export function createSplitPotTable(playerCount = 3, options = {}) {
     useOddChips = false,
     chipAmounts = new Array(playerCount).fill(1000),
     ...otherOptions
-  } = options
+  } = options;
 
-  const configName = useOddChips ? 'oddChip' : 'standard'
+  const configName = useOddChips ? 'oddChip' : 'standard';
 
   return createChipStackTable(configName, chipAmounts, {
     minPlayers: playerCount,
     ...otherOptions,
-  })
+  });
 }
 
 /**
@@ -228,7 +228,7 @@ export function createTournamentTable(options = {}) {
     playerCount = 8,
     startingChips = 1500,
     ...otherOptions
-  } = options
+  } = options;
 
   // Blind progression (typical tournament structure)
   const blindLevels = [
@@ -237,16 +237,16 @@ export function createTournamentTable(options = {}) {
     { small: 75, big: 150 },
     { small: 100, big: 200 },
     { small: 150, big: 300 },
-  ]
+  ];
 
-  const blinds = blindLevels[blindLevel - 1] || blindLevels[0]
-  const chipAmounts = new Array(playerCount).fill(startingChips)
+  const blinds = blindLevels[blindLevel - 1] || blindLevels[0];
+  const chipAmounts = new Array(playerCount).fill(startingChips);
 
   return createChipStackTable('tournament', chipAmounts, {
     blinds,
     minPlayers: playerCount,
     ...otherOptions,
-  })
+  });
 }
 
 /**
@@ -257,11 +257,11 @@ export function cleanupTables(manager) {
   if (manager && manager.tables) {
     manager.tables.forEach((table) => {
       try {
-        table.close()
+        table.close();
       } catch (error) {
         // Ignore cleanup errors
       }
-    })
+    });
   }
 }
 
@@ -275,24 +275,24 @@ export function cleanupTables(manager) {
 export function createMultiTableSetup(
   tableCount = 2,
   config = 'standard',
-  overrides = {}
+  overrides = {},
 ) {
-  const manager = new PokerGameManager()
-  const tables = []
+  const manager = new PokerGameManager();
+  const tables = [];
 
   for (let i = 0; i < tableCount; i++) {
     const baseConfig =
-      typeof config === 'string' ? TABLE_CONFIGS[config] : config
-    const finalConfig = { ...baseConfig, ...overrides, id: `table-${i + 1}` }
-    const table = manager.createTable(finalConfig)
-    tables.push(table)
+      typeof config === 'string' ? TABLE_CONFIGS[config] : config;
+    const finalConfig = { ...baseConfig, ...overrides, id: `table-${i + 1}` };
+    const table = manager.createTable(finalConfig);
+    tables.push(table);
   }
 
   return {
     manager,
     tables,
     primaryTable: tables[0],
-  }
+  };
 }
 
 /**
@@ -307,5 +307,5 @@ export function createWaitHelper(conditions = {}, timeout = 5000) {
     handEnd: timeout, // Full timeout for hand completion
     playerAction: timeout * 0.2, // 20% for individual actions
     ...conditions,
-  }
+  };
 }

@@ -5,8 +5,8 @@
  * Reduces duplication and provides clear, descriptive error messages.
  */
 
-import { expect } from 'vitest'
-import { Action } from '../types/index.js'
+import { expect } from 'vitest';
+import { Action } from '../types/index.js';
 
 /**
  * Assert that a pot split is correct for multiple winners
@@ -19,38 +19,38 @@ export function assertPotSplit(winners, expectedTotal, options = {}) {
     allowOddChip = true,
     maxOddChip = 1,
     description = 'pot split',
-  } = options
+  } = options;
 
-  expect(winners).toBeInstanceOf(Array)
-  expect(winners.length).toBeGreaterThan(0)
+  expect(winners).toBeInstanceOf(Array);
+  expect(winners.length).toBeGreaterThan(0);
 
   // Verify total pot
-  const actualTotal = winners.reduce((sum, winner) => sum + winner.amount, 0)
-  expect(actualTotal).toBe(expectedTotal)
+  const actualTotal = winners.reduce((sum, winner) => sum + winner.amount, 0);
+  expect(actualTotal).toBe(expectedTotal);
 
   if (winners.length === 1) {
     // Single winner gets everything
-    expect(winners[0].amount).toBe(expectedTotal)
+    expect(winners[0].amount).toBe(expectedTotal);
   } else {
     // Multiple winners - check split distribution
-    const expectedEach = Math.floor(expectedTotal / winners.length)
-    const remainder = expectedTotal % winners.length
+    const expectedEach = Math.floor(expectedTotal / winners.length);
+    const remainder = expectedTotal % winners.length;
 
-    const amounts = winners.map((w) => w.amount).sort((a, b) => b - a)
+    const amounts = winners.map((w) => w.amount).sort((a, b) => b - a);
 
     if (remainder === 0) {
       // Even split
       amounts.forEach((amount) => {
-        expect(amount).toBe(expectedEach)
-      })
+        expect(amount).toBe(expectedEach);
+      });
     } else if (allowOddChip && remainder <= maxOddChip) {
       // Some winners get odd chip
-      expect(amounts[0]).toBe(expectedEach + 1) // Winner with odd chip
+      expect(amounts[0]).toBe(expectedEach + 1); // Winner with odd chip
       amounts.slice(1).forEach((amount) => {
-        expect(amount).toBe(expectedEach)
-      })
+        expect(amount).toBe(expectedEach);
+      });
     } else {
-      throw new Error(`Unexpected remainder ${remainder} in ${description}`)
+      throw new Error(`Unexpected remainder ${remainder} in ${description}`);
     }
   }
 }
@@ -65,23 +65,23 @@ export function assertHandStrengths(winners, expectedRanks, options = {}) {
   const {
     _allowTies = true, // API consistency - not yet implemented
     _description = 'hand strengths', // API consistency - not yet implemented
-  } = options
+  } = options;
 
-  expect(winners).toBeInstanceOf(Array)
+  expect(winners).toBeInstanceOf(Array);
 
   if (typeof expectedRanks === 'number') {
     // All winners should have same rank
     winners.forEach((winner) => {
-      expect(winner.hand).toBeDefined()
-      expect(winner.hand.rank).toBe(expectedRanks)
-    })
+      expect(winner.hand).toBeDefined();
+      expect(winner.hand.rank).toBe(expectedRanks);
+    });
   } else if (Array.isArray(expectedRanks)) {
     // Different ranks for different winners
-    expect(winners.length).toBe(expectedRanks.length)
+    expect(winners.length).toBe(expectedRanks.length);
     winners.forEach((winner, index) => {
-      expect(winner.hand).toBeDefined()
-      expect(winner.hand.rank).toBe(expectedRanks[index])
-    })
+      expect(winner.hand).toBeDefined();
+      expect(winner.hand.rank).toBe(expectedRanks[index]);
+    });
   }
 }
 
@@ -96,35 +96,35 @@ export function assertActionSequence(actions, expectedSequence, options = {}) {
     allowAdditionalActions = true,
     _strictOrder = true, // API consistency - not yet implemented
     _description = 'action sequence', // API consistency - not yet implemented
-  } = options
+  } = options;
 
-  expect(actions).toBeInstanceOf(Array)
+  expect(actions).toBeInstanceOf(Array);
 
-  let actionIndex = 0
-  let sequenceIndex = 0
+  let actionIndex = 0;
+  let sequenceIndex = 0;
 
   while (
     sequenceIndex < expectedSequence.length &&
     actionIndex < actions.length
   ) {
-    const expectedAction = expectedSequence[sequenceIndex]
-    const actualAction = actions[actionIndex]
+    const expectedAction = expectedSequence[sequenceIndex];
+    const actualAction = actions[actionIndex];
 
     if (matchesActionPattern(actualAction, expectedAction)) {
-      sequenceIndex++
+      sequenceIndex++;
     } else if (!allowAdditionalActions) {
       expect.fail(
-        `Expected action ${JSON.stringify(expectedAction)} at position ${actionIndex}, got ${JSON.stringify(actualAction)}`
-      )
+        `Expected action ${JSON.stringify(expectedAction)} at position ${actionIndex}, got ${JSON.stringify(actualAction)}`,
+      );
     }
 
-    actionIndex++
+    actionIndex++;
   }
 
   if (sequenceIndex < expectedSequence.length) {
     expect.fail(
-      `Missing expected actions: ${JSON.stringify(expectedSequence.slice(sequenceIndex))}`
-    )
+      `Missing expected actions: ${JSON.stringify(expectedSequence.slice(sequenceIndex))}`,
+    );
   }
 }
 
@@ -139,24 +139,24 @@ function matchesActionPattern(actualAction, expectedPattern) {
     expectedPattern.action &&
     actualAction.action !== expectedPattern.action
   ) {
-    return false
+    return false;
   }
 
   if (
     expectedPattern.amount !== undefined &&
     actualAction.amount !== expectedPattern.amount
   ) {
-    return false
+    return false;
   }
 
   if (
     expectedPattern.playerId &&
     actualAction.playerId !== expectedPattern.playerId
   ) {
-    return false
+    return false;
   }
 
-  return true
+  return true;
 }
 
 /**
@@ -168,14 +168,14 @@ function matchesActionPattern(actualAction, expectedPattern) {
 export function assertActionsOccurred(actions, expectedActions, options = {}) {
   const {
     _description = 'expected actions', // API consistency - not yet implemented
-  } = options
+  } = options;
 
   expectedActions.forEach((expectedAction) => {
     const found = actions.some((action) =>
-      matchesActionPattern(action, expectedAction)
-    )
-    expect(found).toBe(true)
-  })
+      matchesActionPattern(action, expectedAction),
+    );
+    expect(found).toBe(true);
+  });
 }
 
 /**
@@ -189,18 +189,18 @@ export function assertPlayerChips(players, expectedChips, options = {}) {
     allowApproximate = false,
     tolerance = 0,
     _description = 'player chip counts', // API consistency - not yet implemented
-  } = options
+  } = options;
 
   Object.entries(expectedChips).forEach(([playerId, expectedAmount]) => {
-    const player = players.find((p) => p.id === playerId)
-    expect(player).toBeDefined()
+    const player = players.find((p) => p.id === playerId);
+    expect(player).toBeDefined();
 
     if (allowApproximate) {
-      expect(player.chips).toBeCloseTo(expectedAmount, tolerance)
+      expect(player.chips).toBeCloseTo(expectedAmount, tolerance);
     } else {
-      expect(player.chips).toBe(expectedAmount)
+      expect(player.chips).toBe(expectedAmount);
     }
-  })
+  });
 }
 
 /**
@@ -212,17 +212,17 @@ export function assertPlayerChips(players, expectedChips, options = {}) {
 export function assertShowdown(winners, shouldHaveShowdown, options = {}) {
   const {
     _description = 'showdown occurrence', // API consistency - not yet implemented
-  } = options
+  } = options;
 
   if (shouldHaveShowdown) {
     winners.forEach((winner) => {
-      expect(winner.hand).toBeDefined()
-      expect(winner.hand.rank).toBeDefined()
-    })
+      expect(winner.hand).toBeDefined();
+      expect(winner.hand.rank).toBeDefined();
+    });
   } else {
     // If no showdown, winners might not have hand info
     // This is more flexible for fold scenarios
-    expect(winners.length).toBeGreaterThan(0)
+    expect(winners.length).toBeGreaterThan(0);
   }
 }
 
@@ -235,24 +235,24 @@ export function assertShowdown(winners, shouldHaveShowdown, options = {}) {
 export function assertSidePots(winners, expectedDistribution, options = {}) {
   const {
     _description = 'side pot distribution', // API consistency - not yet implemented
-  } = options
+  } = options;
 
   // Group winners by pot type
   const winnersByPot = winners.reduce((acc, winner) => {
-    const potType = winner.potType || 'main'
+    const potType = winner.potType || 'main';
     if (!acc[potType]) {
-      acc[potType] = []
+      acc[potType] = [];
     }
-    acc[potType].push(winner)
-    return acc
-  }, {})
+    acc[potType].push(winner);
+    return acc;
+  }, {});
 
   Object.entries(expectedDistribution).forEach(([potType, expectedTotal]) => {
-    expect(winnersByPot[potType]).toBeDefined()
-    const potWinners = winnersByPot[potType]
-    const actualTotal = potWinners.reduce((sum, w) => sum + w.amount, 0)
-    expect(actualTotal).toBe(expectedTotal)
-  })
+    expect(winnersByPot[potType]).toBeDefined();
+    const potWinners = winnersByPot[potType];
+    const actualTotal = potWinners.reduce((sum, w) => sum + w.amount, 0);
+    expect(actualTotal).toBe(expectedTotal);
+  });
 }
 
 /**
@@ -265,30 +265,30 @@ export function assertBettingRounds(actions, expectedRounds, options = {}) {
   const {
     _allowIncomplete = false, // API consistency - not yet implemented
     _description = 'betting rounds', // API consistency - not yet implemented
-  } = options
+  } = options;
 
-  const roundActions = groupActionsByRound(actions)
+  const roundActions = groupActionsByRound(actions);
 
   expectedRounds.forEach((expectedRound, index) => {
-    expect(roundActions[index]).toBeDefined()
+    expect(roundActions[index]).toBeDefined();
 
     if (expectedRound.minActions) {
       expect(roundActions[index].length).toBeGreaterThanOrEqual(
-        expectedRound.minActions
-      )
+        expectedRound.minActions,
+      );
     }
 
     if (expectedRound.maxActions) {
       expect(roundActions[index].length).toBeLessThanOrEqual(
-        expectedRound.maxActions
-      )
+        expectedRound.maxActions,
+      );
     }
 
     if (expectedRound.lastAction) {
-      const lastAction = roundActions[index][roundActions[index].length - 1]
-      expect(lastAction.action).toBe(expectedRound.lastAction)
+      const lastAction = roundActions[index][roundActions[index].length - 1];
+      expect(lastAction.action).toBe(expectedRound.lastAction);
     }
-  })
+  });
 }
 
 /**
@@ -299,24 +299,24 @@ export function assertBettingRounds(actions, expectedRounds, options = {}) {
 function groupActionsByRound(actions) {
   // This is a simplified implementation
   // In practice, you'd need phase information from game state
-  const rounds = []
-  let currentRound = []
+  const rounds = [];
+  let currentRound = [];
 
   actions.forEach((action) => {
-    currentRound.push(action)
+    currentRound.push(action);
 
     // Detect round end (simplified - actual implementation would be more sophisticated)
     if (action.action === Action.FOLD && currentRound.length > 1) {
-      rounds.push([...currentRound])
-      currentRound = []
+      rounds.push([...currentRound]);
+      currentRound = [];
     }
-  })
+  });
 
   if (currentRound.length > 0) {
-    rounds.push(currentRound)
+    rounds.push(currentRound);
   }
 
-  return rounds
+  return rounds;
 }
 
 /**
@@ -330,32 +330,32 @@ export function assertAllInScenario(
   actions,
   winners,
   expectedOutcome,
-  options = {}
+  options = {},
 ) {
   const {
     _description = 'all-in scenario', // API consistency - not yet implemented
-  } = options
+  } = options;
 
   // Verify all-in actions occurred
   const allInActions = actions.filter(
-    (action) => action.action === Action.ALL_IN
-  )
+    (action) => action.action === Action.ALL_IN,
+  );
   expect(allInActions.length).toBeGreaterThanOrEqual(
-    expectedOutcome.minAllIns || 1
-  )
+    expectedOutcome.minAllIns || 1,
+  );
 
   if (expectedOutcome.maxAllIns) {
-    expect(allInActions.length).toBeLessThanOrEqual(expectedOutcome.maxAllIns)
+    expect(allInActions.length).toBeLessThanOrEqual(expectedOutcome.maxAllIns);
   }
 
   // Verify pot distribution
   if (expectedOutcome.totalPot) {
-    assertPotSplit(winners, expectedOutcome.totalPot, options)
+    assertPotSplit(winners, expectedOutcome.totalPot, options);
   }
 
   // Verify side pots if specified
   if (expectedOutcome.sidePots) {
-    assertSidePots(winners, expectedOutcome.sidePots, options)
+    assertSidePots(winners, expectedOutcome.sidePots, options);
   }
 }
 
@@ -368,30 +368,30 @@ export function assertAllInScenario(
 export function assertTournamentState(gameState, expectedState, options = {}) {
   const {
     _description = 'tournament state', // API consistency - not yet implemented
-  } = options
+  } = options;
 
   if (expectedState.playersRemaining) {
     const activePlayers = Object.values(gameState.players).filter(
-      (p) => p.chips > 0
-    )
-    expect(activePlayers.length).toBe(expectedState.playersRemaining)
+      (p) => p.chips > 0,
+    );
+    expect(activePlayers.length).toBe(expectedState.playersRemaining);
   }
 
   if (expectedState.chipLeader) {
-    const chipCounts = Object.values(gameState.players).map((p) => p.chips)
-    const maxChips = Math.max(...chipCounts)
+    const chipCounts = Object.values(gameState.players).map((p) => p.chips);
+    const maxChips = Math.max(...chipCounts);
     const chipLeader = Object.values(gameState.players).find(
-      (p) => p.chips === maxChips
-    )
-    expect(chipLeader.id).toBe(expectedState.chipLeader)
+      (p) => p.chips === maxChips,
+    );
+    expect(chipLeader.id).toBe(expectedState.chipLeader);
   }
 
   if (expectedState.totalChips) {
     const totalChips = Object.values(gameState.players).reduce(
       (sum, p) => sum + p.chips,
-      0
-    )
-    expect(totalChips).toBe(expectedState.totalChips)
+      0,
+    );
+    expect(totalChips).toBe(expectedState.totalChips);
   }
 }
 
@@ -407,40 +407,40 @@ export function assertPokerScenario(testResult, expected, options = {}) {
     actions,
     gameState,
     _showdownOccurred, // API consistency - not yet implemented
-  } = testResult
+  } = testResult;
 
   // Pot assertions
   if (expected.totalPot) {
-    assertPotSplit(winners, expected.totalPot, options)
+    assertPotSplit(winners, expected.totalPot, options);
   }
 
   // Hand strength assertions
   if (expected.handRanks) {
-    assertHandStrengths(winners, expected.handRanks, options)
+    assertHandStrengths(winners, expected.handRanks, options);
   }
 
   // Action sequence assertions
   if (expected.actionSequence) {
-    assertActionSequence(actions, expected.actionSequence, options)
+    assertActionSequence(actions, expected.actionSequence, options);
   }
 
   // Showdown assertions
   if (expected.showdown !== undefined) {
-    assertShowdown(winners, expected.showdown, options)
+    assertShowdown(winners, expected.showdown, options);
   }
 
   // Side pot assertions
   if (expected.sidePots) {
-    assertSidePots(winners, expected.sidePots, options)
+    assertSidePots(winners, expected.sidePots, options);
   }
 
   // All-in assertions
   if (expected.allIn) {
-    assertAllInScenario(actions, winners, expected.allIn, options)
+    assertAllInScenario(actions, winners, expected.allIn, options);
   }
 
   // Tournament assertions
   if (expected.tournament && gameState) {
-    assertTournamentState(gameState, expected.tournament, options)
+    assertTournamentState(gameState, expected.tournament, options);
   }
 }

@@ -8,7 +8,7 @@ export const TableEvents = {
   CLOSED: 'table:closed',
   EVENT: 'table:event',
   REMOVED: 'table:removed',
-}
+};
 
 // Player Events
 export const PlayerEvents = {
@@ -22,42 +22,42 @@ export const PlayerEvents = {
   CARDS_RECEIVED: 'cards:received',
   MESSAGE_RECEIVED: 'message:received',
   DISCONNECTED: 'disconnected',
-}
+};
 
 // Game Events
 export const GameEvents = {
   STARTED: 'game:started',
   ENDED: 'game:ended',
   ABORTED: 'game:aborted',
-}
+};
 
 // Hand Events
 export const HandEvents = {
   STARTED: 'hand:started',
   COMPLETE: 'hand:complete',
-}
+};
 
 // Card Events
 export const CardEvents = {
   DEALT: 'cards:dealt',
   COMMUNITY: 'cards:community',
-}
+};
 
 // Pot Events
 export const PotEvents = {
   UPDATED: 'pot:updated',
-}
+};
 
 // Chip Events
 export const ChipEvents = {
   AWARDED: 'chips:awarded',
-}
+};
 
 // Round Events
 export const RoundEvents = {
   STARTED: 'round:started',
   ENDED: 'round:ended',
-}
+};
 
 /**
  * All events for convenience
@@ -71,4 +71,4 @@ export const Events = {
   ...PotEvents,
   ...ChipEvents,
   ...RoundEvents,
-}
+};

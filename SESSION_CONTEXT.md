@@ -1,10 +1,11 @@
 # SESSION CONTEXT - Poker Game Manager
 
 ## Current Status (2025-07-30)
-- **✅ ALL TESTS PASSING**: 209 of 209 tests passing (100% success!)
+- **✅ ALL TESTS PASSING**: 211 of 211 tests passing (100% success!)
 - **✅ All critical bugs fixed**: Issue #35 (bug summary) closed
 - **✅ Non-deterministic tests fixed**: Made failing tests deterministic with custom decks
 - **✅ Test count confusion resolved**: 209 total tests (56 in integration folder)
+- **🚧 Test migration progress**: 29 of 42 integration tests migrated to use test utilities
 - **Partial implementation**: Dead button rules (Issue #37) - foundation complete but needs architectural changes
 
 ## Just Completed ✅
@@ -15,6 +16,12 @@
    - All 209 tests now passing (was 208/209 with 1 failure)
    - Ran ESLint and Prettier to ensure code quality
    - Resolved test count confusion: 209 total tests across all folders
+
+2. **Started Issue #9 - Test Migration** (Session 2025-07-30)
+   - Migrated `button-rotation.test.js` → `button-rotation-v2.test.js`
+   - Migrated `standings-display.test.js` → `standings-display-v2.test.js`
+   - Now 29 of 42 integration tests use test utilities
+   - All 211 tests passing (209 original + 2 new v2 tests)
 
 2. **Closed Issue #35** (Bug Summary Meta-Issue)
    - Verified all critical bugs (#11, #27, #29, #31, #32, #33, #34) are fixed

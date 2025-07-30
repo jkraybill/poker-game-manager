@@ -19,7 +19,7 @@
  * - Index 7: CO
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   createTestTable,
   setupEventCapture,
@@ -27,46 +27,46 @@ import {
   StrategicPlayer,
   Action,
   cleanupTables,
-} from '../test-utils/index.js'
+} from '../test-utils/index.js';
 
 describe('8-Player Poker Scenarios (v2)', () => {
-  let manager
-  let table
-  let events
+  let manager;
+  let table;
+  let events;
 
   beforeEach(() => {
     // Initialize but don't create yet
-    manager = null
-    table = null
-    events = null
-  })
+    manager = null;
+    table = null;
+    events = null;
+  });
 
   afterEach(() => {
     // Clean up if created
     if (manager) {
-      cleanupTables(manager)
+      cleanupTables(manager);
     }
-  })
+  });
 
   it('should handle UTG vs UTG+1 opening war', async () => {
     // Create 8-player table
     const result = createTestTable('standard', {
       minPlayers: 8,
       dealerButton: 0,
-    })
-    manager = result.manager
-    table = result.table
+    });
+    manager = result.manager;
+    table = result.table;
 
     // Set up event capture
-    events = setupEventCapture(table)
+    events = setupEventCapture(table);
 
     // Create players array that will be populated below
-    const players = []
+    const players = [];
 
     // Early position aggressive strategy
     const earlyPositionStrategy = ({ player, gameState, myState, toCall }) => {
       // Get player index to determine position
-      const playerIndex = players.findIndex((p) => p.id === player.id)
+      const playerIndex = players.findIndex((p) => p.id === player.id);
 
       // With dealerButton: 0, positions are:
       // Index 0: Button, Index 1: SB, Index 2: BB, Index 3: UTG, Index 4: UTG+1, etc.
@@ -77,7 +77,7 @@ describe('8-Player Poker Scenarios (v2)', () => {
         gameState.currentBet === 20 &&
         !myState.hasActed
       ) {
-        return { action: Action.RAISE, amount: 60 }
+        return { action: Action.RAISE, amount: 60 };
       }
 
       // UTG+1 (index 4) 3-bets UTG (positional advantage)
@@ -86,7 +86,7 @@ describe('8-Player Poker Scenarios (v2)', () => {
         gameState.currentBet === 60 &&
         !myState.hasActed
       ) {
-        return { action: Action.RAISE, amount: 180 }
+        return { action: Action.RAISE, amount: 180 };
       }
 
       // UTG 4-bets (showing strength) - check if we can raise
@@ -97,77 +97,77 @@ describe('8-Player Poker Scenarios (v2)', () => {
         gameState.validActions &&
         gameState.validActions.includes(Action.RAISE)
       ) {
-        return { action: Action.RAISE, amount: 450 }
+        return { action: Action.RAISE, amount: 450 };
       }
 
       // Others fold to early position war
       if (toCall > 60) {
-        return { action: Action.FOLD }
+        return { action: Action.FOLD };
       }
 
-      return { action: toCall > 0 ? Action.FOLD : Action.CHECK }
-    }
+      return { action: toCall > 0 ? Action.FOLD : Action.CHECK };
+    };
 
     // Create players
-    const positions = ['button', 'sb', 'bb', 'utg', 'utg+1', 'mp1', 'mp2', 'co']
+    const positions = ['button', 'sb', 'bb', 'utg', 'utg+1', 'mp1', 'mp2', 'co'];
     positions.forEach((pos, idx) => {
       const player = new StrategicPlayer({
         name: `Player ${idx + 1} (${pos.toUpperCase()})`,
         strategy: earlyPositionStrategy,
-      })
-      player.position = pos
-      player.hasActed = false
-      players.push(player)
-    })
+      });
+      player.position = pos;
+      player.hasActed = false;
+      players.push(player);
+    });
 
     // Add players and start
-    players.forEach((p) => table.addPlayer(p))
-    table.tryStartGame()
+    players.forEach((p) => table.addPlayer(p));
+    table.tryStartGame();
 
     // Wait for hand to complete
-    await waitForHandEnd(events)
+    await waitForHandEnd(events);
 
     // Extract results
-    const { actions } = events
+    const { actions } = events;
 
     // Verify early position battle
-    const raises = actions.filter((a) => a.action === Action.RAISE)
+    const raises = actions.filter((a) => a.action === Action.RAISE);
     // UTG+1's 3-bet from 60 to 180 is a full raise (120 increment > 40 minimum)
     // So betting is reopened and UTG can 4-bet, expecting 3 raises total
-    expect(raises.length).toBe(3)
+    expect(raises.length).toBe(3);
 
-    const utgPlayer = players.find((p) => p.position === 'utg')
-    const utgPlusOnePlayer = players.find((p) => p.position === 'utg+1')
+    const utgPlayer = players.find((p) => p.position === 'utg');
+    const utgPlusOnePlayer = players.find((p) => p.position === 'utg+1');
 
-    const utgRaise = raises.find((r) => r.playerId === utgPlayer.id)
+    const utgRaise = raises.find((r) => r.playerId === utgPlayer.id);
     const utgPlusOneRaise = raises.find(
-      (r) => r.playerId === utgPlusOnePlayer.id
-    )
+      (r) => r.playerId === utgPlusOnePlayer.id,
+    );
 
     // UTG opens, UTG+1 3-bets, UTG 4-bets
-    expect(utgRaise).toBeDefined()
-    expect(utgPlusOneRaise).toBeDefined()
-    expect(utgRaise.amount).toBe(60)
-    expect(utgPlusOneRaise.amount).toBe(180)
+    expect(utgRaise).toBeDefined();
+    expect(utgPlusOneRaise).toBeDefined();
+    expect(utgRaise.amount).toBe(60);
+    expect(utgPlusOneRaise.amount).toBe(180);
 
     // Verify UTG's 4-bet
     const utg4Bet = raises.find(
-      (r) => r.playerId === utgPlayer.id && r.amount === 450
-    )
-    expect(utg4Bet).toBeDefined()
-  })
+      (r) => r.playerId === utgPlayer.id && r.amount === 450,
+    );
+    expect(utg4Bet).toBeDefined();
+  });
 
   it('should handle 8-way family pot with minimal raising', async () => {
     // Create 8-player table
     const result = createTestTable('standard', {
       minPlayers: 8,
       dealerButton: 0,
-    })
-    manager = result.manager
-    table = result.table
+    });
+    manager = result.manager;
+    table = result.table;
 
     // Set up event capture
-    events = setupEventCapture(table)
+    events = setupEventCapture(table);
 
     // Passive strategy with CO min-raise
     const passiveStrategy = ({ player, gameState, myState, toCall }) => {
@@ -179,71 +179,71 @@ describe('8-Player Poker Scenarios (v2)', () => {
           !myState.hasActed &&
           gameState.currentBet === 20
         ) {
-          return { action: Action.RAISE, amount: 40 } // Min-raise
+          return { action: Action.RAISE, amount: 40 }; // Min-raise
         }
 
         // If there's a bet to call, call it
         if (toCall > 0) {
-          return { action: Action.CALL, amount: toCall }
+          return { action: Action.CALL, amount: toCall };
         }
       }
 
       // Check all other situations
-      return { action: Action.CHECK }
-    }
+      return { action: Action.CHECK };
+    };
 
     // Create 8 passive players
-    const positions = ['button', 'sb', 'bb', 'utg', 'utg+1', 'mp1', 'mp2', 'co']
+    const positions = ['button', 'sb', 'bb', 'utg', 'utg+1', 'mp1', 'mp2', 'co'];
     const players = positions.map((pos, idx) => {
       const player = new StrategicPlayer({
         name: `Player ${idx + 1} (${pos.toUpperCase()})`,
         strategy: passiveStrategy,
-      })
-      player.position = pos
-      return player
-    })
+      });
+      player.position = pos;
+      return player;
+    });
 
     // Add players and start
-    players.forEach((p) => table.addPlayer(p))
-    table.tryStartGame()
+    players.forEach((p) => table.addPlayer(p));
+    table.tryStartGame();
 
     // Wait for hand to complete
-    await waitForHandEnd(events)
+    await waitForHandEnd(events);
 
     // Extract results
-    const { winners, totalPot } = events
+    const { winners, totalPot } = events;
 
     // Debug log to understand the winners
     if (winners.length > 1) {
-      console.log('=== SPLIT POT DETECTED ===')
+      console.log('=== SPLIT POT DETECTED ===');
       winners.forEach((winner, i) => {
         console.log(`Winner ${i + 1}:`, {
           playerId: winner.playerId,
           hand: winner.hand?.description,
           cards: winner.cards,
           amount: winner.amount,
-        })
-      })
+        });
+      });
     }
 
     // Verify 8-way pot with min-raise
     // Everyone ends up with 40 in the pot (8 × 40 = 320)
-    expect(totalPot).toBe(320)
+    expect(totalPot).toBe(320);
 
     // This appears to be a split pot scenario in practice
     // When multiple players have the same hand (board plays), pot is split
-    const totalWon = winners.reduce((sum, w) => sum + w.amount, 0)
-    expect(totalWon).toBe(320)
+    const totalWon = winners.reduce((sum, w) => sum + w.amount, 0);
+    expect(totalWon).toBe(320);
 
     // Each winner should get an equal share
     if (winners.length > 1) {
-      const expectedPerWinner = Math.floor(320 / winners.length)
+      const expectedPerWinner = Math.floor(320 / winners.length);
       winners.forEach((w) => {
-        expect(w.amount).toBeGreaterThanOrEqual(expectedPerWinner)
-        expect(w.amount).toBeLessThanOrEqual(expectedPerWinner + winners.length) // Account for odd chips
-      })
+        expect(w.amount).toBeGreaterThanOrEqual(expectedPerWinner);
+        expect(w.amount).toBeLessThanOrEqual(expectedPerWinner + winners.length); // Account for odd chips
+      });
     }
-  })
+  });
 
   it('should handle complex 8-player tournament bubble scenario', async () => {
     // Create 8-player table with bubble blinds
@@ -253,16 +253,16 @@ describe('8-Player Poker Scenarios (v2)', () => {
       maxBuyIn: 3000,
       minPlayers: 8,
       dealerButton: 0,
-    })
-    manager = result.manager
-    table = result.table
+    });
+    manager = result.manager;
+    table = result.table;
 
     // Set up event capture
-    events = setupEventCapture(table)
+    events = setupEventCapture(table);
 
     // Bubble strategy based on stack size
     const bubbleStrategy = ({ player, gameState, myState, toCall }) => {
-      const mRatio = myState.chips / 150 // Total blinds
+      const mRatio = myState.chips / 150; // Total blinds
 
       // Micro stacks shove or fold based on position
       if (player.stackSize === 'micro') {
@@ -271,18 +271,18 @@ describe('8-Player Poker Scenarios (v2)', () => {
           (player.position === 'button' || player.position === 'co') &&
           toCall <= 100
         ) {
-          return { action: Action.ALL_IN, amount: myState.chips }
+          return { action: Action.ALL_IN, amount: myState.chips };
         }
         // If facing a raise and desperate
         if (toCall > 0 && toCall < myState.chips && mRatio < 3) {
-          return { action: Action.ALL_IN, amount: myState.chips }
+          return { action: Action.ALL_IN, amount: myState.chips };
         }
       }
 
       // Short stacks shove or fold
       if (player.stackSize === 'short' && mRatio < 10) {
         if (player.position === 'button' || player.position === 'co') {
-          return { action: Action.ALL_IN, amount: myState.chips }
+          return { action: Action.ALL_IN, amount: myState.chips };
         }
       }
 
@@ -293,33 +293,33 @@ describe('8-Player Poker Scenarios (v2)', () => {
         !myState.hasActed
       ) {
         if (player.position === 'button' || player.position === 'co') {
-          return { action: Action.RAISE, amount: 250 } // Pressure raise
+          return { action: Action.RAISE, amount: 250 }; // Pressure raise
         }
       }
 
       // Medium stacks play cautiously
       if (player.stackSize === 'medium' && toCall > 200) {
-        return { action: Action.FOLD }
+        return { action: Action.FOLD };
       }
 
       // Default tight play
       if (toCall > myState.chips * 0.3) {
-        return { action: Action.FOLD }
+        return { action: Action.FOLD };
       }
 
-      return { action: toCall > 0 ? Action.FOLD : Action.CHECK }
-    }
+      return { action: toCall > 0 ? Action.FOLD : Action.CHECK };
+    };
 
     // Override addPlayer for custom chips
-    const originalAddPlayer = table.addPlayer.bind(table)
+    const originalAddPlayer = table.addPlayer.bind(table);
     table.addPlayer = function (player) {
-      const result = originalAddPlayer(player)
-      const playerData = this.players.get(player.id)
+      const result = originalAddPlayer(player);
+      const playerData = this.players.get(player.id);
       if (playerData && player.targetChips) {
-        playerData.chips = player.targetChips
+        playerData.chips = player.targetChips;
       }
-      return result
-    }
+      return result;
+    };
 
     // Tournament bubble stack distribution
     const stackConfigs = [
@@ -331,34 +331,34 @@ describe('8-Player Poker Scenarios (v2)', () => {
       { position: 'mp1', chips: 400, stackSize: 'short' },
       { position: 'mp2', chips: 2200, stackSize: 'big' },
       { position: 'co', chips: 600, stackSize: 'short' },
-    ]
+    ];
 
     const players = stackConfigs.map((config, idx) => {
       const player = new StrategicPlayer({
         name: `Player ${idx + 1} (${config.position.toUpperCase()})`,
         strategy: bubbleStrategy,
-      })
-      Object.assign(player, config)
-      return player
-    })
+      });
+      Object.assign(player, config);
+      return player;
+    });
 
     // Add players and start
-    players.forEach((p) => table.addPlayer(p))
-    table.tryStartGame()
+    players.forEach((p) => table.addPlayer(p));
+    table.tryStartGame();
 
     // Wait for hand to complete
-    await waitForHandEnd(events)
+    await waitForHandEnd(events);
 
     // Extract results
-    const { actions } = events
+    const { actions } = events;
 
     // Verify bubble dynamics
-    const allIns = actions.filter((a) => a.action === Action.ALL_IN)
-    const folds = actions.filter((a) => a.action === Action.FOLD)
+    const allIns = actions.filter((a) => a.action === Action.ALL_IN);
+    const folds = actions.filter((a) => a.action === Action.FOLD);
 
-    expect(allIns.length).toBeGreaterThan(0) // Some desperation
-    expect(folds.length).toBeGreaterThan(2) // Cautious play
-  })
+    expect(allIns.length).toBeGreaterThan(0); // Some desperation
+    expect(folds.length).toBeGreaterThan(2); // Cautious play
+  });
 
   it('should handle 8-player progressive knockout scenario', async () => {
     // Create 8-player table
@@ -366,53 +366,53 @@ describe('8-Player Poker Scenarios (v2)', () => {
       blinds: { small: 25, big: 50 },
       minPlayers: 8,
       dealerButton: 0,
-    })
-    manager = result.manager
-    table = result.table
+    });
+    manager = result.manager;
+    table = result.table;
 
     // Set up event capture
-    events = setupEventCapture(table)
+    events = setupEventCapture(table);
 
     // Track chip counts
-    const playerChips = new Map()
+    const playerChips = new Map();
 
     // Bounty hunter strategy
     const bountyHunterStrategy = ({ player, gameState, myState, toCall }) => {
       // Track chip counts
-      playerChips.set(player.id, myState.chips)
+      playerChips.set(player.id, myState.chips);
 
       // Aggressor tries to isolate short stacks
       if (player.isAggressor && gameState.currentBet === 50) {
         // Find shortest stack
         const shortStack = Object.values(gameState.players)
           .filter((p) => p.state === 'ACTIVE' && p.chips < 300)
-          .sort((a, b) => a.chips - b.chips)[0]
+          .sort((a, b) => a.chips - b.chips)[0];
 
         if (shortStack) {
-          return { action: Action.RAISE, amount: shortStack.chips + 50 }
+          return { action: Action.RAISE, amount: shortStack.chips + 50 };
         }
       }
 
       // Short stacks call/all-in for bounty protection
       if (myState.chips < 300 && toCall > 0) {
         if (toCall >= myState.chips) {
-          return { action: Action.ALL_IN, amount: myState.chips }
+          return { action: Action.ALL_IN, amount: myState.chips };
         }
-        return { action: Action.CALL, amount: toCall }
+        return { action: Action.CALL, amount: toCall };
       }
 
       // Medium stacks hunt carefully
       if (toCall > 0 && toCall < myState.chips * 0.4) {
-        const potOdds = toCall / (gameState.pot + toCall)
+        const potOdds = toCall / (gameState.pot + toCall);
         if (potOdds < 0.3) {
           // Good pot odds
-          return { action: Action.CALL, amount: toCall }
+          return { action: Action.CALL, amount: toCall };
         }
       }
 
       // Default
-      return { action: toCall > 0 ? Action.FOLD : Action.CHECK }
-    }
+      return { action: toCall > 0 ? Action.FOLD : Action.CHECK };
+    };
 
     // Mix of aggressive bounty hunters and cautious players
     const playerConfigs = [
@@ -424,52 +424,52 @@ describe('8-Player Poker Scenarios (v2)', () => {
       { position: 'mp1', isAggressor: false },
       { position: 'mp2', isAggressor: true },
       { position: 'co', isAggressor: false },
-    ]
+    ];
 
     const players = playerConfigs.map((config, idx) => {
       const player = new StrategicPlayer({
         name: `Player ${idx + 1} (${config.position.toUpperCase()})`,
         strategy: bountyHunterStrategy,
-      })
-      Object.assign(player, config)
-      return player
-    })
+      });
+      Object.assign(player, config);
+      return player;
+    });
 
     // Give one player a short stack
-    const originalAddPlayer = table.addPlayer.bind(table)
-    let shortStackSet = false
+    const originalAddPlayer = table.addPlayer.bind(table);
+    let shortStackSet = false;
     table.addPlayer = function (player) {
-      const result = originalAddPlayer(player)
+      const result = originalAddPlayer(player);
       if (!shortStackSet && player.position === 'mp1') {
-        const playerData = this.players.get(player.id)
+        const playerData = this.players.get(player.id);
         if (playerData) {
-          playerData.chips = 250 // Short stack
-          shortStackSet = true
+          playerData.chips = 250; // Short stack
+          shortStackSet = true;
         }
       }
-      return result
-    }
+      return result;
+    };
 
     // Add players and start
-    players.forEach((p) => table.addPlayer(p))
-    table.tryStartGame()
+    players.forEach((p) => table.addPlayer(p));
+    table.tryStartGame();
 
     // Wait for hand to complete
-    await waitForHandEnd(events)
+    await waitForHandEnd(events);
 
     // In a bounty tournament, aggressive play is expected
-    expect(events.handEnded).toBe(true)
+    expect(events.handEnded).toBe(true);
 
     // Check if any player was eliminated
     for (const [, chips] of playerChips) {
       if (chips === 0) {
         // A player was eliminated - expected in bounty tournaments
-        break
+        break;
       }
     }
 
     // We might or might not see a knockout in one hand
     // Just verify the game played out
-    expect(events.actions.length).toBeGreaterThan(0)
-  })
-})
+    expect(events.actions.length).toBeGreaterThan(0);
+  });
+});

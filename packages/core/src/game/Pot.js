@@ -4,13 +4,13 @@
  */
 export class Pot {
   constructor(id, eligiblePlayers = []) {
-    this.id = id
-    this.name = id === 0 ? 'Main Pot' : `Side Pot ${id}`
-    this.amount = 0
-    this.eligiblePlayers = [...eligiblePlayers] // Players who can win this pot
-    this.contributions = new Map() // Track each player's contribution
-    this.isActive = true // Can this pot accept more bets?
-    this.maxContributionPerPlayer = null // Cap for all-in situations
+    this.id = id;
+    this.name = id === 0 ? 'Main Pot' : `Side Pot ${id}`;
+    this.amount = 0;
+    this.eligiblePlayers = [...eligiblePlayers]; // Players who can win this pot
+    this.contributions = new Map(); // Track each player's contribution
+    this.isActive = true; // Can this pot accept more bets?
+    this.maxContributionPerPlayer = null; // Cap for all-in situations
   }
 
   /**
@@ -22,25 +22,25 @@ export class Pot {
   addContribution(player, amount) {
     // Check if player is eligible
     if (!this.eligiblePlayers.some((p) => p.id === player.id)) {
-      return 0
+      return 0;
     }
 
     // Check if pot is capped
-    const currentContribution = this.contributions.get(player) || 0
-    let allowedAmount = amount
+    const currentContribution = this.contributions.get(player) || 0;
+    let allowedAmount = amount;
 
     if (this.maxContributionPerPlayer !== null) {
       const remainingAllowed =
-        this.maxContributionPerPlayer - currentContribution
-      allowedAmount = Math.min(amount, remainingAllowed)
+        this.maxContributionPerPlayer - currentContribution;
+      allowedAmount = Math.min(amount, remainingAllowed);
     }
 
     if (allowedAmount > 0) {
-      this.contributions.set(player, currentContribution + allowedAmount)
-      this.amount += allowedAmount
+      this.contributions.set(player, currentContribution + allowedAmount);
+      this.amount += allowedAmount;
     }
 
-    return allowedAmount
+    return allowedAmount;
   }
 
   /**
@@ -49,7 +49,7 @@ export class Pot {
    * @returns {number}
    */
   getPlayerContribution(player) {
-    return this.contributions.get(player) || 0
+    return this.contributions.get(player) || 0;
   }
 
   /**
@@ -58,8 +58,8 @@ export class Pot {
    * @param {number} maxPerPlayer - Maximum contribution per player
    */
   cap(maxPerPlayer) {
-    this.maxContributionPerPlayer = maxPerPlayer
-    this.isActive = false
+    this.maxContributionPerPlayer = maxPerPlayer;
+    this.isActive = false;
   }
 
   /**
@@ -69,18 +69,18 @@ export class Pot {
    */
   canAcceptFrom(player) {
     if (!this.isActive) {
-      return false
+      return false;
     }
     if (!this.eligiblePlayers.some((p) => p.id === player.id)) {
-      return false
+      return false;
     }
 
     if (this.maxContributionPerPlayer !== null) {
-      const current = this.contributions.get(player) || 0
-      return current < this.maxContributionPerPlayer
+      const current = this.contributions.get(player) || 0;
+      return current < this.maxContributionPerPlayer;
     }
 
-    return true
+    return true;
   }
 
   /**
@@ -90,22 +90,22 @@ export class Pot {
    */
   getRemainingCapacity(player) {
     if (!this.canAcceptFrom(player)) {
-      return 0
+      return 0;
     }
 
     if (this.maxContributionPerPlayer === null) {
-      return Infinity
+      return Infinity;
     }
 
-    const current = this.contributions.get(player) || 0
-    return this.maxContributionPerPlayer - current
+    const current = this.contributions.get(player) || 0;
+    return this.maxContributionPerPlayer - current;
   }
 
   /**
    * Close this pot to further contributions
    */
   close() {
-    this.isActive = false
+    this.isActive = false;
   }
 
   /**
@@ -122,10 +122,10 @@ export class Pot {
         ([player, amount]) => ({
           playerId: player.id,
           amount,
-        })
+        }),
       ),
       isActive: this.isActive,
       maxContributionPerPlayer: this.maxContributionPerPlayer,
-    }
+    };
   }
 }

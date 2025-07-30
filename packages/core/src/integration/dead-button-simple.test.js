@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { PokerGameManager } from '../PokerGameManager.js'
-import { Player } from '../Player.js'
-import { Action } from '../types/index.js'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { PokerGameManager } from '../PokerGameManager.js';
+import { Player } from '../Player.js';
+import { Action } from '../types/index.js';
 
 /**
  * Simple test to verify dead button rule implementation
@@ -10,20 +10,20 @@ import { Action } from '../types/index.js'
 
 class SimplePlayer extends Player {
   constructor(config) {
-    super(config)
-    this.shouldFold = config.shouldFold || false
+    super(config);
+    this.shouldFold = config.shouldFold || false;
   }
 
   getAction(gameState) {
-    const myState = gameState.players[this.id]
-    const toCall = gameState.currentBet - myState.bet
+    const myState = gameState.players[this.id];
+    const toCall = gameState.currentBet - myState.bet;
 
     if (this.shouldFold && toCall > 0) {
       return {
         playerId: this.id,
         action: Action.FOLD,
         timestamp: Date.now(),
-      }
+      };
     }
 
     if (toCall > 0) {
@@ -32,27 +32,27 @@ class SimplePlayer extends Player {
         action: Action.CALL,
         amount: toCall,
         timestamp: Date.now(),
-      }
+      };
     }
 
     return {
       playerId: this.id,
       action: Action.CHECK,
       timestamp: Date.now(),
-    }
+    };
   }
 }
 
 describe('Dead Button Simple Test', () => {
-  let manager
+  let manager;
 
   beforeEach(() => {
-    manager = new PokerGameManager()
-  })
+    manager = new PokerGameManager();
+  });
 
   afterEach(() => {
-    manager.tables.forEach((table) => table.close())
-  })
+    manager.tables.forEach((table) => table.close());
+  });
 
   it('should show that BB moves forward when player is eliminated', async () => {
     const table = manager.createTable({
@@ -61,15 +61,15 @@ describe('Dead Button Simple Test', () => {
       maxBuyIn: 1000,
       minPlayers: 2,
       dealerButton: 0,
-    })
+    });
 
     // Create 4 players
-    const playerA = new SimplePlayer({ id: 'A', name: 'Player A' })
-    const playerB = new SimplePlayer({ id: 'B', name: 'Player B' })
-    const playerC = new SimplePlayer({ id: 'C', name: 'Player C' })
-    const playerD = new SimplePlayer({ id: 'D', name: 'Player D' })
+    const playerA = new SimplePlayer({ id: 'A', name: 'Player A' });
+    const playerB = new SimplePlayer({ id: 'B', name: 'Player B' });
+    const playerC = new SimplePlayer({ id: 'C', name: 'Player C' });
+    const playerD = new SimplePlayer({ id: 'D', name: 'Player D' });
 
-    const handInfo = []
+    const handInfo = [];
 
     table.on('hand:started', (data) => {
       const info = {
@@ -77,65 +77,65 @@ describe('Dead Button Simple Test', () => {
         dealerButton: data.dealerButton,
         players: [...data.players],
         blindPosts: { sb: null, bb: null },
-      }
-      handInfo.push(info)
-    })
+      };
+      handInfo.push(info);
+    });
 
     table.on('pot:updated', ({ playerBet }) => {
       if (playerBet && handInfo.length > 0) {
-        const currentHand = handInfo[handInfo.length - 1]
+        const currentHand = handInfo[handInfo.length - 1];
         if (playerBet.amount === 10 && !currentHand.blindPosts.sb) {
-          currentHand.blindPosts.sb = playerBet.playerId
+          currentHand.blindPosts.sb = playerBet.playerId;
         } else if (playerBet.amount === 20 && !currentHand.blindPosts.bb) {
-          currentHand.blindPosts.bb = playerBet.playerId
+          currentHand.blindPosts.bb = playerBet.playerId;
         }
       }
-    })
+    });
 
     // Add event to track eliminations
-    const eliminatedPlayers = []
+    const eliminatedPlayers = [];
     table.on('player:eliminated', ({ playerId }) => {
-      eliminatedPlayers.push(playerId)
-    })
+      eliminatedPlayers.push(playerId);
+    });
 
     // Add players to table
-    table.addPlayer(playerA)
-    table.addPlayer(playerB)
-    table.addPlayer(playerC)
-    table.addPlayer(playerD)
+    table.addPlayer(playerA);
+    table.addPlayer(playerB);
+    table.addPlayer(playerC);
+    table.addPlayer(playerD);
 
     // Start first hand
-    table.tryStartGame()
+    table.tryStartGame();
 
     // Wait for first hand to complete
     await new Promise((resolve) => {
       table.on('hand:ended', () => {
         if (handInfo.length === 1) {
           // Manually eliminate player B
-          playerB.chips = 0
+          playerB.chips = 0;
 
           // Start second hand after a delay
           setTimeout(() => {
-            table.tryStartGame()
-          }, 200)
+            table.tryStartGame();
+          }, 200);
         } else if (handInfo.length === 2) {
-          resolve()
+          resolve();
         }
-      })
+      });
 
       // Timeout
-      setTimeout(resolve, 5000)
-    })
+      setTimeout(resolve, 5000);
+    });
 
-    console.log('\n=== Dead Button Simple Test Results ===')
+    console.log('\n=== Dead Button Simple Test Results ===');
     console.log('Hand 1:', {
       button: handInfo[0].dealerButton,
       players: handInfo[0].players,
       sb: handInfo[0].blindPosts.sb,
       bb: handInfo[0].blindPosts.bb,
-    })
+    });
 
-    console.log('Eliminated:', eliminatedPlayers)
+    console.log('Eliminated:', eliminatedPlayers);
 
     if (handInfo[1]) {
       console.log('Hand 2:', {
@@ -143,16 +143,16 @@ describe('Dead Button Simple Test', () => {
         players: handInfo[1].players,
         sb: handInfo[1].blindPosts.sb,
         bb: handInfo[1].blindPosts.bb,
-      })
+      });
     }
 
     // Verify first hand positions
-    expect(handInfo[0].dealerButton).toBe(0) // A is button
-    expect(handInfo[0].blindPosts.sb).toBe('B') // B posts SB
-    expect(handInfo[0].blindPosts.bb).toBe('C') // C posts BB
+    expect(handInfo[0].dealerButton).toBe(0); // A is button
+    expect(handInfo[0].blindPosts.sb).toBe('B'); // B posts SB
+    expect(handInfo[0].blindPosts.bb).toBe('C'); // C posts BB
 
     // Player B should have 0 chips
-    expect(playerB.chips).toBe(0)
+    expect(playerB.chips).toBe(0);
 
     // In hand 2, according to dead button rule:
     // - BB should advance from C to D (big blind always moves forward)
@@ -160,15 +160,15 @@ describe('Dead Button Simple Test', () => {
     // - No small blind should be posted (dead small blind)
 
     if (handInfo[1]) {
-      console.log('\nExpected for Hand 2:')
-      console.log('- BB advances from C to D')
-      console.log("- Dead button on B's seat")
-      console.log('- No SB posted')
+      console.log('\nExpected for Hand 2:');
+      console.log('- BB advances from C to D');
+      console.log("- Dead button on B's seat");
+      console.log('- No SB posted');
 
-      console.log('\nActual Hand 2:')
-      console.log('- BB posted by:', handInfo[1].blindPosts.bb)
-      console.log('- SB posted by:', handInfo[1].blindPosts.sb)
-      console.log('- Button position:', handInfo[1].dealerButton)
+      console.log('\nActual Hand 2:');
+      console.log('- BB posted by:', handInfo[1].blindPosts.bb);
+      console.log('- SB posted by:', handInfo[1].blindPosts.sb);
+      console.log('- Button position:', handInfo[1].dealerButton);
     }
-  })
-})
+  });
+});

@@ -7,7 +7,7 @@ export const TableState = {
   IN_PROGRESS: 'IN_PROGRESS',
   PAUSED: 'PAUSED',
   CLOSED: 'CLOSED',
-}
+};
 
 export const PlayerState = {
   WAITING: 'WAITING',
@@ -16,7 +16,7 @@ export const PlayerState = {
   ALL_IN: 'ALL_IN',
   SITTING_OUT: 'SITTING_OUT',
   DISCONNECTED: 'DISCONNECTED',
-}
+};
 
 export const GamePhase = {
   WAITING: 'WAITING',
@@ -26,7 +26,7 @@ export const GamePhase = {
   RIVER: 'RIVER',
   SHOWDOWN: 'SHOWDOWN',
   ENDED: 'ENDED',
-}
+};
 
 export const Action = {
   CHECK: 'CHECK',
@@ -35,7 +35,7 @@ export const Action = {
   RAISE: 'RAISE',
   FOLD: 'FOLD',
   ALL_IN: 'ALL_IN',
-}
+};
 
 export const HandRank = {
   HIGH_CARD: 1,
@@ -48,7 +48,7 @@ export const HandRank = {
   FOUR_OF_A_KIND: 8,
   STRAIGHT_FLUSH: 9,
   ROYAL_FLUSH: 10,
-}
+};
 
 /**
  * @typedef {Object} PlayerAction

@@ -1,6 +1,6 @@
-import { nanoid } from 'nanoid'
-import { WildcardEventEmitter } from './base/WildcardEventEmitter.js'
-import { Table } from './Table.js'
+import { nanoid } from 'nanoid';
+import { WildcardEventEmitter } from './base/WildcardEventEmitter.js';
+import { Table } from './Table.js';
 
 /**
  * Main entry point for the poker game management library.
@@ -8,13 +8,13 @@ import { Table } from './Table.js'
  */
 export class PokerGameManager extends WildcardEventEmitter {
   constructor(config = {}) {
-    super()
-    this.tables = new Map()
+    super();
+    this.tables = new Map();
     this.config = {
       maxTables: config.maxTables || 1000,
       defaultTimeout: config.defaultTimeout || 30000,
       ...config,
-    }
+    };
   }
 
   /**
@@ -25,16 +25,16 @@ export class PokerGameManager extends WildcardEventEmitter {
   createTable(config = {}) {
     if (this.tables.size >= this.config.maxTables) {
       throw new Error(
-        `Maximum number of tables (${this.config.maxTables}) reached`
-      )
+        `Maximum number of tables (${this.config.maxTables}) reached`,
+      );
     }
 
-    const tableId = config.id || nanoid()
+    const tableId = config.id || nanoid();
     const table = new Table({
       id: tableId,
       timeout: this.config.defaultTimeout,
       ...config,
-    })
+    });
 
     // Forward table events
     table.on('*', (eventName, data) => {
@@ -42,18 +42,18 @@ export class PokerGameManager extends WildcardEventEmitter {
         tableId,
         eventName,
         data,
-      })
-    })
+      });
+    });
 
     table.on('table:closed', () => {
-      this.tables.delete(tableId)
-      this.emit('table:removed', { tableId })
-    })
+      this.tables.delete(tableId);
+      this.emit('table:removed', { tableId });
+    });
 
-    this.tables.set(tableId, table)
-    this.emit('table:created', { tableId, table })
+    this.tables.set(tableId, table);
+    this.emit('table:created', { tableId, table });
 
-    return table
+    return table;
   }
 
   /**
@@ -62,7 +62,7 @@ export class PokerGameManager extends WildcardEventEmitter {
    * @returns {Table|undefined} The table instance or undefined
    */
   getTable(tableId) {
-    return this.tables.get(tableId)
+    return this.tables.get(tableId);
   }
 
   /**
@@ -70,7 +70,7 @@ export class PokerGameManager extends WildcardEventEmitter {
    * @returns {Table[]} Array of active tables
    */
   getTables() {
-    return Array.from(this.tables.values())
+    return Array.from(this.tables.values());
   }
 
   /**
@@ -79,13 +79,13 @@ export class PokerGameManager extends WildcardEventEmitter {
    * @returns {boolean} True if table was closed, false if not found
    */
   closeTable(tableId) {
-    const table = this.tables.get(tableId)
+    const table = this.tables.get(tableId);
     if (!table) {
-      return false
+      return false;
     }
 
-    table.close()
-    return true
+    table.close();
+    return true;
   }
 
   /**
@@ -93,7 +93,7 @@ export class PokerGameManager extends WildcardEventEmitter {
    */
   closeAllTables() {
     for (const table of this.tables.values()) {
-      table.close()
+      table.close();
     }
   }
 
@@ -102,12 +102,12 @@ export class PokerGameManager extends WildcardEventEmitter {
    * @returns {Object} Statistics object
    */
   getStats() {
-    const tables = this.getTables()
+    const tables = this.getTables();
     return {
       totalTables: tables.length,
       activeTables: tables.filter((t) => t.isGameInProgress()).length,
       totalPlayers: tables.reduce((sum, t) => sum + t.getPlayerCount(), 0),
       memoryUsage: process.memoryUsage().heapUsed,
-    }
+    };
   }
 }

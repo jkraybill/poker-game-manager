@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest'
-import { PokerGameManager } from '../PokerGameManager.js'
-import { Player } from '../Player.js'
-import { Action } from '../types/index.js'
+import { describe, it, expect } from 'vitest';
+import { PokerGameManager } from '../PokerGameManager.js';
+import { Player } from '../Player.js';
+import { Action } from '../types/index.js';
 
 /**
  * MINIMAL reproduction of Issue #11: Pot Distribution Bug
@@ -17,24 +17,24 @@ import { Action } from '../types/index.js'
 
 class TestPlayer extends Player {
   constructor(config) {
-    super(config)
-    this.actions = config.actions || []
-    this.actionIndex = 0
+    super(config);
+    this.actions = config.actions || [];
+    this.actionIndex = 0;
   }
 
   getAction() {
     if (this.actionIndex < this.actions.length) {
-      const action = this.actions[this.actionIndex++]
-      console.log(`${this.name}: ${action.action} ${action.amount || ''}`)
-      return { ...action, timestamp: Date.now() }
+      const action = this.actions[this.actionIndex++];
+      console.log(`${this.name}: ${action.action} ${action.amount || ''}`);
+      return { ...action, timestamp: Date.now() };
     }
-    return { action: Action.CHECK, timestamp: Date.now() }
+    return { action: Action.CHECK, timestamp: Date.now() };
   }
 }
 
 describe('Issue #11 - Minimal Pot Distribution Bug', () => {
   it('should reproduce the exact failing scenario', async () => {
-    const manager = new PokerGameManager()
+    const manager = new PokerGameManager();
 
     const table = manager.createTable({
       tableId: 'exact-bug',
@@ -43,7 +43,7 @@ describe('Issue #11 - Minimal Pot Distribution Bug', () => {
       blinds: { small: 10, big: 20 },
       dealerButton: 0,
       minBuyIn: 1000,
-    })
+    });
 
     // Same deck as complex scenario
     const customDeck = [
@@ -51,233 +51,233 @@ describe('Issue #11 - Minimal Pot Distribution Bug', () => {
         rank: 'A',
         suit: 's',
         toString() {
-          return 'As'
+          return 'As';
         },
       }, // P1
       {
         rank: 'K',
         suit: 'd',
         toString() {
-          return 'Kd'
+          return 'Kd';
         },
       }, // P2
       {
         rank: 'Q',
         suit: 'c',
         toString() {
-          return 'Qc'
+          return 'Qc';
         },
       }, // P3
       {
         rank: 'A',
         suit: 'h',
         toString() {
-          return 'Ah'
+          return 'Ah';
         },
       }, // P1
       {
         rank: 'K',
         suit: 'h',
         toString() {
-          return 'Kh'
+          return 'Kh';
         },
       }, // P2
       {
         rank: 'Q',
         suit: 'h',
         toString() {
-          return 'Qh'
+          return 'Qh';
         },
       }, // P3
       {
         rank: '2',
         suit: 'c',
         toString() {
-          return '2c'
+          return '2c';
         },
       },
       {
         rank: '3',
         suit: 'd',
         toString() {
-          return '3d'
+          return '3d';
         },
       },
       {
         rank: '5',
         suit: 's',
         toString() {
-          return '5s'
+          return '5s';
         },
       },
       {
         rank: '7',
         suit: 'h',
         toString() {
-          return '7h'
+          return '7h';
         },
       },
       {
         rank: '2',
         suit: 'd',
         toString() {
-          return '2d'
+          return '2d';
         },
       },
       {
         rank: '9',
         suit: 'h',
         toString() {
-          return '9h'
+          return '9h';
         },
       },
       {
         rank: '2',
         suit: 'h',
         toString() {
-          return '2h'
+          return '2h';
         },
       },
       {
         rank: 'J',
         suit: 'c',
         toString() {
-          return 'Jc'
+          return 'Jc';
         },
       },
-    ]
+    ];
 
-    table.setCustomDeck(customDeck)
+    table.setCustomDeck(customDeck);
 
     // Players that exactly match the failing test
     const p1 = new TestPlayer({
       id: 'p1',
       name: 'Short Stack',
       actions: [{ action: Action.ALL_IN, amount: 100 }],
-    })
+    });
 
     const p2 = new TestPlayer({
       id: 'p2',
       name: 'Medium Stack',
       actions: [{ action: Action.ALL_IN, amount: 300 }],
-    })
+    });
 
     const p3 = new TestPlayer({
       id: 'p3',
       name: 'Big Stack',
       actions: [{ action: Action.CALL, amount: 280 }],
-    })
+    });
 
-    await table.addPlayer(p1)
-    await table.addPlayer(p2)
-    await table.addPlayer(p3)
+    await table.addPlayer(p1);
+    await table.addPlayer(p2);
+    await table.addPlayer(p3);
 
     // Match exact chip counts from failing test
-    p1.removeChips(900) // 100 chips
-    p2.removeChips(700) // 300 chips
+    p1.removeChips(900); // 100 chips
+    p2.removeChips(700); // 300 chips
     // p3 keeps 1000 chips
 
-    console.log('\n=== EXACT FAILING SCENARIO ===')
-    console.log('P1:', p1.chips, 'chips')
-    console.log('P2:', p2.chips, 'chips')
-    console.log('P3:', p3.chips, 'chips')
+    console.log('\n=== EXACT FAILING SCENARIO ===');
+    console.log('P1:', p1.chips, 'chips');
+    console.log('P2:', p2.chips, 'chips');
+    console.log('P3:', p3.chips, 'chips');
 
-    let handResult = null
+    let handResult = null;
     table.on('hand:ended', (data) => {
-      handResult = data
-    })
+      handResult = data;
+    });
 
     // Debug: track pot events
     table.on('pot:updated', (data) => {
-      console.log('pot:updated event:', data)
-    })
+      console.log('pot:updated event:', data);
+    });
 
     table.on('sidepot:created', (data) => {
-      console.log('sidepot:created event:', data)
-    })
+      console.log('sidepot:created event:', data);
+    });
 
     // Track player actions to see when all-ins happen
     table.on('player:action', (data) => {
       console.log(
-        `\nPlayer action: ${data.playerId} ${data.action} ${data.amount || ''}`
-      )
-    })
+        `\nPlayer action: ${data.playerId} ${data.action} ${data.amount || ''}`,
+      );
+    });
 
-    table.tryStartGame()
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    table.tryStartGame();
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    console.log('\n=== RESULTS ===')
+    console.log('\n=== RESULTS ===');
     console.log(
       'Winners:',
       handResult.winners.map((w) => ({
         id: w.playerId,
         amount: w.amount,
         hand: w.hand.description,
-      }))
-    )
+      })),
+    );
 
     console.log(
       '\nActual Pots:',
       handResult.sidePots.map((pot) => ({
         amount: pot.amount,
         eligible: pot.eligiblePlayers,
-      }))
-    )
+      })),
+    );
 
     // Expected pot structure:
     // Main pot: 300 (100 from each player) - P1, P2, P3 eligible
     // Side pot: 400 (200 from P2 and P3) - only P2, P3 eligible
-    console.log('\nExpected Pots:')
-    console.log('- Main pot: 300, eligible: [p1, p2, p3]')
-    console.log('- Side pot: 400, eligible: [p2, p3]')
+    console.log('\nExpected Pots:');
+    console.log('- Main pot: 300, eligible: [p1, p2, p3]');
+    console.log('- Side pot: 400, eligible: [p2, p3]');
 
-    const winner = handResult.winners[0]
-    expect(winner.playerId).toBe('p1')
+    const winner = handResult.winners[0];
+    expect(winner.playerId).toBe('p1');
 
     // Calculate expected winnings:
     // P1 (100 chips) is all-in, so main pot = 100 * 3 = 300
     // P1 should win this main pot since they have AA
-    const expectedWinnings = 300
+    const expectedWinnings = 300;
 
     if (winner.amount === 0) {
       console.log(
         '\n🐛 BUG REPRODUCED: Winner got 0 chips instead of',
-        expectedWinnings
-      )
+        expectedWinnings,
+      );
     } else if (winner.amount === expectedWinnings) {
       console.log(
         '\n✅ Bug FIXED: Winner correctly got',
         winner.amount,
-        'chips'
-      )
+        'chips',
+      );
     } else {
       console.log(
         '\n⚠️  Partial bug: Winner got',
         winner.amount,
         'chips instead of',
-        expectedWinnings
-      )
+        expectedWinnings,
+      );
     }
 
     // The exact amount P1 should win
-    expect(winner.amount).toBe(expectedWinnings)
+    expect(winner.amount).toBe(expectedWinnings);
 
     // Also check final chip counts
-    console.log('\n=== FINAL CHIP COUNTS ===')
-    console.log('P1:', p1.chips, '(started with 100)')
-    console.log('P2:', p2.chips, '(started with 300)')
-    console.log('P3:', p3.chips, '(started with 1000)')
+    console.log('\n=== FINAL CHIP COUNTS ===');
+    console.log('P1:', p1.chips, '(started with 100)');
+    console.log('P2:', p2.chips, '(started with 300)');
+    console.log('P3:', p3.chips, '(started with 1000)');
 
     // Expected final chips:
     // Betting: P1 all-in 100, P2 all-in 300, P3 calls 300
     // Main pot: 100 * 3 = 300 (all players eligible)
     // Side pot: 200 * 2 = 400 (only P2 and P3 eligible)
     // Winners: P1 (AA) wins main pot, P2 (KK) beats P3 (QQ) for side pot
-    expect(p1.chips).toBe(300) // Started 100 - bet 100 + won 300 = 300
-    expect(p2.chips).toBe(400) // Started 300 - bet 300 + won 400 = 400
-    expect(p3.chips).toBe(700) // Started 1000 - bet 300 = 700
-  })
-})
+    expect(p1.chips).toBe(300); // Started 100 - bet 100 + won 300 = 300
+    expect(p2.chips).toBe(400); // Started 300 - bet 300 + won 400 = 400
+    expect(p3.chips).toBe(700); // Started 1000 - bet 300 = 700
+  });
+});
 
 // The deprecated test below has been removed since Issue #11 is now fixed
 // The test above verifies the fix works correctly

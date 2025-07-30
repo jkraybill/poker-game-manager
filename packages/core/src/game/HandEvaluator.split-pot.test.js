@@ -5,8 +5,8 @@
  * have identical hand strengths.
  */
 
-import { describe, it, expect } from 'vitest'
-import { HandEvaluator } from './HandEvaluator.js'
+import { describe, it, expect } from 'vitest';
+import { HandEvaluator } from './HandEvaluator.js';
 
 describe('HandEvaluator Split Pot Scenarios', () => {
   it('should find multiple winners with identical straights', () => {
@@ -41,15 +41,15 @@ describe('HandEvaluator Split Pot Scenarios', () => {
         },
         cards: [],
       },
-    ]
+    ];
 
-    const winners = HandEvaluator.findWinners(playerHands)
+    const winners = HandEvaluator.findWinners(playerHands);
 
-    expect(winners).toHaveLength(2)
-    expect(winners.map((w) => w.player.id)).toContain('player1')
-    expect(winners.map((w) => w.player.id)).toContain('player2')
-    expect(winners.map((w) => w.player.id)).not.toContain('player3')
-  })
+    expect(winners).toHaveLength(2);
+    expect(winners.map((w) => w.player.id)).toContain('player1');
+    expect(winners.map((w) => w.player.id)).toContain('player2');
+    expect(winners.map((w) => w.player.id)).not.toContain('player3');
+  });
 
   it('should find all winners when everyone has identical hands', () => {
     const playerHands = [
@@ -83,13 +83,13 @@ describe('HandEvaluator Split Pot Scenarios', () => {
         },
         cards: [],
       },
-    ]
+    ];
 
-    const winners = HandEvaluator.findWinners(playerHands)
+    const winners = HandEvaluator.findWinners(playerHands);
 
-    expect(winners).toHaveLength(3)
-    expect(winners.map((w) => w.player.id)).toEqual(['p1', 'p2', 'p3'])
-  })
+    expect(winners).toHaveLength(3);
+    expect(winners.map((w) => w.player.id)).toEqual(['p1', 'p2', 'p3']);
+  });
 
   it('should handle split pot with different suits but same rank', () => {
     const playerHands = [
@@ -113,13 +113,13 @@ describe('HandEvaluator Split Pot Scenarios', () => {
         },
         cards: [],
       },
-    ]
+    ];
 
-    const winners = HandEvaluator.findWinners(playerHands)
+    const winners = HandEvaluator.findWinners(playerHands);
 
-    expect(winners).toHaveLength(2)
-    expect(winners.every((w) => w.hand.rank === 6)).toBe(true)
-  })
+    expect(winners).toHaveLength(2);
+    expect(winners.every((w) => w.hand.rank === 6)).toBe(true);
+  });
 
   it('should not split pot when kickers differ', () => {
     const playerHands = [
@@ -143,13 +143,13 @@ describe('HandEvaluator Split Pot Scenarios', () => {
         },
         cards: [],
       },
-    ]
+    ];
 
-    const winners = HandEvaluator.findWinners(playerHands)
+    const winners = HandEvaluator.findWinners(playerHands);
 
-    expect(winners).toHaveLength(1)
-    expect(winners[0].player.id).toBe('player1')
-  })
+    expect(winners).toHaveLength(1);
+    expect(winners[0].player.id).toBe('player1');
+  });
 
   it('should handle complex split with multiple tied hands', () => {
     const playerHands = [
@@ -193,13 +193,13 @@ describe('HandEvaluator Split Pot Scenarios', () => {
         },
         cards: [],
       },
-    ]
+    ];
 
-    const winners = HandEvaluator.findWinners(playerHands)
+    const winners = HandEvaluator.findWinners(playerHands);
 
-    expect(winners).toHaveLength(3)
-    expect(winners.map((w) => w.player.id).sort()).toEqual(['p1', 'p2', 'p4'])
-  })
+    expect(winners).toHaveLength(3);
+    expect(winners.map((w) => w.player.id).sort()).toEqual(['p1', 'p2', 'p4']);
+  });
 
   it('should handle single winner when no ties exist', () => {
     const playerHands = [
@@ -233,11 +233,11 @@ describe('HandEvaluator Split Pot Scenarios', () => {
         },
         cards: [],
       },
-    ]
+    ];
 
-    const winners = HandEvaluator.findWinners(playerHands)
+    const winners = HandEvaluator.findWinners(playerHands);
 
-    expect(winners).toHaveLength(1)
-    expect(winners[0].player.id).toBe('winner')
-  })
-})
+    expect(winners).toHaveLength(1);
+    expect(winners[0].player.id).toBe('winner');
+  });
+});

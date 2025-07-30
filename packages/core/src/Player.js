@@ -1,5 +1,5 @@
-import { nanoid } from 'nanoid'
-import { WildcardEventEmitter } from './base/WildcardEventEmitter.js'
+import { nanoid } from 'nanoid';
+import { WildcardEventEmitter } from './base/WildcardEventEmitter.js';
 
 /**
  * Base Player class that implementations should extend or follow as interface
@@ -7,19 +7,19 @@ import { WildcardEventEmitter } from './base/WildcardEventEmitter.js'
  */
 export class Player extends WildcardEventEmitter {
   constructor(config = {}) {
-    super()
+    super();
 
-    this.id = config.id || nanoid()
-    this.name = config.name || `${this.id}`
-    this.avatar = config.avatar || null
-    this._chips = 0 // Private backing field for chips
+    this.id = config.id || nanoid();
+    this.name = config.name || `${this.id}`;
+    this.avatar = config.avatar || null;
+    this._chips = 0; // Private backing field for chips
 
     // Game state properties - Player is THE source of truth
-    this.bet = 0 // Current bet in the betting round
-    this.state = null // PlayerState enum (ACTIVE, FOLDED, ALL_IN, etc.)
-    this.hasActed = false // Whether player has acted in current betting round
-    this.lastAction = null // Last action taken (Action enum)
-    this.hasOption = false // For big blind option tracking
+    this.bet = 0; // Current bet in the betting round
+    this.state = null; // PlayerState enum (ACTIVE, FOLDED, ALL_IN, etc.)
+    this.hasActed = false; // Whether player has acted in current betting round
+    this.lastAction = null; // Last action taken (Action enum)
+    this.hasOption = false; // For big blind option tracking
   }
 
   /**
@@ -29,7 +29,7 @@ export class Player extends WildcardEventEmitter {
    */
   // eslint-disable-next-line require-await
   getAction(_gameState) {
-    throw new Error('getAction() must be implemented by Player subclass')
+    throw new Error('getAction() must be implemented by Player subclass');
   }
 
   /**
@@ -41,7 +41,7 @@ export class Player extends WildcardEventEmitter {
     this.emit('cards:received', {
       playerId: this.id,
       cardCount: _cards.length,
-    })
+    });
   }
 
   /**
@@ -53,7 +53,7 @@ export class Player extends WildcardEventEmitter {
     this.emit('message:received', {
       playerId: this.id,
       messageType: message.type,
-    })
+    });
   }
 
   /**
@@ -64,15 +64,15 @@ export class Player extends WildcardEventEmitter {
       id: this.id,
       name: this.name,
       avatar: this.avatar,
-    }
+    };
   }
 
   /**
    * Disconnect the player - OPTIONAL
    */
   disconnect() {
-    this.emit('disconnected', { playerId: this.id })
-    this.removeAllListeners()
+    this.emit('disconnected', { playerId: this.id });
+    this.removeAllListeners();
   }
 
   /**
@@ -80,7 +80,7 @@ export class Player extends WildcardEventEmitter {
    * @returns {number} Current chip count
    */
   get chips() {
-    return this._chips
+    return this._chips;
   }
 
   /**
@@ -88,8 +88,8 @@ export class Player extends WildcardEventEmitter {
    * @param {number} amount - New chip amount
    */
   set chips(amount) {
-    const oldAmount = this._chips
-    this._chips = Math.max(0, amount) // Never go negative
+    const oldAmount = this._chips;
+    this._chips = Math.max(0, amount); // Never go negative
 
     if (oldAmount !== this._chips) {
       this.emit('chips:changed', {
@@ -97,7 +97,7 @@ export class Player extends WildcardEventEmitter {
         oldAmount,
         newAmount: this._chips,
         difference: this._chips - oldAmount,
-      })
+      });
     }
   }
 
@@ -108,10 +108,10 @@ export class Player extends WildcardEventEmitter {
    */
   addChips(amount) {
     if (amount < 0) {
-      throw new Error('Cannot add negative chips')
+      throw new Error('Cannot add negative chips');
     }
-    this.chips = this._chips + amount
-    return this._chips
+    this.chips = this._chips + amount;
+    return this._chips;
   }
 
   /**
@@ -122,13 +122,13 @@ export class Player extends WildcardEventEmitter {
    */
   removeChips(amount) {
     if (amount < 0) {
-      throw new Error('Cannot remove negative chips')
+      throw new Error('Cannot remove negative chips');
     }
     if (amount > this._chips) {
-      throw new Error(`Insufficient chips: has ${this._chips}, needs ${amount}`)
+      throw new Error(`Insufficient chips: has ${this._chips}, needs ${amount}`);
     }
-    this.chips = this._chips - amount
-    return this._chips
+    this.chips = this._chips - amount;
+    return this._chips;
   }
 
   /**
@@ -137,7 +137,7 @@ export class Player extends WildcardEventEmitter {
    * @returns {boolean} True if player has enough chips
    */
   canAfford(amount) {
-    return this._chips >= amount
+    return this._chips >= amount;
   }
 
   /**
@@ -146,8 +146,8 @@ export class Player extends WildcardEventEmitter {
    */
   buyIn(amount) {
     if (amount <= 0) {
-      throw new Error('Buy-in must be positive')
+      throw new Error('Buy-in must be positive');
     }
-    this.chips = amount
+    this.chips = amount;
   }
 }
