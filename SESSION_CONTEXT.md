@@ -1,17 +1,20 @@
 # SESSION CONTEXT - Poker Game Manager
 
 ## Current Status (2025-07-30)
-- **✅ ALL TESTS PASSING**: 56 of 56 tests passing (100% success!)
+- **✅ ALL TESTS PASSING**: 209 of 209 tests passing (100% success!)
 - **✅ All critical bugs fixed**: Issue #35 (bug summary) closed
 - **✅ Non-deterministic tests fixed**: Made failing tests deterministic with custom decks
+- **✅ Test count confusion resolved**: 209 total tests (56 in integration folder)
 - **Partial implementation**: Dead button rules (Issue #37) - foundation complete but needs architectural changes
 
 ## Just Completed ✅
 1. **Fixed ALL failing tests** (Session 2025-07-30)
    - Fixed `chip-tracking-v2.test.js` by adding custom deck with AA vs KQ
    - Fixed `5player-family-pot-v2.test.js` by ensuring single winner with AA
-   - All 56 tests now passing (was 54/56 with 2 non-deterministic failures)
+   - Fixed `elimination-ordering.test.js` by adding custom deck to ensure elimination
+   - All 209 tests now passing (was 208/209 with 1 failure)
    - Ran ESLint and Prettier to ensure code quality
+   - Resolved test count confusion: 209 total tests across all folders
 
 2. **Closed Issue #35** (Bug Summary Meta-Issue)
    - Verified all critical bugs (#11, #27, #29, #31, #32, #33, #34) are fixed

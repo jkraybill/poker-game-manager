@@ -572,7 +572,7 @@ describe('Tournament Elimination Ordering (Issue #28)', () => {
     table = manager.createTable({
       id: 'single-elimination-test',
       blinds: { small: 10, big: 20 },
-      minBuyIn: 100,
+      minBuyIn: 30,
       maxBuyIn: 200,
       minPlayers: 2,
       dealerButton: 0,
@@ -610,9 +610,30 @@ describe('Tournament Elimination Ordering (Issue #28)', () => {
     table.addPlayer(player1)
     table.addPlayer(player2)
 
-    // Set different chip amounts - player2 has less and will lose
-    player1.chips = 100
-    player2.chips = 50
+    // Create custom deck to ensure Player 1 wins and Player 2 loses all chips
+    const customDeck = [
+      // Player 1 gets pocket aces
+      { rank: 'A', suit: 's', toString() { return 'As' } },
+      // Player 2 gets 7-2 offsuit (worst hand)
+      { rank: '7', suit: 'd', toString() { return '7d' } },
+      // Player 1 second card
+      { rank: 'A', suit: 'h', toString() { return 'Ah' } },
+      // Player 2 second card
+      { rank: '2', suit: 'c', toString() { return '2c' } },
+      // Burn + Flop
+      { rank: '3', suit: 'd', toString() { return '3d' } }, // Burn
+      { rank: 'K', suit: 'h', toString() { return 'Kh' } },
+      { rank: 'Q', suit: 's', toString() { return 'Qs' } },
+      { rank: 'J', suit: 'c', toString() { return 'Jc' } },
+      // Burn + Turn
+      { rank: '4', suit: 'd', toString() { return '4d' } }, // Burn
+      { rank: 'T', suit: 'h', toString() { return 'Th' } },
+      // Burn + River
+      { rank: '5', suit: 'd', toString() { return '5d' } }, // Burn
+      { rank: '9', suit: 's', toString() { return '9s' } },
+    ]
+
+    table.setCustomDeck(customDeck)
 
     const handComplete = new Promise((resolve) => {
       table.on('hand:ended', () => {
@@ -623,17 +644,15 @@ describe('Tournament Elimination Ordering (Issue #28)', () => {
     table.tryStartGame()
     await handComplete
 
-    // Should have exactly one elimination (the smaller stack)
+    // Should have exactly one elimination (player 2 loses with 7-2)
     expect(eliminationOrder).toHaveLength(1)
-    // Don't check specific ID since it's randomly generated
-
-    // Verify the remaining player has the higher chip count
+    
+    // Verify the remaining player has chips
     const remainingPlayers = Array.from(table.players.values())
-    if (remainingPlayers.length === 1) {
-      const survivor = remainingPlayers[0]
-      console.log('Survivor has chips:', survivor.player.chips)
-      expect(survivor.player.chips).toBeGreaterThan(0)
-    }
+    expect(remainingPlayers).toHaveLength(1)
+    const survivor = remainingPlayers[0]
+    console.log('Survivor has chips:', survivor.player.chips)
+    expect(survivor.player.chips).toBeGreaterThan(0)
 
     console.log('✅ Single elimination works correctly')
   })
