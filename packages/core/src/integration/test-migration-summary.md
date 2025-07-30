@@ -2,9 +2,27 @@
 
 ## Overview
 
-Successfully migrated **27 integration test files** containing **50+ tests** to use the test utilities framework. The migrated tests show significant code reduction (average 30%) and improved readability, consistency, and maintainability.
+Successfully migrated **29 integration test files** containing **56+ tests** to use the test utilities framework. The migrated tests show significant code reduction (average 28%) and improved readability, consistency, and maintainability.
 
 ## Migrated Tests
+
+### Phase 6 - Additional Migration (Session 2025-07-30)
+
+#### 28. Button Rotation Test (Issue #36)
+
+- **Original**: `button-rotation.test.js` (270 lines)
+- **Migrated**: `button-rotation-v2.test.js` (269 lines)
+- **Reduction**: 1 line (minimal)
+- **Tests**: 4 tests for button rotation scenarios
+- **Benefits**: Cleaner code using test utilities, consistent patterns
+
+#### 29. Standings Display Test (Issue #34)
+
+- **Original**: `standings-display.test.js` (247 lines)
+- **Migrated**: `standings-display-v2.test.js` (239 lines)
+- **Reduction**: 8 lines (3%)
+- **Tests**: 2 tests for standings separation (active vs eliminated)
+- **Benefits**: Uses StrategicPlayer and event capture utilities
 
 ### Phase 1 - Initial Demonstration (3 tests)
 
@@ -259,11 +277,12 @@ Specialized table creators reduce boilerplate:
 
 ## Migration Statistics
 
-- **Total Files Migrated**: 27
-- **Total Tests Migrated**: 50+ tests
+- **Total Files Migrated**: 29 (2 more added in Session 2025-07-30)
+- **Total Tests Migrated**: 56+ tests
 - **Average Code Reduction**: 28%
 - **Total Lines Removed**: ~2,000+
 - **Test Categories Covered**: All major poker scenarios
+- **Remaining to Migrate**: 13 tests (mostly issue-specific repro tests)
 
 ## Test Categories Migrated
 
