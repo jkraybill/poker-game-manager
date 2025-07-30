@@ -13,7 +13,7 @@ Please read:
 
 Key facts:
 - Pure JavaScript, Node.js 22+, event-driven architecture
-- 183 tests passing, 1 failing (split pot), 1 skipped
+- 211 tests passing (100% success rate!)
 - Player class is the single source of truth
 - GitHub: https://github.com/jkraybill/poker-game-manager
 - Issues: https://github.com/jkraybill/poker-game-manager/issues
