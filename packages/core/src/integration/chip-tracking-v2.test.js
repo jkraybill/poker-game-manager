@@ -274,6 +274,33 @@ describe('Chip Tracking (v2)', () => {
     shortStack.chips = 100;
     bigStack.chips = 300;
 
+    // Set up custom deck to ensure deterministic outcome
+    // Short stack gets pocket Aces, big stack gets King-Queen
+    const customDeck = [
+      // First card to each player (SB/shortStack first, then BB/bigStack)
+      { rank: 'A', suit: 's', toString() { return 'As'; } }, // Short stack first card
+      { rank: 'K', suit: 'h', toString() { return 'Kh'; } }, // Big stack first card
+      // Second card to each player
+      { rank: 'A', suit: 'h', toString() { return 'Ah'; } }, // Short stack second card
+      { rank: 'Q', suit: 'd', toString() { return 'Qd'; } }, // Big stack second card
+      // Burn card
+      { rank: '3', suit: 'c', toString() { return '3c'; } },
+      // Flop (3 cards)
+      { rank: '7', suit: 's', toString() { return '7s'; } },
+      { rank: '8', suit: 'd', toString() { return '8d'; } },
+      { rank: '9', suit: 'c', toString() { return '9c'; } },
+      // Burn card
+      { rank: '4', suit: 'h', toString() { return '4h'; } },
+      // Turn
+      { rank: '2', suit: 's', toString() { return '2s'; } },
+      // Burn card
+      { rank: '5', suit: 'd', toString() { return '5d'; } },
+      // River
+      { rank: 'J', suit: 'c', toString() { return 'Jc'; } },
+    ];
+    
+    table.setCustomDeck(customDeck);
+
     table.tryStartGame();
 
     // Wait for hand
@@ -296,21 +323,18 @@ describe('Chip Tracking (v2)', () => {
     const totalWinnings = winners.reduce((sum, w) => sum + w.amount, 0);
     expect(totalWinnings).toBeGreaterThan(0);
 
-    // In this all-in scenario:
-    // - Total pot is 400 chips (100 + 300)
-    // - If short stack wins: gets 200 chips (main pot), big stack gets 200 back
-    // - If big stack wins: gets 400 chips total
+    // In this all-in scenario with predetermined cards:
+    // - Short stack has pocket Aces (AA)
+    // - Big stack has King-Queen (KQ)
+    // - Total pot is 200 chips (100 from each player in the main pot)
+    // - Short stack wins the main pot (200 chips)
+    // - Big stack gets back the uncalled portion (200 chips)
     const totalChips = finalShortChips + finalBigChips;
-    expect(totalChips).toBe(400); // Chip conservation is now working!
+    expect(totalChips).toBe(400); // Chip conservation
     
-    if (winners.some((w) => w.playerId === 'short')) {
-      // Short stack won the main pot (200 chips)
-      expect(finalShortChips).toBe(200);
-      expect(finalBigChips).toBe(200); // Big stack gets remaining chips back
-    } else {
-      // Big stack won everything
-      expect(finalBigChips).toBe(400);
-      expect(finalShortChips).toBe(0);
-    }
+    // With pocket Aces vs KQ, short stack should always win
+    expect(winners.some((w) => w.playerId === 'short')).toBe(true);
+    expect(finalShortChips).toBe(200); // Won the main pot
+    expect(finalBigChips).toBe(200);   // Gets back uncalled chips
   });
 });

@@ -107,6 +107,39 @@ describe('5-Player Family Pot (v2)', () => {
     // Add players
     players.forEach((p) => table.addPlayer(p));
 
+    // Set up custom deck to ensure exactly one winner (Player 1 gets the nuts)
+    // Player 1 will have AA, others will have weaker hands
+    const customDeck = [
+      // First card to each player (starting from dealer+1)
+      { rank: 'A', suit: 's', toString() { return 'As'; } }, // P1 first card
+      { rank: 'K', suit: 'h', toString() { return 'Kh'; } }, // P2 first card
+      { rank: 'Q', suit: 'd', toString() { return 'Qd'; } }, // P3 first card
+      { rank: 'J', suit: 'c', toString() { return 'Jc'; } }, // P4 first card
+      { rank: 'T', suit: 's', toString() { return 'Ts'; } }, // P5 first card
+      // Second card to each player
+      { rank: 'A', suit: 'h', toString() { return 'Ah'; } }, // P1 second card (pocket aces)
+      { rank: 'K', suit: 'd', toString() { return 'Kd'; } }, // P2 second card
+      { rank: 'Q', suit: 'c', toString() { return 'Qc'; } }, // P3 second card
+      { rank: 'J', suit: 's', toString() { return 'Js'; } }, // P4 second card
+      { rank: 'T', suit: 'h', toString() { return 'Th'; } }, // P5 second card
+      // Burn card
+      { rank: '2', suit: 'c', toString() { return '2c'; } },
+      // Flop (3 cards) - low cards that don't help anyone
+      { rank: '2', suit: 's', toString() { return '2s'; } },
+      { rank: '3', suit: 'd', toString() { return '3d'; } },
+      { rank: '4', suit: 'h', toString() { return '4h'; } },
+      // Burn card
+      { rank: '5', suit: 'c', toString() { return '5c'; } },
+      // Turn - another low card
+      { rank: '6', suit: 's', toString() { return '6s'; } },
+      // Burn card
+      { rank: '7', suit: 'd', toString() { return '7d'; } },
+      // River - another low card
+      { rank: '8', suit: 'h', toString() { return '8h'; } },
+    ];
+    
+    table.setCustomDeck(customDeck);
+
     // Start game
     table.tryStartGame();
 
