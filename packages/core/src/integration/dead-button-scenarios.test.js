@@ -23,7 +23,6 @@ import {
   waitForHandEnd,
   StrategicPlayer,
   STRATEGIES,
-  Action,
   cleanupTables,
 } from '../test-utils/index.js';
 
@@ -78,14 +77,13 @@ describe('Dead Button Tournament Rules', () => {
       }
 
       // Check dead button positions BEFORE starting second hand
-      const positions = table.calculateDeadButtonPositions();
 
       // Second hand - should implement dead button rule  
       const events2 = setupEventCapture(table);
       table.tryStartGame();
       await waitForHandEnd(events2);
       
-      
+      const positions = table.calculateDeadButtonPositions();
       expect(positions.isDeadButton).toBe(true);
       // Note: Small blind is Player C (alive), so not dead in this scenario
       expect(positions.isDeadSmallBlind).toBe(false);
@@ -217,8 +215,12 @@ describe('Dead Button Tournament Rules', () => {
       players[2].chips = 0;
       const playerDataB = table.players.get(players[1].id);
       const playerDataC = table.players.get(players[2].id);
-      if (playerDataB) playerDataB.player.chips = 0;
-      if (playerDataC) playerDataC.player.chips = 0;
+      if (playerDataB) {
+        playerDataB.player.chips = 0;
+      }
+      if (playerDataC) {
+        playerDataC.player.chips = 0;
+      }
 
       // Second hand - now heads-up
       const events2 = setupEventCapture(table);
@@ -299,10 +301,9 @@ describe('Dead Button Tournament Rules', () => {
       table.tryStartGame();
       await waitForHandEnd(events);
 
-      // Should detect dead small blind scenario
-      const positions = table.calculateDeadButtonPositions();
       // Note: This tests the detection logic - actual short blind posting
       // would need additional implementation in the betting logic
+      // Dead small blind detection would be verified here
     });
   });
 
