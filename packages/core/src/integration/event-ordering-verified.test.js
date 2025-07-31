@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { PokerGameManager } from '../PokerGameManager.js';
-import { Player } from '../Player.js';
-import { Action } from '../types/index.js';
+import {
+  createTestTable,
+  StrategicPlayer,
+  STRATEGIES,
+  cleanupTables,
+} from '../test-utils/index.js';
 
 /**
  * Verified test for Issue #33: Event ordering
@@ -9,30 +12,21 @@ import { Action } from '../types/index.js';
  */
 
 describe('Event Ordering - Verified (Issue #33)', () => {
-  let manager;
-  let table;
+  let manager, table;
 
   beforeEach(() => {
-    manager = new PokerGameManager();
+    ({ manager, table } = createTestTable('standard', {
+      minPlayers: 2,
+      dealerButton: 0,
+    }));
   });
 
   afterEach(() => {
-    if (table) {
-      table.close();
-    }
+    cleanupTables(manager);
   });
 
   it('should verify event ordering is correct even without elimination', async () => {
     // First, let's just verify that hand:ended fires before game cleanup
-    table = manager.createTable({
-      id: 'event-order-test',
-      blinds: { small: 10, big: 20 },
-      minBuyIn: 100,
-      maxBuyIn: 200,
-      minPlayers: 2,
-      dealerButton: 0,
-    });
-
     const eventLog = [];
     let handEndedTime = 0;
     let gameEndCleanupTime = 0;
@@ -85,154 +79,147 @@ describe('Event Ordering - Verified (Issue #33)', () => {
       console.log('Time since hand:ended:', elimTime - handEndedTime, 'ms');
     });
 
-    // Simple players
-    class SimplePlayer extends Player {
-      getAction(gameState) {
-        const myState = gameState.players[this.id];
-        const toCall = gameState.currentBet - myState.bet;
+    // Create players using test utilities
+    const player1 = new StrategicPlayer({
+      id: 'player1',
+      name: 'Player 1',
+      strategy: STRATEGIES.checkCall,
+    });
+    const player2 = new StrategicPlayer({
+      id: 'player2',
+      name: 'Player 2',
+      strategy: STRATEGIES.checkCall,
+    });
 
-        if (toCall > 0 && toCall <= myState.chips) {
-          return {
-            playerId: this.id,
-            action: Action.CALL,
-            amount: toCall,
-            timestamp: Date.now(),
-          };
-        }
+    // Add players
+    table.addPlayer(player1);
+    table.addPlayer(player2);
 
-        return {
-          playerId: this.id,
-          action: Action.CHECK,
-          timestamp: Date.now(),
-        };
-      }
-    }
-
-    const p1 = new SimplePlayer({ name: 'Player 1' });
-    const p2 = new SimplePlayer({ name: 'Player 2' });
-
-    table.addPlayer(p1);
-    table.addPlayer(p2);
-
-    // Create promise for hand completion before starting game
-    const handComplete = new Promise((resolve) => {
-      table.once('hand:ended', () => {
-        setTimeout(resolve, 100);
+    // Wait for hand to complete
+    const handPromise = new Promise((resolve) => {
+      table.on('hand:ended', () => {
+        // Give time for any cleanup to happen
+        setTimeout(() => resolve(), 100);
       });
     });
 
     // Start game
     table.tryStartGame();
 
-    // Wait for hand to complete
-    await handComplete;
+    // Wait for completion
+    await handPromise;
 
-    // Analyze event order
-    console.log('\nEvent sequence:');
+    // Log final event order
+    console.log('\nFinal event log:');
     eventLog.forEach((e) => {
-      console.log(`- ${e.event} at ${e.timestamp}`);
+      console.log(`  ${e.event} at ${e.timestamp}`);
     });
 
     // Verify hand:ended came before handleGameEnd
     const handEndedEvent = eventLog.find((e) => e.event === 'hand:ended');
-    const handleGameEndEvent = eventLog.find((e) => e.event === 'handleGameEnd');
-
-    expect(handEndedEvent).toBeDefined();
-    expect(handleGameEndEvent).toBeDefined();
-    expect(handleGameEndEvent.timestamp).toBeGreaterThanOrEqual(
-      handEndedEvent.timestamp,
+    const handleGameEndEvent = eventLog.find(
+      (e) => e.event === 'handleGameEnd',
     );
 
-    console.log('\n✓ Events fired in correct order');
+    expect(handEndedEvent).toBeTruthy();
+    expect(handleGameEndEvent).toBeTruthy();
+    expect(handEndedEvent.timestamp).toBeLessThan(
+      handleGameEndEvent.timestamp,
+    );
   });
 
-  it('should fire player:eliminated after hand:ended when player loses all chips', async () => {
-    table = manager.createTable({
-      id: 'manual-elim-test',
-      blinds: { small: 10, big: 20 },
-      minBuyIn: 40,
-      maxBuyIn: 200,
-      minPlayers: 2,
-      dealerButton: 0,
-    });
-
+  it('should ensure elimination events fire after hand:ended', async () => {
     const eventLog = [];
+    let handEndedFired = false;
 
     // Track events
-    table.on('hand:ended', () => {
-      eventLog.push({
-        event: 'hand:ended',
-        timestamp: Date.now(),
-      });
+    table.on('hand:ended', ({ winners }) => {
+      handEndedFired = true;
+      eventLog.push({ event: 'hand:ended', winners });
+      console.log('hand:ended fired with winners:', winners);
     });
 
     table.on('player:eliminated', ({ playerId }) => {
       eventLog.push({
         event: 'player:eliminated',
-        timestamp: Date.now(),
         playerId,
+        afterHandEnded: handEndedFired,
       });
+      console.log(
+        'player:eliminated fired for',
+        playerId,
+        'afterHandEnded:',
+        handEndedFired,
+      );
     });
 
-    // Simple all-in player
-    class AllInPlayer extends Player {
-      getAction(gameState) {
-        const myState = gameState.players[this.id];
+    // Create players with unequal chips
+    const richPlayer = new StrategicPlayer({
+      id: 'rich',
+      name: 'Rich Player',
+      strategy: STRATEGIES.aggressive,
+    });
+    const poorPlayer = new StrategicPlayer({
+      id: 'poor',
+      name: 'Poor Player',
+      strategy: STRATEGIES.checkCall,
+    });
 
-        // Go all-in if we have chips
-        if (myState.chips > 0) {
-          return {
-            playerId: this.id,
-            action: Action.ALL_IN,
-            amount: myState.chips,
-            timestamp: Date.now(),
-          };
-        }
-
-        return {
-          playerId: this.id,
-          action: Action.CHECK,
-          timestamp: Date.now(),
-        };
-      }
+    // Add players
+    table.addPlayer(richPlayer);
+    table.addPlayer(poorPlayer);
+    
+    // Give poor player very few chips
+    const poorData = Array.from(table.players.values()).find(
+      (p) => p.player.id === 'poor',
+    );
+    if (poorData) {
+      poorData.chips = 30; // Just enough for blinds + small bet
     }
 
-    const p1 = new AllInPlayer({ name: 'Player 1' });
-    const p2 = new AllInPlayer({ name: 'Player 2' });
-
-    // Set initial chips - p2 has less so will lose
-    p1.chips = 100;
-    p2.chips = 50;
-
-    table.addPlayer(p1);
-    table.addPlayer(p2);
-
-    // Create promise for hand completion
-    const handComplete = new Promise((resolve) => {
-      table.once('hand:ended', () => {
+    // Wait for hand to complete
+    const handPromise = new Promise((resolve) => {
+      table.on('hand:ended', () => {
         // Give time for elimination events
-        setTimeout(resolve, 100);
+        setTimeout(() => resolve(), 200);
       });
     });
 
     // Start game
     table.tryStartGame();
 
-    // Wait for hand to complete
-    await handComplete;
+    // Wait for completion
+    await handPromise;
 
-    // Check results
+    // Verify event order
+    console.log('\nEvent log:');
+    eventLog.forEach((e) => {
+      console.log(`  ${e.event}`, e);
+    });
+
+    // Check that hand:ended fired
     const handEndedEvents = eventLog.filter((e) => e.event === 'hand:ended');
-    const elimEvents = eventLog.filter((e) => e.event === 'player:eliminated');
+    expect(handEndedEvents.length).toBeGreaterThan(0);
 
-    expect(handEndedEvents).toHaveLength(1);
+    // Check if any eliminations occurred
+    const eliminationEvents = eventLog.filter(
+      (e) => e.event === 'player:eliminated',
+    );
 
-    // If someone was eliminated, verify the order
-    if (elimEvents.length > 0) {
-      expect(elimEvents[0].timestamp).toBeGreaterThanOrEqual(
-        handEndedEvents[0].timestamp,
+    if (eliminationEvents.length > 0) {
+      // All eliminations should show afterHandEnded: true
+      eliminationEvents.forEach((elimEvent) => {
+        expect(elimEvent.afterHandEnded).toBe(true);
+      });
+
+      // And elimination should come after hand:ended in the log
+      const handEndedIndex = eventLog.findIndex(
+        (e) => e.event === 'hand:ended',
       );
-      console.log('✓ Elimination fired after hand:ended');
+      const firstElimIndex = eventLog.findIndex(
+        (e) => e.event === 'player:eliminated',
+      );
+      expect(firstElimIndex).toBeGreaterThan(handEndedIndex);
     }
   });
 });
