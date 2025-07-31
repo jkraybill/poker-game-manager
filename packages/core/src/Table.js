@@ -321,6 +321,7 @@ export class Table extends WildcardEventEmitter {
     const buttonPlayerData = allPlayers[buttonSeatIndex];
     const isDeadButton = buttonPlayerData.player.chips <= 0;
 
+
     // Find SB position (1 seat before BB by seat order)
     const sbSeatIndex =
       (bbSeatIndex - 1 + allPlayers.length) % allPlayers.length;
