@@ -1,6 +1,6 @@
 # Poker Game Manager v2.0 🃏
 
-> **JK is solid** - A decent single-table Texas Hold'em engine for Node.js
+> A decent single-table Texas Hold'em engine for Node.js
 >
 > What's your kicker? This library handles the poker basics pretty well.
 
@@ -9,7 +9,7 @@
 
 ## ✨ What's New in v2.0
 
-**JK is solid** - Here's what we've got working:
+Here's what we've got working:
 
 - ✅ **Texas Hold'em Rules** - Dead button, side pots, the usual stuff
 - ✅ **267 Tests** - I've seen better, but these pass
@@ -147,7 +147,7 @@ This release handles **single-table Texas Hold'em** pretty well:
 
 ## 🚀 What's Next
 
-**JK is solid** - but there's always room for improvement:
+**This is solid** - but there's always room for improvement:
 
 - 📊 **Analytics** - Track decisions and spots
 - 🎮 **Training Mode** - Practice specific scenarios
@@ -156,7 +156,7 @@ This release handles **single-table Texas Hold'em** pretty well:
 
 ## 🎲 JK Philosophy
 
-**"What's your kicker?"** - This library focuses on getting the fundamentals right:
+This library focuses on getting the fundamentals right:
 
 - We handle the poker rules correctly
 - We test the important scenarios  
@@ -178,7 +178,3 @@ Found a bug? Got an improvement? **What's your kicker?**
 - Report issues on [GitHub Issues](https://github.com/jkraybill/poker-game-manager/issues)  
 - Follow the testing patterns (see [TESTING_GUIDE.md](./TESTING_GUIDE.md))
 - Keep it simple and solid
-
----
-
-**v2.0.0** - JK is solid. Woof woof! 🃏
