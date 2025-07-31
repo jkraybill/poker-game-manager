@@ -101,9 +101,14 @@ describe('7-Player Poker Scenarios (v2)', () => {
     if (winners.length === 1) {
       expect(winners[0].amount).toBe(140);
     } else {
-      // Split pot - each winner gets equal share
-      winners.forEach((w) => {
-        expect(w.amount).toBe(Math.floor(140 / winners.length));
+      // Split pot - handle remainder distribution
+      const baseAmount = Math.floor(140 / winners.length);
+      const remainder = 140 % winners.length;
+      
+      winners.forEach((w, index) => {
+        // First 'remainder' winners get 1 extra chip
+        const expectedAmount = index < remainder ? baseAmount + 1 : baseAmount;
+        expect(w.amount).toBe(expectedAmount);
       });
     }
 
