@@ -1,7 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { PokerGameManager } from '../PokerGameManager.js';
-import { Player } from '../Player.js';
-import { Action } from '../types/index.js';
+import {
+  createTestTable,
+  setupEventCapture,
+  StrategicPlayer,
+  STRATEGIES,
+  cleanupTables,
+} from '../test-utils/index.js';
 
 /**
  * Tests for dead button and dead small blind rules per POKER-RULES.md section 3
@@ -10,54 +14,24 @@ import { Action } from '../types/index.js';
  * The button and small blind are positioned relative to the big blind.
  */
 
-// Simple test player that tracks position and blinds posted
-class TestPlayer extends Player {
-  constructor(config) {
-    super(config);
-    this.blindsPosted = [];
-    this.isEliminated = false;
-  }
-
-  getAction(gameState) {
-    const myState = gameState.players[this.id];
-    const toCall = gameState.currentBet - myState.bet;
-
-    // Fold if eliminated
-    if (this.isEliminated) {
-      return {
-        playerId: this.id,
-        action: Action.FOLD,
-        timestamp: Date.now(),
-      };
-    }
-
-    // Otherwise just call/check
-    if (toCall > 0) {
-      return {
-        playerId: this.id,
-        action: Action.CALL,
-        amount: toCall,
-        timestamp: Date.now(),
-      };
-    }
-
-    return {
-      playerId: this.id,
-      action: Action.CHECK,
-      timestamp: Date.now(),
-    };
-  }
-}
-
 describe('Dead Button Rules', () => {
-  let manager;
+  let manager, table;
 
   beforeEach(() => {
-    manager = new PokerGameManager();
+    // Use test utilities for table creation
+    ({ manager, table } = createTestTable('standard', {
+      minPlayers: 2,
+      dealerButton: 0,
+    }));
+    
+    // Set up event capture
+    setupEventCapture(table, {
+      events: ['hand:started', 'pot:updated', 'hand:ended', 'player:eliminated'],
+    });
   });
 
   afterEach(() => {
-    manager.tables.forEach((table) => table.close());
+    cleanupTables(manager);
   });
 
   it('should implement dead button when player between button and blinds is eliminated', async () => {
@@ -67,19 +41,28 @@ describe('Dead Button Rules', () => {
     // Player B eliminated during hand
     // Hand 2 should have: Dead button on B's seat, no SB posted, C=BB
 
-    const table = manager.createTable({
-      blinds: { small: 10, big: 20 },
-      minBuyIn: 1000,
-      maxBuyIn: 1000,
-      minPlayers: 2,
-      dealerButton: 0,
-    });
-
+    // Create players using test utilities
     const players = [
-      new TestPlayer({ id: 'A', name: 'Player A' }),
-      new TestPlayer({ id: 'B', name: 'Player B' }),
-      new TestPlayer({ id: 'C', name: 'Player C' }),
-      new TestPlayer({ id: 'D', name: 'Player D' }),
+      new StrategicPlayer({ 
+        id: 'A', 
+        name: 'Player A',
+        strategy: STRATEGIES.checkCall,
+      }),
+      new StrategicPlayer({ 
+        id: 'B', 
+        name: 'Player B',
+        strategy: STRATEGIES.checkCall,
+      }),
+      new StrategicPlayer({ 
+        id: 'C', 
+        name: 'Player C',
+        strategy: STRATEGIES.checkCall,
+      }),
+      new StrategicPlayer({ 
+        id: 'D', 
+        name: 'Player D',
+        strategy: STRATEGIES.checkCall,
+      }),
     ];
 
     // Track blind posting
@@ -109,48 +92,41 @@ describe('Dead Button Rules', () => {
         blindTracking.hand1.bb = data.players[(data.dealerButton + 2) % 4];
       } else if (handCount === 2) {
         blindTracking.hand2.button = data.dealerButton;
-
         // Check if button is "dead" (on eliminated player's seat)
-        const activePlayerIds = players
-          .filter((p) => p.chips > 0)
-          .map((p) => p.id);
-        const buttonPlayerId = data.players[data.dealerButton];
-        blindTracking.hand2.deadButton =
-          !activePlayerIds.includes(buttonPlayerId);
-
-        // TODO: This is where the current implementation fails
-        // It should place button on B's empty seat, not rotate to next active
+        const activePlayerIds = Array.from(table.players.values())
+          .filter(p => p.chips > 0)
+          .map(p => p.player.id);
+        const buttonPosition = data.dealerButton;
+        const buttonPlayers = Array.from(table.players.values());
+        if (buttonPosition < buttonPlayers.length) {
+          const buttonPlayerData = buttonPlayers[buttonPosition];
+          blindTracking.hand2.deadButton = !activePlayerIds.includes(buttonPlayerData?.player?.id);
+        }
       }
     });
 
     table.on('pot:updated', ({ playerBet, deadMoney }) => {
-      if (playerBet && handCount === 1) {
-        if (playerBet.amount === 10 && !blindTracking.hand1.sb) {
-          blindTracking.hand1.sb = playerBet.playerId;
-        } else if (playerBet.amount === 20 && !blindTracking.hand1.bb) {
-          blindTracking.hand1.bb = playerBet.playerId;
+      if (playerBet && handCount > 0) {
+        const trackingObj = handCount === 1 ? blindTracking.hand1 : blindTracking.hand2;
+        if (playerBet.amount === 10 && !trackingObj.sb) {
+          trackingObj.sb = playerBet.playerId;
+        } else if (playerBet.amount === 20 && !trackingObj.bb) {
+          trackingObj.bb = playerBet.playerId;
         }
-      } else if (handCount === 2) {
-        if (playerBet) {
-          if (playerBet.amount === 10 && !blindTracking.hand2.sb) {
-            blindTracking.hand2.sb = playerBet.playerId;
-          } else if (playerBet.amount === 20 && !blindTracking.hand2.bb) {
-            blindTracking.hand2.bb = playerBet.playerId;
-          }
-        }
-        if (deadMoney) {
-          blindTracking.hand2.deadSB = true;
-        }
+      }
+      if (deadMoney && handCount === 2) {
+        blindTracking.hand2.deadSB = true;
       }
     });
 
     table.on('hand:ended', () => {
       if (handCount === 1) {
-        // Eliminate player B after hand 1
-        players[1].chips = 0;
-        players[1].isEliminated = true;
         hand1Complete = true;
-
+        // Eliminate player B after hand 1
+        const playerBData = Array.from(table.players.values()).find(p => p.player.id === 'B');
+        if (playerBData) {
+          playerBData.chips = 0;
+        }
         // Start hand 2
         setTimeout(() => table.tryStartGame(), 100);
       } else if (handCount === 2) {
@@ -159,11 +135,9 @@ describe('Dead Button Rules', () => {
     });
 
     // Add players
-    for (const player of players) {
-      table.addPlayer(player);
-    }
+    players.forEach(player => table.addPlayer(player));
 
-    // Start game
+    // Start first hand
     table.tryStartGame();
 
     // Wait for both hands to complete
@@ -209,19 +183,28 @@ describe('Dead Button Rules', () => {
     // Players B and C eliminated during hand
     // Hand 2: D=Button, A=SB, D=BB (heads-up rules)
 
-    const table = manager.createTable({
-      blinds: { small: 10, big: 20 },
-      minBuyIn: 1000,
-      maxBuyIn: 1000,
-      minPlayers: 2,
-      dealerButton: 0,
-    });
-
+    // Create players using test utilities
     const players = [
-      new TestPlayer({ id: 'A', name: 'Player A' }),
-      new TestPlayer({ id: 'B', name: 'Player B' }),
-      new TestPlayer({ id: 'C', name: 'Player C' }),
-      new TestPlayer({ id: 'D', name: 'Player D' }),
+      new StrategicPlayer({ 
+        id: 'A', 
+        name: 'Player A',
+        strategy: STRATEGIES.checkCall,
+      }),
+      new StrategicPlayer({ 
+        id: 'B', 
+        name: 'Player B',
+        strategy: STRATEGIES.checkCall,
+      }),
+      new StrategicPlayer({ 
+        id: 'C', 
+        name: 'Player C',
+        strategy: STRATEGIES.checkCall,
+      }),
+      new StrategicPlayer({ 
+        id: 'D', 
+        name: 'Player D',
+        strategy: STRATEGIES.checkCall,
+      }),
     ];
 
     let handCount = 0;
@@ -239,19 +222,21 @@ describe('Dead Button Rules', () => {
     table.on('hand:ended', () => {
       if (handCount === 1) {
         // Eliminate players B and C
-        players[1].chips = 0;
-        players[1].isEliminated = true;
-        players[2].chips = 0;
-        players[2].isEliminated = true;
+        const playerBData = Array.from(table.players.values()).find(p => p.player.id === 'B');
+        const playerCData = Array.from(table.players.values()).find(p => p.player.id === 'C');
+        if (playerBData) {
+          playerBData.chips = 0;
+        }
+        if (playerCData) {
+          playerCData.chips = 0;
+        }
 
         setTimeout(() => table.tryStartGame(), 100);
       }
     });
 
     // Add players and start
-    for (const player of players) {
-      table.addPlayer(player);
-    }
+    players.forEach(player => table.addPlayer(player));
     table.tryStartGame();
 
     // Wait for completion

@@ -1,73 +1,59 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { PokerGameManager } from '../PokerGameManager.js';
-import { Player } from '../Player.js';
-import { Action } from '../types/index.js';
+import {
+  createTestTable,
+  setupEventCapture,
+  StrategicPlayer,
+  STRATEGIES,
+  cleanupTables,
+} from '../test-utils/index.js';
 
 /**
  * Simple test to verify dead button rule implementation
  * Tests the exact scenario from Issue #37
  */
 
-class SimplePlayer extends Player {
-  constructor(config) {
-    super(config);
-    this.shouldFold = config.shouldFold || false;
-  }
-
-  getAction(gameState) {
-    const myState = gameState.players[this.id];
-    const toCall = gameState.currentBet - myState.bet;
-
-    if (this.shouldFold && toCall > 0) {
-      return {
-        playerId: this.id,
-        action: Action.FOLD,
-        timestamp: Date.now(),
-      };
-    }
-
-    if (toCall > 0) {
-      return {
-        playerId: this.id,
-        action: Action.CALL,
-        amount: toCall,
-        timestamp: Date.now(),
-      };
-    }
-
-    return {
-      playerId: this.id,
-      action: Action.CHECK,
-      timestamp: Date.now(),
-    };
-  }
-}
-
 describe('Dead Button Simple Test', () => {
-  let manager;
+  let manager, table;
 
   beforeEach(() => {
-    manager = new PokerGameManager();
+    // Use test utilities for table creation
+    ({ manager, table } = createTestTable('standard', {
+      minPlayers: 2,
+      dealerButton: 0,
+    }));
+    
+    // Set up event capture
+    setupEventCapture(table, {
+      events: ['hand:started', 'pot:updated', 'hand:ended', 'player:eliminated'],
+    });
   });
 
   afterEach(() => {
-    manager.tables.forEach((table) => table.close());
+    cleanupTables(manager);
   });
 
   it('should show that BB moves forward when player is eliminated', async () => {
-    const table = manager.createTable({
-      blinds: { small: 10, big: 20 },
-      minBuyIn: 1000,
-      maxBuyIn: 1000,
-      minPlayers: 2,
-      dealerButton: 0,
+    // Create 4 players using test utilities
+    const playerA = new StrategicPlayer({ 
+      id: 'A', 
+      name: 'Player A',
+      strategy: STRATEGIES.checkCall,
     });
-
-    // Create 4 players
-    const playerA = new SimplePlayer({ id: 'A', name: 'Player A' });
-    const playerB = new SimplePlayer({ id: 'B', name: 'Player B' });
-    const playerC = new SimplePlayer({ id: 'C', name: 'Player C' });
-    const playerD = new SimplePlayer({ id: 'D', name: 'Player D' });
+    const playerB = new StrategicPlayer({ 
+      id: 'B', 
+      name: 'Player B',
+      strategy: STRATEGIES.checkCall,
+    });
+    const playerC = new StrategicPlayer({ 
+      id: 'C', 
+      name: 'Player C',
+      strategy: STRATEGIES.checkCall,
+    });
+    const playerD = new StrategicPlayer({ 
+      id: 'D', 
+      name: 'Player D',
+      strategy: STRATEGIES.checkCall,
+    });
 
     const handInfo = [];
 
@@ -112,7 +98,10 @@ describe('Dead Button Simple Test', () => {
       table.on('hand:ended', () => {
         if (handInfo.length === 1) {
           // Manually eliminate player B
-          playerB.chips = 0;
+          const playerBData = Array.from(table.players.values()).find(p => p.player.id === 'B');
+          if (playerBData) {
+            playerBData.chips = 0;
+          }
 
           // Start second hand after a delay
           setTimeout(() => {
@@ -152,7 +141,8 @@ describe('Dead Button Simple Test', () => {
     expect(handInfo[0].blindPosts.bb).toBe('C'); // C posts BB
 
     // Player B should have 0 chips
-    expect(playerB.chips).toBe(0);
+    const playerBData = Array.from(table.players.values()).find(p => p.player.id === 'B');
+    expect(playerBData?.chips).toBe(0);
 
     // In hand 2, according to dead button rule:
     // - BB should advance from C to D (big blind always moves forward)
