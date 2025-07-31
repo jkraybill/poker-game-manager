@@ -1,8 +1,8 @@
 # Integration Guide 🃏
 
-> This guide shows you how to build poker applications with our library.
->
-> We'll get you up and running with the basics, then show you some fancier stuff.
+This guide shows you how to build poker applications with our library.
+
+We'll get you up and running with the basics, then show you some fancier stuff.
 
 ## Table of Contents
 
