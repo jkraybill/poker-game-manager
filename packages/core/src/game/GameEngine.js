@@ -42,13 +42,19 @@ export class GameEngine extends WildcardEventEmitter {
       config.dealerButton !== undefined
         ? config.dealerButton
         : Math.floor(Math.random() * this.players.length);
+    
+    // Dead button rule support - explicit position indices
+    this.buttonPlayerIndex = config.buttonPlayerIndex;
+    this.smallBlindPlayerIndex = config.smallBlindPlayerIndex;
+    this.bigBlindPlayerIndex = config.bigBlindPlayerIndex;
+    this.isDeadButton = config.isDeadButton || false;
+    this.isDeadSmallBlind = config.isDeadSmallBlind || false;
+    
     this.roundBets = new Map();
     this.playerHands = new Map();
     this.lastBettor = null;
     this.customDeck = config.customDeck || null;
     this.raiseHistory = []; // Track raise increments in current round
-    this.isDeadButton = config.isDeadButton || false;
-    this.isDeadSmallBlind = config.isDeadSmallBlind || false;
   }
 
   /**
@@ -159,26 +165,39 @@ export class GameEngine extends WildcardEventEmitter {
       return;
     }
 
-    let sbIndex, bbIndex;
+    let sbIndex, bbIndex, sbPlayer, bbPlayer;
 
-    // Special handling for heads-up play
-    if (activePlayers.length === 2) {
-      // In heads-up, the dealer/button is the small blind
-      sbIndex = this.dealerButtonIndex;
-      bbIndex = this.getNextActivePlayerIndex(sbIndex);
+    // Use explicit position indices if provided (dead button rule)
+    if (this.bigBlindPlayerIndex !== undefined && this.bigBlindPlayerIndex !== null) {
+      bbIndex = this.bigBlindPlayerIndex;
+      bbPlayer = this.players[bbIndex];
+      
+      if (!this.isDeadSmallBlind && this.smallBlindPlayerIndex !== undefined && this.smallBlindPlayerIndex !== null) {
+        sbIndex = this.smallBlindPlayerIndex;
+        sbPlayer = this.players[sbIndex];
+      }
     } else {
-      // Normal blind positions for 3+ players
-      sbIndex = this.getNextActivePlayerIndex(this.dealerButtonIndex);
-      bbIndex = this.getNextActivePlayerIndex(sbIndex);
+      // Fallback to old behavior for backward compatibility
+      
+      // Special handling for heads-up play
+      if (activePlayers.length === 2) {
+        // In heads-up, the dealer/button is the small blind
+        sbIndex = this.dealerButtonIndex;
+        bbIndex = this.getNextActivePlayerIndex(sbIndex);
+      } else {
+        // Normal blind positions for 3+ players
+        sbIndex = this.getNextActivePlayerIndex(this.dealerButtonIndex);
+        bbIndex = this.getNextActivePlayerIndex(sbIndex);
+      }
+
+      sbPlayer = this.players[sbIndex];
+      bbPlayer = this.players[bbIndex];
     }
 
-    const sbPlayer = this.players[sbIndex];
-    const bbPlayer = this.players[bbIndex];
-
-    // Post small blind (unless it's dead)
-    if (!this.isDeadSmallBlind) {
+    // Post small blind (unless it's dead or no player assigned)
+    if (!this.isDeadSmallBlind && sbPlayer) {
       this.handleBet(sbPlayer, this.config.smallBlind, 'small blind');
-    } else {
+    } else if (this.isDeadSmallBlind) {
       // Dead small blind - add to pot without attributing to any player
       this.potManager.addDeadMoney(this.config.smallBlind);
       this.emit('blind:dead', {
@@ -188,10 +207,11 @@ export class GameEngine extends WildcardEventEmitter {
     }
 
     // Post big blind (always posted, never dead)
-    this.handleBet(bbPlayer, this.config.bigBlind, 'big blind');
-
-    // Big blind has option
-    bbPlayer.hasOption = true;
+    if (bbPlayer) {
+      this.handleBet(bbPlayer, this.config.bigBlind, 'big blind');
+      // Big blind has option
+      bbPlayer.hasOption = true;
+    }
 
     // Set current player
     if (activePlayers.length === 2) {

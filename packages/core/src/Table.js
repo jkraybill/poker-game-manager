@@ -161,15 +161,30 @@ export class Table extends WildcardEventEmitter {
         (a, b) => a.seatNumber - b.seatNumber,
       );
 
+      // Calculate dead button positions
+      const positions = this.calculateDeadButtonPositions();
+      
+      // Convert seat-based positions to player array indices
+      const activePlayers = sortedPlayers
+        .filter((pd) => pd.player.chips > 0)
+        .map((pd) => pd.player);
+      
+      const buttonPlayerIndex = positions.buttonIndex;
+      const smallBlindPlayerIndex = positions.smallBlindIndex;
+      const bigBlindPlayerIndex = positions.bigBlindIndex;
+
       this.gameEngine = new GameEngine({
         variant: this.config.variant,
-        players: sortedPlayers.map((pd) => pd.player), // Pass Player instances directly
+        players: activePlayers,
         blinds: this.config.blinds,
         timeout: this.config.timeout,
         dealerButton: this.currentDealerButton,
         customDeck: this.customDeck,
-        isDeadButton: this.isDeadButton,
-        isDeadSmallBlind: this.isDeadSmallBlind,
+        buttonPlayerIndex,
+        smallBlindPlayerIndex,
+        bigBlindPlayerIndex,
+        isDeadButton: positions.isDeadButton,
+        isDeadSmallBlind: positions.isDeadSmallBlind,
       });
 
       // Forward specific game events we care about
@@ -402,10 +417,16 @@ export class Table extends WildcardEventEmitter {
     // Get only active players (those who will remain after eliminations)
     const activePlayers = allPlayers.filter((pd) => pd.player.chips > 0);
 
-    // Track who posted big blind this hand before updating for next hand
+    // Track who posted big blind this hand for next hand's dead button calculation
     const gameEngine = this.gameEngine;
-    if (gameEngine && activePlayers.length >= 2) {
-      // Find who posted BB this hand
+    if (gameEngine && gameEngine.bigBlindPlayerIndex !== undefined && gameEngine.bigBlindPlayerIndex !== null) {
+      // Use the explicit big blind index from game engine
+      const bbPlayer = gameEngine.players[gameEngine.bigBlindPlayerIndex];
+      if (bbPlayer) {
+        this.lastBigBlindPlayerId = bbPlayer.id;
+      }
+    } else if (gameEngine && activePlayers.length >= 2) {
+      // Fallback to old calculation for backward compatibility
       const bbIndex =
         activePlayers.length === 2
           ? (this.currentDealerButton + 1) % 2
