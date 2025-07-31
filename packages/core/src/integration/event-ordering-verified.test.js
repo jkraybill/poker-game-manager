@@ -97,7 +97,7 @@ describe('Event Ordering - Verified (Issue #33)', () => {
 
     // Wait for hand to complete
     const handPromise = new Promise((resolve) => {
-      table.on('hand:ended', () => {
+      table.once('hand:ended', () => {
         // Give time for any cleanup to happen
         setTimeout(() => resolve(), 100);
       });
@@ -178,11 +178,17 @@ describe('Event Ordering - Verified (Issue #33)', () => {
     }
 
     // Wait for hand to complete
-    const handPromise = new Promise((resolve) => {
-      table.on('hand:ended', () => {
+    const handPromise = new Promise((resolve, reject) => {
+      const handler = () => {
         // Give time for elimination events
         setTimeout(() => resolve(), 200);
-      });
+      };
+      table.once('hand:ended', handler);
+      
+      // Add timeout in case hand never ends
+      setTimeout(() => {
+        reject(new Error('Test timeout - hand never ended'));
+      }, 5000);
     });
 
     // Start game
