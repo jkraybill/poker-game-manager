@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { PokerGameManager } from '../PokerGameManager.js';
-import { Player } from '../Player.js';
-import { Action } from '../types/index.js';
+import {
+  createTestTable,
+  setupEventCapture,
+  StrategicPlayer,
+  cleanupTables,
+  waitForHandEnd,
+  Action,
+} from '../test-utils/index.js';
 import { getFormattedStandings } from '../utils/playerStatus.js';
 
 /**
@@ -12,55 +17,48 @@ import { getFormattedStandings } from '../utils/playerStatus.js';
  */
 
 describe('Standings Display (Issue #34)', () => {
-  let manager;
-  let table;
+  let manager, table, events;
 
   beforeEach(() => {
-    manager = new PokerGameManager();
+    manager = null;
+    table = null;
+    events = null;
   });
 
   afterEach(() => {
-    if (table) {
-      table.close();
+    if (manager) {
+      cleanupTables(manager);
     }
   });
 
   it('should separate active and eliminated players in standings', async () => {
-    table = manager.createTable({
+    ({ manager, table } = createTestTable('standard', {
       id: 'standings-test',
       blinds: { small: 10, big: 20 },
       minBuyIn: 100,
       maxBuyIn: 500,
       minPlayers: 3,
       dealerButton: 0,
-    });
+    }));
+    events = setupEventCapture(table);
 
-    // Simple all-in player for forcing eliminations
-    class AllInPlayer extends Player {
-      getAction(gameState) {
-        const myState = gameState.players[this.id];
-
-        if (myState.chips > 0) {
-          return {
-            playerId: this.id,
-            action: Action.ALL_IN,
-            amount: myState.chips,
-            timestamp: Date.now(),
-          };
-        }
-
+    // Simple all-in strategy for forcing eliminations
+    const allInStrategy = ({ myState }) => {
+      if (myState.chips > 0) {
         return {
-          playerId: this.id,
-          action: Action.CHECK,
-          timestamp: Date.now(),
+          action: Action.ALL_IN,
+          amount: myState.chips,
         };
       }
-    }
+      return {
+        action: Action.CHECK,
+      };
+    };
 
     // Create players with different chip amounts
-    const alice = new AllInPlayer({ name: 'Alice' });
-    const bob = new AllInPlayer({ name: 'Bob' });
-    const charlie = new AllInPlayer({ name: 'Charlie' });
+    const alice = new StrategicPlayer({ name: 'Alice', strategy: allInStrategy });
+    const bob = new StrategicPlayer({ name: 'Bob', strategy: allInStrategy });
+    const charlie = new StrategicPlayer({ name: 'Charlie', strategy: allInStrategy });
 
     table.addPlayer(alice);
     table.addPlayer(bob);
@@ -88,40 +86,35 @@ describe('Standings Display (Issue #34)', () => {
     // Track eliminated players for standings display
     const eliminatedPlayers = [];
 
-    // Wait for hand to complete and players to be eliminated
-    const handComplete = new Promise((resolve) => {
-      let eliminatedCount = 0;
+    // Track eliminated players for standings display
+    let eliminatedCount = 0;
+    table.on('player:eliminated', ({ playerId }) => {
+      eliminatedCount++;
+      const playerName =
+        [alice, bob, charlie].find((p) => p.id === playerId)?.name || playerId;
+      console.log(
+        `Player ${playerName} (${playerId}) eliminated (${eliminatedCount} total)`,
+      );
 
-      table.on('player:eliminated', ({ playerId }) => {
-        eliminatedCount++;
-        const playerName =
-          [alice, bob, charlie].find((p) => p.id === playerId)?.name || playerId;
-        console.log(
-          `Player ${playerName} (${playerId}) eliminated (${eliminatedCount} total)`,
-        );
-
-        // Track eliminated player for standings display
-        eliminatedPlayers.push({
-          id: playerId,
-          name: playerName,
-          chips: 0,
-          seatNumber: 0, // Not important for this test
-          status: 'eliminated',
-          eliminationOrder: eliminatedCount,
-        });
-
-        // Wait for both eliminations before checking final standings
-        if (eliminatedCount === 2) {
-          setTimeout(resolve, 100); // Brief delay for cleanup
-        }
+      // Track eliminated player for standings display
+      eliminatedPlayers.push({
+        id: playerId,
+        name: playerName,
+        chips: 0,
+        seatNumber: 0, // Not important for this test
+        status: 'eliminated',
+        eliminationOrder: eliminatedCount,
       });
     });
 
     // Start the game
     table.tryStartGame();
 
-    // Wait for eliminations
-    await handComplete;
+    // Wait for hand to complete
+    await waitForHandEnd(events);
+    
+    // Brief delay for elimination events to fire
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     // Check final standings - should have eliminated players separated
     const finalStandings = getFormattedStandings(
@@ -164,38 +157,31 @@ describe('Standings Display (Issue #34)', () => {
   });
 
   it('should handle all players eliminated scenario', async () => {
-    table = manager.createTable({
+    ({ manager, table } = createTestTable('standard', {
       id: 'all-eliminated-test',
       blinds: { small: 5, big: 10 },
       minBuyIn: 30,
       maxBuyIn: 100,
       minPlayers: 2,
       dealerButton: 0,
-    });
+    }));
+    events = setupEventCapture(table);
 
-    class AllInPlayer extends Player {
-      getAction(gameState) {
-        const myState = gameState.players[this.id];
-
-        if (myState.chips > 0) {
-          return {
-            playerId: this.id,
-            action: Action.ALL_IN,
-            amount: myState.chips,
-            timestamp: Date.now(),
-          };
-        }
-
+    // All-in strategy
+    const allInStrategy = ({ myState }) => {
+      if (myState.chips > 0) {
         return {
-          playerId: this.id,
-          action: Action.CHECK,
-          timestamp: Date.now(),
+          action: Action.ALL_IN,
+          amount: myState.chips,
         };
       }
-    }
+      return {
+        action: Action.CHECK,
+      };
+    };
 
-    const player1 = new AllInPlayer({ name: 'Player 1' });
-    const player2 = new AllInPlayer({ name: 'Player 2' });
+    const player1 = new StrategicPlayer({ name: 'Player 1', strategy: allInStrategy });
+    const player2 = new StrategicPlayer({ name: 'Player 2', strategy: allInStrategy });
 
     table.addPlayer(player1);
     table.addPlayer(player2);
@@ -207,27 +193,24 @@ describe('Standings Display (Issue #34)', () => {
     // Track eliminated players
     const eliminatedPlayers = [];
 
-    const handComplete = new Promise((resolve) => {
-      table.on('player:eliminated', ({ playerId }) => {
-        const playerName =
-          [player1, player2].find((p) => p.id === playerId)?.name || playerId;
-        eliminatedPlayers.push({
-          id: playerId,
-          name: playerName,
-          chips: 0,
-          seatNumber: 0,
-          status: 'eliminated',
-          eliminationOrder: eliminatedPlayers.length + 1,
-        });
-      });
-
-      table.on('hand:ended', () => {
-        setTimeout(resolve, 100);
+    table.on('player:eliminated', ({ playerId }) => {
+      const playerName =
+        [player1, player2].find((p) => p.id === playerId)?.name || playerId;
+      eliminatedPlayers.push({
+        id: playerId,
+        name: playerName,
+        chips: 0,
+        seatNumber: 0,
+        status: 'eliminated',
+        eliminationOrder: eliminatedPlayers.length + 1,
       });
     });
 
     table.tryStartGame();
-    await handComplete;
+    await waitForHandEnd(events);
+    
+    // Brief delay for elimination events
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     // After the hand, we should have 1 active + 1 eliminated = 2 total
     const standings = getFormattedStandings(table.players, eliminatedPlayers);
