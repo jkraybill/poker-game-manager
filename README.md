@@ -53,9 +53,9 @@ When wrapping up your session, please complete these steps:
    - Update these copypastas if they could be better
    - Prune obsolete sections from documentation
    - Update CLAUDE.md with new patterns/fixes
-   - Update TESTING_GUIDE.md with updates to testing methodology
-   - Simplify SESSION_CONTEXT.md (remove old victories)
-   - Delete or archive outdated files
+   - Update documentation if you discover inaccuracies
+   - Ensure all *.md files remain current and accurate
+   - Remove any newly obsolete information
 
 5. **Document for Next Session**:
    - Update SESSION_CONTEXT.md with:
