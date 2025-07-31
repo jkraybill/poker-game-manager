@@ -160,11 +160,11 @@ describe('Table Auto-Start Behavior', () => {
       // Add players
       const player1 = new StrategicPlayer({ 
         name: 'Player 1', 
-        strategy: createTimingStrategy() 
+        strategy: createTimingStrategy(), 
       });
       const player2 = new StrategicPlayer({ 
         name: 'Player 2', 
-        strategy: createTimingStrategy() 
+        strategy: createTimingStrategy(), 
       });
       table.addPlayer(player1);
       table.addPlayer(player2);

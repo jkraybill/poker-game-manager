@@ -109,21 +109,49 @@ describe('Elimination Display Fixed', () => {
     // Set up custom deck where A wins with AA
     const customDeck = [
       // Deal order for 3 players
-      { rank: 'A', suit: 's', toString() { return 'As'; } }, // A first card
-      { rank: '2', suit: 'c', toString() { return '2c'; } }, // B first card
-      { rank: '7', suit: 'd', toString() { return '7d'; } }, // C first card
-      { rank: 'A', suit: 'h', toString() { return 'Ah'; } }, // A second card (AA)
-      { rank: '3', suit: 'c', toString() { return '3c'; } }, // B second card
-      { rank: '4', suit: 'c', toString() { return '4c'; } }, // C second card
+      { rank: 'A', suit: 's', toString() {
+ return 'As'; 
+} }, // A first card
+      { rank: '2', suit: 'c', toString() {
+ return '2c'; 
+} }, // B first card
+      { rank: '7', suit: 'd', toString() {
+ return '7d'; 
+} }, // C first card
+      { rank: 'A', suit: 'h', toString() {
+ return 'Ah'; 
+} }, // A second card (AA)
+      { rank: '3', suit: 'c', toString() {
+ return '3c'; 
+} }, // B second card
+      { rank: '4', suit: 'c', toString() {
+ return '4c'; 
+} }, // C second card
       // Community cards
-      { rank: 'K', suit: 'c', toString() { return 'Kc'; } }, // burn
-      { rank: 'K', suit: 's', toString() { return 'Ks'; } }, // flop 1
-      { rank: 'K', suit: 'd', toString() { return 'Kd'; } }, // flop 2
-      { rank: 'K', suit: 'h', toString() { return 'Kh'; } }, // flop 3
-      { rank: '2', suit: 'd', toString() { return '2d'; } }, // burn
-      { rank: 'Q', suit: 'c', toString() { return 'Qc'; } }, // turn
-      { rank: '3', suit: 'd', toString() { return '3d'; } }, // burn
-      { rank: 'J', suit: 'c', toString() { return 'Jc'; } }, // river
+      { rank: 'K', suit: 'c', toString() {
+ return 'Kc'; 
+} }, // burn
+      { rank: 'K', suit: 's', toString() {
+ return 'Ks'; 
+} }, // flop 1
+      { rank: 'K', suit: 'd', toString() {
+ return 'Kd'; 
+} }, // flop 2
+      { rank: 'K', suit: 'h', toString() {
+ return 'Kh'; 
+} }, // flop 3
+      { rank: '2', suit: 'd', toString() {
+ return '2d'; 
+} }, // burn
+      { rank: 'Q', suit: 'c', toString() {
+ return 'Qc'; 
+} }, // turn
+      { rank: '3', suit: 'd', toString() {
+ return '3d'; 
+} }, // burn
+      { rank: 'J', suit: 'c', toString() {
+ return 'Jc'; 
+} }, // river
     ];
 
     table.setCustomDeck(customDeck);

@@ -210,7 +210,6 @@ describe('Issue #11 - Minimal Pot Distribution Bug', () => {
 
     table.tryStartGame();
     await waitForHandEnd(events);
-    const handResult = events.handEnded;
 
     console.log('\n=== RESULTS ===');
     console.log(

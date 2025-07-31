@@ -5,7 +5,6 @@ import {
   StrategicPlayer,
   cleanupTables,
   waitForHandEnd,
-  Action,
   STRATEGIES,
 } from '../../test-utils/index.js';
 
