@@ -45,6 +45,7 @@ export class StrategicPlayer extends Player {
       toCall,
       position: this.position,
       actionCount: this.actionCount++,
+      validActions: gameState.validActions || [],
     });
 
     return { ...baseAction, ...strategicAction };

@@ -1,85 +1,88 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { PokerGameManager } from '../PokerGameManager.js';
-import { Player } from '../Player.js';
-import { Action } from '../types/index.js';
+import {
+  createTestTable,
+  setupEventCapture,
+  StrategicPlayer,
+  cleanupTables,
+  waitForHandEnd,
+  Action,
+  STRATEGIES,
+} from '../test-utils/index.js';
 
 /**
  * Test for Issue #34 - Eliminated players shown in active standings
  */
 
-class AllInPlayer extends Player {
-  constructor(config) {
-    super(config);
-    this.hasGoneAllIn = false;
-  }
-
-  getAction(gameState) {
-    const myState = gameState.players[this.id];
-    const toCall = gameState.currentBet - myState.bet;
-
-    // Go all-in on first action
-    if (!this.hasGoneAllIn && toCall > 0) {
-      this.hasGoneAllIn = true;
-      return {
-        playerId: this.id,
-        action: Action.ALL_IN,
-        amount: myState.chips,
-        timestamp: Date.now(),
-      };
-    }
-
-    if (toCall > 0) {
-      return {
-        playerId: this.id,
-        action: Action.CALL,
-        amount: toCall,
-        timestamp: Date.now(),
-      };
-    }
-
-    return {
-      playerId: this.id,
-      action: Action.CHECK,
-      timestamp: Date.now(),
-    };
-  }
-}
-
 describe('Eliminated Player Display', () => {
-  let manager;
+  let manager, table, events;
 
   beforeEach(() => {
-    manager = new PokerGameManager();
-  });
-
-  afterEach(() => {
-    manager.tables.forEach((table) => table.close());
-  });
-
-  it('should not show eliminated players in active player list', async () => {
-    const table = manager.createTable({
+    ({ manager, table } = createTestTable('standard', {
       blinds: { small: 10, big: 20 },
       minBuyIn: 100,
       maxBuyIn: 100,
       minPlayers: 2,
       dealerButton: 0,
-    });
+    }));
+    events = setupEventCapture(table);
+  });
+
+  afterEach(() => {
+    cleanupTables(manager);
+  });
+
+  it('should not show eliminated players in active player list', async () => {
+    // Strategy: Player B goes all-in on first action
+    const allInOnceStrategy = (() => {
+      let hasGoneAllIn = false;
+      return ({ myState, toCall }) => {
+        // Go all-in on first action when facing a bet
+        if (!hasGoneAllIn && toCall > 0) {
+          hasGoneAllIn = true;
+          return {
+            action: Action.ALL_IN,
+            amount: myState.chips,
+          };
+        }
+
+        if (toCall > 0) {
+          return {
+            action: Action.CALL,
+            amount: toCall,
+          };
+        }
+
+        return {
+          action: Action.CHECK,
+        };
+      };
+    })();
 
     const players = [
-      new Player({ id: 'A', name: 'Player A' }),
-      new AllInPlayer({ id: 'B', name: 'Player B (will lose)' }),
-      new Player({ id: 'C', name: 'Player C' }),
+      new StrategicPlayer({ 
+        id: 'A', 
+        name: 'Player A', 
+        strategy: STRATEGIES.alwaysCall, 
+      }),
+      new StrategicPlayer({ 
+        id: 'B', 
+        name: 'Player B (will lose)', 
+        strategy: allInOnceStrategy, 
+      }),
+      new StrategicPlayer({ 
+        id: 'C', 
+        name: 'Player C', 
+        strategy: STRATEGIES.alwaysCall, 
+      }),
     ];
 
+    // Add players
+    for (const player of players) {
+      table.addPlayer(player);
+    }
+
     // Give player B very few chips so they'll lose
-    const originalAddPlayer = table.addPlayer.bind(table);
-    table.addPlayer = function (player) {
-      const result = originalAddPlayer(player);
-      if (player.id === 'B') {
-        player.chips = 30; // Will go all-in and likely lose
-      }
-      return result;
-    };
+    players[1].chips = 30; // Will go all-in and likely lose
 
     let eliminationOccurred = false;
     let postEliminationActivePlayers = null;
@@ -117,14 +120,11 @@ describe('Eliminated Player Display', () => {
       }
     });
 
-    // Add players and start
-    for (const player of players) {
-      table.addPlayer(player);
-    }
+    // Start game
     table.tryStartGame();
 
     // Wait for hand to complete
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await waitForHandEnd(events);
 
     // Verify results
     console.log('\n=== Elimination Display Test Results ===');
