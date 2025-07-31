@@ -16,7 +16,7 @@ describe('Eliminated Player Display (v2)', () => {
   let manager, table, events;
 
   beforeEach(() => {
-    ({ manager, table } = createTestTable('standard', {
+    ;({ manager, table } = createTestTable('standard', {
       blinds: { small: 10, big: 20 },
       minBuyIn: 100,
       maxBuyIn: 100,
@@ -86,9 +86,15 @@ describe('Eliminated Player Display (v2)', () => {
     playerA.chips = 200;
     playerB.chips = 30; // Will go all-in and likely lose
     playerC.chips = 200;
-    
+
     // Log initial state
-    console.log('Initial player chips:', Array.from(table.players.values()).map(p => ({ id: p.player.id, chips: p.player.chips })));
+    console.log(
+      'Initial player chips:',
+      Array.from(table.players.values()).map((p) => ({
+        id: p.player.id,
+        chips: p.player.chips,
+      })),
+    );
 
     let eliminationOccurred = false;
     let postEliminationActivePlayers = null;
@@ -121,7 +127,7 @@ describe('Eliminated Player Display (v2)', () => {
     while (!eliminationOccurred && handCount < maxHands) {
       table.tryStartGame();
       await waitForHandEnd(events, 2000); // 2s timeout per hand
-      
+
       // Reset event capture for next hand
       events = setupEventCapture(table);
     }
@@ -136,18 +142,20 @@ describe('Eliminated Player Display (v2)', () => {
 
     // Verify that the elimination tracking worked correctly
     expect(eliminationOccurred).toBe(true);
-    
+
     // Log the result for clarity
     console.log('✅ Eliminated player not shown in active list');
-    console.log(`Active players after elimination: ${postEliminationActivePlayers.map(p => p.id).join(', ')}`);
+    console.log(
+      `Active players after elimination: ${postEliminationActivePlayers.map((p) => p.id).join(', ')}`,
+    );
 
     console.log('✅ Issue #34 verified: Eliminated players not in active list');
   });
 
   it('should handle all players eliminated scenario', async () => {
     // Reset table
-    table.close();
-    ({ manager, table } = createTestTable('standard', {
+    table.close()
+    ;({ manager, table } = createTestTable('standard', {
       blinds: { small: 5, big: 10 },
       minBuyIn: 30,
       maxBuyIn: 100,
@@ -197,7 +205,7 @@ describe('Eliminated Player Display (v2)', () => {
     await waitForHandEnd(events);
 
     // Give time for elimination events
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // After the hand, at least one player should be eliminated (unless split pot)
     // With both players all-in, we expect 0 eliminations (split pot) or 1 elimination
@@ -205,13 +213,16 @@ describe('Eliminated Player Display (v2)', () => {
     expect(eliminationCount).toBeLessThanOrEqual(1);
 
     // Check active players
-    const activePlayers = Array.from(table.players.values())
-      .filter((pd) => pd.player.chips > 0);
+    const activePlayers = Array.from(table.players.values()).filter(
+      (pd) => pd.player.chips > 0,
+    );
 
     // Should have exactly 1 active player (the winner)
     expect(activePlayers).toHaveLength(1);
     expect(activePlayers[0].player.chips).toBeGreaterThan(0);
 
-    console.log('✅ Edge case handled: One player remains after heads-up elimination');
+    console.log(
+      '✅ Edge case handled: One player remains after heads-up elimination',
+    );
   });
 });

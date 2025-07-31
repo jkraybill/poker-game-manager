@@ -18,14 +18,19 @@ describe('Dead Button Simple Test (v2)', () => {
 
   beforeEach(() => {
     // Use test utilities for table creation
-    ({ manager, table } = createTestTable('standard', {
+    ;({ manager, table } = createTestTable('standard', {
       minPlayers: 2,
       dealerButton: 0,
     }));
-    
+
     // Set up event capture
     events = setupEventCapture(table, {
-      events: ['hand:started', 'pot:updated', 'hand:ended', 'player:eliminated'],
+      events: [
+        'hand:started',
+        'pot:updated',
+        'hand:ended',
+        'player:eliminated',
+      ],
     });
   });
 
@@ -36,23 +41,23 @@ describe('Dead Button Simple Test (v2)', () => {
   it('should show that BB moves forward when player is eliminated', async () => {
     // Create 4 players using test utilities
     const players = [
-      new StrategicPlayer({ 
-        id: 'A', 
+      new StrategicPlayer({
+        id: 'A',
         name: 'Player A',
         strategy: STRATEGIES.alwaysCall,
       }),
-      new StrategicPlayer({ 
-        id: 'B', 
+      new StrategicPlayer({
+        id: 'B',
         name: 'Player B',
         strategy: STRATEGIES.alwaysCall,
       }),
-      new StrategicPlayer({ 
-        id: 'C', 
+      new StrategicPlayer({
+        id: 'C',
         name: 'Player C',
         strategy: STRATEGIES.alwaysCall,
       }),
-      new StrategicPlayer({ 
-        id: 'D', 
+      new StrategicPlayer({
+        id: 'D',
         name: 'Player D',
         strategy: STRATEGIES.alwaysCall,
       }),
@@ -90,7 +95,7 @@ describe('Dead Button Simple Test (v2)', () => {
     });
 
     // Add players to table
-    players.forEach(player => table.addPlayer(player));
+    players.forEach((player) => table.addPlayer(player));
 
     // Start first hand
     table.tryStartGame();
@@ -99,7 +104,9 @@ describe('Dead Button Simple Test (v2)', () => {
     await waitForHandEnd(events);
 
     // Manually eliminate player B
-    const playerBData = Array.from(table.players.values()).find(p => p.player.id === 'B');
+    const playerBData = Array.from(table.players.values()).find(
+      (p) => p.player.id === 'B',
+    );
     if (playerBData) {
       playerBData.chips = 0;
     }
@@ -114,7 +121,7 @@ describe('Dead Button Simple Test (v2)', () => {
         resolve();
       };
       table.on('hand:ended', handler);
-      
+
       // Timeout
       setTimeout(resolve, 2000); // 2s timeout
     });

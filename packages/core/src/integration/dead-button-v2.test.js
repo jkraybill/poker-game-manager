@@ -19,14 +19,19 @@ describe('Dead Button Rules (v2)', () => {
 
   beforeEach(() => {
     // Use test utilities for table creation
-    ({ manager, table } = createTestTable('standard', {
+    ;({ manager, table } = createTestTable('standard', {
       minPlayers: 2,
       dealerButton: 0,
     }));
-    
+
     // Set up event capture
     setupEventCapture(table, {
-      events: ['hand:started', 'pot:updated', 'hand:ended', 'player:eliminated'],
+      events: [
+        'hand:started',
+        'pot:updated',
+        'hand:ended',
+        'player:eliminated',
+      ],
     });
   });
 
@@ -43,23 +48,23 @@ describe('Dead Button Rules (v2)', () => {
 
     // Create players using test utilities
     const players = [
-      new StrategicPlayer({ 
-        id: 'A', 
+      new StrategicPlayer({
+        id: 'A',
         name: 'Player A',
         strategy: STRATEGIES.alwaysCall,
       }),
-      new StrategicPlayer({ 
-        id: 'B', 
+      new StrategicPlayer({
+        id: 'B',
         name: 'Player B',
         strategy: STRATEGIES.alwaysCall,
       }),
-      new StrategicPlayer({ 
-        id: 'C', 
+      new StrategicPlayer({
+        id: 'C',
         name: 'Player C',
         strategy: STRATEGIES.alwaysCall,
       }),
-      new StrategicPlayer({ 
-        id: 'D', 
+      new StrategicPlayer({
+        id: 'D',
         name: 'Player D',
         strategy: STRATEGIES.alwaysCall,
       }),
@@ -90,13 +95,15 @@ describe('Dead Button Rules (v2)', () => {
         blindTracking.hand2.button = data.dealerButton;
         // Check if button is "dead" (on eliminated player's seat)
         const activePlayerIds = Array.from(table.players.values())
-          .filter(p => p.chips > 0)
-          .map(p => p.player.id);
+          .filter((p) => p.chips > 0)
+          .map((p) => p.player.id);
         const buttonPosition = data.dealerButton;
         const buttonPlayers = Array.from(table.players.values());
         if (buttonPosition < buttonPlayers.length) {
           const buttonPlayerData = buttonPlayers[buttonPosition];
-          blindTracking.hand2.deadButton = !activePlayerIds.includes(buttonPlayerData?.player?.id);
+          blindTracking.hand2.deadButton = !activePlayerIds.includes(
+            buttonPlayerData?.player?.id,
+          );
         }
       }
     });
@@ -104,7 +111,8 @@ describe('Dead Button Rules (v2)', () => {
     // Track blind posts
     table.on('pot:updated', ({ playerBet, deadMoney }) => {
       if (playerBet && handCount > 0) {
-        const trackingObj = handCount === 1 ? blindTracking.hand1 : blindTracking.hand2;
+        const trackingObj =
+          handCount === 1 ? blindTracking.hand1 : blindTracking.hand2;
         if (playerBet.amount === 10 && !trackingObj.sb) {
           trackingObj.sb = playerBet.playerId;
         } else if (playerBet.amount === 20 && !trackingObj.bb) {
@@ -121,7 +129,9 @@ describe('Dead Button Rules (v2)', () => {
       if (handCount === 1) {
         hand1Complete = true;
         // Eliminate player B after hand 1
-        const playerBData = Array.from(table.players.values()).find(p => p.player.id === 'B');
+        const playerBData = Array.from(table.players.values()).find(
+          (p) => p.player.id === 'B',
+        );
         if (playerBData) {
           playerBData.chips = 0;
         }
@@ -133,7 +143,7 @@ describe('Dead Button Rules (v2)', () => {
     });
 
     // Add players
-    players.forEach(player => table.addPlayer(player));
+    players.forEach((player) => table.addPlayer(player));
 
     // Start first hand
     table.tryStartGame();
@@ -183,23 +193,23 @@ describe('Dead Button Rules (v2)', () => {
 
     // Create players
     const players = [
-      new StrategicPlayer({ 
-        id: 'A', 
+      new StrategicPlayer({
+        id: 'A',
         name: 'Player A',
         strategy: STRATEGIES.alwaysCall,
       }),
-      new StrategicPlayer({ 
-        id: 'B', 
+      new StrategicPlayer({
+        id: 'B',
         name: 'Player B',
         strategy: STRATEGIES.alwaysCall,
       }),
-      new StrategicPlayer({ 
-        id: 'C', 
+      new StrategicPlayer({
+        id: 'C',
         name: 'Player C',
         strategy: STRATEGIES.alwaysCall,
       }),
-      new StrategicPlayer({ 
-        id: 'D', 
+      new StrategicPlayer({
+        id: 'D',
         name: 'Player D',
         strategy: STRATEGIES.alwaysCall,
       }),
@@ -222,14 +232,18 @@ describe('Dead Button Rules (v2)', () => {
     table.on('hand:ended', () => {
       if (handCount === 1) {
         // Eliminate players B and C
-        const playerBData = Array.from(table.players.values()).find(p => p.player.id === 'B');
-        const playerCData = Array.from(table.players.values()).find(p => p.player.id === 'C');
+        const playerBData = Array.from(table.players.values()).find(
+          (p) => p.player.id === 'B',
+        );
+        const playerCData = Array.from(table.players.values()).find(
+          (p) => p.player.id === 'C',
+        );
         if (playerBData) {
-playerBData.chips = 0;
-}
+          playerBData.chips = 0;
+        }
         if (playerCData) {
-playerCData.chips = 0;
-}
+          playerCData.chips = 0;
+        }
 
         // Start second hand
         setTimeout(() => table.tryStartGame(), 100);
@@ -239,7 +253,7 @@ playerCData.chips = 0;
     });
 
     // Add players
-    players.forEach(player => table.addPlayer(player));
+    players.forEach((player) => table.addPlayer(player));
 
     // Start first hand
     table.tryStartGame();

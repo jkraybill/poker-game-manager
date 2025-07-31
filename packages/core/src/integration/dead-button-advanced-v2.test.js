@@ -17,16 +17,21 @@ describe('Dead Button Advanced Scenarios (v2)', () => {
 
   beforeEach(() => {
     // Use test utilities for table creation
-    ({ manager, table } = createTestTable('standard', {
+    ;({ manager, table } = createTestTable('standard', {
       minPlayers: 2,
       minBuyIn: 100,
       maxBuyIn: 100,
       dealerButton: 0,
     }));
-    
+
     // Set up event capture
     events = setupEventCapture(table, {
-      events: ['hand:started', 'pot:updated', 'hand:ended', 'player:eliminated'],
+      events: [
+        'hand:started',
+        'pot:updated',
+        'hand:ended',
+        'player:eliminated',
+      ],
     });
   });
 
@@ -43,25 +48,25 @@ describe('Dead Button Advanced Scenarios (v2)', () => {
 
     // Create players with custom blind posting tracking
     const players = [
-      new StrategicPlayer({ 
-        id: 'A', 
+      new StrategicPlayer({
+        id: 'A',
         name: 'Player A',
         strategy: STRATEGIES.alwaysCall,
       }),
-      new StrategicPlayer({ 
-        id: 'B', 
+      new StrategicPlayer({
+        id: 'B',
         name: 'Player B',
         strategy: STRATEGIES.alwaysCall,
       }),
-      new StrategicPlayer({ 
-        id: 'C', 
+      new StrategicPlayer({
+        id: 'C',
         name: 'Player C',
         strategy: STRATEGIES.alwaysCall,
       }),
     ];
 
     // Add blind posting tracking to players
-    players.forEach(player => {
+    players.forEach((player) => {
       player.postedBlinds = [];
     });
 
@@ -100,10 +105,12 @@ describe('Dead Button Advanced Scenarios (v2)', () => {
     });
 
     // Add players to table
-    players.forEach(player => table.addPlayer(player));
+    players.forEach((player) => table.addPlayer(player));
 
     // Give B very few chips so they'll be eliminated
-    const playerBData = Array.from(table.players.values()).find(p => p.player.id === 'B');
+    const playerBData = Array.from(table.players.values()).find(
+      (p) => p.player.id === 'B',
+    );
     if (playerBData) {
       playerBData.chips = 30;
     }
@@ -118,7 +125,9 @@ describe('Dead Button Advanced Scenarios (v2)', () => {
     console.log(
       'Player chips:',
       players.map((p) => {
-        const playerData = Array.from(table.players.values()).find(pd => pd.player.id === p.id);
+        const playerData = Array.from(table.players.values()).find(
+          (pd) => pd.player.id === p.id,
+        );
         return `${p.id}: $${playerData?.chips || 0}`;
       }),
     );
@@ -134,7 +143,9 @@ describe('Dead Button Advanced Scenarios (v2)', () => {
     console.log(
       'Player chips:',
       players.map((p) => {
-        const playerData = Array.from(table.players.values()).find(pd => pd.player.id === p.id);
+        const playerData = Array.from(table.players.values()).find(
+          (pd) => pd.player.id === p.id,
+        );
         return `${p.id}: $${playerData?.chips || 0}`;
       }),
     );
@@ -173,20 +184,20 @@ describe('Dead Button Advanced Scenarios (v2)', () => {
 
   it('should handle button player elimination correctly', async () => {
     // When button is eliminated, next hand should have dead button
-    
+
     const players = [
-      new StrategicPlayer({ 
-        id: 'A', 
+      new StrategicPlayer({
+        id: 'A',
         name: 'Player A',
         strategy: STRATEGIES.alwaysCall,
       }),
-      new StrategicPlayer({ 
-        id: 'B', 
+      new StrategicPlayer({
+        id: 'B',
         name: 'Player B',
         strategy: STRATEGIES.alwaysCall,
       }),
-      new StrategicPlayer({ 
-        id: 'C', 
+      new StrategicPlayer({
+        id: 'C',
         name: 'Player C',
         strategy: STRATEGIES.alwaysCall,
       }),
@@ -201,10 +212,12 @@ describe('Dead Button Advanced Scenarios (v2)', () => {
     });
 
     // Add players
-    players.forEach(player => table.addPlayer(player));
+    players.forEach((player) => table.addPlayer(player));
 
     // Give A (button) very few chips
-    const playerAData = Array.from(table.players.values()).find(p => p.player.id === 'A');
+    const playerAData = Array.from(table.players.values()).find(
+      (p) => p.player.id === 'A',
+    );
     if (playerAData) {
       playerAData.chips = 30;
     }

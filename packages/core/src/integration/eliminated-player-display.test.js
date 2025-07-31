@@ -17,7 +17,7 @@ describe('Eliminated Player Display', () => {
   let manager, table, events;
 
   beforeEach(() => {
-    ({ manager, table } = createTestTable('standard', {
+    ;({ manager, table } = createTestTable('standard', {
       blinds: { small: 10, big: 20 },
       minBuyIn: 100,
       maxBuyIn: 100,
@@ -59,20 +59,20 @@ describe('Eliminated Player Display', () => {
     })();
 
     const players = [
-      new StrategicPlayer({ 
-        id: 'A', 
-        name: 'Player A', 
-        strategy: STRATEGIES.alwaysCall, 
+      new StrategicPlayer({
+        id: 'A',
+        name: 'Player A',
+        strategy: STRATEGIES.alwaysCall,
       }),
-      new StrategicPlayer({ 
-        id: 'B', 
-        name: 'Player B (will lose)', 
-        strategy: allInOnceStrategy, 
+      new StrategicPlayer({
+        id: 'B',
+        name: 'Player B (will lose)',
+        strategy: allInOnceStrategy,
       }),
-      new StrategicPlayer({ 
-        id: 'C', 
-        name: 'Player C', 
-        strategy: STRATEGIES.alwaysCall, 
+      new StrategicPlayer({
+        id: 'C',
+        name: 'Player C',
+        strategy: STRATEGIES.alwaysCall,
       }),
     ];
 

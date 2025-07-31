@@ -21,7 +21,7 @@ describe('Tournament Elimination Ordering (Issue #28) - v2', () => {
   let manager, table, events;
 
   beforeEach(() => {
-    ({ manager, table } = createTestTable('standard', {
+    ;({ manager, table } = createTestTable('standard', {
       id: 'elimination-order-test',
       blinds: { small: 5, big: 10 },
       minBuyIn: 30,
@@ -113,19 +113,25 @@ describe('Tournament Elimination Ordering (Issue #28) - v2', () => {
     playerNames.set(bigStack.id, 'Big Stack');
 
     // Set different starting chips using table data
-    const smallStackData = Array.from(table.players.values()).find(p => p.player.id === smallStack.id);
-    const mediumStackData = Array.from(table.players.values()).find(p => p.player.id === mediumStack.id);
-    const bigStackData = Array.from(table.players.values()).find(p => p.player.id === bigStack.id);
+    const smallStackData = Array.from(table.players.values()).find(
+      (p) => p.player.id === smallStack.id,
+    );
+    const mediumStackData = Array.from(table.players.values()).find(
+      (p) => p.player.id === mediumStack.id,
+    );
+    const bigStackData = Array.from(table.players.values()).find(
+      (p) => p.player.id === bigStack.id,
+    );
 
     if (smallStackData) {
-smallStackData.chips = 30;
-}
+      smallStackData.chips = 30;
+    }
     if (mediumStackData) {
-mediumStackData.chips = 50;
-}
+      mediumStackData.chips = 50;
+    }
     if (bigStackData) {
-bigStackData.chips = 200;
-}
+      bigStackData.chips = 200;
+    }
 
     startingChips.set(smallStack.id, 30);
     startingChips.set(mediumStack.id, 50);
@@ -143,7 +149,7 @@ bigStackData.chips = 200;
     await waitForHandEnd(events);
 
     // Give time for elimination events
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     console.log(
       'Hand ended, winners:',
@@ -209,8 +215,8 @@ bigStackData.chips = 200;
 
   it('should demonstrate the potential issue with simultaneous eliminations', async () => {
     // Reset table for new test
-    table.close();
-    ({ manager, table } = createTestTable('standard', {
+    table.close()
+    ;({ manager, table } = createTestTable('standard', {
       id: 'simultaneous-elim-test',
       blinds: { small: 5, big: 10 },
       minBuyIn: 30,
@@ -272,16 +278,21 @@ bigStackData.chips = 200;
     players.forEach((player, index) => {
       table.addPlayer(player);
       playerNames.set(player.id, player.name);
-      const chips = index === 0 ? 300 : index === 1 ? 100 : index === 2 ? 60 : 40;
-      const playerData = Array.from(table.players.values()).find(p => p.player.id === player.id);
+      const chips =
+        index === 0 ? 300 : index === 1 ? 100 : index === 2 ? 60 : 40;
+      const playerData = Array.from(table.players.values()).find(
+        (p) => p.player.id === player.id,
+      );
       if (playerData) {
-playerData.chips = chips;
-}
+        playerData.chips = chips;
+      }
       startingChips.set(player.id, chips);
       console.log(`  ${index + 1}. ${player.name} (${chips} chips)`);
     });
 
-    console.log('\nTournament rule: Elimination should be by stack size, not addition order');
+    console.log(
+      '\nTournament rule: Elimination should be by stack size, not addition order',
+    );
     console.log('Expected elimination order: Small -> Medium -> Big');
 
     // Rig deck so Winner gets the nuts
@@ -304,25 +315,36 @@ playerData.chips = chips;
 
     // Wait for completion
     await waitForHandEnd(events);
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
-    console.log('\nHand ended, winners:', events.winners.map(w => ({ name: playerNames.get(w.playerId), amount: w.amount })));
+    console.log(
+      '\nHand ended, winners:',
+      events.winners.map((w) => ({
+        name: playerNames.get(w.playerId),
+        amount: w.amount,
+      })),
+    );
 
     console.log('\nActual elimination order:');
     eliminationOrder.forEach((elim, index) => {
-      console.log(`  ${index + 1}. ${elim.playerName} (${elim.startingChips} chips)`);
+      console.log(
+        `  ${index + 1}. ${elim.playerName} (${elim.startingChips} chips)`,
+      );
     });
 
     // Verify elimination order follows stack sizes
     if (eliminationOrder.length >= 3) {
-      const isCorrectOrder = 
-        eliminationOrder[0].startingChips <= eliminationOrder[1].startingChips &&
+      const isCorrectOrder =
+        eliminationOrder[0].startingChips <=
+          eliminationOrder[1].startingChips &&
         eliminationOrder[1].startingChips <= eliminationOrder[2].startingChips;
-      
+
       if (isCorrectOrder) {
         console.log('✅ Elimination order correctly follows stack size rules');
       } else {
-        console.log('❌ ISSUE #28: Elimination order does not follow stack size rules');
+        console.log(
+          '❌ ISSUE #28: Elimination order does not follow stack size rules',
+        );
       }
     }
 
@@ -331,8 +353,8 @@ playerData.chips = chips;
 
   it('should handle single elimination correctly (baseline test)', async () => {
     // Reset table
-    table.close();
-    ({ manager, table } = createTestTable('standard', {
+    table.close()
+    ;({ manager, table } = createTestTable('standard', {
       blinds: { small: 5, big: 10 },
       minPlayers: 2,
       dealerButton: 0,
@@ -374,20 +396,24 @@ playerData.chips = chips;
     table.addPlayer(survivor);
 
     // Give folder minimal chips
-    const folderData = Array.from(table.players.values()).find(p => p.player.id === foldPlayer.id);
+    const folderData = Array.from(table.players.values()).find(
+      (p) => p.player.id === foldPlayer.id,
+    );
     if (folderData) {
-folderData.chips = 15;
-} // Less than big blind
+      folderData.chips = 15;
+    } // Less than big blind
 
     table.tryStartGame();
     await waitForHandEnd(events);
 
     // Wait a bit for player state to update
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    const survivorData = Array.from(table.players.values()).find(p => p.player.id === survivor.id);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const survivorData = Array.from(table.players.values()).find(
+      (p) => p.player.id === survivor.id,
+    );
     console.log(`Survivor has chips: ${survivorData?.chips}`);
-    
+
     // Just check that the test ran without errors
     expect(events.handEnded).toBe(true);
     console.log('✅ Single elimination works correctly');

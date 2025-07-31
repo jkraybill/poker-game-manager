@@ -11,7 +11,7 @@ describe('Dealer Button Rotation (Issue #36)', () => {
   let players;
 
   beforeEach(() => {
-    ({ manager, table } = createTestTable('standard', {
+    ;({ manager, table } = createTestTable('standard', {
       blinds: { small: 10, big: 20 },
       minBuyIn: 1000,
       maxBuyIn: 1000,
@@ -30,42 +30,48 @@ describe('Dealer Button Rotation (Issue #36)', () => {
       new ConditionalPlayer({
         id: 'p1',
         name: 'Player 1',
-        conditions: [{
-          condition: () => true,
-          action: (state) => {
-            const toCall = state.currentBet - state.myState.bet;
-            // Always fold to bets, check when possible
-            return toCall > 0 ?
-              { action: Action.FOLD } :
-              { action: Action.CHECK };
+        conditions: [
+          {
+            condition: () => true,
+            action: (state) => {
+              const toCall = state.currentBet - state.myState.bet;
+              // Always fold to bets, check when possible
+              return toCall > 0
+                ? { action: Action.FOLD }
+                : { action: Action.CHECK };
+            },
           },
-        }],
+        ],
       }),
       new ConditionalPlayer({
         id: 'p2',
         name: 'Player 2',
-        conditions: [{
-          condition: () => true,
-          action: (state) => {
-            const toCall = state.currentBet - state.myState.bet;
-            return toCall > 0 ?
-              { action: Action.FOLD } :
-              { action: Action.CHECK };
+        conditions: [
+          {
+            condition: () => true,
+            action: (state) => {
+              const toCall = state.currentBet - state.myState.bet;
+              return toCall > 0
+                ? { action: Action.FOLD }
+                : { action: Action.CHECK };
+            },
           },
-        }],
+        ],
       }),
       new ConditionalPlayer({
         id: 'p3',
         name: 'Player 3',
-        conditions: [{
-          condition: () => true,
-          action: (state) => {
-            const toCall = state.currentBet - state.myState.bet;
-            return toCall > 0 ?
-              { action: Action.FOLD } :
-              { action: Action.CHECK };
+        conditions: [
+          {
+            condition: () => true,
+            action: (state) => {
+              const toCall = state.currentBet - state.myState.bet;
+              return toCall > 0
+                ? { action: Action.FOLD }
+                : { action: Action.CHECK };
+            },
           },
-        }],
+        ],
       }),
     ];
 
@@ -111,7 +117,7 @@ describe('Dealer Button Rotation (Issue #36)', () => {
 
   it('should skip eliminated players when rotating button', async () => {
     // Create 4 players for this test
-    ({ manager, table } = createTestTable('standard', {
+    ;({ manager, table } = createTestTable('standard', {
       blinds: { small: 10, big: 20 },
       minBuyIn: 100,
       maxBuyIn: 100,
@@ -124,54 +130,62 @@ describe('Dealer Button Rotation (Issue #36)', () => {
       new ConditionalPlayer({
         id: 'p1',
         name: 'Player 1',
-        conditions: [{
-          condition: () => true,
-          action: (state) => {
-            const toCall = state.currentBet - state.myState.bet;
-            return toCall > 0 ?
-              { action: Action.FOLD } :
-              { action: Action.CHECK };
+        conditions: [
+          {
+            condition: () => true,
+            action: (state) => {
+              const toCall = state.currentBet - state.myState.bet;
+              return toCall > 0
+                ? { action: Action.FOLD }
+                : { action: Action.CHECK };
+            },
           },
-        }],
+        ],
       }),
       new ConditionalPlayer({
         id: 'p2',
         name: 'Player 2',
-        conditions: [{
-          condition: () => true,
-          action: (state) => {
-            const toCall = state.currentBet - state.myState.bet;
-            return toCall > 0 ?
-              { action: Action.CALL, amount: toCall } :
-              { action: Action.CHECK };
+        conditions: [
+          {
+            condition: () => true,
+            action: (state) => {
+              const toCall = state.currentBet - state.myState.bet;
+              return toCall > 0
+                ? { action: Action.CALL, amount: toCall }
+                : { action: Action.CHECK };
+            },
           },
-        }],
+        ],
       }),
       new ConditionalPlayer({
         id: 'p3',
         name: 'Player 3',
-        conditions: [{
-          condition: () => true,
-          action: (state) => {
-            const toCall = state.currentBet - state.myState.bet;
-            return toCall > 0 ?
-              { action: Action.FOLD } :
-              { action: Action.CHECK };
+        conditions: [
+          {
+            condition: () => true,
+            action: (state) => {
+              const toCall = state.currentBet - state.myState.bet;
+              return toCall > 0
+                ? { action: Action.FOLD }
+                : { action: Action.CHECK };
+            },
           },
-        }],
+        ],
       }),
       new ConditionalPlayer({
         id: 'p4',
         name: 'Player 4',
-        conditions: [{
-          condition: () => true,
-          action: (state) => {
-            const toCall = state.currentBet - state.myState.bet;
-            return toCall > 0 ?
-              { action: Action.FOLD } :
-              { action: Action.CHECK };
+        conditions: [
+          {
+            condition: () => true,
+            action: (state) => {
+              const toCall = state.currentBet - state.myState.bet;
+              return toCall > 0
+                ? { action: Action.FOLD }
+                : { action: Action.CHECK };
+            },
           },
-        }],
+        ],
       }),
     ];
 
@@ -199,9 +213,9 @@ describe('Dealer Button Rotation (Issue #36)', () => {
 
     // After hand 1, player 2 should be eliminated (they called and lost)
     // Check if player 2 has 0 chips
-    const p2ChipsAfterHand1 = Array.from(table.players.values()).find(
-      (p) => p.player.id === 'p2',
-    )?.chips || 0;
+    const p2ChipsAfterHand1 =
+      Array.from(table.players.values()).find((p) => p.player.id === 'p2')
+        ?.chips || 0;
     console.log('Player 2 chips after hand 1:', p2ChipsAfterHand1);
 
     // Hand 2: Button should skip eliminated player
@@ -215,7 +229,7 @@ describe('Dealer Button Rotation (Issue #36)', () => {
 
     // Verify button rotated correctly
     expect(buttonPositions.length).toBeGreaterThanOrEqual(2);
-    
+
     // With player at position 1 eliminated:
     // Hand 1: button at 0
     // Hand 2: button should skip 1 and go to 2
@@ -241,7 +255,7 @@ async function playHand(table) {
 
   table.tryStartGame();
   await handEndPromise;
-  
+
   // Short delay between hands
   await new Promise((r) => setTimeout(r, 100));
 }

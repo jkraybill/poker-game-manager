@@ -34,7 +34,7 @@ describe('Table Auto-Start Behavior (v2)', () => {
     'should NOT auto-start games anymore - requires explicit start',
     { timeout: 10000 },
     async () => {
-      ({ manager, table } = createTestTable('standard', {
+      ;({ manager, table } = createTestTable('standard', {
         blinds: { small: 10, big: 20 },
         minBuyIn: 1000,
         maxBuyIn: 1000,
@@ -115,7 +115,7 @@ describe('Table Auto-Start Behavior (v2)', () => {
     'should show why tests capture actions from multiple games',
     { timeout: 10000 },
     async () => {
-      ({ manager, table } = createTestTable('standard', {
+      ;({ manager, table } = createTestTable('standard', {
         blinds: { small: 10, big: 20 },
         minBuyIn: 1000,
         maxBuyIn: 1000,
@@ -130,7 +130,9 @@ describe('Table Auto-Start Behavior (v2)', () => {
         let actionCount = 0;
         return ({ gameState, player }) => {
           actionCount++;
-          console.log(`📊 Strategy called: actionCount=${actionCount}, currentBet=${gameState.currentBet}, playerId=${player.id}`);
+          console.log(
+            `📊 Strategy called: actionCount=${actionCount}, currentBet=${gameState.currentBet}, playerId=${player.id}`,
+          );
 
           // First action: raise if facing big blind
           if (actionCount === 1 && gameState.currentBet === 20) {
@@ -204,7 +206,7 @@ describe('Table Auto-Start Behavior (v2)', () => {
   );
 
   it('should show how to prevent the leak with immediate table close', async () => {
-    ({ manager, table } = createTestTable('standard', {
+    ;({ manager, table } = createTestTable('standard', {
       blinds: { small: 10, big: 20 },
       minBuyIn: 1000,
       maxBuyIn: 1000,

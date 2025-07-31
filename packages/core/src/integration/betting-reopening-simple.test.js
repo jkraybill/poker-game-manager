@@ -36,10 +36,10 @@ describe('Issue #32 - Betting Reopening Rules', () => {
     manager = result.manager;
     table = result.table;
     events = setupEventCapture(table);
-    
+
     // Track additional events
     let roundActions = [];
-    
+
     table.on('betting:round-start', ({ round }) => {
       console.log(`\n=== ${round} betting round started ===`);
       roundActions = [];
@@ -65,7 +65,7 @@ describe('Issue #32 - Betting Reopening Rules', () => {
       console.log(
         `Can raise: ${validActions?.includes(Action.RAISE) ? 'YES' : 'NO'}`,
       );
-      
+
       // First action in preflop: raise to 300
       if (roundActions.length === 2) {
         // After SB and BB posts
@@ -83,10 +83,7 @@ describe('Issue #32 - Betting Reopening Rules', () => {
         );
 
         // Check if we can raise using validActions
-        if (
-          validActions.includes(Action.RAISE) &&
-          myState.chips > toCall * 2
-        ) {
+        if (validActions.includes(Action.RAISE) && myState.chips > toCall * 2) {
           console.log('P1: Raising is valid, attempting raise');
           console.log(`P1 decides: RAISE ${gameState.currentBet * 2}`);
           return {
@@ -117,7 +114,7 @@ describe('Issue #32 - Betting Reopening Rules', () => {
       console.log(
         `Player P2 to act. Current bet: ${gameState.currentBet}, My bet: ${myState.bet}, Chips: ${myState.chips}`,
       );
-      
+
       if (toCall > 0) {
         console.log('P2 decides: CALL');
         return {
@@ -139,7 +136,7 @@ describe('Issue #32 - Betting Reopening Rules', () => {
       console.log(
         `Player P3 to act. Current bet: ${gameState.currentBet}, My bet: ${myState.bet}, Chips: ${myState.chips}`,
       );
-      
+
       // Always go all-in
       console.log(`P3 decides: ALL_IN ${myState.chips}`);
       return {
@@ -178,7 +175,7 @@ describe('Issue #32 - Betting Reopening Rules', () => {
     table.addPlayer(player1);
     table.addPlayer(player2);
     table.addPlayer(player3);
-    
+
     // Set chips after adding to table
     player1.chips = 2000;
     player2.chips = 2000;
@@ -189,7 +186,7 @@ describe('Issue #32 - Betting Reopening Rules', () => {
     for (const [, data] of table.players.entries()) {
       console.log(`${data.player.name}: ${data.player.chips} chips`);
     }
-    
+
     // Track player actions in roundActions
     table.on('player:action', ({ playerId, action, amount }) => {
       console.log(`Player ${playerId} action: ${action} ${amount || ''}`);
@@ -276,7 +273,6 @@ describe('Issue #32 - Betting Reopening Rules', () => {
     table = result.table;
     events = setupEventCapture(table);
 
-
     // P1: Raises to 200, then re-raises if allowed
     const p1Strategy = ({ gameState, myState, toCall, validActions }) => {
       // First action: raise to 200
@@ -356,7 +352,7 @@ describe('Issue #32 - Betting Reopening Rules', () => {
     table.addPlayer(player1);
     table.addPlayer(player2);
     table.addPlayer(player3);
-    
+
     // Set chips after adding to table
     player1.chips = 2000;
     player2.chips = 2000;

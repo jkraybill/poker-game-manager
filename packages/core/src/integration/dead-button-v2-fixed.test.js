@@ -18,11 +18,11 @@ describe('Dead Button Rules (v2 Fixed)', () => {
 
   beforeEach(() => {
     // Use test utilities for table creation
-    ({ manager, table } = createTestTable('standard', {
+    ;({ manager, table } = createTestTable('standard', {
       minPlayers: 2,
       dealerButton: 0,
     }));
-    
+
     // Set up event capture
     events = setupEventCapture(table);
   });
@@ -33,26 +33,26 @@ describe('Dead Button Rules (v2 Fixed)', () => {
 
   it('should demonstrate dead button behavior with player elimination', async () => {
     // Simple test: Start with 4 players, eliminate 1, see what happens
-    
+
     // Create players using test utilities
     const players = [
-      new StrategicPlayer({ 
-        id: 'A', 
+      new StrategicPlayer({
+        id: 'A',
         name: 'Player A',
         strategy: STRATEGIES.alwaysCall,
       }),
-      new StrategicPlayer({ 
-        id: 'B', 
+      new StrategicPlayer({
+        id: 'B',
         name: 'Player B',
         strategy: STRATEGIES.alwaysCall,
       }),
-      new StrategicPlayer({ 
-        id: 'C', 
+      new StrategicPlayer({
+        id: 'C',
         name: 'Player C',
         strategy: STRATEGIES.alwaysCall,
       }),
-      new StrategicPlayer({ 
-        id: 'D', 
+      new StrategicPlayer({
+        id: 'D',
         name: 'Player D',
         strategy: STRATEGIES.alwaysCall,
       }),
@@ -89,15 +89,17 @@ describe('Dead Button Rules (v2 Fixed)', () => {
     });
 
     // Add players
-    players.forEach(player => table.addPlayer(player));
+    players.forEach((player) => table.addPlayer(player));
 
     // Set up player chips - give everyone starting chips first
-    Array.from(table.players.values()).forEach(pd => {
+    Array.from(table.players.values()).forEach((pd) => {
       pd.chips = 1000; // Standard starting stack
     });
 
     // Give player B very few chips so they get eliminated
-    const playerBData = Array.from(table.players.values()).find(p => p.player.id === 'B');
+    const playerBData = Array.from(table.players.values()).find(
+      (p) => p.player.id === 'B',
+    );
     if (playerBData) {
       playerBData.chips = 30;
       console.log(`Set player B chips to ${playerBData.chips}`);
@@ -105,7 +107,7 @@ describe('Dead Button Rules (v2 Fixed)', () => {
 
     // Log initial state
     console.log('\nInitial player states:');
-    Array.from(table.players.values()).forEach(pd => {
+    Array.from(table.players.values()).forEach((pd) => {
       console.log(`${pd.player.id}: ${pd.chips} chips`);
     });
 
@@ -125,15 +127,22 @@ describe('Dead Button Rules (v2 Fixed)', () => {
 
     // Check player chips after hand 1
     console.log('\nPlayer chips after hand 1:');
-    players.forEach(p => {
-      const playerData = Array.from(table.players.values()).find(pd => pd.player.id === p.id);
+    players.forEach((p) => {
+      const playerData = Array.from(table.players.values()).find(
+        (pd) => pd.player.id === p.id,
+      );
       console.log(`${p.id}: ${playerData?.chips || 0} chips`);
     });
 
     // Now try to start hand 2 if we have enough players
-    const activePlayers = Array.from(table.players.values()).filter(p => p.chips > 0);
+    const activePlayers = Array.from(table.players.values()).filter(
+      (p) => p.chips > 0,
+    );
     console.log(`\nActive players: ${activePlayers.length}`);
-    console.log('Active player IDs:', activePlayers.map(p => p.player.id));
+    console.log(
+      'Active player IDs:',
+      activePlayers.map((p) => p.player.id),
+    );
 
     if (activePlayers.length >= 2) {
       // Start second hand
@@ -144,8 +153,11 @@ describe('Dead Button Rules (v2 Fixed)', () => {
       try {
         await Promise.race([
           waitForHandEnd(events),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Second hand timeout after 3s')), 3000),
+          new Promise((_, reject) =>
+            setTimeout(
+              () => reject(new Error('Second hand timeout after 3s')),
+              3000,
+            ),
           ),
         ]);
         console.log('\nHand 2 completed');
@@ -162,12 +174,14 @@ describe('Dead Button Rules (v2 Fixed)', () => {
         console.log('Event state:', {
           handEnded: events.handEnded,
           gameStarted: events.gameStarted,
-          lastEvents: events.events.slice(-5).map(e => e.event),
+          lastEvents: events.events.slice(-5).map((e) => e.event),
         });
       }
     } else {
       console.log('\nNot enough active players for second hand');
-      console.log('Test expectation: Player B should be eliminated with 30 chips');
+      console.log(
+        'Test expectation: Player B should be eliminated with 30 chips',
+      );
     }
 
     // Basic assertion to ensure test runs

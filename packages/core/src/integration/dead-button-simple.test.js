@@ -17,14 +17,19 @@ describe('Dead Button Simple Test', () => {
 
   beforeEach(() => {
     // Use test utilities for table creation
-    ({ manager, table } = createTestTable('standard', {
+    ;({ manager, table } = createTestTable('standard', {
       minPlayers: 2,
       dealerButton: 0,
     }));
-    
+
     // Set up event capture
     setupEventCapture(table, {
-      events: ['hand:started', 'pot:updated', 'hand:ended', 'player:eliminated'],
+      events: [
+        'hand:started',
+        'pot:updated',
+        'hand:ended',
+        'player:eliminated',
+      ],
     });
   });
 
@@ -34,23 +39,23 @@ describe('Dead Button Simple Test', () => {
 
   it('should show that BB moves forward when player is eliminated', async () => {
     // Create 4 players using test utilities
-    const playerA = new StrategicPlayer({ 
-      id: 'A', 
+    const playerA = new StrategicPlayer({
+      id: 'A',
       name: 'Player A',
       strategy: STRATEGIES.alwaysCall,
     });
-    const playerB = new StrategicPlayer({ 
-      id: 'B', 
+    const playerB = new StrategicPlayer({
+      id: 'B',
       name: 'Player B',
       strategy: STRATEGIES.alwaysCall,
     });
-    const playerC = new StrategicPlayer({ 
-      id: 'C', 
+    const playerC = new StrategicPlayer({
+      id: 'C',
       name: 'Player C',
       strategy: STRATEGIES.alwaysCall,
     });
-    const playerD = new StrategicPlayer({ 
-      id: 'D', 
+    const playerD = new StrategicPlayer({
+      id: 'D',
       name: 'Player D',
       strategy: STRATEGIES.alwaysCall,
     });
@@ -98,7 +103,9 @@ describe('Dead Button Simple Test', () => {
       table.on('hand:ended', () => {
         if (handInfo.length === 1) {
           // Manually eliminate player B
-          const playerBData = Array.from(table.players.values()).find(p => p.player.id === 'B');
+          const playerBData = Array.from(table.players.values()).find(
+            (p) => p.player.id === 'B',
+          );
           if (playerBData) {
             playerBData.chips = 0;
           }
@@ -141,7 +148,9 @@ describe('Dead Button Simple Test', () => {
     expect(handInfo[0].blindPosts.bb).toBe('C'); // C posts BB
 
     // Player B should have 0 chips
-    const playerBData = Array.from(table.players.values()).find(p => p.player.id === 'B');
+    const playerBData = Array.from(table.players.values()).find(
+      (p) => p.player.id === 'B',
+    );
     expect(playerBData?.chips).toBe(0);
 
     // In hand 2, according to dead button rule:

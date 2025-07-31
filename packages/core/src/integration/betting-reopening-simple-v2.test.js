@@ -14,7 +14,7 @@ describe('Issue #32 - Betting Reopening Rules (v2)', () => {
   let events;
 
   beforeEach(() => {
-    ({ manager, table } = createTestTable('standard', {
+    ;({ manager, table } = createTestTable('standard', {
       blinds: { small: 50, big: 100 },
       minBuyIn: 1000,
       maxBuyIn: 2000,
@@ -55,7 +55,7 @@ describe('Issue #32 - Betting Reopening Rules (v2)', () => {
       console.log(`\n--- Action ${actionCount} ---`);
       const myState = state.players[playerId];
       const toCall = state.currentBet - myState.bet;
-      
+
       console.log(
         `Player p1 to act. Current bet: ${state.currentBet}, My bet: ${myState.bet}, Chips: ${myState.chips}`,
       );
@@ -71,7 +71,7 @@ describe('Issue #32 - Betting Reopening Rules (v2)', () => {
       // p2 (position 1) = SB
       // p3 (position 2) = BB
       // So p1 acts first after blinds are posted
-      if (state.currentBet === 100 && !myState.hasActed) { 
+      if (state.currentBet === 100 && !myState.hasActed) {
         console.log('p1 decides: RAISE 300');
         return {
           playerId,
@@ -158,13 +158,13 @@ describe('Issue #32 - Betting Reopening Rules (v2)', () => {
       name: 'Button/P1',
       strategy: p1Strategy,
     });
-    
+
     const player2 = new StrategicPlayer({
       id: 'p2',
       name: 'SB/P2',
       strategy: p2Strategy,
     });
-    
+
     const player3 = new StrategicPlayer({
       id: 'p3',
       name: 'BB/P3',
@@ -268,7 +268,11 @@ describe('Issue #32 - Betting Reopening Rules (v2)', () => {
       }
 
       // If we can raise again, do it
-      if (toCall > 0 && gameState.validActions && gameState.validActions.includes(Action.RAISE)) {
+      if (
+        toCall > 0 &&
+        gameState.validActions &&
+        gameState.validActions.includes(Action.RAISE)
+      ) {
         return {
           action: Action.RAISE,
           amount: gameState.currentBet * 2,
@@ -317,13 +321,13 @@ describe('Issue #32 - Betting Reopening Rules (v2)', () => {
       name: 'Button/P1',
       strategy: p1Strategy,
     });
-    
+
     const player2 = new StrategicPlayer({
       id: 'p2',
       name: 'SB/P2',
       strategy: p2Strategy,
     });
-    
+
     const player3 = new StrategicPlayer({
       id: 'p3',
       name: 'BB/P3',
@@ -342,7 +346,7 @@ describe('Issue #32 - Betting Reopening Rules (v2)', () => {
 
     // Debug: Check actual chip counts
     console.log('\nChip amounts after setting:');
-    Array.from(table.players.values()).forEach(pd => {
+    Array.from(table.players.values()).forEach((pd) => {
       console.log(`${pd.player.name}: ${pd.player.chips} chips`);
     });
 

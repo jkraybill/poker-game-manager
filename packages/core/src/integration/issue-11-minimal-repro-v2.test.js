@@ -25,13 +25,13 @@ describe('Issue #11 - Minimal Pot Distribution Bug (v2)', () => {
   let manager, table, events;
 
   beforeEach(() => {
-    ({ manager, table } = createTestTable('standard', {
+    ;({ manager, table } = createTestTable('standard', {
       tableId: 'exact-bug',
       minPlayers: 3,
       maxPlayers: 3,
       blinds: { small: 10, big: 20 },
       dealerButton: 0,
-      minBuyIn: 100,  // Minimum for smallest stack
+      minBuyIn: 100, // Minimum for smallest stack
       maxBuyIn: 10000,
     }));
     events = setupEventCapture(table);
@@ -190,9 +190,15 @@ describe('Issue #11 - Minimal Pot Distribution Bug (v2)', () => {
     expect(winner.amount).toBe(expectedWinnings);
 
     // Also check final chip counts after hand
-    const p1Final = Array.from(table.players.values()).find(p => p.player.id === 'p1');
-    const p2Final = Array.from(table.players.values()).find(p => p.player.id === 'p2');
-    const p3Final = Array.from(table.players.values()).find(p => p.player.id === 'p3');
+    const p1Final = Array.from(table.players.values()).find(
+      (p) => p.player.id === 'p1',
+    );
+    const p2Final = Array.from(table.players.values()).find(
+      (p) => p.player.id === 'p2',
+    );
+    const p3Final = Array.from(table.players.values()).find(
+      (p) => p.player.id === 'p3',
+    );
 
     console.log('\n=== FINAL CHIP COUNTS ===');
     console.log('P1:', p1Final?.player.chips, '(started with 100)');

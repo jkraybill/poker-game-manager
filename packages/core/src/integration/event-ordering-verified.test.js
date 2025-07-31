@@ -15,7 +15,7 @@ describe('Event Ordering - Verified (Issue #33)', () => {
   let manager, table;
 
   beforeEach(() => {
-    ({ manager, table } = createTestTable('standard', {
+    ;({ manager, table } = createTestTable('standard', {
       minPlayers: 2,
       dealerButton: 0,
     }));
@@ -117,16 +117,16 @@ describe('Event Ordering - Verified (Issue #33)', () => {
 
     // Verify hand:ended came before handleGameEnd
     const handEndedEvent = eventLog.find((e) => e.event === 'hand:ended');
-    const handleGameEndEvent = eventLog.find(
-      (e) => e.event === 'handleGameEnd',
-    );
+    const handleGameEndEvent = eventLog.find((e) => e.event === 'handleGameEnd');
 
     expect(handEndedEvent).toBeTruthy();
     expect(handleGameEndEvent).toBeTruthy();
-    
+
     // Check order in array (more reliable than timestamp comparison)
     const handEndedIndex = eventLog.findIndex((e) => e.event === 'hand:ended');
-    const handleGameEndIndex = eventLog.findIndex((e) => e.event === 'handleGameEnd');
+    const handleGameEndIndex = eventLog.findIndex(
+      (e) => e.event === 'handleGameEnd',
+    );
     expect(handEndedIndex).toBeLessThan(handleGameEndIndex);
   });
 
@@ -170,7 +170,7 @@ describe('Event Ordering - Verified (Issue #33)', () => {
     // Add players
     table.addPlayer(richPlayer);
     table.addPlayer(poorPlayer);
-    
+
     // Give poor player very few chips
     const poorData = Array.from(table.players.values()).find(
       (p) => p.player.id === 'poor',
@@ -186,7 +186,7 @@ describe('Event Ordering - Verified (Issue #33)', () => {
         setTimeout(() => resolve(), 200);
       };
       table.once('hand:ended', handler);
-      
+
       // Add timeout in case hand never ends
       setTimeout(() => {
         reject(new Error('Test timeout - hand never ended'));
@@ -221,9 +221,7 @@ describe('Event Ordering - Verified (Issue #33)', () => {
       });
 
       // And elimination should come after hand:ended in the log
-      const handEndedIndex = eventLog.findIndex(
-        (e) => e.event === 'hand:ended',
-      );
+      const handEndedIndex = eventLog.findIndex((e) => e.event === 'hand:ended');
       const firstElimIndex = eventLog.findIndex(
         (e) => e.event === 'player:eliminated',
       );

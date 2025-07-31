@@ -15,7 +15,7 @@ describe('Event Ordering - Fixed (Issue #33)', () => {
   let manager, table;
 
   beforeEach(() => {
-    ({ manager, table } = createTestTable('standard', {
+    ;({ manager, table } = createTestTable('standard', {
       blinds: { small: 10, big: 20 },
       minBuyIn: 40,
       maxBuyIn: 200,
@@ -72,7 +72,7 @@ describe('Event Ordering - Fixed (Issue #33)', () => {
         },
       },
     });
-    
+
     const poorPlayer = new StrategicPlayer({
       id: 'poor',
       name: 'Poor Player',
@@ -82,7 +82,7 @@ describe('Event Ordering - Fixed (Issue #33)', () => {
     // Add players
     table.addPlayer(richPlayer);
     table.addPlayer(poorPlayer);
-    
+
     // Give poor player exactly 40 chips (min buy-in)
     const poorData = Array.from(table.players.values()).find(
       (p) => p.player.id === 'poor',
@@ -107,8 +107,8 @@ describe('Event Ordering - Fixed (Issue #33)', () => {
       // Backup timeout
       setTimeout(() => {
         if (timeoutId) {
-clearTimeout(timeoutId);
-}
+          clearTimeout(timeoutId);
+        }
         resolve({ handEndedFired, timedOut: true });
       }, 5000);
     });
@@ -167,7 +167,7 @@ clearTimeout(timeoutId);
 
   it('should handle multiple eliminations in correct order', async () => {
     // Test with 3 players where 2 get eliminated
-    ({ manager, table } = createTestTable('standard', {
+    ;({ manager, table } = createTestTable('standard', {
       blinds: { small: 10, big: 20 },
       minBuyIn: 30,
       maxBuyIn: 200,
@@ -215,7 +215,7 @@ clearTimeout(timeoutId);
     table.addPlayer(bigStack);
     table.addPlayer(mediumStack);
     table.addPlayer(smallStack);
-    
+
     // Set specific chip amounts
     const bigData = Array.from(table.players.values()).find(
       (p) => p.player.id === 'big',
@@ -226,16 +226,16 @@ clearTimeout(timeoutId);
     const smallData = Array.from(table.players.values()).find(
       (p) => p.player.id === 'small',
     );
-    
+
     if (bigData) {
-bigData.chips = 200;
-}
+      bigData.chips = 200;
+    }
     if (medData) {
-medData.chips = 50;
-}
+      medData.chips = 50;
+    }
     if (smallData) {
-smallData.chips = 30;
-}
+      smallData.chips = 30;
+    }
 
     // Wait for hand completion
     const handPromise = new Promise((resolve) => {
@@ -261,9 +261,7 @@ smallData.chips = 30;
     expect(handEndedCount).toBe(1);
 
     // All eliminations should come after hand:ended
-    const handEndedIndex = eventLog.findIndex(
-      (e) => e.event === 'hand:ended',
-    );
+    const handEndedIndex = eventLog.findIndex((e) => e.event === 'hand:ended');
     eventLog.forEach((event, index) => {
       if (event.event === 'player:eliminated') {
         expect(index).toBeGreaterThan(handEndedIndex);
