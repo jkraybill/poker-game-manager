@@ -3,24 +3,29 @@
 ## Current Status (2025-07-31)
 - **✅ ALL TESTS PASSING**: 231 tests passing, CI green
 - **✅ ESLint compliant**: All code follows project style rules
-- **🎯 Test Utilities Migration**: 7/11 test files migrated for Issue #9
+- **✅ Test Utilities Migration COMPLETE**: Issue #9 finished - all integration tests migrated
 
 ## Recent Changes (2025-07-31)
-- Migrated 5 additional test files to use test utilities:
+- **COMPLETED Issue #9: Test Utilities Migration**
+  - Total of 10 integration test files migrated to use test utilities
+  - All tests now use StrategicPlayer instead of extending Player class
+  - Consistent use of createTestTable, setupEventCapture, and waitForHandEnd
+  - Note: GameEngine.test.js was not migrated as it's a unit test with mocks
+- Migrated files today:
   - elimination-ordering.test.js
   - elimination-display-fixed.test.js
   - event-ordering-elimination.test.js
   - issue-11-minimal-repro.test.js
-- Previous session: betting-reopening-simple.test.js, eliminated-player-display.test.js
-- Added validActions to StrategicPlayer strategy context
+  - memory-leak-repro.test.js
+  - standings-display.test.js
+  - dealer-button-rotation.test.js
+- Previous: betting-reopening-simple.test.js, eliminated-player-display.test.js
 - All test migrations maintain 100% pass rate
-- 4 test files remaining: memory-leak-repro.test.js, standings-display.test.js, GameEngine.test.js, dealer-button-rotation.test.js
 
 ## Next Priorities
-1. Issue #9 - Continue test utility migration (more files to migrate)
-2. Issue #32 - All-in betting reopening rules 
-3. Issue #33 - Event ordering improvements
-4. Issue #34 - Eliminated player display fix
+1. Issue #32 - All-in betting reopening rules (CRITICAL for tournament integrity)
+2. Issue #33 - Event ordering improvements (stability)
+3. Issue #34 - Eliminated player display fix (quick UX win)
 
 ## Key Commands
 ```bash
