@@ -33,7 +33,7 @@ Here's how to get a game running - nothing fancy:
 ```javascript
 import { PokerGameManager, Player } from './packages/core/src/index.js';
 
-// Make a basic player - what's your kicker?
+// Make a basic player
 class SimplePlayer extends Player {
   async getAction(gameState) {
     const { validActions, toCall } = gameState;
@@ -78,7 +78,7 @@ table.tryStartGame();
 
 ### The Player Interface - This is Your Main Thing
 
-Every player needs to extend the `Player` class. **What's your kicker?** You mainly need to implement `getAction()`:
+Every player needs to extend the `Player` class. You mainly need to implement `getAction()`:
 
 ```javascript
 import { Player } from './packages/core/src/Player.js';
@@ -166,7 +166,7 @@ class PositionalPlayer extends Player {
     const myIndex = activePlayers.findIndex(p => p.id === this.id);
     const isLatePosition = myIndex >= activePlayers.length - 2;
     
-    // Play tighter early, looser late - what's your kicker?
+    // Play tighter early, looser late
     const aggression = isLatePosition ? 0.7 : 0.3;
     
     if (phase === 'PRE_FLOP' && currentBet === 0 && Math.random() < aggression) {
@@ -184,7 +184,7 @@ class PositionalPlayer extends Player {
 
 ## Game State
 
-**What's your kicker?** The `gameState` object tells you everything happening at the table:
+The `gameState` object tells you everything happening at the table:
 
 ```javascript
 {
@@ -267,7 +267,7 @@ table.on('pot:updated', ({ total }) => {
 
 ### Tournament Simulation
 
-**What's your kicker?** Here's a more complete example with different player types:
+Here's a more complete example with different player types:
 
 ```javascript
 import { PokerGameManager, Player } from './packages/core/src/index.js';
