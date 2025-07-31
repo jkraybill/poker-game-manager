@@ -1,8 +1,8 @@
-# Poker Game Manager v2.0 🃏
+# Poker Game Manager 🃏
 
-> A decent single-table Texas Hold'em engine for Node.js
->
-> What's your kicker? This library handles the poker basics pretty well.
+A decent single-table Texas Hold'em engine for Node.js
+
+What's your kicker? This library handles the poker basics pretty well.
 
 [![Tests](https://github.com/jkraybill/poker-game-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/jkraybill/poker-game-manager/actions/workflows/ci.yml)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
