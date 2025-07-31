@@ -12,7 +12,7 @@ Please read:
 
 Key facts:
 - Pure JavaScript, Node.js 22+, event-driven architecture
-- 260+ tests across 63 test files (championship-grade testing)
+- 267+ tests across 63+ test files (championship-grade testing)
 - Tournament-standard rules (dead button, side pots, all edge cases)
 - Player class is the single source of truth
 - GitHub: https://github.com/jkraybill/poker-game-manager
