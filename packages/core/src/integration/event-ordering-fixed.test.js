@@ -76,7 +76,7 @@ describe('Event Ordering - Fixed (Issue #33)', () => {
     const poorPlayer = new StrategicPlayer({
       id: 'poor',
       name: 'Poor Player',
-      strategy: STRATEGIES.checkCall,
+      strategy: STRATEGIES.alwaysCall,
     });
 
     // Add players
@@ -203,12 +203,12 @@ clearTimeout(timeoutId);
     const mediumStack = new StrategicPlayer({
       id: 'medium',
       name: 'Medium Stack',
-      strategy: STRATEGIES.checkCall,
+      strategy: STRATEGIES.alwaysCall,
     });
     const smallStack = new StrategicPlayer({
       id: 'small',
       name: 'Small Stack',
-      strategy: STRATEGIES.checkCall,
+      strategy: STRATEGIES.alwaysCall,
     });
 
     // Add players

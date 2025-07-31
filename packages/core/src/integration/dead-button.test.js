@@ -46,22 +46,22 @@ describe('Dead Button Rules', () => {
       new StrategicPlayer({ 
         id: 'A', 
         name: 'Player A',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'B', 
         name: 'Player B',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'C', 
         name: 'Player C',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'D', 
         name: 'Player D',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
     ];
 
@@ -188,22 +188,22 @@ describe('Dead Button Rules', () => {
       new StrategicPlayer({ 
         id: 'A', 
         name: 'Player A',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'B', 
         name: 'Player B',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'C', 
         name: 'Player C',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'D', 
         name: 'Player D',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
     ];
 

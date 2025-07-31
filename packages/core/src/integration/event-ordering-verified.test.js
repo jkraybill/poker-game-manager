@@ -83,12 +83,12 @@ describe('Event Ordering - Verified (Issue #33)', () => {
     const player1 = new StrategicPlayer({
       id: 'player1',
       name: 'Player 1',
-      strategy: STRATEGIES.checkCall,
+      strategy: STRATEGIES.alwaysCall,
     });
     const player2 = new StrategicPlayer({
       id: 'player2',
       name: 'Player 2',
-      strategy: STRATEGIES.checkCall,
+      strategy: STRATEGIES.alwaysCall,
     });
 
     // Add players
@@ -162,7 +162,7 @@ describe('Event Ordering - Verified (Issue #33)', () => {
     const poorPlayer = new StrategicPlayer({
       id: 'poor',
       name: 'Poor Player',
-      strategy: STRATEGIES.checkCall,
+      strategy: STRATEGIES.alwaysCall,
     });
 
     // Add players

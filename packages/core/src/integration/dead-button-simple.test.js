@@ -37,22 +37,22 @@ describe('Dead Button Simple Test', () => {
     const playerA = new StrategicPlayer({ 
       id: 'A', 
       name: 'Player A',
-      strategy: STRATEGIES.checkCall,
+      strategy: STRATEGIES.alwaysCall,
     });
     const playerB = new StrategicPlayer({ 
       id: 'B', 
       name: 'Player B',
-      strategy: STRATEGIES.checkCall,
+      strategy: STRATEGIES.alwaysCall,
     });
     const playerC = new StrategicPlayer({ 
       id: 'C', 
       name: 'Player C',
-      strategy: STRATEGIES.checkCall,
+      strategy: STRATEGIES.alwaysCall,
     });
     const playerD = new StrategicPlayer({ 
       id: 'D', 
       name: 'Player D',
-      strategy: STRATEGIES.checkCall,
+      strategy: STRATEGIES.alwaysCall,
     });
 
     const handInfo = [];
