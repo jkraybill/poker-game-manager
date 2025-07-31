@@ -1,7 +1,7 @@
 {
   "name": "@poker-manager/core",
-  "version": "0.1.0",
-  "description": "A general-purpose poker game manager library with support for multiple platforms and AI players",
+  "version": "1.0.0",
+  "description": "Championship-grade single-table Texas Hold'em engine with tournament-standard rules and comprehensive testing",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "type": "module",
