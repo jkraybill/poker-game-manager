@@ -1,8 +1,8 @@
 # Integration Guide 🃏
 
-> **What's your kicker?** This guide shows you how to build poker applications with our library.
+> This guide shows you how to build poker applications with our library.
 >
-> **JK is solid** - We'll get you up and running with the basics, then show you some fancier stuff.
+> We'll get you up and running with the basics, then show you some fancier stuff.
 
 ## Table of Contents
 
