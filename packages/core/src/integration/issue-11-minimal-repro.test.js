@@ -1,7 +1,12 @@
-import { describe, it, expect } from 'vitest';
-import { PokerGameManager } from '../PokerGameManager.js';
-import { Player } from '../Player.js';
-import { Action } from '../types/index.js';
+import { describe, it, expect, afterEach } from 'vitest';
+import {
+  createTestTable,
+  setupEventCapture,
+  StrategicPlayer,
+  cleanupTables,
+  waitForHandEnd,
+  Action,
+} from '../test-utils/index.js';
 
 /**
  * MINIMAL reproduction of Issue #11: Pot Distribution Bug
@@ -15,28 +20,17 @@ import { Action } from '../types/index.js';
  * Root cause: The all-in player is not marked as eligible for the pot they helped create
  */
 
-class TestPlayer extends Player {
-  constructor(config) {
-    super(config);
-    this.actions = config.actions || [];
-    this.actionIndex = 0;
-  }
-
-  getAction() {
-    if (this.actionIndex < this.actions.length) {
-      const action = this.actions[this.actionIndex++];
-      console.log(`${this.name}: ${action.action} ${action.amount || ''}`);
-      return { ...action, timestamp: Date.now() };
-    }
-    return { action: Action.CHECK, timestamp: Date.now() };
-  }
-}
-
 describe('Issue #11 - Minimal Pot Distribution Bug', () => {
-  it('should reproduce the exact failing scenario', async () => {
-    const manager = new PokerGameManager();
+  let manager;
 
-    const table = manager.createTable({
+  afterEach(() => {
+    if (manager) {
+      cleanupTables(manager);
+    }
+  });
+
+  it('should reproduce the exact failing scenario', async () => {
+    const result = createTestTable('standard', {
       tableId: 'exact-bug',
       minPlayers: 3,
       maxPlayers: 3,
@@ -44,6 +38,9 @@ describe('Issue #11 - Minimal Pot Distribution Bug', () => {
       dealerButton: 0,
       minBuyIn: 1000,
     });
+    manager = result.manager;
+    const table = result.table;
+    const events = setupEventCapture(table);
 
     // Same deck as complex scenario
     const customDeck = [
@@ -149,43 +146,51 @@ describe('Issue #11 - Minimal Pot Distribution Bug', () => {
 
     table.setCustomDeck(customDeck);
 
+    // Create action-based strategies
+    const createActionStrategy = (actions) => {
+      let actionIndex = 0;
+      return ({ player }) => {
+        if (actionIndex < actions.length) {
+          const action = actions[actionIndex++];
+          console.log(`${player.name}: ${action.action} ${action.amount || ''}`);
+          return action;
+        }
+        return { action: Action.CHECK };
+      };
+    };
+
     // Players that exactly match the failing test
-    const p1 = new TestPlayer({
+    const p1 = new StrategicPlayer({
       id: 'p1',
       name: 'Short Stack',
-      actions: [{ action: Action.ALL_IN, amount: 100 }],
+      strategy: createActionStrategy([{ action: Action.ALL_IN, amount: 100 }]),
     });
 
-    const p2 = new TestPlayer({
+    const p2 = new StrategicPlayer({
       id: 'p2',
       name: 'Medium Stack',
-      actions: [{ action: Action.ALL_IN, amount: 300 }],
+      strategy: createActionStrategy([{ action: Action.ALL_IN, amount: 300 }]),
     });
 
-    const p3 = new TestPlayer({
+    const p3 = new StrategicPlayer({
       id: 'p3',
       name: 'Big Stack',
-      actions: [{ action: Action.CALL, amount: 280 }],
+      strategy: createActionStrategy([{ action: Action.CALL, amount: 280 }]),
     });
 
-    await table.addPlayer(p1);
-    await table.addPlayer(p2);
-    await table.addPlayer(p3);
+    table.addPlayer(p1);
+    table.addPlayer(p2);
+    table.addPlayer(p3);
 
     // Match exact chip counts from failing test
-    p1.removeChips(900); // 100 chips
-    p2.removeChips(700); // 300 chips
-    // p3 keeps 1000 chips
+    p1.chips = 100;
+    p2.chips = 300;
+    p3.chips = 1000;
 
     console.log('\n=== EXACT FAILING SCENARIO ===');
     console.log('P1:', p1.chips, 'chips');
     console.log('P2:', p2.chips, 'chips');
     console.log('P3:', p3.chips, 'chips');
-
-    let handResult = null;
-    table.on('hand:ended', (data) => {
-      handResult = data;
-    });
 
     // Debug: track pot events
     table.on('pot:updated', (data) => {
@@ -204,21 +209,22 @@ describe('Issue #11 - Minimal Pot Distribution Bug', () => {
     });
 
     table.tryStartGame();
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await waitForHandEnd(events);
+    const handResult = events.handEnded;
 
     console.log('\n=== RESULTS ===');
     console.log(
       'Winners:',
-      handResult.winners.map((w) => ({
+      events.winners.map((w) => ({
         id: w.playerId,
         amount: w.amount,
-        hand: w.hand.description,
+        hand: w.hand ? w.hand.description : 'N/A',
       })),
     );
 
     console.log(
       '\nActual Pots:',
-      handResult.sidePots.map((pot) => ({
+      events.sidePots.map((pot) => ({
         amount: pot.amount,
         eligible: pot.eligiblePlayers,
       })),
@@ -231,7 +237,7 @@ describe('Issue #11 - Minimal Pot Distribution Bug', () => {
     console.log('- Main pot: 300, eligible: [p1, p2, p3]');
     console.log('- Side pot: 400, eligible: [p2, p3]');
 
-    const winner = handResult.winners[0];
+    const winner = events.winners[0];
     expect(winner.playerId).toBe('p1');
 
     // Calculate expected winnings:
@@ -379,7 +385,7 @@ describe('Issue #11 - Minimal Pot Distribution Bug', () => {
     })));
 
     // THE BUG: Winner gets 0 chips
-    const winner = handResult.winners[0];
+    const winner = events.winners[0];
     expect(winner.playerId).toBe('p1'); // P1 wins with AA
     expect(winner.amount).toBe(300); // Should win 300 (100 from each player)
     

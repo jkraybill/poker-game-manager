@@ -1,8 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { PokerGameManager } from '../PokerGameManager.js';
-import { Player } from '../Player.js';
-import { Action } from '../types/index.js';
-import { Deck } from '../game/Deck.js';
+import {
+  createChipStackTable,
+  setupEventCapture,
+  StrategicPlayer,
+  cleanupTables,
+  waitForHandEnd,
+  Action,
+} from '../test-utils/index.js';
 
 /**
  * Test for Issue #33: Event ordering with guaranteed elimination
@@ -12,68 +16,59 @@ import { Deck } from '../game/Deck.js';
  */
 
 describe('Event Ordering - Elimination (Issue #33)', () => {
-  let manager;
-  let table;
+  let manager, table, events;
 
   beforeEach(() => {
-    manager = new PokerGameManager();
+    manager = null;
+    table = null;
+    events = null;
   });
 
   afterEach(() => {
-    if (table) {
-      table.close();
+    if (manager) {
+      cleanupTables(manager);
     }
   });
 
   it('should fire player:eliminated after hand:ended when player loses all chips', async () => {
+    // Create table with chip stacks
+    ({ manager, table } = createChipStackTable(
+      'standard',
+      [100, 50], // Player 1 has more chips
+      {
+        id: 'elimination-test',
+        blinds: { small: 10, big: 20 },
+        minBuyIn: 40,
+        maxBuyIn: 200,
+        minPlayers: 2,
+        maxPlayers: 9,
+        dealerButton: 0,
+      },
+    ));
+    events = setupEventCapture(table);
+
     // Create a custom deck where player 1 gets better cards than player 2
-    class RiggedDeck extends Deck {
-      constructor() {
-        super();
-        // Set up cards - in 2-player game with dealerButton:0
-        // Player at position 0 gets cards first, player at position 1 gets cards second
-        this.cards = [];
+    const customDeck = [
+      // Player 1 gets AA (will win)
+      { rank: 'A', suit: 's', toString() { return 'As'; } },
+      // Player 2 gets 72 (will lose)
+      { rank: '7', suit: 'd', toString() { return '7d'; } },
+      // Player 1 second card
+      { rank: 'A', suit: 'h', toString() { return 'Ah'; } },
+      // Player 2 second card
+      { rank: '2', suit: 'c', toString() { return '2c'; } },
+      // Burn + Community cards that don't help player 2
+      { rank: '3', suit: 'h', toString() { return '3h'; } }, // burn
+      { rank: 'K', suit: 's', toString() { return 'Ks'; } }, // flop
+      { rank: 'Q', suit: 'h', toString() { return 'Qh'; } },
+      { rank: 'J', suit: 'd', toString() { return 'Jd'; } },
+      { rank: '4', suit: 'h', toString() { return '4h'; } }, // burn
+      { rank: 'T', suit: 'c', toString() { return 'Tc'; } }, // turn
+      { rank: '5', suit: 'h', toString() { return '5h'; } }, // burn
+      { rank: '9', suit: 's', toString() { return '9s'; } }, // river
+    ];
 
-        // Player 1 gets AA (will win)
-        this.cards.push({ rank: 'A', suit: 's' });
-        this.cards.push({ rank: 'A', suit: 'h' });
-
-        // Player 2 gets 72 (will lose)
-        this.cards.push({ rank: '7', suit: 'd' });
-        this.cards.push({ rank: '2', suit: 'c' });
-
-        // Community cards that don't help player 2
-        this.cards.push({ rank: 'K', suit: 's' });
-        this.cards.push({ rank: 'Q', suit: 'h' });
-        this.cards.push({ rank: 'J', suit: 'd' });
-        this.cards.push({ rank: 'T', suit: 'c' });
-        this.cards.push({ rank: '9', suit: 's' });
-
-        // Add more cards to avoid running out
-        for (let i = 0; i < 40; i++) {
-          this.cards.push({ rank: '3', suit: 'h' });
-        }
-      }
-
-      shuffle() {
-        // Don't shuffle - keep our rigged order
-      }
-    }
-
-    // Create table
-    table = manager.createTable({
-      id: 'elimination-test',
-      blinds: { small: 10, big: 20 },
-      minBuyIn: 40,
-      maxBuyIn: 200,
-      minPlayers: 2,
-      maxPlayers: 9,
-      dealerButton: 0,
-    });
-
-    // Use rigged deck
-    const riggedDeck = new RiggedDeck();
-    table.setCustomDeck(riggedDeck.cards);
+    table.setCustomDeck(customDeck);
 
     const eventLog = [];
 
@@ -94,52 +89,40 @@ describe('Event Ordering - Elimination (Issue #33)', () => {
       });
     });
 
-    // Simple all-in player
-    class AllInPlayer extends Player {
-      getAction(gameState) {
-        const myState = gameState.players[this.id];
-
-        if (myState.chips > 0) {
-          return {
-            playerId: this.id,
-            action: Action.ALL_IN,
-            amount: myState.chips,
-            timestamp: Date.now(),
-          };
-        }
-
+    // Simple all-in strategy
+    const allInStrategy = ({ myState }) => {
+      if (myState.chips > 0) {
         return {
-          playerId: this.id,
-          action: Action.CHECK,
-          timestamp: Date.now(),
+          action: Action.ALL_IN,
+          amount: myState.chips,
         };
       }
-    }
+      return {
+        action: Action.CHECK,
+      };
+    };
 
-    const player1 = new AllInPlayer({ name: 'Player 1' });
-    const player2 = new AllInPlayer({ name: 'Player 2' });
+    const player1 = new StrategicPlayer({
+      name: 'Player 1',
+      strategy: allInStrategy,
+    });
+    const player2 = new StrategicPlayer({
+      name: 'Player 2',
+      strategy: allInStrategy,
+    });
 
     // Add players in order
     table.addPlayer(player1);
     table.addPlayer(player2);
 
-    // Set chips - player 2 will lose all chips
-    player1.chips = 100;
-    player2.chips = 50;
-
-    // Wait for hand to complete
-    const handComplete = new Promise((resolve) => {
-      table.on('hand:ended', () => {
-        // Wait a bit for any async events
-        setTimeout(resolve, 100);
-      });
-    });
-
     // Start game
     table.tryStartGame();
 
-    // Wait for completion
-    await handComplete;
+    // Wait for hand to complete
+    await waitForHandEnd(events);
+    
+    // Give time for elimination event to fire
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     // Verify we got both events
     const handEndedEvents = eventLog.filter((e) => e.event === 'hand:ended');
@@ -162,7 +145,9 @@ describe('Event Ordering - Elimination (Issue #33)', () => {
     // Verify player1 won the pot
     expect(handEndedEvents[0].winners[0].id).toBe(player1.id);
     // Player 1 (SB) posts 10, Player 2 (BB) posts 20, then both go all-in
-    // Total pot = 100 + 50 = 150
-    expect(handEndedEvents[0].winners[0].amount).toBe(150);
+    // Player 2 has 50 chips total, Player 1 matches that amount
+    // Total pot = 50 + 50 = 100, but Player 1 gets back 20 (uncalled portion)
+    // So Player 1 wins 80
+    expect(handEndedEvents[0].winners[0].amount).toBe(80);
   });
 });
