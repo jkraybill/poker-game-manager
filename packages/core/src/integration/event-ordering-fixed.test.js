@@ -160,7 +160,7 @@ clearTimeout(timeoutId);
     // Check final chip counts
     const finalChips = {};
     table.players.forEach((playerData, playerId) => {
-      finalChips[playerId] = playerData.chips;
+      finalChips[playerId] = playerData.player?.chips || playerData.chips || 0;
     });
     console.log('\nFinal chips:', finalChips);
   });
