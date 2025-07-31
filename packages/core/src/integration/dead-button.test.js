@@ -241,7 +241,22 @@ describe('Dead Button Rules', () => {
 
     // Wait for completion
     await new Promise((resolve) => {
-      setTimeout(resolve, 2000);
+      let handEndCount = 0;
+      const handEndHandler = () => {
+        handEndCount++;
+        if (handEndCount >= 2) {
+          table.off('hand:ended', handEndHandler);
+          setTimeout(() => resolve(), 100); // Small delay to ensure cleanup
+        }
+      };
+      
+      table.on('hand:ended', handEndHandler);
+      
+      // Timeout after 5 seconds
+      setTimeout(() => {
+        table.off('hand:ended', handEndHandler);
+        resolve();
+      }, 5000);
     });
 
     console.log('\n=== Multiple Elimination Test ===');

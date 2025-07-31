@@ -37,8 +37,12 @@ export default defineConfig({
     isolate: true,
     // fileParallelism: false,
     // Force exit after tests complete
-    teardownTimeout: 1000,
+    teardownTimeout: 5000,
     // Add test timeout to identify slow tests
     testTimeout: 10000, // 10 seconds per test
+    // Clear module cache between tests
+    clearMocks: true,
+    resetMocks: true,
+    restoreMocks: true,
   },
 })

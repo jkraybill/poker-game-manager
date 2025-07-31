@@ -47,14 +47,12 @@ describe('Table Auto-Start Behavior (v2)', () => {
       const handEnds = [];
 
       // Simple fold strategy
-      const foldStrategy = (gameState, playerId) => {
+      const foldStrategy = ({ player }) => {
         console.log(
-          `Player ${playerId} acting in game ${gameCount}, hand ${handCount}`,
+          `Player ${player.id} acting in game ${gameCount}, hand ${handCount}`,
         );
         return {
-          playerId,
           action: Action.FOLD,
-          timestamp: Date.now(),
         };
       };
 
@@ -130,29 +128,29 @@ describe('Table Auto-Start Behavior (v2)', () => {
       // Strategy that raises in first action, folds afterward
       const timingTestStrategy = (() => {
         let actionCount = 0;
-        return (gameState, playerId) => {
+        return ({ gameState, player }) => {
           actionCount++;
+          console.log(`📊 Strategy called: actionCount=${actionCount}, currentBet=${gameState.currentBet}, playerId=${player.id}`);
 
           // First action: raise if facing big blind
           if (actionCount === 1 && gameState.currentBet === 20) {
+            console.log('🎲 Returning RAISE action');
             return {
-              playerId,
               action: Action.RAISE,
               amount: 60,
-              timestamp: Date.now(),
             };
           }
 
           // All other actions: fold
+          console.log('🎲 Returning FOLD action');
           return {
-            playerId,
             action: Action.FOLD,
-            timestamp: Date.now(),
           };
         };
       })();
 
       table.on('player:action', ({ playerId: _playerId, action, amount }) => {
+        console.log(`📍 Action detected: ${action}, amount: ${amount}`);
         actions.push({ action, amount });
         if (action === Action.RAISE) {
           raisesDetected++;
@@ -171,10 +169,8 @@ describe('Table Auto-Start Behavior (v2)', () => {
       });
       const player2 = new StrategicPlayer({
         name: 'Player 2',
-        strategy: (gameState, playerId) => ({
-          playerId,
+        strategy: () => ({
           action: Action.FOLD,
-          timestamp: Date.now(),
         }),
       });
 
@@ -200,7 +196,8 @@ describe('Table Auto-Start Behavior (v2)', () => {
         '\n✅  No more automatic restarts - only explicit game starts!',
       );
 
-      // We should have exactly 2 actions (first game: raise + fold = 2)
+      // We should have exactly 2 actions (first game: Player 1 raises, Player 2 folds)
+      // The game ends after Player 2 folds, leaving only one player
       expect(actions.length).toBe(2);
       expect(raisesDetected).toBe(1);
     },
@@ -217,10 +214,8 @@ describe('Table Auto-Start Behavior (v2)', () => {
     let gameCount = 0;
     let handEnded = false;
 
-    const quickFoldStrategy = (gameState, playerId) => ({
-      playerId,
+    const quickFoldStrategy = () => ({
       action: Action.FOLD,
-      timestamp: Date.now(),
     });
 
     table.on('game:started', () => {

@@ -31,7 +31,8 @@ describe('Issue #11 - Minimal Pot Distribution Bug (v2)', () => {
       maxPlayers: 3,
       blinds: { small: 10, big: 20 },
       dealerButton: 0,
-      minBuyIn: 1000,
+      minBuyIn: 100,  // Minimum for smallest stack
+      maxBuyIn: 10000,
     }));
     events = setupEventCapture(table);
   });
@@ -56,24 +57,22 @@ describe('Issue #11 - Minimal Pot Distribution Bug (v2)', () => {
     table.setCustomDeck(customDeck);
 
     // Strategy for each player based on original test
-    const p1Strategy = (gameState, playerId) => {
+    const p1Strategy = ({ myState }) => {
       console.log('Short Stack: ALL_IN 100');
-      return { playerId, action: Action.ALL_IN, amount: gameState.players[playerId].chips, timestamp: Date.now() };
+      return { action: Action.ALL_IN, amount: myState.chips };
     };
 
-    const p2Strategy = (gameState, playerId) => {
+    const p2Strategy = ({ myState }) => {
       console.log('Medium Stack: ALL_IN 300');
-      return { playerId, action: Action.ALL_IN, amount: gameState.players[playerId].chips, timestamp: Date.now() };
+      return { action: Action.ALL_IN, amount: myState.chips };
     };
 
-    const p3Strategy = (gameState, playerId) => {
-      const myState = gameState.players[playerId];
-      const toCall = gameState.currentBet - myState.bet;
+    const p3Strategy = ({ toCall }) => {
       if (toCall > 0) {
         console.log('Big Stack: CALL', toCall);
-        return { playerId, action: Action.CALL, amount: toCall, timestamp: Date.now() };
+        return { action: Action.CALL, amount: toCall };
       }
-      return { playerId, action: Action.CHECK, timestamp: Date.now() };
+      return { action: Action.CHECK };
     };
 
     // Create players
@@ -95,30 +94,20 @@ describe('Issue #11 - Minimal Pot Distribution Bug (v2)', () => {
       strategy: p3Strategy,
     });
 
-    // Add players
+    // Add players first
     table.addPlayer(p1);
     table.addPlayer(p2);
     table.addPlayer(p3);
 
-    // Set exact chip counts from failing test
-    const p1Data = Array.from(table.players.values()).find(p => p.player.id === 'p1');
-    const p2Data = Array.from(table.players.values()).find(p => p.player.id === 'p2');
-    const p3Data = Array.from(table.players.values()).find(p => p.player.id === 'p3');
-    
-    if (p1Data) {
-p1Data.chips = 100;
-}
-    if (p2Data) {
-p2Data.chips = 300;
-}
-    if (p3Data) {
-p3Data.chips = 1000;
-}
+    // Set chips directly on Player objects after adding
+    p1.chips = 100;
+    p2.chips = 300;
+    p3.chips = 1000;
 
     console.log('\n=== EXACT FAILING SCENARIO ===');
-    console.log('P1:', 100, 'chips');
-    console.log('P2:', 300, 'chips');
-    console.log('P3:', 1000, 'chips');
+    console.log('P1:', p1.chips, 'chips (expected 100)');
+    console.log('P2:', p2.chips, 'chips (expected 300)');
+    console.log('P3:', p3.chips, 'chips (expected 1000)');
 
     // Debug: track pot events
     table.on('pot:updated', (data) => {
@@ -206,17 +195,17 @@ p3Data.chips = 1000;
     const p3Final = Array.from(table.players.values()).find(p => p.player.id === 'p3');
 
     console.log('\n=== FINAL CHIP COUNTS ===');
-    console.log('P1:', p1Final?.chips, '(started with 100)');
-    console.log('P2:', p2Final?.chips, '(started with 300)');
-    console.log('P3:', p3Final?.chips, '(started with 1000)');
+    console.log('P1:', p1Final?.player.chips, '(started with 100)');
+    console.log('P2:', p2Final?.player.chips, '(started with 300)');
+    console.log('P3:', p3Final?.player.chips, '(started with 1000)');
 
     // Expected final chips:
     // Betting: P1 all-in 100, P2 all-in 300, P3 calls 300
     // Main pot: 100 * 3 = 300 (all players eligible)
     // Side pot: 200 * 2 = 400 (only P2 and P3 eligible)
     // Winners: P1 (AA) wins main pot, P2 (KK) beats P3 (QQ) for side pot
-    expect(p1Final?.chips).toBe(300); // Started 100 - bet 100 + won 300 = 300
-    expect(p2Final?.chips).toBe(400); // Started 300 - bet 300 + won 400 = 400
-    expect(p3Final?.chips).toBe(700); // Started 1000 - bet 300 = 700
+    expect(p1Final?.player.chips).toBe(300); // Started 100 - bet 100 + won 300 = 300
+    expect(p2Final?.player.chips).toBe(400); // Started 300 - bet 300 + won 400 = 400
+    expect(p3Final?.player.chips).toBe(700); // Started 1000 - bet 300 = 700
   });
 });

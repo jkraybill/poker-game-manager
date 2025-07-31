@@ -198,7 +198,7 @@ clearTimeout(timeoutId);
     const bigStack = new StrategicPlayer({
       id: 'big',
       name: 'Big Stack',
-      strategy: STRATEGIES.aggressive,
+      strategy: STRATEGIES.threeBet,
     });
     const mediumStack = new StrategicPlayer({
       id: 'medium',

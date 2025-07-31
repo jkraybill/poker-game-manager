@@ -6,7 +6,6 @@ import {
   STRATEGIES,
   cleanupTables,
   waitForHandEnd,
-  Action,
 } from '../test-utils/index.js';
 
 /**
@@ -40,22 +39,22 @@ describe('Dead Button Simple Test (v2)', () => {
       new StrategicPlayer({ 
         id: 'A', 
         name: 'Player A',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'B', 
         name: 'Player B',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'C', 
         name: 'Player C',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'D', 
         name: 'Player D',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
     ];
 
@@ -110,13 +109,9 @@ describe('Dead Button Simple Test (v2)', () => {
 
     // Wait for second hand
     await new Promise((resolve) => {
-      let handEndCount = 0;
       const handler = () => {
-        handEndCount++;
-        if (handEndCount === 2) {
-          table.off('hand:ended', handler);
-          resolve();
-        }
+        table.off('hand:ended', handler);
+        resolve();
       };
       table.on('hand:ended', handler);
       

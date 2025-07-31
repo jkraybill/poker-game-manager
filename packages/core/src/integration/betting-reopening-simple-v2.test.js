@@ -171,31 +171,20 @@ describe('Issue #32 - Betting Reopening Rules (v2)', () => {
       strategy: p3Strategy,
     });
 
-    // Override addPlayer to set custom chip amounts BEFORE adding players
-    const originalAddPlayer = table.addPlayer.bind(table);
-    table.addPlayer = function (player) {
-      const result = originalAddPlayer(player);
-      const playerData = this.players.get(player.id);
-      if (playerData && player.targetChips) {
-        playerData.chips = player.targetChips;
-      }
-      return result;
-    };
-
-    // Set target chips on players before adding
-    player1.targetChips = 2000;
-    player2.targetChips = 2000;
-    player3.targetChips = 250; // P3 needs exactly 250 chips for proper test
-
-    // Add players
+    // Add players first
     table.addPlayer(player1);
     table.addPlayer(player2);
     table.addPlayer(player3);
 
-    // Log the actual chip amounts after adding
-    console.log('\nChip amounts after adding:');
+    // Set chips directly on Player objects after adding
+    player1.chips = 2000;
+    player2.chips = 2000;
+    player3.chips = 250; // P3 needs exactly 250 chips for proper test
+
+    // Log the actual chip amounts after setting
+    console.log('\nChip amounts after setting:');
     for (const [, data] of table.players.entries()) {
-      console.log(`${data.player.name}: ${data.chips} chips`);
+      console.log(`${data.player.name}: ${data.player.chips} chips`);
     }
 
     console.log('\nStarting game...');
@@ -269,76 +258,56 @@ describe('Issue #32 - Betting Reopening Rules (v2)', () => {
 
   it('should ALLOW re-raise when all-in is a full raise or more', async () => {
     // P1: Raises to 200, then re-raises if allowed
-    const p1Strategy = (state, playerId) => {
-      const myState = state.players[playerId];
-      const toCall = state.currentBet - myState.bet;
-
+    const p1Strategy = ({ gameState, myState, toCall }) => {
       // First action: raise to 200
-      if (!myState.hasActed && state.currentBet === 100) {
+      if (!myState.hasActed && gameState.currentBet === 100) {
         return {
-          playerId,
           action: Action.RAISE,
           amount: 200,
-          timestamp: Date.now(),
         };
       }
 
       // If we can raise again, do it
-      if (toCall > 0 && state.validActions.includes(Action.RAISE)) {
+      if (toCall > 0 && gameState.validActions && gameState.validActions.includes(Action.RAISE)) {
         return {
-          playerId,
           action: Action.RAISE,
-          amount: state.currentBet * 2,
-          timestamp: Date.now(),
+          amount: gameState.currentBet * 2,
         };
       }
 
       // Otherwise call if needed
       if (toCall > 0) {
         return {
-          playerId,
           action: Action.CALL,
           amount: toCall,
-          timestamp: Date.now(),
         };
       }
 
       return {
-        playerId,
         action: Action.CHECK,
-        timestamp: Date.now(),
       };
     };
 
     // P2: Just calls
-    const p2Strategy = (state, playerId) => {
-      const myState = state.players[playerId];
-      const toCall = state.currentBet - myState.bet;
-
+    const p2Strategy = ({ toCall }) => {
       if (toCall > 0) {
         return {
-          playerId,
           action: Action.CALL,
           amount: toCall,
-          timestamp: Date.now(),
         };
       }
 
       return {
-        playerId,
         action: Action.CHECK,
-        timestamp: Date.now(),
       };
     };
 
     // P3: Goes all-in with exactly enough for a full raise
-    const p3Strategy = (state, playerId) => {
-      const myState = state.players[playerId];
+    const p3Strategy = ({ myState }) => {
+      console.log(`P3 strategy: chips=${myState.chips}, bet=${myState.bet}`);
       return {
-        playerId,
         action: Action.ALL_IN,
         amount: myState.chips,
-        timestamp: Date.now(),
       };
     };
 
@@ -361,27 +330,23 @@ describe('Issue #32 - Betting Reopening Rules (v2)', () => {
       strategy: p3Strategy,
     });
 
-    // Override addPlayer to set custom chip amounts BEFORE adding players
-    const originalAddPlayer = table.addPlayer.bind(table);
-    table.addPlayer = function (player) {
-      const result = originalAddPlayer(player);
-      const playerData = this.players.get(player.id);
-      if (playerData && player.targetChips) {
-        playerData.chips = player.targetChips;
-      }
-      return result;
-    };
-
-    // Set target chips on players before adding
-    player1.targetChips = 2000;
-    player2.targetChips = 2000;
-    player3.targetChips = 400; // P3 needs exactly 400 chips for a full raise
-
-    // Add players
+    // Add players first
     table.addPlayer(player1);
     table.addPlayer(player2);
     table.addPlayer(player3);
 
+    // Set chips directly on Player objects after adding
+    player1.chips = 2000;
+    player2.chips = 2000;
+    player3.chips = 400; // P3 needs exactly 400 chips for a full raise
+
+    // Debug: Check actual chip counts
+    console.log('\nChip amounts after setting:');
+    Array.from(table.players.values()).forEach(pd => {
+      console.log(`${pd.player.name}: ${pd.player.chips} chips`);
+    });
+
+    console.log('\nStarting game...');
     table.tryStartGame();
 
     // Wait for hand to end

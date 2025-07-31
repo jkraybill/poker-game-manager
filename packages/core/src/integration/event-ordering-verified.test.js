@@ -123,9 +123,11 @@ describe('Event Ordering - Verified (Issue #33)', () => {
 
     expect(handEndedEvent).toBeTruthy();
     expect(handleGameEndEvent).toBeTruthy();
-    expect(handEndedEvent.timestamp).toBeLessThan(
-      handleGameEndEvent.timestamp,
-    );
+    
+    // Check order in array (more reliable than timestamp comparison)
+    const handEndedIndex = eventLog.findIndex((e) => e.event === 'hand:ended');
+    const handleGameEndIndex = eventLog.findIndex((e) => e.event === 'handleGameEnd');
+    expect(handEndedIndex).toBeLessThan(handleGameEndIndex);
   });
 
   it('should ensure elimination events fire after hand:ended', async () => {
@@ -157,7 +159,7 @@ describe('Event Ordering - Verified (Issue #33)', () => {
     const richPlayer = new StrategicPlayer({
       id: 'rich',
       name: 'Rich Player',
-      strategy: STRATEGIES.aggressive,
+      strategy: STRATEGIES.threeBet,
     });
     const poorPlayer = new StrategicPlayer({
       id: 'poor',

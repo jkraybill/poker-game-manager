@@ -5,8 +5,6 @@ import {
   StrategicPlayer,
   STRATEGIES,
   cleanupTables,
-  waitForHandEnd,
-  Action,
 } from '../test-utils/index.js';
 
 /**
@@ -17,7 +15,7 @@ import {
  */
 
 describe('Dead Button Rules (v2)', () => {
-  let manager, table, events;
+  let manager, table;
 
   beforeEach(() => {
     // Use test utilities for table creation
@@ -27,7 +25,7 @@ describe('Dead Button Rules (v2)', () => {
     }));
     
     // Set up event capture
-    events = setupEventCapture(table, {
+    setupEventCapture(table, {
       events: ['hand:started', 'pot:updated', 'hand:ended', 'player:eliminated'],
     });
   });
@@ -48,22 +46,22 @@ describe('Dead Button Rules (v2)', () => {
       new StrategicPlayer({ 
         id: 'A', 
         name: 'Player A',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'B', 
         name: 'Player B',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'C', 
         name: 'Player C',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'D', 
         name: 'Player D',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
     ];
 
@@ -188,22 +186,22 @@ describe('Dead Button Rules (v2)', () => {
       new StrategicPlayer({ 
         id: 'A', 
         name: 'Player A',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'B', 
         name: 'Player B',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'C', 
         name: 'Player C',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'D', 
         name: 'Player D',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
     ];
 

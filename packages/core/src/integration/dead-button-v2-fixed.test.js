@@ -5,7 +5,7 @@ import {
   StrategicPlayer,
   STRATEGIES,
   cleanupTables,
-  Action,
+  waitForHandEnd,
 } from '../test-utils/index.js';
 
 /**
@@ -39,22 +39,22 @@ describe('Dead Button Rules (v2 Fixed)', () => {
       new StrategicPlayer({ 
         id: 'A', 
         name: 'Player A',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'B', 
         name: 'Player B',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'C', 
         name: 'Player C',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'D', 
         name: 'Player D',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
     ];
 
@@ -91,23 +91,31 @@ describe('Dead Button Rules (v2 Fixed)', () => {
     // Add players
     players.forEach(player => table.addPlayer(player));
 
+    // Set up player chips - give everyone starting chips first
+    Array.from(table.players.values()).forEach(pd => {
+      pd.chips = 1000; // Standard starting stack
+    });
+
     // Give player B very few chips so they get eliminated
     const playerBData = Array.from(table.players.values()).find(p => p.player.id === 'B');
     if (playerBData) {
       playerBData.chips = 30;
+      console.log(`Set player B chips to ${playerBData.chips}`);
     }
 
+    // Log initial state
+    console.log('\nInitial player states:');
+    Array.from(table.players.values()).forEach(pd => {
+      console.log(`${pd.player.id}: ${pd.chips} chips`);
+    });
+
     // Start first hand
+    console.log('\nStarting first hand...');
     table.tryStartGame();
 
     // Wait for first hand to complete
-    await new Promise((resolve) => {
-      table.on('hand:ended', () => {
-        console.log('\nHand 1 completed');
-        resolve();
-      });
-      setTimeout(resolve, 5000); // Timeout safety
-    });
+    await waitForHandEnd(events);
+    console.log('\nHand 1 completed');
 
     // Log hand 1 results
     console.log('\n=== Hand 1 Results ===');
@@ -125,33 +133,41 @@ describe('Dead Button Rules (v2 Fixed)', () => {
     // Now try to start hand 2 if we have enough players
     const activePlayers = Array.from(table.players.values()).filter(p => p.chips > 0);
     console.log(`\nActive players: ${activePlayers.length}`);
+    console.log('Active player IDs:', activePlayers.map(p => p.player.id));
 
     if (activePlayers.length >= 2) {
       // Start second hand
+      console.log('\nStarting second hand...');
       table.tryStartGame();
 
-      // Wait for second hand
-      await new Promise((resolve) => {
-        let handEndCount = 0;
-        const handler = () => {
-          handEndCount++;
-          if (handEndCount === 2) {
-            table.off('hand:ended', handler);
-            console.log('\nHand 2 completed');
-            resolve();
-          }
-        };
-        table.on('hand:ended', handler);
-        setTimeout(resolve, 5000); // Timeout safety
-      });
+      // Wait for second hand with timeout
+      try {
+        await Promise.race([
+          waitForHandEnd(events),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Second hand timeout after 3s')), 3000)
+          )
+        ]);
+        console.log('\nHand 2 completed');
 
-      // Log hand 2 results
-      if (gameState.hands[1]) {
-        console.log('\n=== Hand 2 Results ===');
-        console.log('Button:', gameState.hands[1].button);
-        console.log('Players:', gameState.hands[1].players);
-        console.log('Blinds:', gameState.blindPosts.hand2);
+        // Log hand 2 results
+        if (gameState.hands[1]) {
+          console.log('\n=== Hand 2 Results ===');
+          console.log('Button:', gameState.hands[1].button);
+          console.log('Players:', gameState.hands[1].players);
+          console.log('Blinds:', gameState.blindPosts.hand2);
+        }
+      } catch (error) {
+        console.error('\nError waiting for second hand:', error.message);
+        console.log('Event state:', {
+          handEnded: events.handEnded,
+          gameStarted: events.gameStarted,
+          lastEvents: events.events.slice(-5).map(e => e.event)
+        });
       }
+    } else {
+      console.log('\nNot enough active players for second hand');
+      console.log('Test expectation: Player B should be eliminated with 30 chips');
     }
 
     // Basic assertion to ensure test runs

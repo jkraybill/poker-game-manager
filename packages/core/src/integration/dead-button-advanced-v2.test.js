@@ -6,7 +6,6 @@ import {
   STRATEGIES,
   cleanupTables,
   waitForHandEnd,
-  Action,
 } from '../test-utils/index.js';
 
 /**
@@ -47,17 +46,17 @@ describe('Dead Button Advanced Scenarios (v2)', () => {
       new StrategicPlayer({ 
         id: 'A', 
         name: 'Player A',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'B', 
         name: 'Player B',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'C', 
         name: 'Player C',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
     ];
 
@@ -179,17 +178,17 @@ describe('Dead Button Advanced Scenarios (v2)', () => {
       new StrategicPlayer({ 
         id: 'A', 
         name: 'Player A',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'B', 
         name: 'Player B',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
       new StrategicPlayer({ 
         id: 'C', 
         name: 'Player C',
-        strategy: STRATEGIES.checkCall,
+        strategy: STRATEGIES.alwaysCall,
       }),
     ];
 
