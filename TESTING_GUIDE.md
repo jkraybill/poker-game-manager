@@ -1,14 +1,14 @@
 # 🎯 POKER TESTING MASTERY GUIDE
 
-> **211 Tests: The Granular Revolution**
+> **231 Tests: Test Utilities Revolution**
 > 
-> This guide encapsulates the testing wisdom gained from shattering a 2157-line test monolith into surgical, poker-focused test files. Each pattern here is battle-tested for poker excellence.
+> This guide encapsulates the testing wisdom gained from migrating to a comprehensive test utilities framework. All integration tests now use StrategicPlayer and consistent patterns for maximum maintainability.
 
 ## ⚡ Essential Commands
 
 ### 🚀 Testing Commands for Poker Excellence
 ```bash
-# 🎯 FULL TEST SUITE (211 passing tests!)
+# 🎯 FULL TEST SUITE (231 passing tests!)
 npm test
 
 # 🎲 GRANULAR POKER SCENARIOS
@@ -51,6 +51,50 @@ npm test -- 3player-scenarios --bail         # Stop on first failure
 
 # 🎯 PERFORMANCE DEBUGGING
 NODE_OPTIONS="--inspect" npm test -- 4player  # Node debugger integration
+```
+
+## 🧰 TEST UTILITIES FRAMEWORK
+
+### 🎯 Modern Testing Architecture (All Integration Tests Migrated)
+All integration tests now use the test utilities framework located in `/packages/core/src/test-utils/`:
+
+```javascript
+import {
+  createTestTable,
+  setupEventCapture,
+  waitForHandEnd,
+  StrategicPlayer,
+  Action,
+  cleanupTables,
+} from '../test-utils/index.js';
+```
+
+**Key Benefits**:
+- **StrategicPlayer**: Flexible player implementation with strategy functions
+- **createTestTable**: Deterministic table creation with standard settings
+- **setupEventCapture**: Automated event tracking and collection
+- **waitForHandEnd**: Promise-based hand completion waiting
+- **cleanupTables**: Proper resource cleanup after tests
+
+### 🎯 Strategic Player Pattern
+```javascript
+const squeezeStrategy = ({ player, gameState, myState, toCall }) => {
+  // Use lastAction tracking for advanced plays
+  const playerStates = Object.values(gameState.players);
+  const hasRaiser = playerStates.some(p => p.lastAction === Action.RAISE);
+  const hasCaller = playerStates.some(p => p.lastAction === Action.CALL);
+  
+  if (hasRaiser && hasCaller) {
+    return { action: Action.RAISE, amount: 180 }; // Squeeze play
+  }
+  
+  return { action: Action.FOLD };
+};
+
+const player = new StrategicPlayer({
+  name: 'Squeeze Player',
+  strategy: squeezeStrategy
+});
 ```
 
 ## 🗂️ POKER TEST ARCHITECTURE
@@ -822,16 +866,17 @@ describe('⚡ Performance Benchmarks', () => {
 - [ ] **Hand Evaluation**: < 0.5ms average  
 - [ ] **Memory Usage**: < 512KB per table
 - [ ] **Concurrent Tables**: 1000+ supported
-- [ ] **Test Suite Speed**: All 205 tests < 5 seconds
+- [ ] **Test Suite Speed**: All 231 tests < 5 seconds
 
 ## 🎯 Coverage Goals (Production Excellence)
 
-### 🏆 Current Achievement: 205 Tests Passing!
+### 🏆 Current Achievement: 231 Tests Passing!
 - **Core game logic**: 100% coverage achieved ✅
 - **Integration scenarios**: All major patterns covered ✅  
 - **Edge cases**: Side pots, timeouts, all-ins ✅
 - **Error handling**: Invalid actions, disconnections ✅
 - **Performance**: Real-time benchmarks established ✅
+- **Test utilities**: Complete framework migration ✅
 
 ### 🚀 Next Level Targets
 - **Tournament scenarios**: Multi-table, ICM calculations
