@@ -1,6 +1,6 @@
 {
   "name": "@poker-manager/core",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Championship-grade single-table Texas Hold'em engine with tournament-standard rules and comprehensive testing",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

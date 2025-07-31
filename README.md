@@ -1,4 +1,4 @@
-# Poker Game Manager v1.0 🏆
+# Poker Game Manager v2.0 🏆
 
 > **Championship-Grade Single-Table Texas Hold'em Engine**
 >
@@ -7,7 +7,7 @@
 [![Tests](https://github.com/jkraybill/poker-game-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/jkraybill/poker-game-manager/actions/workflows/ci.yml)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
 
-## ✨ What's New in v1.0
+## ✨ What's New in v2.0
 
 **🎯 SINGLE-TABLE TEXAS HOLD'EM MASTERY** - Everything you need for world-class poker software:
 
@@ -134,7 +134,7 @@ packages/core/src/
 └── test-utils/             # Testing framework
 ```
 
-## 🎯 What v1.0 Proves
+## 🎯 What v2.0 Proves
 
 This release demonstrates **mastery of single-table Texas Hold'em**:
 
@@ -147,7 +147,7 @@ This release demonstrates **mastery of single-table Texas Hold'em**:
 
 ## 🚀 Future Roadmap
 
-**v1.0 Foundation Complete** - What's next:
+**v2.0 Foundation Complete** - What's next:
 
 - 📊 **Analytics Engine** - Decision tracking and leak detection
 - 🎮 **Training Mode** - Scenario practice and coaching
