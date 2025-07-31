@@ -145,8 +145,8 @@ describe('Dead Button Rules (v2 Fixed)', () => {
         await Promise.race([
           waitForHandEnd(events),
           new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Second hand timeout after 3s')), 3000)
-          )
+            setTimeout(() => reject(new Error('Second hand timeout after 3s')), 3000),
+          ),
         ]);
         console.log('\nHand 2 completed');
 
@@ -162,7 +162,7 @@ describe('Dead Button Rules (v2 Fixed)', () => {
         console.log('Event state:', {
           handEnded: events.handEnded,
           gameStarted: events.gameStarted,
-          lastEvents: events.events.slice(-5).map(e => e.event)
+          lastEvents: events.events.slice(-5).map(e => e.event),
         });
       }
     } else {
