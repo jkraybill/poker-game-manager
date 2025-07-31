@@ -242,7 +242,7 @@ smallData.chips = 30;
       table.on('hand:ended', () => {
         setTimeout(() => resolve(), 500); // Wait for all eliminations
       });
-      setTimeout(() => resolve(), 6000); // Timeout
+      setTimeout(() => resolve(), 2000); // 2s timeout
     });
 
     // Start game

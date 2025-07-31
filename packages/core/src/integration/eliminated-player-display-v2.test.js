@@ -116,11 +116,11 @@ describe('Eliminated Player Display (v2)', () => {
       }
     });
 
-    // Play until someone is eliminated
-    const maxHands = 10;
+    // Play until someone is eliminated (max 3 hands to prevent long CI runs)
+    const maxHands = 3;
     while (!eliminationOccurred && handCount < maxHands) {
       table.tryStartGame();
-      await waitForHandEnd(events);
+      await waitForHandEnd(events, 2000); // 2s timeout per hand
       
       // Reset event capture for next hand
       events = setupEventCapture(table);

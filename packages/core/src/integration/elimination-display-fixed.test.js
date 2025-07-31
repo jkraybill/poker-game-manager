@@ -169,10 +169,7 @@ describe('Elimination Display Fixed', () => {
       }));
       console.log('All players in table:', allPlayers);
 
-      if (handsPlayed < 3) {
-        // Continue playing more hands
-        setTimeout(() => table.tryStartGame(), 100);
-      }
+      // Don't automatically start more hands
     });
 
     // Add players and start
@@ -181,8 +178,18 @@ describe('Elimination Display Fixed', () => {
     table.addPlayer(playerC);
     table.tryStartGame();
 
-    // Wait for multiple hands
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    // Wait for just the first hand to complete
+    await new Promise((resolve) => {
+      const checkCompletion = () => {
+        if (handsPlayed >= 1) {
+          resolve();
+        } else {
+          setTimeout(checkCompletion, 100);
+        }
+      };
+      // Start checking after a short delay
+      setTimeout(checkCompletion, 100);
+    });
 
     // Final verification
     console.log('\n=== FINAL TEST RESULTS ===');

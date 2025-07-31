@@ -116,7 +116,7 @@ describe('Dead Button Simple Test (v2)', () => {
       table.on('hand:ended', handler);
       
       // Timeout
-      setTimeout(resolve, 5000);
+      setTimeout(resolve, 2000); // 2s timeout
     });
 
     console.log('\n=== Dead Button Simple Test Results ===');
