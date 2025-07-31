@@ -1,57 +1,36 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { PokerGameManager } from '../PokerGameManager.js';
-import { Player } from '../Player.js';
-import { Action } from '../types/index.js';
+import {
+  createTestTable,
+  setupEventCapture,
+  ConditionalPlayer,
+  cleanupTables,
+  Action,
+} from '../test-utils/index.js';
 
 /**
  * Advanced tests for dead button scenarios with player eliminations
  */
 
-class TestPlayer extends Player {
-  constructor(config) {
-    super(config);
-    this.shouldFold = false;
-    this.postedBlinds = []; // Track when this player posts blinds
-  }
-
-  getAction(gameState) {
-    const myState = gameState.players[this.id];
-    const toCall = gameState.currentBet - myState.bet;
-
-    if (this.shouldFold) {
-      return {
-        playerId: this.id,
-        action: Action.FOLD,
-        timestamp: Date.now(),
-      };
-    }
-
-    if (toCall > 0) {
-      return {
-        playerId: this.id,
-        action: Action.CALL,
-        amount: toCall,
-        timestamp: Date.now(),
-      };
-    }
-
-    return {
-      playerId: this.id,
-      action: Action.CHECK,
-      timestamp: Date.now(),
-    };
-  }
-}
+// Using ConditionalPlayer from test utilities instead of custom TestPlayer
 
 describe('Dead Button Advanced Scenarios', () => {
-  let manager;
+  let manager, table;
 
   beforeEach(() => {
-    manager = new PokerGameManager();
+    // Use test utilities for table creation
+    ({ manager, table } = createTestTable('standard', {
+      minPlayers: 2,
+      dealerButton: 0,
+    }));
+    
+    // Set up event capture
+    setupEventCapture(table, {
+      events: ['hand:started', 'pot:updated', 'hand:ended', 'player:eliminated'],
+    });
   });
 
   afterEach(() => {
-    manager.tables.forEach((table) => table.close());
+    cleanupTables(manager);
   });
 
   it('should ensure no player posts BB twice in a row when SB is eliminated', async () => {
@@ -61,22 +40,61 @@ describe('Dead Button Advanced Scenarios', () => {
     // B gets eliminated
     // Hand 2: The critical question - who posts BB?
 
-    const table = manager.createTable({
-      blinds: { small: 10, big: 20 },
-      minBuyIn: 100,
-      maxBuyIn: 100,
-      minPlayers: 2,
-      dealerButton: 0,
-    });
-
     const players = [
-      new TestPlayer({ id: 'A', name: 'Player A' }),
-      new TestPlayer({ id: 'B', name: 'Player B' }),
-      new TestPlayer({ id: 'C', name: 'Player C' }),
+      new ConditionalPlayer({ 
+        id: 'A', 
+        name: 'Player A',
+        conditions: [{
+          condition: () => true,
+          action: (state) => {
+            const toCall = state.currentBet - state.myState.bet;
+            return toCall > 0 ? 
+              { action: Action.CALL, amount: toCall } : 
+              { action: Action.CHECK };
+          },
+        }],
+      }),
+      new ConditionalPlayer({ 
+        id: 'B', 
+        name: 'Player B',
+        conditions: [{
+          condition: () => true,
+          action: (state) => {
+            const toCall = state.currentBet - state.myState.bet;
+            return toCall > 0 ? 
+              { action: Action.CALL, amount: toCall } : 
+              { action: Action.CHECK };
+          },
+        }],
+      }),
+      new ConditionalPlayer({ 
+        id: 'C', 
+        name: 'Player C',
+        conditions: [{
+          condition: () => true,
+          action: (state) => {
+            const toCall = state.currentBet - state.myState.bet;
+            return toCall > 0 ? 
+              { action: Action.CALL, amount: toCall } : 
+              { action: Action.CHECK };
+          },
+        }],
+      }),
     ];
+    
+    // Track blind posts on players
+    players.forEach(p => p.postedBlinds = []);
 
+    // Add players first
+    for (const player of players) {
+      table.addPlayer(player);
+    }
+    
     // Give B very few chips so they'll be eliminated
-    players[1].chips = 30;
+    const playerBData = Array.from(table.players.values()).find(p => p.player.id === 'B');
+    if (playerBData) {
+      playerBData.chips = 30;
+    }
 
     const blindPosts = {
       hand1: { sb: null, bb: null },
@@ -118,7 +136,7 @@ describe('Dead Button Advanced Scenarios', () => {
         console.log('\nAfter Hand 1:');
         console.log(
           'Player chips:',
-          players.map((p) => `${p.id}: $${p.chips}`),
+          Array.from(table.players.values()).map((p) => `${p.player.id}: $${p.chips}`),
         );
         console.log('Blinds posted:', blindPosts.hand1);
 
@@ -128,7 +146,7 @@ describe('Dead Button Advanced Scenarios', () => {
         console.log('\nAfter Hand 2:');
         console.log(
           'Player chips:',
-          players.map((p) => `${p.id}: $${p.chips}`),
+          Array.from(table.players.values()).map((p) => `${p.player.id}: $${p.chips}`),
         );
         console.log('Blinds posted:', blindPosts.hand2);
 
@@ -142,10 +160,7 @@ describe('Dead Button Advanced Scenarios', () => {
       }
     });
 
-    // Add players
-    for (const player of players) {
-      table.addPlayer(player);
-    }
+    // Players already added above
 
     // Start game
     table.tryStartGame();
@@ -189,22 +204,59 @@ describe('Dead Button Advanced Scenarios', () => {
 
   it('should handle button player elimination correctly', async () => {
     // When button is eliminated, next hand should have dead button
-    const table = manager.createTable({
-      blinds: { small: 10, big: 20 },
-      minBuyIn: 100,
-      maxBuyIn: 100,
-      minPlayers: 2,
-      dealerButton: 0,
-    });
-
+    
     const players = [
-      new TestPlayer({ id: 'A', name: 'Player A' }),
-      new TestPlayer({ id: 'B', name: 'Player B' }),
-      new TestPlayer({ id: 'C', name: 'Player C' }),
+      new ConditionalPlayer({ 
+        id: 'A', 
+        name: 'Player A',
+        conditions: [{
+          condition: () => true,
+          action: (state) => {
+            const toCall = state.currentBet - state.myState.bet;
+            return toCall > 0 ? 
+              { action: Action.CALL, amount: toCall } : 
+              { action: Action.CHECK };
+          },
+        }],
+      }),
+      new ConditionalPlayer({ 
+        id: 'B', 
+        name: 'Player B',
+        conditions: [{
+          condition: () => true,
+          action: (state) => {
+            const toCall = state.currentBet - state.myState.bet;
+            return toCall > 0 ? 
+              { action: Action.CALL, amount: toCall } : 
+              { action: Action.CHECK };
+          },
+        }],
+      }),
+      new ConditionalPlayer({ 
+        id: 'C', 
+        name: 'Player C',
+        conditions: [{
+          condition: () => true,
+          action: (state) => {
+            const toCall = state.currentBet - state.myState.bet;
+            return toCall > 0 ? 
+              { action: Action.CALL, amount: toCall } : 
+              { action: Action.CHECK };
+          },
+        }],
+      }),
     ];
 
+    // Add players first
+    for (const player of players) {
+      table.addPlayer(player);
+    }
+    
     // Give A (button) very few chips
-    players[0].chips = 30;
+    const playerAData = Array.from(table.players.values()).find(p => p.player.id === 'A');
+    if (playerAData) {
+      playerAData.chips = 30;
+    }
 
     const buttonPositions = [];
     const activePlayers = [];
@@ -222,10 +274,7 @@ describe('Dead Button Advanced Scenarios', () => {
       }
     });
 
-    // Add players and start
-    for (const player of players) {
-      table.addPlayer(player);
-    }
+    // Start game (players already added above)
     table.tryStartGame();
 
     // Wait for completion
