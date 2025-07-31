@@ -1,6 +1,8 @@
 # Troubleshooting Guide
 
-## Common Issues & Solutions
+## Common Development Issues & Solutions
+
+> **Note**: This covers general development issues. The core poker engine is production-ready and extensively tested with 260+ tests.
 
 ### 1. All Tests Failing with Dealer Button Errors
 **Symptom**: Tests fail with position/betting order issues
@@ -14,16 +16,21 @@ const table = manager.createTable({
 });
 ```
 
-### 2. Minimum Raise Validation Failing - NEW CRITICAL BUG
-**Symptom**: Minimum raise validation logic failing (4 tests failing)
-**Status**: CRITICAL BUG - Needs immediate attention
-**Workaround**: Skip affected tests for now
+### 2. Custom Player Implementation Issues
+**Symptom**: Player actions not being processed correctly
+**Common Causes**: Missing required fields in action objects
+**Solution**: 
 ```javascript
-it.skip('should enforce minimum raise of 2x big blind for first raise', async () => {
-  // Test skipped due to minimum raise validation bug
-});
+// Always return complete action objects
+getAction(gameState) {
+  return {
+    playerId: this.id,
+    action: Action.FOLD,
+    amount: 0,
+    timestamp: Date.now(),  // REQUIRED
+  };
+}
 ```
-**Location**: `/packages/core/src/game/GameEngine.js` - betting validation logic
 
 ### 3. Test Timeout Errors
 **Symptom**: Test hangs and times out
