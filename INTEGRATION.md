@@ -17,6 +17,8 @@ We'll get you up and running with the basics, then show you some fancier stuff.
 
 ## Installation
 
+### From GitHub (Development)
+
 ```bash
 # Clone it down
 git clone https://github.com/jkraybill/poker-game-manager.git
@@ -25,6 +27,19 @@ cd poker-game-manager
 # Install the stuff (needs Node.js 22+)
 npm install
 ```
+
+### From GitHub Packages (Published)
+
+```bash
+# Set up GitHub Packages authentication
+echo "@jkraybill:registry=https://npm.pkg.github.com" >> .npmrc
+echo "//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN" >> .npmrc
+
+# Install the package
+npm install @jkraybill/poker-game-manager
+```
+
+**Note:** Replace `YOUR_GITHUB_TOKEN` with a GitHub Personal Access Token that has `packages:read` permission. Don't use `npm login` - GitHub Packages uses token authentication directly through `.npmrc`.
 
 ## Quick Start
 

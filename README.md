@@ -6,6 +6,7 @@ What's your kicker? This library handles the poker basics pretty well.
 
 [![Tests](https://github.com/jkraybill/poker-game-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/jkraybill/poker-game-manager/actions/workflows/ci.yml)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
+[![GitHub Package](https://img.shields.io/badge/npm-GitHub%20Packages-blue)](https://github.com/jkraybill/poker-game-manager/packages)
 
 ## ✨ What's New in v2.0
 
@@ -22,8 +23,36 @@ Here's what we've got working:
 
 ### Installation
 
+This package is published to GitHub Packages (not the public npm registry). To install:
+
+1. **Get a GitHub Personal Access Token:**
+   - Go to https://github.com/settings/tokens/new
+   - Create a token with `read:packages` scope
+   - Copy the generated token
+
+2. **Configure npm to use GitHub Packages:**
+   
+   Create a `.npmrc` file in your project root:
+   ```bash
+   echo "@jkraybill:registry=https://npm.pkg.github.com" >> .npmrc
+   echo "//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN" >> .npmrc
+   ```
+   
+   Or set it globally in `~/.npmrc`:
+   ```bash
+   echo "//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN" >> ~/.npmrc
+   ```
+
+3. **Install the package:**
+   ```bash
+   npm install @jkraybill/poker-game-manager  # Requires Node.js 22+
+   ```
+
+**Note:** Replace `YOUR_GITHUB_TOKEN` with your actual token. For security, consider using an environment variable:
 ```bash
-npm install poker-game-manager  # Requires Node.js 22+
+echo "//npm.pkg.github.com/:_authToken=\${GITHUB_TOKEN}" >> .npmrc
+export GITHUB_TOKEN=your_actual_token_here
+npm install @jkraybill/poker-game-manager
 ```
 
 Or if you're building from source:
@@ -36,7 +65,7 @@ npm run build  # Build for distribution
 
 ### Your First Game
 ```javascript
-import { PokerGameManager, Player } from 'poker-game-manager';
+import { PokerGameManager, Player } from '@jkraybill/poker-game-manager';
 
 // Create a simple player - nothing fancy
 class MyPlayer extends Player {
@@ -75,21 +104,21 @@ table.tryStartGame();
 
 ```javascript
 // Main imports
-import { PokerGameManager, Table, Player } from 'poker-game-manager';
+import { PokerGameManager, Table, Player } from '@jkraybill/poker-game-manager';
 
 // Type imports
-import { Action, GamePhase, PlayerStatus } from 'poker-game-manager';
+import { Action, GamePhase, PlayerStatus } from '@jkraybill/poker-game-manager';
 
 // Specific module imports
-import { Table } from 'poker-game-manager/table';
-import { Player } from 'poker-game-manager/player';
-import { Action, GamePhase } from 'poker-game-manager/types';
+import { Table } from '@jkraybill/poker-game-manager/table';
+import { Player } from '@jkraybill/poker-game-manager/player';
+import { Action, GamePhase } from '@jkraybill/poker-game-manager/types';
 
 // Game components
-import { HandEvaluator, Deck, GameEngine } from 'poker-game-manager';
+import { HandEvaluator, Deck, GameEngine } from '@jkraybill/poker-game-manager';
 
 // CommonJS also supported
-const { PokerGameManager, Player } = require('poker-game-manager');
+const { PokerGameManager, Player } = require('@jkraybill/poker-game-manager');
 ```
 
 ## 🎲 What We've Built

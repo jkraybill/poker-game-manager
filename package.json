@@ -1,5 +1,5 @@
 {
-  "name": "poker-game-manager",
+  "name": "@jkraybill/poker-game-manager",
   "version": "1.0.0",
   "description": "Championship-grade single-table Texas Hold'em engine with tournament-standard rules and comprehensive testing",
   "main": "dist/index.cjs",
@@ -15,7 +15,8 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --run --coverage",
     "lint": "eslint packages/core/src packages/ai/src --ext .js",
-    "format": "prettier --write \"packages/**/*.{js,json,md}\""
+    "format": "prettier --write \"packages/**/*.{js,json,md}\"",
+    "prepublishOnly": "npm run lint && npm test && npm run build"
   },
   "keywords": [
     "poker",
@@ -25,7 +26,7 @@
     "multiplayer",
     "api"
   ],
-  "author": "",
+  "author": "JK Raybill",
   "license": "MIT",
   "engines": {
     "node": ">=22.0.0"
@@ -85,6 +86,9 @@
     "url": "https://github.com/jkraybill/poker-game-manager/issues"
   },
   "homepage": "https://github.com/jkraybill/poker-game-manager#readme",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "workspaces": [
     "packages/*"
   ]
