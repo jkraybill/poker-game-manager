@@ -1,14 +1,14 @@
 {
-  "name": "@poker-manager/core",
-  "version": "2.0.0",
+  "name": "poker-game-manager",
+  "version": "1.0.0",
   "description": "Championship-grade single-table Texas Hold'em engine with tournament-standard rules and comprehensive testing",
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
+  "main": "dist/index.cjs",
+  "module": "packages/core/src/index.js",
   "type": "module",
   "scripts": {
     "build": "npm run clean && npm run build:esm && npm run build:cjs",
-    "build:esm": "esbuild packages/core/src/index.js --bundle --platform=node --format=esm --outfile=dist/index.mjs",
-    "build:cjs": "esbuild packages/core/src/index.js --bundle --platform=node --format=cjs --outfile=dist/index.js",
+    "build:esm": "esbuild packages/core/src/index.js --bundle --platform=node --format=esm --outfile=dist/index.mjs --external:pokersolver --external:eventemitter3 --external:nanoid",
+    "build:cjs": "esbuild packages/core/src/index.js --bundle --platform=node --format=cjs --outfile=dist/index.cjs --external:pokersolver --external:eventemitter3 --external:nanoid",
     "clean": "rm -rf dist",
     "test": "vitest --run",
     "test:watch": "vitest",
@@ -46,11 +46,33 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": "./packages/core/src/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./packages/core/src/index.d.ts"
+    },
+    "./table": {
+      "import": "./packages/core/src/Table.js",
+      "require": "./dist/table.cjs"
+    },
+    "./player": {
+      "import": "./packages/core/src/Player.js",
+      "require": "./dist/player.cjs"
+    },
+    "./types": {
+      "import": "./packages/core/src/types/index.js",
+      "require": "./dist/types.cjs"
+    },
+    "./game/*": {
+      "import": "./packages/core/src/game/*.js",
+      "require": "./dist/game/*.cjs"
+    },
+    "./utils/*": {
+      "import": "./packages/core/src/utils/*.js",
+      "require": "./dist/utils/*.cjs"
     }
   },
   "files": [
+    "packages/core/src",
     "dist",
     "README.md",
     "LICENSE"

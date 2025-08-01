@@ -1,0 +1,59 @@
+# Test files
+**/*.test.js
+**/*.spec.js
+**/test/
+**/tests/
+coverage/
+.coverage/
+
+# Config files
+.eslintrc.*
+.prettierrc.*
+vitest.config.js
+*.config.js
+
+# Source maps
+*.map
+
+# Development files
+examples/
+docs/
+*.md
+!README.md
+!LICENSE
+
+# CI/CD
+.github/
+.travis.yml
+.circleci/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Dependencies
+node_modules/
+
+# Build artifacts we don't need
+dist/*.map
+
+# AI and adapter packages (not part of core)
+packages/ai/
+packages/adapters/
+
+# Session and context files
+SESSION_CONTEXT.md
+CLAUDE.md
+ABOUT-JK.md
+REFACTORING_PLAN.md
+TROUBLESHOOTING.md
+CURRENT_BUGS.md
+TESTING_GUIDE.md
+INTEGRATION.md
+POKER-RULES.md

@@ -21,15 +21,22 @@ Here's what we've got working:
 ## 🚀 Quick Start
 
 ### Installation
+
+```bash
+npm install poker-game-manager  # Requires Node.js 22+
+```
+
+Or if you're building from source:
 ```bash
 git clone https://github.com/jkraybill/poker-game-manager.git
 cd poker-game-manager
-npm install  # Requires Node.js 22+
+npm install
+npm run build  # Build for distribution
 ```
 
 ### Your First Game
 ```javascript
-import { PokerGameManager, Player } from './packages/core/src/index.js';
+import { PokerGameManager, Player } from 'poker-game-manager';
 
 // Create a simple player - nothing fancy
 class MyPlayer extends Player {
@@ -62,6 +69,27 @@ table.on('hand:ended', (result) => {
 
 // Start the game
 table.tryStartGame();
+```
+
+### Available Imports
+
+```javascript
+// Main imports
+import { PokerGameManager, Table, Player } from 'poker-game-manager';
+
+// Type imports
+import { Action, GamePhase, PlayerStatus } from 'poker-game-manager';
+
+// Specific module imports
+import { Table } from 'poker-game-manager/table';
+import { Player } from 'poker-game-manager/player';
+import { Action, GamePhase } from 'poker-game-manager/types';
+
+// Game components
+import { HandEvaluator, Deck, GameEngine } from 'poker-game-manager';
+
+// CommonJS also supported
+const { PokerGameManager, Player } = require('poker-game-manager');
 ```
 
 ## 🎲 What We've Built
