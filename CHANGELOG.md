@@ -5,6 +5,27 @@ All notable changes to the Poker Game Manager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2025-08-03
+
+### Added
+- **LRU cache for hand evaluations** - 32x performance improvement (0.032ms → 0.001ms)
+- **Object pooling** - Reduced GC pressure for game states
+- **Performance monitoring utilities** - Track operation times in development
+- **Comprehensive benchmark suite** - Measure performance across all operations
+
+### Fixed
+- **Flaky test in standings-display** - Fixed improper player initialization
+- **ESLint compliance** - All code now passes strict linting rules
+
+### Changed
+- Optimized game state building with pooled objects
+- Added performance tracking to critical paths
+
+### Performance
+- Hand evaluation: 32x faster with caching
+- Memory usage: Efficient object pooling reduces GC overhead
+- All optimizations maintain 100% backward compatibility
+
 ## [2.0.0] - 2025-08-03
 
 ### Breaking Changes 🚨
@@ -66,5 +87,6 @@ In tournament poker, starting stacks vary widely (10,000 to 100,000+ chips). Tab
 - Performance optimized (sub-millisecond hand evaluation)
 - ESM and CommonJS dual package support
 
+[2.1.0]: https://github.com/jkraybill/poker-game-manager/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/jkraybill/poker-game-manager/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/jkraybill/poker-game-manager/releases/tag/v1.0.0
