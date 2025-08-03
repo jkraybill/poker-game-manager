@@ -18,8 +18,6 @@ describe('Eliminated Player Display (v2)', () => {
   beforeEach(() => {
     ;({ manager, table } = createTestTable('standard', {
       blinds: { small: 10, big: 20 },
-      minBuyIn: 100,
-      maxBuyIn: 100,
       minPlayers: 2,
       dealerButton: 0,
     }));
@@ -77,15 +75,15 @@ describe('Eliminated Player Display (v2)', () => {
       strategy: callStrategy,
     });
 
+    // Set chips before adding players (v2.0 API)
+    playerA.buyIn(200);
+    playerB.buyIn(30); // Will go all-in and likely lose
+    playerC.buyIn(200);
+
     // Add players
     table.addPlayer(playerA);
     table.addPlayer(playerB);
     table.addPlayer(playerC);
-
-    // Set chips directly on Player objects after adding
-    playerA.chips = 200;
-    playerB.chips = 30; // Will go all-in and likely lose
-    playerC.chips = 200;
 
     // Log initial state
     console.log(
@@ -157,8 +155,6 @@ describe('Eliminated Player Display (v2)', () => {
     table.close()
     ;({ manager, table } = createTestTable('standard', {
       blinds: { small: 5, big: 10 },
-      minBuyIn: 30,
-      maxBuyIn: 100,
       minPlayers: 2,
       dealerButton: 0,
     }));
@@ -188,12 +184,12 @@ describe('Eliminated Player Display (v2)', () => {
       strategy: allInStrategy,
     });
 
+    // Set chips before adding players (v2.0 API)
+    player1.buyIn(30);
+    player2.buyIn(30);
+
     table.addPlayer(player1);
     table.addPlayer(player2);
-
-    // Set chips directly on Player objects after adding
-    player1.chips = 30;
-    player2.chips = 30;
 
     let eliminationCount = 0;
     table.on('player:eliminated', ({ playerId }) => {
