@@ -5,6 +5,12 @@ All notable changes to the Poker Game Manager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2025-08-03
+
+### Fixed
+- **Fixed flaky test in standings-display-v2** - Updated to use proper v2.0 API (buyIn before addPlayer)
+- **Removed deprecated table config options** - Cleaned up minBuyIn/maxBuyIn references in tests
+
 ## [2.1.0] - 2025-08-03
 
 ### Added
@@ -87,6 +93,7 @@ In tournament poker, starting stacks vary widely (10,000 to 100,000+ chips). Tab
 - Performance optimized (sub-millisecond hand evaluation)
 - ESM and CommonJS dual package support
 
+[2.1.1]: https://github.com/jkraybill/poker-game-manager/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/jkraybill/poker-game-manager/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/jkraybill/poker-game-manager/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/jkraybill/poker-game-manager/releases/tag/v1.0.0
