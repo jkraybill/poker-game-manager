@@ -11,7 +11,7 @@ import { Action } from '../types/index.js';
 
 // Simple player that always calls
 class BenchmarkPlayer extends Player {
-  async getAction(gameState) {
+  getAction(gameState) {
     const myState = gameState.players[this.id];
     const toCall = gameState.currentBet - myState.bet;
     
@@ -62,17 +62,17 @@ function measureTime(fn, iterations = 1000) {
 }
 
 function formatResults(name, results) {
-  console.log(`\n${name}:`);
-  console.log(`  Average: ${results.avg.toFixed(3)}ms`);
-  console.log(`  Median:  ${results.median.toFixed(3)}ms`);
-  console.log(`  Min:     ${results.min.toFixed(3)}ms`);
-  console.log(`  Max:     ${results.max.toFixed(3)}ms`);
-  console.log(`  P95:     ${results.p95.toFixed(3)}ms`);
-  console.log(`  P99:     ${results.p99.toFixed(3)}ms`);
+  console.log(`\n${name}:`); // eslint-disable-line no-console
+  console.log(`  Average: ${results.avg.toFixed(3)}ms`); // eslint-disable-line no-console
+  console.log(`  Median:  ${results.median.toFixed(3)}ms`); // eslint-disable-line no-console
+  console.log(`  Min:     ${results.min.toFixed(3)}ms`); // eslint-disable-line no-console
+  console.log(`  Max:     ${results.max.toFixed(3)}ms`); // eslint-disable-line no-console
+  console.log(`  P95:     ${results.p95.toFixed(3)}ms`); // eslint-disable-line no-console
+  console.log(`  P99:     ${results.p99.toFixed(3)}ms`); // eslint-disable-line no-console
 }
 
 // Benchmarks
-async function benchmarkTableCreation() {
+function benchmarkTableCreation() {
   const manager = new PokerGameManager();
   
   const results = measureTime(() => {
@@ -87,7 +87,7 @@ async function benchmarkTableCreation() {
   formatResults('Table Creation', results);
 }
 
-async function benchmarkPlayerAddition() {
+function benchmarkPlayerAddition() {
   const manager = new PokerGameManager();
   const table = manager.createTable({
     blinds: { small: 10, big: 20 },
@@ -104,7 +104,7 @@ async function benchmarkPlayerAddition() {
   formatResults('Player Addition/Removal', results);
 }
 
-async function benchmarkGameStart() {
+function benchmarkGameStart() {
   const manager = new PokerGameManager();
   
   const results = measureTime(() => {
@@ -154,7 +154,7 @@ async function benchmarkSingleAction() {
     const start = performance.now();
     const player = players.find(p => p.id === playerId);
     if (player) {
-      const action = await player.getAction(gameState);
+      await player.getAction(gameState);
       // Simulate action processing
     }
     const end = performance.now();
@@ -167,9 +167,9 @@ async function benchmarkSingleAction() {
   // Wait for some actions
   await new Promise(resolve => setTimeout(resolve, 100));
   
-  console.log('\nSingle Action Processing:');
-  console.log(`  Average: ${(totalTime / actionCount).toFixed(3)}ms`);
-  console.log(`  Total actions: ${actionCount}`);
+  console.log('\nSingle Action Processing:'); // eslint-disable-line no-console
+  console.log(`  Average: ${(totalTime / actionCount).toFixed(3)}ms`); // eslint-disable-line no-console
+  console.log(`  Total actions: ${actionCount}`); // eslint-disable-line no-console
 }
 
 async function benchmarkHandEvaluation() {
@@ -203,7 +203,7 @@ async function benchmarkFullHand() {
   let handsCompleted = 0;
   let totalTime = 0;
   
-  const runHand = async () => {
+  const runHand = () => {
     const table = manager.createTable({
       blinds: { small: 10, big: 20 },
       maxPlayers: 9,
@@ -218,7 +218,7 @@ async function benchmarkFullHand() {
     
     const start = performance.now();
     
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       table.on('hand:ended', () => {
         const end = performance.now();
         totalTime += (end - start);
@@ -237,9 +237,9 @@ async function benchmarkFullHand() {
     await runHand();
   }
   
-  console.log('\nFull Hand Completion (6 players):');
-  console.log(`  Average: ${(totalTime / handsCompleted).toFixed(3)}ms`);
-  console.log(`  Total hands: ${handsCompleted}`);
+  console.log('\nFull Hand Completion (6 players):'); // eslint-disable-line no-console
+  console.log(`  Average: ${(totalTime / handsCompleted).toFixed(3)}ms`); // eslint-disable-line no-console
+  console.log(`  Total hands: ${handsCompleted}`); // eslint-disable-line no-console
 }
 
 // Memory usage benchmark
@@ -279,10 +279,10 @@ async function benchmarkMemoryUsage() {
   }
   const finalMemory = process.memoryUsage();
   
-  console.log('\nMemory Usage (100 tables, 6 players each):');
-  console.log(`  Heap Used: ${((finalMemory.heapUsed - initialMemory.heapUsed) / 1024 / 1024).toFixed(2)}MB`);
-  console.log(`  RSS: ${((finalMemory.rss - initialMemory.rss) / 1024 / 1024).toFixed(2)}MB`);
-  console.log(`  Per Table: ${((finalMemory.heapUsed - initialMemory.heapUsed) / 100 / 1024).toFixed(2)}KB`);
+  console.log('\nMemory Usage (100 tables, 6 players each):'); // eslint-disable-line no-console
+  console.log(`  Heap Used: ${((finalMemory.heapUsed - initialMemory.heapUsed) / 1024 / 1024).toFixed(2)}MB`); // eslint-disable-line no-console
+  console.log(`  RSS: ${((finalMemory.rss - initialMemory.rss) / 1024 / 1024).toFixed(2)}MB`); // eslint-disable-line no-console
+  console.log(`  Per Table: ${((finalMemory.heapUsed - initialMemory.heapUsed) / 100 / 1024).toFixed(2)}KB`); // eslint-disable-line no-console
   
   // Cleanup
   tables.forEach(table => table.close());
@@ -292,11 +292,11 @@ async function benchmarkMemoryUsage() {
 async function runBenchmarks() {
   const os = await import('os');
   
-  console.log('=== Poker Game Manager Performance Benchmarks ===');
-  console.log(`Node: ${process.version}`);
-  console.log(`Platform: ${process.platform} ${process.arch}`);
-  console.log(`CPUs: ${os.cpus().length} x ${os.cpus()[0].model}`);
-  console.log(`Memory: ${(os.totalmem() / 1024 / 1024 / 1024).toFixed(2)}GB`);
+  console.log('=== Poker Game Manager Performance Benchmarks ==='); // eslint-disable-line no-console
+  console.log(`Node: ${process.version}`); // eslint-disable-line no-console
+  console.log(`Platform: ${process.platform} ${process.arch}`); // eslint-disable-line no-console
+  console.log(`CPUs: ${os.cpus().length} x ${os.cpus()[0].model}`); // eslint-disable-line no-console
+  console.log(`Memory: ${(os.totalmem() / 1024 / 1024 / 1024).toFixed(2)}GB`); // eslint-disable-line no-console
   
   await benchmarkTableCreation();
   await benchmarkPlayerAddition();
@@ -306,12 +306,12 @@ async function runBenchmarks() {
   await benchmarkFullHand();
   await benchmarkMemoryUsage();
   
-  console.log('\n=== Benchmark Complete ===');
+  console.log('\n=== Benchmark Complete ==='); // eslint-disable-line no-console
 }
 
 // Run if called directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  runBenchmarks().catch(console.error);
+  runBenchmarks().catch(console.error); // eslint-disable-line no-console
 }
 
 export { runBenchmarks, measureTime, formatResults };

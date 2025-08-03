@@ -15,7 +15,9 @@ export class PerformanceMonitor {
    * Start timing an operation
    */
   startTimer(name) {
-    if (!this.enabled) return () => {};
+    if (!this.enabled) {
+      return () => {};
+    }
     
     const startTime = performance.now();
     return () => {
@@ -28,7 +30,9 @@ export class PerformanceMonitor {
    * Record a metric value
    */
   recordMetric(name, value) {
-    if (!this.enabled) return;
+    if (!this.enabled) {
+      return;
+    }
     
     if (!this.metrics.has(name)) {
       this.metrics.set(name, {
@@ -86,20 +90,22 @@ export class PerformanceMonitor {
    * Print metrics to console
    */
   printMetrics() {
-    if (!this.enabled) return;
+    if (!this.enabled) {
+      return;
+    }
     
     const metrics = this.getMetrics();
-    console.log('\n=== Performance Metrics ===');
+    console.log('\n=== Performance Metrics ==='); // eslint-disable-line no-console
     
     for (const [name, values] of Object.entries(metrics)) {
-      console.log(`\n${name}:`);
-      console.log(`  Count: ${values.count}`);
-      console.log(`  Avg:   ${values.avg.toFixed(3)}ms`);
-      console.log(`  Min:   ${values.min.toFixed(3)}ms`);
-      console.log(`  Max:   ${values.max.toFixed(3)}ms`);
-      console.log(`  P50:   ${values.p50.toFixed(3)}ms`);
-      console.log(`  P95:   ${values.p95.toFixed(3)}ms`);
-      console.log(`  P99:   ${values.p99.toFixed(3)}ms`);
+      console.log(`\n${name}:`); // eslint-disable-line no-console
+      console.log(`  Count: ${values.count}`); // eslint-disable-line no-console
+      console.log(`  Avg:   ${values.avg.toFixed(3)}ms`); // eslint-disable-line no-console
+      console.log(`  Min:   ${values.min.toFixed(3)}ms`); // eslint-disable-line no-console
+      console.log(`  Max:   ${values.max.toFixed(3)}ms`); // eslint-disable-line no-console
+      console.log(`  P50:   ${values.p50.toFixed(3)}ms`); // eslint-disable-line no-console
+      console.log(`  P95:   ${values.p95.toFixed(3)}ms`); // eslint-disable-line no-console
+      console.log(`  P99:   ${values.p99.toFixed(3)}ms`); // eslint-disable-line no-console
     }
   }
 }

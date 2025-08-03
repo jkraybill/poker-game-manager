@@ -4,7 +4,7 @@ import { Deck } from './Deck.js';
 import { PotManager } from './PotManager.js';
 import { HandEvaluator } from './HandEvaluator.js';
 import { Player } from '../Player.js';
-import { gameStatePool, actionPool } from '../utils/performance.js';
+import { gameStatePool } from '../utils/performance.js';
 import { monitor } from '../utils/monitoring.js';
 
 /**
