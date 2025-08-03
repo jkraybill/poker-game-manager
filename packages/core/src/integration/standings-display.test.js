@@ -60,14 +60,15 @@ describe('Standings Display (Issue #34)', () => {
     const bob = new StrategicPlayer({ name: 'Bob', strategy: allInStrategy });
     const charlie = new StrategicPlayer({ name: 'Charlie', strategy: allInStrategy });
 
+    // Set chips BEFORE adding to table (v2.0 requirement)
+    alice.buyIn(500); // Big stack (will win)
+    bob.buyIn(50); // Small stack (will be eliminated)
+    charlie.buyIn(100); // Medium stack (will be eliminated)
+
+    // Now add players to table with their chips already set
     table.addPlayer(alice);
     table.addPlayer(bob);
     table.addPlayer(charlie);
-
-    // Set different chip amounts - Alice will win, Bob and Charlie will be eliminated
-    alice.chips = 500; // Big stack (will win)
-    bob.chips = 50; // Small stack (will be eliminated)
-    charlie.chips = 100; // Medium stack (will be eliminated)
 
     // Check initial standings - all should be active
     const initialStandings = getFormattedStandings(table.players);
