@@ -4,6 +4,8 @@ import { Deck } from './Deck.js';
 import { PotManager } from './PotManager.js';
 import { HandEvaluator } from './HandEvaluator.js';
 import { Player } from '../Player.js';
+import { gameStatePool, actionPool } from '../utils/performance.js';
+import { monitor } from '../utils/monitoring.js';
 
 /**
  * Core game engine that handles Texas Hold'em game logic
@@ -540,6 +542,8 @@ export class GameEngine extends WildcardEventEmitter {
    * Handle a player action
    */
   handlePlayerAction(player, action) {
+    const endTimer = monitor.startTimer('handlePlayerAction');
+    
     // Validate the action before processing
     const validationResult = this.validateAction(player, action);
     if (!validationResult.valid) {
@@ -553,6 +557,7 @@ export class GameEngine extends WildcardEventEmitter {
 
       // Re-prompt the same player (don't mark as acted, don't move to next player)
       this.promptNextPlayer();
+      endTimer();
       return;
     }
 
@@ -590,6 +595,7 @@ export class GameEngine extends WildcardEventEmitter {
 
     // If hand ended (e.g., all but one folded), don't continue
     if (handEnded) {
+      endTimer();
       return;
     }
 
@@ -604,6 +610,8 @@ export class GameEngine extends WildcardEventEmitter {
       this.moveToNextActivePlayer();
       this.promptNextPlayer();
     }
+    
+    endTimer();
   }
 
   /**
@@ -1108,13 +1116,25 @@ export class GameEngine extends WildcardEventEmitter {
    * Build current game state
    */
   buildGameState() {
-    const pot = this.potManager.getTotal();
-    const currentBet = this.getCurrentBet();
-    const currentPlayerId = this.players[this.currentPlayerIndex].id;
-
-    const players = {};
+    const endTimer = monitor.startTimer('buildGameState');
+    
+    // Use object pool for game state
+    const gameState = gameStatePool.acquire();
+    
+    // Update pooled object with current values
+    gameState.phase = this.phase;
+    gameState.communityCards = [...this.board];
+    gameState.pot = this.potManager.getTotal();
+    gameState.currentBet = this.getCurrentBet();
+    gameState.currentPlayer = this.players[this.currentPlayerIndex].id;
+    
+    // Clear and rebuild players object
+    for (const key in gameState.players) {
+      delete gameState.players[key];
+    }
+    
     for (const player of this.players) {
-      players[player.id] = {
+      gameState.players[player.id] = {
         id: player.id,
         chips: player.chips,
         bet: player.bet,
@@ -1124,14 +1144,8 @@ export class GameEngine extends WildcardEventEmitter {
       };
     }
 
-    return {
-      phase: this.phase,
-      communityCards: [...this.board],
-      pot,
-      currentBet,
-      currentPlayer: currentPlayerId,
-      players,
-    };
+    endTimer();
+    return gameState;
   }
 
   /**
@@ -1141,5 +1155,14 @@ export class GameEngine extends WildcardEventEmitter {
     this.phase = GamePhase.ENDED;
     this.emit('game:aborted');
     this.removeAllListeners();
+  }
+  
+  /**
+   * Release a game state back to the pool
+   */
+  releaseGameState(gameState) {
+    if (gameState && typeof gameState === 'object') {
+      gameStatePool.release(gameState);
+    }
   }
 }

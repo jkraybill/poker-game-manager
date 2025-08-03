@@ -1,6 +1,10 @@
 import pkg from 'pokersolver';
 const { Hand } = pkg;
 import { HandRank } from '../types/index.js';
+import { LRUCache, createCardKey } from '../utils/performance.js';
+
+// Global cache for hand evaluations
+const evaluationCache = new LRUCache(10000);
 
 /**
  * Evaluates and compares poker hands using pokersolver library
@@ -46,6 +50,13 @@ export class HandEvaluator {
       throw new Error('Need at least 5 cards to evaluate');
     }
 
+    // Check cache first
+    const cacheKey = createCardKey(cards);
+    const cached = evaluationCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     // Convert cards to pokersolver format
     const pokersolverCards = cards.map((card) =>
       this.cardToPokersolverFormat(card),
@@ -65,7 +76,7 @@ export class HandEvaluator {
       : this.mapPokersolverRank(solved.name);
 
     // Convert back to our format
-    return {
+    const result = {
       rank: mappedRank,
       kickers: solved.cards.map((card) => {
         // Extract rank value from pokersolver card
@@ -86,6 +97,11 @@ export class HandEvaluator {
       }),
       description: solved.descr,
     };
+
+    // Cache the result
+    evaluationCache.set(cacheKey, result);
+
+    return result;
   }
 
   /**
@@ -257,5 +273,22 @@ export class HandEvaluator {
       A: 14,
     };
     return values[rank] || values[rank.toUpperCase()] || 0;
+  }
+
+  /**
+   * Clear the evaluation cache (useful for testing)
+   */
+  static clearCache() {
+    evaluationCache.clear();
+  }
+
+  /**
+   * Get cache statistics
+   */
+  static getCacheStats() {
+    return {
+      size: evaluationCache.size,
+      maxSize: evaluationCache.maxSize,
+    };
   }
 }
