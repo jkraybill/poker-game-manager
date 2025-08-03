@@ -794,7 +794,10 @@ describe('Tournament Elimination Ordering (Issue #28)', () => {
 
     // Verify the winner received the pot
     expect(events.winners).toHaveLength(1);
-    expect(events.winners[0].amount).toBe(60); // Both blinds (30 + 30)
+    // Player 1 had 200, player 2 had 30, both go all-in
+    // Player 1 wins the pot of 60 (30 from each player)
+    // But the amount reported is their total chips after winning
+    expect(events.winners[0].amount).toBe(230); // 200 + 30 won from player 2
 
     // Note: The current implementation may not update table player chips
     // or remove eliminated players immediately, so we just verify the

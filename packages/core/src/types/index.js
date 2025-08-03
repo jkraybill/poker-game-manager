@@ -89,8 +89,6 @@ export const HandRank = {
  * @property {Object} [blinds] - Blind structure
  * @property {number} [blinds.small=10] - Small blind
  * @property {number} [blinds.big=20] - Big blind
- * @property {number} [minBuyIn=1000] - Minimum buy-in
- * @property {number} [maxBuyIn=10000] - Maximum buy-in
  * @property {number} [timeout=30000] - Action timeout in ms
  */
 

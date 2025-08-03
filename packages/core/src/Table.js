@@ -16,8 +16,6 @@ export class Table extends WildcardEventEmitter {
       maxPlayers: config.maxPlayers || 9,
       minPlayers: config.minPlayers || 2,
       blinds: config.blinds || { small: 10, big: 20 },
-      minBuyIn: config.minBuyIn || 1000,
-      maxBuyIn: config.maxBuyIn || 10000,
       timeout: config.timeout || 30000,
       ...config,
     };
@@ -56,8 +54,8 @@ export class Table extends WildcardEventEmitter {
       throw new Error('Player already at table');
     }
 
-    // Set player's initial chips
-    player.buyIn(this.config.minBuyIn);
+    // Player should already have chips set before being added to the table
+    // Tables no longer enforce buy-in limits - that's a tournament/room policy
 
     const seatNumber = this.getNextAvailableSeat();
 

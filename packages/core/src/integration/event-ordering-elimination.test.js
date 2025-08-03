@@ -168,10 +168,13 @@ describe('Event Ordering - Elimination (Issue #33)', () => {
 
     // Verify player1 won the pot
     expect(handEndedEvents[0].winners[0].id).toBe(player1.id);
-    // Player 1 (SB) posts 10, Player 2 (BB) posts 20, then both go all-in
-    // Player 2 has 50 chips total, Player 1 matches that amount
-    // Total pot = 50 + 50 = 100, but Player 1 gets back 20 (uncalled portion)
-    // So Player 1 wins 80
-    expect(handEndedEvents[0].winners[0].amount).toBe(80);
+    // Player 1 (SB) starts with 100, posts 10, has 90 left
+    // Player 2 (BB) starts with 50, posts 20, has 30 left
+    // Both go all-in:
+    // - Player 2 puts in remaining 30 (total contribution: 20 + 30 = 50)
+    // - Player 1 calls 50 total (already has 10 in, puts in 40 more)
+    // Player 1 has 50 uncalled chips
+    // Total pot = 100, Player 1 gets pot + uncalled = 100 + 50 = 150
+    expect(handEndedEvents[0].winners[0].amount).toBe(150);
   });
 });

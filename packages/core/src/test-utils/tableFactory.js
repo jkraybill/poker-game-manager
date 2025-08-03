@@ -107,6 +107,16 @@ export function createTestTable(config = 'standard', overrides = {}) {
 
   const table = manager.createTable(finalConfig);
 
+  // Override addPlayer to ensure players have chips
+  const originalAddPlayer = table.addPlayer.bind(table);
+  table.addPlayer = function (player) {
+    // If player doesn't have chips, give them the default buy-in
+    if (player.chips === 0) {
+      player.buyIn(finalConfig.minBuyIn || 1000);
+    }
+    return originalAddPlayer(player);
+  };
+
   return {
     manager,
     table,
@@ -138,13 +148,15 @@ export function createChipStackTable(
 
   // Override addPlayer to set custom chip amounts
   table.addPlayer = function (player) {
-    const result = originalAddPlayer(player);
-    const playerData = this.players.get(player.id);
-
-    if (playerData && chipAmounts[playerIndex] !== undefined) {
-      playerData.chips = chipAmounts[playerIndex];
+    // Set player chips before adding to table
+    if (chipAmounts[playerIndex] !== undefined) {
+      player.buyIn(chipAmounts[playerIndex]);
+    } else {
+      // Default buy-in if not specified
+      player.buyIn(finalConfig.minBuyIn || 1000);
     }
-
+    
+    const result = originalAddPlayer(player);
     playerIndex++;
     return result;
   };

@@ -67,10 +67,10 @@ describe('Simple Split Pot Test (v2)', () => {
   });
 
   it('should handle 2-player all-in split pot scenario', async () => {
-    // Create heads-up table
+    // Create heads-up table with 100 chips each
     const result = createHeadsUpTable({
-      minBuyIn: 100,
-      maxBuyIn: 100,
+      buttonChips: 100,
+      bbChips: 100,
       dealerButton: 0,
     });
     manager = result.manager;
