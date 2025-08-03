@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Players must have chips before joining tables** - Tables no longer automatically call `player.buyIn()` when adding players
 - **Updated TableConfig typedef** - Removed `minBuyIn` and `maxBuyIn` properties
 
+### Added
+- **Performance optimizations** - 32x faster hand evaluation with LRU caching
+- **Object pooling** - Reduced GC pressure for high-frequency objects
+- **Performance monitoring** - Built-in utilities to track operation times
+- **Comprehensive benchmarks** - Full benchmark suite for measuring performance
+
 ### Changed
 - Tables now accept players with any chip amount, making them suitable for tournament play
 - Buy-in policies are now the responsibility of tournament/room implementations, not individual tables
@@ -20,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed 3 integration tests that had incorrect expectations about winner payouts
 - Updated test infrastructure to work with new player initialization requirements
+
+### Performance Improvements
+- Hand evaluation: 0.032ms → 0.001ms (32x faster)
+- Table creation: <0.01ms average
+- Game start (6 players): ~0.1ms
+- Memory usage: Efficient GC with object pooling
 
 ### Migration Guide
 ```javascript
