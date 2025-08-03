@@ -34,8 +34,6 @@ describe('Standings Display (Issue #34) - v2', () => {
   it('should separate active and eliminated players in standings', async () => {
     // Create table
     const result = createTestTable('standard', {
-      minBuyIn: 100,
-      maxBuyIn: 500,
       minPlayers: 3,
       dealerButton: 0,
     });
@@ -64,14 +62,14 @@ describe('Standings Display (Issue #34) - v2', () => {
       strategy: allInStrategy,
     });
 
+    // Set different chip amounts - Alice will win, Bob and Charlie will be eliminated
+    alice.buyIn(500); // Big stack (will win)
+    bob.buyIn(50); // Small stack (will be eliminated)
+    charlie.buyIn(100); // Medium stack (will be eliminated)
+
     table.addPlayer(alice);
     table.addPlayer(bob);
     table.addPlayer(charlie);
-
-    // Set different chip amounts - Alice will win, Bob and Charlie will be eliminated
-    alice.chips = 500; // Big stack (will win)
-    bob.chips = 50; // Small stack (will be eliminated)
-    charlie.chips = 100; // Medium stack (will be eliminated)
 
     // Check initial standings - all should be active
     const initialStandings = getFormattedStandings(table.players);
@@ -161,11 +159,9 @@ describe('Standings Display (Issue #34) - v2', () => {
   });
 
   it('should handle all players eliminated scenario', async () => {
-    // Create table with small buy-ins
+    // Create table with small blinds
     const result = createTestTable('standard', {
       blinds: { small: 5, big: 10 },
-      minBuyIn: 30,
-      maxBuyIn: 100,
       minPlayers: 2,
       dealerButton: 0,
     });
@@ -189,12 +185,12 @@ describe('Standings Display (Issue #34) - v2', () => {
       strategy: allInStrategy,
     });
 
+    // Set very small stacks to force elimination
+    player1.buyIn(30);
+    player2.buyIn(30);
+
     table.addPlayer(player1);
     table.addPlayer(player2);
-
-    // Set very small stacks to force elimination
-    player1.chips = 30;
-    player2.chips = 30;
 
     // Track eliminated players
     const eliminatedPlayers = [];
