@@ -10,11 +10,15 @@ What's your kicker? This library handles the poker basics pretty well.
 
 ## ✨ What's New in v2.0
 
-Here's what we've got working:
+### Breaking Changes 🚨
+- **Tables no longer enforce buy-in limits** - That's a tournament/room policy now
+- **Players must have chips before joining** - No more automatic buy-ins
+- **Removed minBuyIn/maxBuyIn from tables** - Use any chip amount you want
 
+### What's Working:
 - ✅ **Texas Hold'em Rules** - Dead button, side pots, the usual stuff
-- ✅ **267 Tests** - I've seen better, but these pass
-- ✅ **Tournament Compliance** - Follows the rules like it should
+- ✅ **239 Tests** - All passing after the v2.0 changes
+- ✅ **Tournament Ready** - Tables accept any stack size now
 - ✅ **Event-Driven** - Woof woof! Events fire when things happen
 - ✅ **Clean Code** - No legacy junk cluttering things up
 - ✅ **Performance** - Fast enough for what you need
@@ -87,9 +91,14 @@ const table = manager.createTable({
   maxPlayers: 6
 });
 
-// Add some players
-table.addPlayer(new MyPlayer('Alice'));
-table.addPlayer(new MyPlayer('Bob'));
+// Add some players (v2.0: must set chips first!)
+const alice = new MyPlayer('Alice');
+alice.buyIn(1000); // Set chips before adding
+table.addPlayer(alice);
+
+const bob = new MyPlayer('Bob');
+bob.buyIn(1000);
+table.addPlayer(bob);
 
 // Listen for results - Woof woof!
 table.on('hand:ended', (result) => {
