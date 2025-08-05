@@ -1128,7 +1128,7 @@ export class GameEngine extends WildcardEventEmitter {
       currentPlayer: this.players[this.currentPlayerIndex].id,
       bigBlind: this.config.bigBlind,
       smallBlind: this.config.smallBlind,
-      players: {}
+      players: {},
     };
     
     // Add player states
@@ -1160,7 +1160,7 @@ export class GameEngine extends WildcardEventEmitter {
    * Release a game state back to the pool
    * @deprecated No longer using object pool for game state
    */
-  releaseGameState(gameState) {
+  releaseGameState(_gameState) {
     // No-op: we're not using the pool anymore to avoid reset issues
     // Game state objects will be garbage collected normally
   }
