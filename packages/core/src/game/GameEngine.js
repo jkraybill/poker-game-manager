@@ -4,7 +4,7 @@ import { Deck } from './Deck.js';
 import { PotManager } from './PotManager.js';
 import { HandEvaluator } from './HandEvaluator.js';
 import { Player } from '../Player.js';
-import { gameStatePool } from '../utils/performance.js';
+// import { gameStatePool } from '../utils/performance.js'; // Not using pool to avoid reset issues
 import { monitor } from '../utils/monitoring.js';
 
 /**
@@ -1118,23 +1118,20 @@ export class GameEngine extends WildcardEventEmitter {
   buildGameState() {
     const endTimer = monitor.startTimer('buildGameState');
     
-    // Use object pool for game state
-    const gameState = gameStatePool.acquire();
+    // Create a fresh game state object instead of using the pool
+    // This prevents issues with the object being reset while still in use
+    const gameState = {
+      phase: this.phase,
+      communityCards: [...this.board],
+      pot: this.potManager.getTotal(),
+      currentBet: this.getCurrentBet(),
+      currentPlayer: this.players[this.currentPlayerIndex].id,
+      bigBlind: this.config.bigBlind,
+      smallBlind: this.config.smallBlind,
+      players: {}
+    };
     
-    // Update pooled object with current values
-    gameState.phase = this.phase;
-    gameState.communityCards = [...this.board];
-    gameState.pot = this.potManager.getTotal();
-    gameState.currentBet = this.getCurrentBet();
-    gameState.currentPlayer = this.players[this.currentPlayerIndex].id;
-    gameState.bigBlind = this.config.bigBlind;
-    gameState.smallBlind = this.config.smallBlind;
-    
-    // Clear and rebuild players object
-    for (const key in gameState.players) {
-      delete gameState.players[key];
-    }
-    
+    // Add player states
     for (const player of this.players) {
       gameState.players[player.id] = {
         id: player.id,
@@ -1161,10 +1158,10 @@ export class GameEngine extends WildcardEventEmitter {
   
   /**
    * Release a game state back to the pool
+   * @deprecated No longer using object pool for game state
    */
   releaseGameState(gameState) {
-    if (gameState && typeof gameState === 'object') {
-      gameStatePool.release(gameState);
-    }
+    // No-op: we're not using the pool anymore to avoid reset issues
+    // Game state objects will be garbage collected normally
   }
 }
