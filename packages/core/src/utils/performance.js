@@ -170,6 +170,8 @@ export const gameStatePool = new ObjectPool(
     validActions: [],
     minRaise: 0,
     toCall: 0,
+    bigBlind: 0,
+    smallBlind: 0,
   }),
   (obj) => {
     obj.tableId = null;
@@ -183,5 +185,7 @@ export const gameStatePool = new ObjectPool(
     obj.validActions = [];
     obj.minRaise = 0;
     obj.toCall = 0;
+    obj.bigBlind = 0;
+    obj.smallBlind = 0;
   },
 );

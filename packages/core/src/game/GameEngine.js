@@ -1127,6 +1127,8 @@ export class GameEngine extends WildcardEventEmitter {
     gameState.pot = this.potManager.getTotal();
     gameState.currentBet = this.getCurrentBet();
     gameState.currentPlayer = this.players[this.currentPlayerIndex].id;
+    gameState.bigBlind = this.config.bigBlind;
+    gameState.smallBlind = this.config.smallBlind;
     
     // Clear and rebuild players object
     for (const key in gameState.players) {
