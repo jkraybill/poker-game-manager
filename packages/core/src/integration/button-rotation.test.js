@@ -33,8 +33,8 @@ describe('Dealer Button Rotation (Issue #36)', () => {
         conditions: [
           {
             when: () => true,
-            then: (state) => {
-              const toCall = state.currentBet - state.myState.bet;
+            then: ({ gameState, myState }) => {
+              const toCall = gameState.currentBet - myState.bet;
               // Always fold to bets, check when possible
               return toCall > 0
                 ? { action: Action.FOLD }
@@ -49,8 +49,8 @@ describe('Dealer Button Rotation (Issue #36)', () => {
         conditions: [
           {
             when: () => true,
-            then: (state) => {
-              const toCall = state.currentBet - state.myState.bet;
+            then: ({ gameState, myState }) => {
+              const toCall = gameState.currentBet - myState.bet;
               return toCall > 0
                 ? { action: Action.FOLD }
                 : { action: Action.CHECK };
@@ -64,8 +64,8 @@ describe('Dealer Button Rotation (Issue #36)', () => {
         conditions: [
           {
             when: () => true,
-            then: (state) => {
-              const toCall = state.currentBet - state.myState.bet;
+            then: ({ gameState, myState }) => {
+              const toCall = gameState.currentBet - myState.bet;
               return toCall > 0
                 ? { action: Action.FOLD }
                 : { action: Action.CHECK };
@@ -133,8 +133,8 @@ describe('Dealer Button Rotation (Issue #36)', () => {
         conditions: [
           {
             when: () => true,
-            then: (state) => {
-              const toCall = state.currentBet - state.myState.bet;
+            then: ({ gameState, myState }) => {
+              const toCall = gameState.currentBet - myState.bet;
               return toCall > 0
                 ? { action: Action.FOLD }
                 : { action: Action.CHECK };
@@ -148,8 +148,8 @@ describe('Dealer Button Rotation (Issue #36)', () => {
         conditions: [
           {
             when: () => true,
-            then: (state) => {
-              const toCall = state.currentBet - state.myState.bet;
+            then: ({ gameState, myState }) => {
+              const toCall = gameState.currentBet - myState.bet;
               return toCall > 0
                 ? { action: Action.CALL, amount: toCall }
                 : { action: Action.CHECK };
@@ -163,8 +163,8 @@ describe('Dealer Button Rotation (Issue #36)', () => {
         conditions: [
           {
             when: () => true,
-            then: (state) => {
-              const toCall = state.currentBet - state.myState.bet;
+            then: ({ gameState, myState }) => {
+              const toCall = gameState.currentBet - myState.bet;
               return toCall > 0
                 ? { action: Action.FOLD }
                 : { action: Action.CHECK };
@@ -178,8 +178,8 @@ describe('Dealer Button Rotation (Issue #36)', () => {
         conditions: [
           {
             when: () => true,
-            then: (state) => {
-              const toCall = state.currentBet - state.myState.bet;
+            then: ({ gameState, myState }) => {
+              const toCall = gameState.currentBet - myState.bet;
               return toCall > 0
                 ? { action: Action.FOLD }
                 : { action: Action.CHECK };
