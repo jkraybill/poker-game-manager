@@ -5,6 +5,21 @@ All notable changes to the Poker Game Manager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.4] - 2025-08-06
+
+### Added
+- **Integration test for all-in scenarios** - Added comprehensive test for scenarios where all active players are all-in
+- **Automatic betting round termination** - Game now correctly ends betting rounds when no further action is possible
+
+### Fixed
+- **All-in betting logic** - Fixed issue where betting rounds continued unnecessarily when all active players were all-in
+- **Game flow optimization** - Eliminated redundant betting rounds in all-in scenarios, proceeding directly to showdown
+
+### Testing
+- Added `all-in-no-further-betting.test.js` integration test
+- Validates proper pot distribution when no further betting action is possible
+- Ensures game proceeds efficiently through all-in scenarios
+
 ## [2.1.1] - 2025-08-03
 
 ### Fixed
@@ -93,6 +108,7 @@ In tournament poker, starting stacks vary widely (10,000 to 100,000+ chips). Tab
 - Performance optimized (sub-millisecond hand evaluation)
 - ESM and CommonJS dual package support
 
+[2.1.4]: https://github.com/jkraybill/poker-game-manager/compare/v2.1.1...v2.1.4
 [2.1.1]: https://github.com/jkraybill/poker-game-manager/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/jkraybill/poker-game-manager/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/jkraybill/poker-game-manager/compare/v1.0.0...v2.0.0
