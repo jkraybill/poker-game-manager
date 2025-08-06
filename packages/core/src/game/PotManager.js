@@ -263,6 +263,16 @@ export class PotManager extends EventEmitter {
   }
 
   /**
+   * Clear all pot amounts after winnings have been distributed
+   * This completes the double-entry bookkeeping transaction
+   */
+  clearAllPots() {
+    for (const pot of this.pots) {
+      pot.amount = 0;
+    }
+  }
+
+  /**
    * Reset for a new hand
    */
   reset() {

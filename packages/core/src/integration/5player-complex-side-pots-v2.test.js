@@ -186,10 +186,10 @@ describe('5-Player Complex Side Pots (v2)', () => {
     expect(potsToCheck.length).toBeGreaterThanOrEqual(1);
     console.log('Side pots created:', potsToCheck.length);
 
-    // Verify total pot amount is reasonable
+    // After fix: Pots should be cleared after distribution (chip conservation fix)
     const totalPotAmount = potsToCheck.reduce((sum, pot) => sum + pot.amount, 0);
-    expect(totalPotAmount).toBeGreaterThan(0);
-    console.log('Total pot amount:', totalPotAmount);
+    expect(totalPotAmount).toBe(0);  // Fixed: Pots cleared after distribution
+    console.log('Total pot amount after distribution:', totalPotAmount);
 
     // Verify winners were determined
     expect(winners.length).toBeGreaterThan(0);

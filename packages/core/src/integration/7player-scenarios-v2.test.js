@@ -322,12 +322,12 @@ describe('7-Player Poker Scenarios (v2)', () => {
     if (potsToCheck.length > 0) {
       expect(potsToCheck.length).toBeGreaterThanOrEqual(1);
 
-      // Calculate total from pots
+      // After fix: Pots should be cleared after distribution (chip conservation fix)
       const calculatedTotal = potsToCheck.reduce(
         (sum, pot) => sum + pot.amount,
         0,
       );
-      expect(calculatedTotal).toBeGreaterThan(0);
+      expect(calculatedTotal).toBe(0);  // Fixed: Pots cleared after distribution
     } else {
       // If we don't have detailed pot info, at least verify we have a total pot
       expect(totalPot).toBeGreaterThan(0);

@@ -317,9 +317,9 @@ describe('6-Player Poker Scenarios (v2)', () => {
     if (sidePots.length > 0) {
       expect(sidePots.length).toBeGreaterThanOrEqual(1);
 
-      // Calculate total from side pots
+      // After fix: Side pots should be cleared after distribution (chip conservation fix)
       const sidePotTotal = sidePots.reduce((sum, pot) => sum + pot.amount, 0);
-      expect(sidePotTotal).toBeGreaterThan(0);
+      expect(sidePotTotal).toBe(0);  // Fixed: Pots cleared after distribution
 
       // Verify pot integrity
       const totalChipsInPlay = players.reduce(

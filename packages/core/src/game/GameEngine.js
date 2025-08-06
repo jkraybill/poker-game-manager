@@ -1069,6 +1069,9 @@ export class GameEngine extends WildcardEventEmitter {
         total: player.chips,
       });
     }
+
+    // Clear all pots after distribution to complete double-entry bookkeeping
+    this.potManager.clearAllPots();
   }
 
   /**
