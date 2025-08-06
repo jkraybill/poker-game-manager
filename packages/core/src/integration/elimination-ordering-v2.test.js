@@ -71,20 +71,15 @@ describe('Tournament Elimination Ordering (Issue #28) - v2', () => {
     });
 
     // Create all-in strategy
-    const allInStrategy = (gameState, playerId) => {
-      const myState = gameState.players[playerId];
+    const allInStrategy = ({ myState }) => {
       if (myState.chips > 0) {
         return {
-          playerId,
           action: Action.ALL_IN,
           amount: myState.chips,
-          timestamp: Date.now(),
         };
       }
       return {
-        playerId,
         action: Action.CHECK,
-        timestamp: Date.now(),
       };
     };
 
@@ -248,20 +243,15 @@ describe('Tournament Elimination Ordering (Issue #28) - v2', () => {
     });
 
     // All-in strategy
-    const allInStrategy = (gameState, playerId) => {
-      const myState = gameState.players[playerId];
+    const allInStrategy = ({ myState }) => {
       if (myState.chips > 0) {
         return {
-          playerId,
           action: Action.ALL_IN,
           amount: myState.chips,
-          timestamp: Date.now(),
         };
       }
       return {
-        playerId,
         action: Action.CHECK,
-        timestamp: Date.now(),
       };
     };
 

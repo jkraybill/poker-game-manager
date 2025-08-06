@@ -50,18 +50,17 @@ describe('Issue #32 - Betting Reopening Rules (v2)', () => {
     });
 
     // Strategy: Player 1 raises to 300
-    const p1Strategy = (state, playerId) => {
+    const p1Strategy = ({ gameState, myState }) => {
       actionCount++;
       console.log(`\n--- Action ${actionCount} ---`);
-      const myState = state.players[playerId];
-      const toCall = state.currentBet - myState.bet;
+      const toCall = gameState.currentBet - myState.bet;
 
       console.log(
-        `Player p1 to act. Current bet: ${state.currentBet}, My bet: ${myState.bet}, Chips: ${myState.chips}`,
+        `Player p1 to act. Current bet: ${gameState.currentBet}, My bet: ${myState.bet}, Chips: ${myState.chips}`,
       );
-      console.log(`Valid actions: ${state.validActions?.join(', ')}`);
+      console.log(`Valid actions: ${gameState.validActions?.join(', ')}`);
       console.log(
-        `Can raise: ${state.validActions?.includes(Action.RAISE) ? 'YES' : 'NO'}`,
+        `Can raise: ${gameState.validActions?.includes(Action.RAISE) ? 'YES' : 'NO'}`,
       );
       console.log(`Round actions so far: ${roundActions.length}`);
 
@@ -71,84 +70,68 @@ describe('Issue #32 - Betting Reopening Rules (v2)', () => {
       // p2 (position 1) = SB
       // p3 (position 2) = BB
       // So p1 acts first after blinds are posted
-      if (state.currentBet === 100 && !myState.hasActed) {
+      if (gameState.currentBet === 100 && !myState.hasActed) {
         console.log('p1 decides: RAISE 300');
         return {
-          playerId,
           action: Action.RAISE,
           amount: 300,
-          timestamp: Date.now(),
         };
       }
 
       // If we get another turn and there's more to call
       if (toCall > 0) {
         console.log(
-          `P1 facing bet of ${state.currentBet}, need to call ${toCall}`,
+          `P1 facing bet of ${gameState.currentBet}, need to call ${toCall}`,
         );
 
         // Check if we can raise using validActions
         if (
-          state.validActions.includes(Action.RAISE) &&
+          gameState.validActions.includes(Action.RAISE) &&
           myState.chips > toCall * 2
         ) {
           console.log('P1: Raising is valid, attempting raise');
           return {
-            playerId,
             action: Action.RAISE,
-            amount: state.currentBet * 2,
-            timestamp: Date.now(),
+            amount: gameState.currentBet * 2,
           };
         }
 
         // Otherwise just call
         console.log('P1: Cannot raise (not in valid actions), calling instead');
         return {
-          playerId,
           action: Action.CALL,
           amount: toCall,
-          timestamp: Date.now(),
         };
       }
 
       return {
-        playerId,
         action: Action.CHECK,
-        timestamp: Date.now(),
       };
     };
 
     // Strategy: Player 2 calls
-    const p2Strategy = (state, playerId) => {
-      const myState = state.players[playerId];
-      const toCall = state.currentBet - myState.bet;
+    const p2Strategy = ({ gameState, myState }) => {
+      const toCall = gameState.currentBet - myState.bet;
 
       if (toCall > 0) {
         return {
-          playerId,
           action: Action.CALL,
           amount: toCall,
-          timestamp: Date.now(),
         };
       }
 
       return {
-        playerId,
         action: Action.CHECK,
-        timestamp: Date.now(),
       };
     };
 
     // Strategy: Player 3 goes all-in
-    const p3Strategy = (state, playerId) => {
-      const myState = state.players[playerId];
+    const p3Strategy = ({ gameState, myState }) => {
 
       // Always go all-in
       return {
-        playerId,
         action: Action.ALL_IN,
         amount: myState.chips,
-        timestamp: Date.now(),
       };
     };
 
