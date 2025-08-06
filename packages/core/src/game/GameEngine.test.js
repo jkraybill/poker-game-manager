@@ -114,11 +114,17 @@ describe('GameEngine', () => {
 
   describe('player actions', () => {
     beforeEach(() => {
-      // Reset all mocks before each test
+      // Clear mock call history but keep default implementation
       mockPlayers.forEach((mp) => {
-        mp.player.getAction.mockReset();
-        mp.player.receivePrivateCards.mockReset();
-        mp.player.receiveMessage.mockReset();
+        mp.player.getAction.mockClear();
+        mp.player.receivePrivateCards.mockClear();
+        mp.player.receiveMessage.mockClear();
+        // Re-apply default implementation after clearing
+        mp.player.getAction.mockResolvedValue({
+          action: Action.FOLD,
+          playerId: mp.player.id,
+          timestamp: Date.now(),
+        });
       });
       gameEngine.start();
     });
