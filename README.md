@@ -8,21 +8,27 @@ What's your kicker? This library handles the poker basics pretty well.
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
 [![GitHub Package](https://img.shields.io/badge/npm-GitHub%20Packages-blue)](https://github.com/jkraybill/poker-game-manager/packages)
 
-## ✨ What's New in v2.0
+## ✨ What's New in v2.1.6
 
-### Breaking Changes 🚨
+### Strict Action Validation 🚨
+- **Action enum is now mandatory** - String actions like 'FOLD' will crash immediately
+- **No auto-folding on errors** - Invalid actions throw fatal errors (this is a simulation framework!)
+- **Developer errors crash fast** - Undefined/null actions are fatal, not silently handled
+
+### Previous v2.0 Breaking Changes
 - **Tables no longer enforce buy-in limits** - That's a tournament/room policy now
 - **Players must have chips before joining** - No more automatic buy-ins
 - **Removed minBuyIn/maxBuyIn from tables** - Use any chip amount you want
 
 ### What's Working:
 - ✅ **Texas Hold'em Rules** - Dead button, side pots, the usual stuff
-- ✅ **239 Tests** - All passing after the v2.0 changes
+- ✅ **244 Tests** - All passing with strict validation
 - ✅ **Tournament Ready** - Tables accept any stack size now
 - ✅ **Event-Driven** - Woof woof! Events fire when things happen
 - ✅ **Clean Code** - No legacy junk cluttering things up
 - ✅ **Lightning Fast** - 32x faster hand evaluation with caching
 - ✅ **Memory Efficient** - Object pooling reduces GC pressure
+- ✅ **Strict Validation** - Invalid actions crash immediately (no silent failures!)
 
 ## 🚀 Quick Start
 
@@ -70,7 +76,7 @@ npm run build  # Build for distribution
 
 ### Your First Game
 ```javascript
-import { PokerGameManager, Player } from '@jkraybill/poker-game-manager';
+import { PokerGameManager, Player, Action } from '@jkraybill/poker-game-manager';
 
 // Create a simple player - nothing fancy
 class MyPlayer extends Player {
@@ -78,10 +84,11 @@ class MyPlayer extends Player {
     const { validActions, toCall } = gameState;
     
     // Basic strategy: What's your kicker?
-    if (validActions.includes('CALL') && toCall <= 20) {
-      return { action: 'CALL' };
+    // IMPORTANT: Must use Action enum - strings will crash!
+    if (validActions.includes(Action.CALL) && toCall <= 20) {
+      return { action: Action.CALL };
     }
-    return { action: 'FOLD' }; // I've seen better hands
+    return { action: Action.FOLD }; // I've seen better hands
   }
 }
 

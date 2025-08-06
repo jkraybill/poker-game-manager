@@ -5,6 +5,37 @@ All notable changes to the Poker Game Manager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.6] - 2025-08-06
+
+### Breaking Changes 🚨
+- **Strict Action enum enforcement** - String actions like 'FOLD' or 'allIn' now throw fatal errors
+- **No auto-folding on invalid actions** - Any invalid action crashes immediately (proper for simulation framework)
+- **Undefined/null actions are fatal** - Players must always return valid action objects
+
+### Fixed
+- **Infinite loop bug** - Fixed issue where invalid string actions caused infinite re-prompting loops
+- **Action validation** - All actions now strictly validated against Action enum values
+- **Test infrastructure** - Fixed ConditionalPlayer API usage in multiple test files
+
+### Changed
+- **Error handling philosophy** - Changed from production-style (auto-fold) to simulation-style (crash on error)
+- **Validation timing** - Actions validated immediately, not after processing
+- **Test mocks** - Updated all mock players to return valid Action enum values
+
+### Technical Details
+- Players MUST import and use the Action enum: `import { Action } from '@jkraybill/poker-game-manager'`
+- Valid actions: `Action.FOLD`, `Action.CHECK`, `Action.CALL`, `Action.BET`, `Action.RAISE`, `Action.ALL_IN`
+- String actions like `'FOLD'` or `'allIn'` will throw: `Invalid action type: "allIn". Must use Action enum values`
+
+## [2.1.5] - 2025-08-06
+
+### Fixed
+- **Chip conservation bug** - Resolved issue where pot distribution could violate chip conservation
+- **Winner payout calculation** - Fixed edge case in multi-way pot winner determination
+
+### Added
+- **Additional pot distribution tests** - Enhanced test coverage for complex pot scenarios
+
 ## [2.1.4] - 2025-08-06
 
 ### Added
