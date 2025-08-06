@@ -414,6 +414,14 @@ export class GameEngine extends WildcardEventEmitter {
     const currentBet = this.getCurrentBet();
     const toCall = currentBet - player.bet;
 
+    // Check if action is defined
+    if (!action || !action.action) {
+      throw new Error(
+        `Invalid action: action object is ${action ? 'missing action property' : 'undefined'}. ` +
+        'Expected format: { action: Action.FOLD, amount?: number }'
+      );
+    }
+
     // First, enforce that only Action enum values are accepted
     const validActionValues = Object.values(Action);
     if (!validActionValues.includes(action.action)) {

@@ -51,9 +51,9 @@ describe('Dead Button Advanced Scenarios', () => {
         name: 'Player A',
         conditions: [
           {
-            condition: () => true,
-            action: (state) => {
-              const toCall = state.currentBet - state.myState.bet;
+            when: () => true,
+            then: ({ gameState, myState }) => {
+              const toCall = gameState.currentBet - myState.bet;
               return toCall > 0
                 ? { action: Action.CALL, amount: toCall }
                 : { action: Action.CHECK };
@@ -66,9 +66,9 @@ describe('Dead Button Advanced Scenarios', () => {
         name: 'Player B',
         conditions: [
           {
-            condition: () => true,
-            action: (state) => {
-              const toCall = state.currentBet - state.myState.bet;
+            when: () => true,
+            then: ({ gameState, myState }) => {
+              const toCall = gameState.currentBet - myState.bet;
               return toCall > 0
                 ? { action: Action.CALL, amount: toCall }
                 : { action: Action.CHECK };
@@ -81,9 +81,9 @@ describe('Dead Button Advanced Scenarios', () => {
         name: 'Player C',
         conditions: [
           {
-            condition: () => true,
-            action: (state) => {
-              const toCall = state.currentBet - state.myState.bet;
+            when: () => true,
+            then: ({ gameState, myState }) => {
+              const toCall = gameState.currentBet - myState.bet;
               return toCall > 0
                 ? { action: Action.CALL, amount: toCall }
                 : { action: Action.CHECK };
@@ -228,9 +228,9 @@ describe('Dead Button Advanced Scenarios', () => {
         name: 'Player A',
         conditions: [
           {
-            condition: () => true,
-            action: (state) => {
-              const toCall = state.currentBet - state.myState.bet;
+            when: () => true,
+            then: ({ gameState, myState }) => {
+              const toCall = gameState.currentBet - myState.bet;
               return toCall > 0
                 ? { action: Action.CALL, amount: toCall }
                 : { action: Action.CHECK };
@@ -243,9 +243,9 @@ describe('Dead Button Advanced Scenarios', () => {
         name: 'Player B',
         conditions: [
           {
-            condition: () => true,
-            action: (state) => {
-              const toCall = state.currentBet - state.myState.bet;
+            when: () => true,
+            then: ({ gameState, myState }) => {
+              const toCall = gameState.currentBet - myState.bet;
               return toCall > 0
                 ? { action: Action.CALL, amount: toCall }
                 : { action: Action.CHECK };
@@ -258,9 +258,9 @@ describe('Dead Button Advanced Scenarios', () => {
         name: 'Player C',
         conditions: [
           {
-            condition: () => true,
-            action: (state) => {
-              const toCall = state.currentBet - state.myState.bet;
+            when: () => true,
+            then: ({ gameState, myState }) => {
+              const toCall = gameState.currentBet - myState.bet;
               return toCall > 0
                 ? { action: Action.CALL, amount: toCall }
                 : { action: Action.CHECK };
