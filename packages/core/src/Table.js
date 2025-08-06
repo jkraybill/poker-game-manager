@@ -133,14 +133,15 @@ export class Table extends WildcardEventEmitter {
 
   /**
    * Start a new game if conditions are met
+   * @returns {boolean} True if game started successfully, false otherwise
    */
   tryStartGame() {
     if (this.state !== TableState.WAITING) {
-      return;
+      return false;
     }
 
     if (this.players.size < this.config.minPlayers) {
-      return;
+      return false;
     }
 
     this.state = TableState.IN_PROGRESS;
@@ -150,6 +151,12 @@ export class Table extends WildcardEventEmitter {
     this.handStartingChips.clear();
     for (const [playerId, playerData] of this.players.entries()) {
       this.handStartingChips.set(playerId, playerData.player.chips);
+    }
+
+    // Track chip counts before starting (for blind refund if needed)
+    const chipSnapshot = new Map();
+    for (const [playerId, playerData] of this.players.entries()) {
+      chipSnapshot.set(playerId, playerData.player.chips);
     }
 
     try {
@@ -229,14 +236,29 @@ export class Table extends WildcardEventEmitter {
 
       // Clear custom deck after use
       this.customDeck = null;
+      
+      // Game started successfully
+      return true;
     } catch (error) {
-      // If game fails to start, revert state
+      // If game fails to start, revert state and refund blinds
       this.state = TableState.WAITING;
+      
+      // Refund blinds by restoring chip counts
+      for (const [playerId, originalChips] of chipSnapshot.entries()) {
+        const playerData = this.players.get(playerId);
+        if (playerData) {
+          playerData.player.chips = originalChips;
+        }
+      }
+      
       this.gameEngine = null;
       this.emit('game:error', {
         tableId: this.id,
         error: error.message,
       });
+      
+      // Game failed to start
+      return false;
     }
   }
 

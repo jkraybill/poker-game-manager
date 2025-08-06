@@ -5,6 +5,21 @@ All notable changes to the Poker Game Manager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.7] - 2025-08-06
+
+### Fixed
+- **Critical chip conservation bug** - Fixed issue where blinds were deducted but never refunded when `tryStartGame()` failed
+- **Return value for tryStartGame()** - Method now properly returns `true` on success and `false` on failure
+
+### Changed
+- **Blind refund mechanism** - Added chip snapshot and restoration when game fails to start
+- **API improvement** - `tryStartGame()` now returns boolean to indicate success/failure
+
+### Technical Details
+- When `GameEngine.start()` throws an error, all player chips are restored to pre-blind values
+- Ensures perfect chip conservation in all scenarios
+- Fixes issue reported by pokersim team where chips were lost in multi-table setups
+
 ## [2.1.6] - 2025-08-06
 
 ### Breaking Changes 🚨
