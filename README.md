@@ -179,7 +179,23 @@ npm run test:coverage              # See what we're testing
 
 # Build it
 npm run build                      # Creates dist/ folder
+
+# 🚨 NEVER manually publish - CI handles releases!
+# ❌ npm publish                   # DON'T DO THIS!
+# ✅ git tag v2.x.x && git push origin v2.x.x  # Triggers CI release
 ```
+
+### 📦 Publishing & Releases
+
+**⚠️ Important:** Never run `npm publish` manually! This causes CI conflicts.
+
+The release process is fully automated:
+1. Push changes to `master` and wait for CI ✅
+2. Update `package.json` version and commit  
+3. Create and push a git tag: `git tag v2.x.x && git push origin v2.x.x`
+4. GitHub Actions automatically publishes to GitHub Packages
+
+All releases are published to GitHub Packages (not public npm registry).
 
 ## 📋 Requirements
 

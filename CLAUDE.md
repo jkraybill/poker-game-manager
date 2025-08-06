@@ -58,13 +58,32 @@ git status
 git diff
 git add .
 git commit -m "message"
+git push origin master     # Push changes
+git tag v2.x.x             # Create release tag
+git push origin v2.x.x     # Push tag (triggers CI release)
 ```
 
 ### What Claude CANNOT Run
+- `npm publish` - ❌ NEVER run manually! Publishing is handled by CI/CD automatically when tags are pushed
 - `npm run dev` - JK runs dev server separately
 - Any server start commands
 - Direct database operations
 - Production deployments
+
+### 🚨 CRITICAL: Publishing & Release Process
+**NEVER manually run `npm publish`** - this causes CI conflicts!
+
+✅ **Correct Release Process:**
+1. Fix/implement changes
+2. Commit changes: `git add . && git commit -m "fix: description"`
+3. Push changes: `git push origin master`
+4. Wait for CI to pass ✅
+5. Bump version: Edit `package.json` version field
+6. Commit version: `git add package.json && git commit -m "chore: bump version to 2.x.x"`
+7. Create & push tag: `git tag v2.x.x && git push origin master && git push origin v2.x.x`
+8. **CI automatically publishes** when tag is pushed
+
+❌ **Wrong Process:** Manual `npm publish` causes "409 Conflict - Cannot publish over existing version"
 
 ## Architecture Overview
 

@@ -72,7 +72,8 @@ table.addPlayer(player); // Player joins with their chips
 npm test          # Run all 239 tests
 npm run lint      # Code quality check  
 npm run build     # Build for distribution
-npm publish       # Publish to GitHub Packages
+# ❌ npm publish  # NEVER RUN MANUALLY! Causes CI conflicts
+git tag v2.x.x && git push origin v2.x.x  # Triggers automated CI release
 ```
 
 ## 🏆 What We've Accomplished
