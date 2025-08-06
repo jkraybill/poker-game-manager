@@ -54,22 +54,21 @@ describe('Event Ordering - Fixed (Issue #33)', () => {
     const richPlayer = new StrategicPlayer({
       id: 'rich',
       name: 'Rich Player',
-      strategy: {
-        preFlop: ({ myState, currentBet }) => {
-          const toCall = currentBet - myState.bet;
-          if (toCall > 0) {
-            // Always raise big to put pressure
-            return { action: Action.RAISE, amount: myState.chips };
-          }
-          return { action: Action.CHECK };
-        },
-        default: ({ myState, currentBet }) => {
-          const toCall = currentBet - myState.bet;
-          if (toCall > 0) {
-            return { action: Action.CALL, amount: toCall };
-          }
-          return { action: Action.CHECK };
-        },
+      strategy: ({ gameState, myState }) => {
+        const currentBet = gameState.currentBet;
+        const toCall = currentBet - myState.bet;
+        
+        // In preflop, always raise big to put pressure
+        if (gameState.phase === 'preFlop' && toCall > 0) {
+          return { action: Action.RAISE, amount: myState.chips };
+        }
+        
+        // Post-flop, just call
+        if (toCall > 0) {
+          return { action: Action.CALL, amount: toCall };
+        }
+        
+        return { action: Action.CHECK };
       },
     });
 

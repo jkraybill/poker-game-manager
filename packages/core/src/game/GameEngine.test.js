@@ -7,7 +7,12 @@ import { Player } from '../Player.js';
 class MockPlayer extends Player {
   constructor(config) {
     super(config);
-    this.getAction = vi.fn();
+    // Default to returning a fold action to prevent undefined errors
+    this.getAction = vi.fn().mockResolvedValue({
+      action: Action.FOLD,
+      playerId: config.id,
+      timestamp: Date.now(),
+    });
     this.receivePrivateCards = vi.fn();
     this.receiveMessage = vi.fn();
   }
@@ -183,8 +188,13 @@ describe('GameEngine', () => {
     it('should handle timeout by folding', async () => {
       const currentPlayer = mockPlayers[gameEngine.currentPlayerIndex];
       // Make getAction take longer than timeout
+      // Return a valid action after timeout to avoid "undefined action" errors
       currentPlayer.player.getAction.mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 2000)),
+        () => new Promise((resolve) => setTimeout(() => resolve({
+          action: Action.CHECK,
+          playerId: currentPlayer.player.id,
+          timestamp: Date.now(),
+        }), 2000)),
       );
 
       const actionSpy = vi.fn();
