@@ -384,6 +384,15 @@ export class GameEngine extends WildcardEventEmitter {
       // Clear the timeout since action completed
       clearTimeout(timeoutId);
 
+      // Check if the player returned a valid action
+      if (!action) {
+        // Player returned undefined/null - this is a developer error, crash immediately
+        throw new Error(
+          `Player ${currentPlayer.id} returned invalid action (undefined/null). ` +
+          'This is a developer error. Players must always return a valid action object.',
+        );
+      }
+      
       this.handlePlayerAction(currentPlayer, action);
     } catch (error) {
       // Clear timeout if it exists
@@ -436,43 +445,49 @@ export class GameEngine extends WildcardEventEmitter {
 
     switch (action.action) {
       case Action.FOLD:
-        return { valid: true };
+        // Fold is always valid
+        return;
 
       case Action.CHECK:
         if (toCall > 0) {
-          return { valid: false, reason: 'Cannot check when facing a bet' };
+          throw new Error('Cannot check when facing a bet. Developer error: invalid game logic.');
         }
-        return { valid: true };
+        return;
 
       case Action.CALL:
         if (toCall <= 0) {
-          return { valid: false, reason: 'Nothing to call' };
+          throw new Error('Nothing to call. Developer error: invalid game logic.');
         }
         if (toCall > player.chips) {
-          return { valid: false, reason: 'Insufficient chips to call' };
+          throw new Error('Insufficient chips to call. Developer error: invalid game logic.');
         }
-        return { valid: true };
+        return;
 
-      case Action.BET:
+      case Action.BET: {
         if (currentBet > 0) {
-          return {
-            valid: false,
-            reason: 'Cannot bet when facing a bet - use raise',
-          };
+          throw new Error('Cannot bet when facing a bet - use raise. Developer error: invalid game logic.');
         }
-        return this.validateBetAmount(action.amount, player);
+        const betResult = this.validateBetAmount(action.amount, player);
+        if (!betResult.valid) {
+          throw new Error(`Invalid bet: ${betResult.reason}. Developer error.`);
+        }
+        return;
+      }
 
-      case Action.RAISE:
+      case Action.RAISE: {
         if (currentBet === 0) {
-          return {
-            valid: false,
-            reason: 'Cannot raise without a bet - use bet',
-          };
+          throw new Error('Cannot raise without a bet - use bet. Developer error: invalid game logic.');
         }
-        return this.validateRaiseAmount(action.amount, player);
+        const raiseResult = this.validateRaiseAmount(action.amount, player);
+        if (!raiseResult.valid) {
+          throw new Error(`Invalid raise: ${raiseResult.reason}. Developer error.`);
+        }
+        return;
+      }
 
       case Action.ALL_IN:
-        return { valid: true }; // All-in is always valid
+        // All-in is always valid
+        return;
 
       default:
         // This should never happen now due to the enum check above
@@ -578,22 +593,8 @@ export class GameEngine extends WildcardEventEmitter {
   handlePlayerAction(player, action) {
     const endTimer = monitor.startTimer('handlePlayerAction');
     
-    // Validate the action before processing
-    const validationResult = this.validateAction(player, action);
-    if (!validationResult.valid) {
-      // Invalid action - emit error and re-prompt the same player
-      this.emit('action:invalid', {
-        playerId: player.id,
-        action: action.action,
-        amount: action.amount,
-        reason: validationResult.reason,
-      });
-
-      // Re-prompt the same player (don't mark as acted, don't move to next player)
-      this.promptNextPlayer();
-      endTimer();
-      return;
-    }
+    // Validate the action - will throw if invalid (developer error)
+    this.validateAction(player, action);
 
     // Store the player's last action
     player.lastAction = action.action;
