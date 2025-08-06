@@ -198,12 +198,14 @@ export class PotManager extends EventEmitter {
     // Process each pot separately
     for (const pot of this.pots) {
       // Find players eligible for this pot who are still in the hand
-      const eligibleHands = allPlayerHands.filter((ph) =>
+      let eligibleHands = allPlayerHands.filter((ph) =>
         pot.eligiblePlayers.some((ep) => ep.id === ph.player.id),
       );
 
       if (eligibleHands.length === 0) {
-        continue;
+        // If no originally eligible players remain (all folded),
+        // distribute this pot among all remaining active players
+        eligibleHands = allPlayerHands;
       }
 
       // Find the best hand(s) among eligible players for this pot
@@ -261,6 +263,7 @@ export class PotManager extends EventEmitter {
       }
     }
   }
+
 
   /**
    * Clear all pot amounts after winnings have been distributed

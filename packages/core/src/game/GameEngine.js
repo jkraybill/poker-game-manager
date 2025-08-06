@@ -366,16 +366,16 @@ export class GameEngine extends WildcardEventEmitter {
       bettingDetails,
     });
 
-    try {
-      // Get action from player with timeout
-      let timeoutId;
-      const timeoutPromise = new Promise((_, reject) => {
-        timeoutId = setTimeout(
-          () => reject(new Error('Timeout')),
-          this.config.timeout,
-        );
-      });
+    // Get action from player with timeout
+    let timeoutId;
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(
+        () => reject(new Error(`Player ${currentPlayer.id} action timeout after ${this.config.timeout}ms`)),
+        this.config.timeout,
+      );
+    });
 
+    try {
       const action = await Promise.race([
         currentPlayer.getAction(gameState),
         timeoutPromise,
@@ -386,11 +386,24 @@ export class GameEngine extends WildcardEventEmitter {
 
       this.handlePlayerAction(currentPlayer, action);
     } catch (error) {
-      // Default to fold on timeout or error
-      this.handlePlayerAction(currentPlayer, {
-        action: Action.FOLD,
-        playerId: currentPlayer.id,
-      });
+      // Clear timeout if it exists
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      
+      // Only handle timeout errors by folding - let validation errors crash
+      if (error.message.includes('timeout')) {
+        // eslint-disable-next-line no-console
+        console.warn(`Player ${currentPlayer.id} timed out, automatically folding`);
+        this.handlePlayerAction(currentPlayer, {
+          action: Action.FOLD,
+          playerId: currentPlayer.id,
+          timestamp: Date.now(),
+        });
+      } else {
+        // All other errors (including validation errors) should crash the application
+        throw error;
+      }
     }
   }
 
@@ -400,6 +413,18 @@ export class GameEngine extends WildcardEventEmitter {
   validateAction(player, action) {
     const currentBet = this.getCurrentBet();
     const toCall = currentBet - player.bet;
+
+    // First, enforce that only Action enum values are accepted
+    const validActionValues = Object.values(Action);
+    if (!validActionValues.includes(action.action)) {
+      // Throw a hard error to force proper API usage
+      const receivedAction = typeof action.action === 'string' ? `"${action.action}"` : action.action;
+      throw new Error(
+        `Invalid action type: ${receivedAction}. ` +
+        `Must use Action enum values: ${validActionValues.join(', ')}. ` +
+        'Example: { action: Action.ALL_IN } not { action: "allIn" }',
+      );
+    }
 
     switch (action.action) {
       case Action.FOLD:
@@ -442,7 +467,8 @@ export class GameEngine extends WildcardEventEmitter {
         return { valid: true }; // All-in is always valid
 
       default:
-        return { valid: false, reason: 'Unknown action' };
+        // This should never happen now due to the enum check above
+        throw new Error(`Unexpected action validation error for: ${action.action}`);
     }
   }
 
