@@ -126,7 +126,7 @@ describe('Issue #32 - Betting Reopening Rules (v2)', () => {
     };
 
     // Strategy: Player 3 goes all-in
-    const p3Strategy = ({ gameState, myState }) => {
+    const p3Strategy = ({ myState }) => {
 
       // Always go all-in
       return {
