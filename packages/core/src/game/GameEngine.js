@@ -878,11 +878,22 @@ export class GameEngine extends WildcardEventEmitter {
       phase: this.phase,
     });
 
-    // Reset current player to first active player after button
-    this.currentPlayerIndex = this.getNextActivePlayerIndex(
-      this.dealerButtonIndex,
+    // Check if betting is needed (more than one active player)
+    const activePlayers = this.players.filter(
+      (p) => p.state === PlayerState.ACTIVE,
     );
-    this.startBettingRound();
+    
+    if (activePlayers.length <= 1) {
+      // No betting needed - all players except one (or none) are all-in
+      // Progress directly to next phase
+      this.endBettingRound();
+    } else {
+      // Reset current player to first active player after button
+      this.currentPlayerIndex = this.getNextActivePlayerIndex(
+        this.dealerButtonIndex,
+      );
+      this.startBettingRound();
+    }
   }
 
   /**
@@ -903,10 +914,21 @@ export class GameEngine extends WildcardEventEmitter {
       phase: this.phase,
     });
 
-    this.currentPlayerIndex = this.getNextActivePlayerIndex(
-      this.dealerButtonIndex,
+    // Check if betting is needed (more than one active player)
+    const activePlayers = this.players.filter(
+      (p) => p.state === PlayerState.ACTIVE,
     );
-    this.startBettingRound();
+    
+    if (activePlayers.length <= 1) {
+      // No betting needed - all players except one (or none) are all-in
+      // Progress directly to next phase
+      this.endBettingRound();
+    } else {
+      this.currentPlayerIndex = this.getNextActivePlayerIndex(
+        this.dealerButtonIndex,
+      );
+      this.startBettingRound();
+    }
   }
 
   /**
@@ -927,10 +949,21 @@ export class GameEngine extends WildcardEventEmitter {
       phase: this.phase,
     });
 
-    this.currentPlayerIndex = this.getNextActivePlayerIndex(
-      this.dealerButtonIndex,
+    // Check if betting is needed (more than one active player)
+    const activePlayers = this.players.filter(
+      (p) => p.state === PlayerState.ACTIVE,
     );
-    this.startBettingRound();
+    
+    if (activePlayers.length <= 1) {
+      // No betting needed - all players except one (or none) are all-in
+      // Progress directly to next phase (showdown)
+      this.endBettingRound();
+    } else {
+      this.currentPlayerIndex = this.getNextActivePlayerIndex(
+        this.dealerButtonIndex,
+      );
+      this.startBettingRound();
+    }
   }
 
   /**
