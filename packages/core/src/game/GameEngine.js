@@ -418,7 +418,7 @@ export class GameEngine extends WildcardEventEmitter {
     if (!action || !action.action) {
       throw new Error(
         `Invalid action: action object is ${action ? 'missing action property' : 'undefined'}. ` +
-        'Expected format: { action: Action.FOLD, amount?: number }'
+        'Expected format: { action: Action.FOLD, amount?: number }',
       );
     }
 
