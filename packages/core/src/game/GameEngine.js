@@ -255,7 +255,10 @@ export class GameEngine extends WildcardEventEmitter {
       // No one can act, immediately end the betting round
       this.endBettingRound();
     } else {
-      this.promptNextPlayer();
+      // Only start prompting if game hasn't been aborted
+      if (this.phase !== GamePhase.ENDED) {
+        this.promptNextPlayer();
+      }
     }
   }
 
@@ -342,6 +345,11 @@ export class GameEngine extends WildcardEventEmitter {
    * Prompt the next player for action
    */
   async promptNextPlayer() {
+    // Don't create promises if game is already ended/aborted
+    if (this.phase === GamePhase.ENDED) {
+      return;
+    }
+
     const currentPlayer = this.players[this.currentPlayerIndex];
 
     if (!currentPlayer || currentPlayer.state !== PlayerState.ACTIVE) {
@@ -636,7 +644,10 @@ export class GameEngine extends WildcardEventEmitter {
     } else {
       // Continue to next player
       this.moveToNextActivePlayer();
-      this.promptNextPlayer();
+      // Only continue if game is still running
+      if (this.phase !== GamePhase.ENDED) {
+        this.promptNextPlayer();
+      }
     }
     
     endTimer();

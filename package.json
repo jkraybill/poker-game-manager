@@ -10,7 +10,7 @@
     "build:esm": "esbuild packages/core/src/index.js --bundle --platform=node --format=esm --outfile=dist/index.mjs --external:pokersolver --external:eventemitter3 --external:nanoid",
     "build:cjs": "esbuild packages/core/src/index.js --bundle --platform=node --format=cjs --outfile=dist/index.cjs --external:pokersolver --external:eventemitter3 --external:nanoid",
     "clean": "rm -rf dist",
-    "test": "vitest --run",
+    "test": "NODE_OPTIONS=\"--unhandled-rejections=strict\" vitest --run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --run --coverage",
