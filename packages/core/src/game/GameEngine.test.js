@@ -7,11 +7,29 @@ import { Player } from '../Player.js';
 class MockPlayer extends Player {
   constructor(config) {
     super(config);
-    // Default to returning a call or check based on toCall
+    // Default to returning a valid action based on validActions array
     this.getAction = vi.fn().mockImplementation((gameState) => {
-      const toCall = gameState.currentBet - (gameState.players[config.id]?.bet || 0);
+      // Use validActions if provided by GameEngine
+      const validActions = gameState.validActions || [];
+      
+      // Simple strategy: prefer CHECK over CALL over FOLD
+      let action;
+      if (validActions.includes(Action.CHECK)) {
+        action = Action.CHECK;
+      } else if (validActions.includes(Action.CALL)) {
+        action = Action.CALL;
+      } else if (validActions.includes(Action.FOLD)) {
+        action = Action.FOLD;
+      } else if (validActions.includes(Action.ALL_IN)) {
+        action = Action.ALL_IN;
+      } else {
+        // This should never happen if GameEngine is working correctly
+        console.error('No valid actions available for player', config.id, 'validActions:', validActions);
+        action = Action.CHECK; // Fallback
+      }
+      
       return Promise.resolve({
-        action: toCall > 0 ? Action.CALL : Action.CHECK,
+        action: action,
         playerId: config.id,
         timestamp: Date.now(),
       });
@@ -124,9 +142,27 @@ describe('GameEngine', () => {
         mp.player.receiveMessage.mockClear();
         // Re-apply default implementation after clearing
         mp.player.getAction.mockImplementation((gameState) => {
-          const toCall = gameState.currentBet - (gameState.players[mp.player.id]?.bet || 0);
+          // Use validActions if provided by GameEngine
+          const validActions = gameState.validActions || [];
+          
+          // Simple strategy: prefer CHECK over CALL over FOLD
+          let action;
+          if (validActions.includes(Action.CHECK)) {
+            action = Action.CHECK;
+          } else if (validActions.includes(Action.CALL)) {
+            action = Action.CALL;
+          } else if (validActions.includes(Action.FOLD)) {
+            action = Action.FOLD;
+          } else if (validActions.includes(Action.ALL_IN)) {
+            action = Action.ALL_IN;
+          } else {
+            // This should never happen if GameEngine is working correctly
+            console.error('No valid actions available for player', mp.player.id, 'validActions:', validActions);
+            action = Action.CHECK; // Fallback
+          }
+          
           return Promise.resolve({
-            action: toCall > 0 ? Action.CALL : Action.CHECK,
+            action: action,
             playerId: mp.player.id,
             timestamp: Date.now(),
           });
