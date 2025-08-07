@@ -40,7 +40,7 @@ What's your kicker? This library handles the poker basics pretty well.
 
 ### What's Working:
 - ✅ **Texas Hold'em Rules** - Dead button, side pots, the usual stuff
-- ✅ **249 Tests** - All passing with strict validation
+- ✅ **247 Tests** - All passing with strict validation
 - ✅ **Tournament Ready** - Tables accept any stack size now
 - ✅ **Event-Driven** - Events fire in correct order (eliminations before hand:ended)
 - ✅ **Clean Code** - No legacy junk cluttering things up
@@ -249,14 +249,14 @@ packages/core/src/
 └── test-utils/             # Testing helpers
 ```
 
-## 🎯 What v2.0 Gives You
+## 🎯 What This Library Gives You
 
-This release handles **single-table Texas Hold'em** pretty well:
+This library handles **single-table Texas Hold'em** pretty well:
 
 ✅ **Rule Implementation** - Texas Hold'em rules work correctly  
 ✅ **Edge Cases** - All-ins, side pots, eliminations handled  
 ✅ **Tournament Rules** - Dead button positioning like the pros use  
-✅ **Testing Coverage** - 242 tests prove it works  
+✅ **Testing Coverage** - 247 tests prove it works  
 ✅ **Performance** - Fast enough for real use  
 ✅ **Clean Code** - Event-driven architecture that makes sense  
 

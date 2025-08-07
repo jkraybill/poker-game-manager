@@ -1,6 +1,6 @@
 # Response to Chip Conservation Bug Reports
 
-## UPDATE: v3.0.2 Released - Race Condition Fixed!
+## UPDATE: v3.0.2 - Race Condition Fixed!
 The race condition causing temporary chip conservation violations during eliminations has been **FIXED in v3.0.2**. Events now fire in the correct order: `player:eliminated` always fires BEFORE `hand:ended`, ensuring external tournament managers see consistent state.
 
 ## Original Response to PGM v2.1.7 Progressive Chip Loss Report

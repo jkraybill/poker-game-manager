@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed 🔧
 - **Unhandled Promise Rejections** - Fixed async/await chain in GameEngine for proper error propagation
-- **Test Suite Stability** - All 249 tests now pass consistently in CI environment
+- **Test Suite Stability** - All 247 tests now pass consistently in CI environment
 
 ## [3.0.0] - 2025-08-07
 
@@ -46,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Strategic Player Logic** - Fixed fold-when-can-check issues in example players
 
 ### Technical Excellence 🏆
-- **242 Tests Passing** - Modern test suite with comprehensive coverage
+- **247 Tests Passing** - Modern test suite with comprehensive coverage
 - **Zero Breaking Examples** - All documentation code examples verified working
 - **Strict Validation** - Prevents unrealistic gameplay in simulation scenarios
 - **Developer Experience** - Clear error messages for invalid actions
