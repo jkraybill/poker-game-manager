@@ -115,8 +115,18 @@ describe('Standings Display (Issue #34) - v2', () => {
     // Wait for hand to complete
     await waitForHandEnd(events);
 
-    // Give more time for elimination events in CI
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    // Wait for eliminations to be processed - CI needs more time
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Debug: Check actual table state
+    const actualTablePlayers = Array.from(table.players.values());
+    console.log('Table players after wait:', actualTablePlayers.map(pd => ({
+      name: pd.player.name,
+      chips: pd.player.chips,
+      id: pd.player.id,
+    })));
+    console.log('Eliminated count:', eliminatedCount);
+    console.log('Eliminated players tracked:', eliminatedPlayers.length);
 
     // Check final standings - should have eliminated players separated
     const finalStandings = getFormattedStandings(
@@ -215,8 +225,8 @@ describe('Standings Display (Issue #34) - v2', () => {
     // Wait for hand to complete
     await waitForHandEnd(events);
 
-    // Give more time for elimination events in CI
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    // Wait for eliminations to be processed - CI needs more time
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     // After the hand, we should have 1 active + 1 eliminated = 2 total
     const standings = getFormattedStandings(table.players, eliminatedPlayers);
