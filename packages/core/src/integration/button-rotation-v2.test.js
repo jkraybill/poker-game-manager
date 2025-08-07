@@ -108,17 +108,22 @@ describe('Dealer Button Rotation (Issue #36) - v2', () => {
 
     // All-in strategy for short stack
     let actionCount = 0;
-    const allInStrategy = ({ player, myState }) => {
+    const allInStrategy = ({ player, myState, toCall }) => {
       actionCount++;
       // Short stack goes all-in on first action
       if (player.name === 'Short Stack' && actionCount === 1) {
         return { action: Action.ALL_IN, amount: myState.chips };
       }
-      // Others fold to all-in
-      if (myState.bet < 30) {
+      // Others fold to all-in only if there's something to call
+      if (myState.bet < 30 && toCall > 0) {
         return { action: Action.FOLD };
       }
-      return { action: Action.CHECK };
+      // Check when nothing to call
+      if (toCall === 0) {
+        return { action: Action.CHECK };
+      }
+      // Call if we need to
+      return { action: Action.CALL };
     };
 
     // Create players with different names

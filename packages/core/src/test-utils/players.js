@@ -63,7 +63,10 @@ export class StrategicPlayer extends Player {
  */
 export const STRATEGIES = {
   // Basic strategies
-  alwaysFold: () => ({ action: Action.FOLD }),
+  alwaysFold: ({ toCall }) =>
+    toCall > 0
+      ? { action: Action.FOLD }
+      : { action: Action.CHECK },
   alwaysCheck: () => ({ action: Action.CHECK }),
   alwaysCall: ({ toCall }) =>
     toCall > 0

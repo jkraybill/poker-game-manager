@@ -92,12 +92,21 @@ Substantial Action (SA) is either:
 ## 5. Betting Rules
 
 ### 5.1 Valid Actions
-- **5.1.1** Check: When no bet is faced
+- **5.1.1** Check: When no bet is faced (toCall = 0)
 - **5.1.2** Bet: First chips into pot on a betting round
-- **5.1.3** Call: Match the current bet
+- **5.1.3** Call: Match the current bet (toCall > 0)
 - **5.1.4** Raise: Increase the current bet
-- **5.1.5** Fold: Surrender hand and forfeit chips in pot
+- **5.1.5** Fold: Surrender hand and forfeit chips in pot (ONLY valid when toCall > 0)
 - **5.1.6** All-in: Bet all remaining chips
+
+#### 5.1.7 Simulation Framework Rules
+**IMPORTANT**: This implementation enforces strict simulation rules:
+- Players CANNOT fold when they can check for free (toCall = 0)
+- Examples where folding is INVALID:
+  - Big blind facing no raise (must check or raise)
+  - First to act on flop/turn/river (must check or bet)
+  - Any player when current bet equals their bet
+- This prevents unrealistic gameplay in simulations
 
 ### 5.2 Betting Amounts
 

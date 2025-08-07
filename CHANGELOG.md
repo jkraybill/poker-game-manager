@@ -5,6 +5,33 @@ All notable changes to the Poker Game Manager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.8] - 2025-08-07
+
+### Breaking Changes 🚨
+- **Fold validation enforced** - Players CANNOT fold when they can check for free (`toCall = 0`)
+- **No auto-folding on timeouts** - Timeouts now throw fatal errors instead of auto-folding
+- **Strict simulation rules** - This is a simulation framework, not a production poker room
+
+### Fixed
+- **Fixed duplicate validation method** - `calculateValidActions` now matches `calculateBettingDetails` logic
+- **Fold validation** - Fold is now only valid when facing a bet (`toCall > 0`)
+- **Test utilities** - Updated `alwaysFold` strategy to check `toCall` before folding
+
+### Added
+- **SIMULATION_RULES.md** - Comprehensive documentation of all action validation rules
+- **Enhanced documentation** - Updated README.md and POKER-RULES.md with clear validation rules
+- **Action validation examples** - Added specific scenarios where actions are valid/invalid
+
+### Changed
+- **Error messages** - More descriptive validation error messages
+- **Test strategies** - All test strategies now properly validate actions before returning
+
+### Technical Details
+- Fold is INVALID when: Big blind with option, first to act postflop, any player when `toCall = 0`
+- Fold is VALID when: Facing a bet/raise (`toCall > 0`)
+- All validation errors throw immediately with descriptive messages
+- Both `calculateValidActions()` and `calculateBettingDetails()` enforce identical rules
+
 ## [2.1.7] - 2025-08-06
 
 ### Fixed

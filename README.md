@@ -8,12 +8,23 @@ What's your kicker? This library handles the poker basics pretty well.
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
 [![GitHub Package](https://img.shields.io/badge/npm-GitHub%20Packages-blue)](https://github.com/jkraybill/poker-game-manager/packages)
 
-## ✨ What's New in v2.1.6
+## ✨ What's New in v2.1.8
 
 ### Strict Action Validation 🚨
 - **Action enum is now mandatory** - String actions like 'FOLD' will crash immediately
-- **No auto-folding on errors** - Invalid actions throw fatal errors (this is a simulation framework!)
+- **Fold validation enforced** - Players CANNOT fold when they can check for free (toCall = 0)
+- **No auto-folding on timeouts** - Timeouts throw fatal errors (this is a simulation framework!)
 - **Developer errors crash fast** - Undefined/null actions are fatal, not silently handled
+
+#### Valid Action Rules (Simulation Framework)
+- **CHECK**: Only valid when `toCall = 0` (nothing to call)
+- **FOLD**: Only valid when `toCall > 0` (facing a bet/raise)
+- **CALL**: Only valid when `toCall > 0` and player has chips
+- **BET**: Only valid when no current bet exists
+- **RAISE**: Only valid when facing a bet and player has sufficient chips
+- **ALL_IN**: Always valid when player has chips
+
+⚠️ **Important**: In this simulation framework, players CANNOT fold when they can check for free. This prevents unrealistic gameplay where players fold with no cost.
 
 ### Previous v2.0 Breaking Changes
 - **Tables no longer enforce buy-in limits** - That's a tournament/room policy now

@@ -287,14 +287,15 @@ export class GameEngine extends WildcardEventEmitter {
     // Determine valid actions
     const validActions = [];
 
-    // Fold is always valid (unless player is all-in)
-    if (player.state === PlayerState.ACTIVE) {
-      validActions.push(Action.FOLD);
-    }
-
-    // Check if player can check
+    // Check if player can check (when nothing to call)
     if (toCall === 0) {
       validActions.push(Action.CHECK);
+    }
+
+    // Fold is only valid when facing a bet (toCall > 0)
+    // In a simulation, players cannot fold when they can check for free
+    if (player.state === PlayerState.ACTIVE && toCall > 0) {
+      validActions.push(Action.FOLD);
     }
 
     // Call if there's something to call and player has chips
@@ -400,19 +401,8 @@ export class GameEngine extends WildcardEventEmitter {
         clearTimeout(timeoutId);
       }
       
-      // Only handle timeout errors by folding - let validation errors crash
-      if (error.message.includes('timeout')) {
-        // eslint-disable-next-line no-console
-        console.warn(`Player ${currentPlayer.id} timed out, automatically folding`);
-        this.handlePlayerAction(currentPlayer, {
-          action: Action.FOLD,
-          playerId: currentPlayer.id,
-          timestamp: Date.now(),
-        });
-      } else {
-        // All other errors (including validation errors) should crash the application
-        throw error;
-      }
+      // ALL errors should crash - timeouts are developer bugs in a simulation
+      throw error;
     }
   }
 
@@ -445,7 +435,10 @@ export class GameEngine extends WildcardEventEmitter {
 
     switch (action.action) {
       case Action.FOLD:
-        // Fold is always valid
+        // Fold is only valid when facing a bet (simulation framework rule)
+        if (toCall <= 0) {
+          throw new Error('Cannot fold when you can check for free. Developer error: invalid game logic.');
+        }
         return;
 
       case Action.CHECK:
@@ -1143,12 +1136,15 @@ export class GameEngine extends WildcardEventEmitter {
     const currentBet = this.getCurrentBet();
     const toCall = currentBet - player.bet;
 
-    // FOLD is always valid
-    validActions.push(Action.FOLD);
-
     // CHECK is valid if nothing to call
     if (toCall === 0) {
       validActions.push(Action.CHECK);
+    }
+
+    // FOLD is only valid when facing a bet (toCall > 0)
+    // In a simulation framework, players cannot fold when they can check for free
+    if (toCall > 0) {
+      validActions.push(Action.FOLD);
     }
 
     // CALL is valid if there's something to call and player has chips

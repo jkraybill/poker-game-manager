@@ -7,11 +7,14 @@ import { Player } from '../Player.js';
 class MockPlayer extends Player {
   constructor(config) {
     super(config);
-    // Default to returning a fold action to prevent undefined errors
-    this.getAction = vi.fn().mockResolvedValue({
-      action: Action.FOLD,
-      playerId: config.id,
-      timestamp: Date.now(),
+    // Default to returning a call or check based on toCall
+    this.getAction = vi.fn().mockImplementation((gameState) => {
+      const toCall = gameState.currentBet - (gameState.players[config.id]?.bet || 0);
+      return Promise.resolve({
+        action: toCall > 0 ? Action.CALL : Action.CHECK,
+        playerId: config.id,
+        timestamp: Date.now(),
+      });
     });
     this.receivePrivateCards = vi.fn();
     this.receiveMessage = vi.fn();
@@ -120,33 +123,46 @@ describe('GameEngine', () => {
         mp.player.receivePrivateCards.mockClear();
         mp.player.receiveMessage.mockClear();
         // Re-apply default implementation after clearing
-        mp.player.getAction.mockResolvedValue({
-          action: Action.FOLD,
-          playerId: mp.player.id,
-          timestamp: Date.now(),
+        mp.player.getAction.mockImplementation((gameState) => {
+          const toCall = gameState.currentBet - (gameState.players[mp.player.id]?.bet || 0);
+          return Promise.resolve({
+            action: toCall > 0 ? Action.CALL : Action.CHECK,
+            playerId: mp.player.id,
+            timestamp: Date.now(),
+          });
         });
       });
       gameEngine.start();
     });
 
-    it('should handle fold action', async () => {
-      const currentPlayer = mockPlayers[gameEngine.currentPlayerIndex];
-      currentPlayer.player.getAction.mockResolvedValue({
+    it('should reject fold action when check is available', async () => {
+      // Set up BB with option to check (everyone called)
+      const sbIndex = gameEngine.getNextActivePlayerIndex(gameEngine.dealerButtonIndex);
+      const bbIndex = gameEngine.getNextActivePlayerIndex(sbIndex);
+      
+      // Make everyone call to BB
+      mockPlayers.forEach((mp, idx) => {
+        if (idx !== bbIndex) {
+          mp.bet = 20;
+          mp.chips = 980;
+          mp.hasActed = true;
+        }
+      });
+      
+      gameEngine.currentPlayerIndex = bbIndex;
+      const bbPlayer = mockPlayers[bbIndex];
+      bbPlayer.hasActed = false;
+      
+      // Try to fold when check is available
+      bbPlayer.player.getAction.mockResolvedValue({
         action: Action.FOLD,
-        playerId: currentPlayer.player.id,
+        playerId: bbPlayer.player.id,
       });
 
-      const actionSpy = vi.fn();
-      gameEngine.on('player:action', actionSpy);
-
-      // Trigger next player prompt
-      await gameEngine.promptNextPlayer();
-
-      expect(actionSpy).toHaveBeenCalledWith({
-        playerId: currentPlayer.player.id,
-        action: Action.FOLD,
-        amount: undefined,
-      });
+      // Should throw error
+      await expect(gameEngine.promptNextPlayer()).rejects.toThrow(
+        'Cannot fold when you can check for free',
+      );
     });
 
     it('should handle check action when valid', async () => {
@@ -191,10 +207,9 @@ describe('GameEngine', () => {
       });
     });
 
-    it('should handle timeout by folding', async () => {
+    it('should throw error on timeout', async () => {
       const currentPlayer = mockPlayers[gameEngine.currentPlayerIndex];
       // Make getAction take longer than timeout
-      // Return a valid action after timeout to avoid "undefined action" errors
       currentPlayer.player.getAction.mockImplementation(
         () => new Promise((resolve) => setTimeout(() => resolve({
           action: Action.CHECK,
@@ -203,16 +218,10 @@ describe('GameEngine', () => {
         }), 2000)),
       );
 
-      const actionSpy = vi.fn();
-      gameEngine.on('player:action', actionSpy);
-
-      await gameEngine.promptNextPlayer();
-
-      expect(actionSpy).toHaveBeenCalledWith({
-        playerId: currentPlayer.player.id,
-        action: Action.FOLD,
-        amount: undefined,
-      });
+      // Expect the timeout to throw an error
+      await expect(gameEngine.promptNextPlayer()).rejects.toThrow(
+        `Player ${currentPlayer.player.id} action timeout after 1000ms`,
+      );
     });
   });
 
