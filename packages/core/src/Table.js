@@ -209,6 +209,18 @@ export class Table extends WildcardEventEmitter {
 
       eventsToForward.forEach((eventName) => {
         this.gameEngine.on(eventName, (data) => {
+          // Special handling for hand:complete to ensure proper event ordering
+          if (eventName === 'hand:complete') {
+            // Store the hand:ended data but handle it in handleGameEnd
+            this.pendingHandEndedData = {
+              ...data,
+              tableId: this.id,
+              gameNumber: this.gameCount,
+            };
+            // Don't emit hand:ended yet - it will be emitted after eliminations
+            return;
+          }
+          
           // Map hand:complete to hand:ended for backward compatibility
           const emitEventName =
             eventName === 'hand:complete' ? 'hand:ended' : eventName;
@@ -490,38 +502,40 @@ export class Table extends WildcardEventEmitter {
       }
     }
 
-    // Use process.nextTick to ensure elimination events fire after hand:ended
+    // Emit elimination events BEFORE hand:ended (v3.0.2 fix for event ordering)
     if (playersToEliminate.length > 0) {
-      process.nextTick(() => {
-        // Sort players by starting chip count (smallest stack first = lower finishing position)
-        // This follows tournament rules: players with smaller stacks finish lower
-        playersToEliminate.sort((a, b) => a.startingChips - b.startingChips);
+      // Sort players by starting chip count (smallest stack first = lower finishing position)
+      // This follows tournament rules: players with smaller stacks finish lower
+      playersToEliminate.sort((a, b) => a.startingChips - b.startingChips);
 
-        // Emit elimination events sequentially, not simultaneously
-        // Use small delays to ensure proper ordering and avoid simultaneous timestamps
-        playersToEliminate.forEach(({ playerId, startingChips }, index) => {
-          setTimeout(() => {
-            this.emit('player:eliminated', {
-              playerId,
-              tableId: this.id,
-              finalChips: 0,
-              gameNumber: this.gameCount,
-              startingChips, // Include starting chips for tournament tracking
-              finishingPosition: playersToEliminate.length - index, // Lower position = earlier elimination
-            });
-          }, index * 10); // 10ms delay between eliminations for proper ordering
+      // Emit elimination events immediately (synchronously)
+      playersToEliminate.forEach(({ playerId, startingChips }, index) => {
+        this.emit('player:eliminated', {
+          playerId,
+          tableId: this.id,
+          finalChips: 0,
+          gameNumber: this.gameCount,
+          startingChips, // Include starting chips for tournament tracking
+          finishingPosition: playersToEliminate.length - index, // Lower position = earlier elimination
         });
-
-        // Remove players after all elimination events are scheduled
-        setTimeout(
-          () => {
-            for (const { playerId } of playersToEliminate) {
-              this.removePlayer(playerId);
-            }
-          },
-          playersToEliminate.length * 10 + 50,
-        ); // Wait for all eliminations + buffer
       });
+
+      // Remove players immediately
+      for (const { playerId } of playersToEliminate) {
+        this.removePlayer(playerId);
+      }
+    }
+
+    // Now emit hand:ended AFTER eliminations have been processed
+    // Use setTimeout to ensure distinct timestamps for proper event ordering
+    if (this.pendingHandEndedData) {
+      const dataToEmit = this.pendingHandEndedData;
+      this.pendingHandEndedData = null;
+      
+      // Small delay (1ms) to ensure elimination events have distinct earlier timestamps
+      setTimeout(() => {
+        this.emit('hand:ended', dataToEmit);
+      }, 1);
     }
 
     // Clean up game engine
