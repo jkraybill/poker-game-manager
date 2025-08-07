@@ -62,7 +62,7 @@ export class GameEngine extends WildcardEventEmitter {
   /**
    * Start a new hand
    */
-  start() {
+  async start() {
     if (this.phase !== GamePhase.WAITING) {
       throw new Error('Game already in progress');
     }
@@ -73,7 +73,7 @@ export class GameEngine extends WildcardEventEmitter {
     });
 
     this.initializeHand();
-    this.startBettingRound();
+    await this.startBettingRound();
   }
 
   /**
@@ -228,7 +228,7 @@ export class GameEngine extends WildcardEventEmitter {
   /**
    * Start a new betting round
    */
-  startBettingRound() {
+  async startBettingRound() {
     // Reset round state
     for (const player of this.players) {
       if (
@@ -253,11 +253,11 @@ export class GameEngine extends WildcardEventEmitter {
     );
     if (activePlayers.length === 0) {
       // No one can act, immediately end the betting round
-      this.endBettingRound();
+      await this.endBettingRound();
     } else {
       // Only start prompting if game hasn't been aborted
       if (this.phase !== GamePhase.ENDED) {
-        this.promptNextPlayer();
+        await this.promptNextPlayer();
       }
     }
   }
@@ -402,7 +402,7 @@ export class GameEngine extends WildcardEventEmitter {
         );
       }
       
-      this.handlePlayerAction(currentPlayer, action);
+      await this.handlePlayerAction(currentPlayer, action);
     } catch (error) {
       // Clear timeout if it exists
       if (timeoutId) {
@@ -591,7 +591,7 @@ export class GameEngine extends WildcardEventEmitter {
   /**
    * Handle a player action
    */
-  handlePlayerAction(player, action) {
+  async handlePlayerAction(player, action) {
     const endTimer = monitor.startTimer('handlePlayerAction');
     
     // Validate the action - will throw if invalid (developer error)
@@ -640,13 +640,13 @@ export class GameEngine extends WildcardEventEmitter {
     // Check if betting round is complete after this action
     const isComplete = this.isBettingRoundComplete();
     if (isComplete) {
-      this.endBettingRound();
+      await this.endBettingRound();
     } else {
       // Continue to next player
       this.moveToNextActivePlayer();
       // Only continue if game is still running
       if (this.phase !== GamePhase.ENDED) {
-        this.promptNextPlayer();
+        await this.promptNextPlayer();
       }
     }
     
@@ -874,7 +874,7 @@ export class GameEngine extends WildcardEventEmitter {
   /**
    * End the current betting round
    */
-  endBettingRound() {
+  async endBettingRound() {
     this.potManager.endBettingRound();
 
     // Clear option flags
@@ -885,13 +885,13 @@ export class GameEngine extends WildcardEventEmitter {
     // Progress to next phase
     switch (this.phase) {
       case GamePhase.PRE_FLOP:
-        this.dealFlop();
+        await this.dealFlop();
         break;
       case GamePhase.FLOP:
-        this.dealTurn();
+        await this.dealTurn();
         break;
       case GamePhase.TURN:
-        this.dealRiver();
+        await this.dealRiver();
         break;
       case GamePhase.RIVER:
         this.showdown();
@@ -902,7 +902,7 @@ export class GameEngine extends WildcardEventEmitter {
   /**
    * Deal the flop
    */
-  dealFlop() {
+  async dealFlop() {
     this.phase = GamePhase.FLOP;
 
     // Burn one card
@@ -925,20 +925,20 @@ export class GameEngine extends WildcardEventEmitter {
     if (activePlayers.length <= 1) {
       // No betting needed - all players except one (or none) are all-in
       // Progress directly to next phase
-      this.endBettingRound();
+      await this.endBettingRound();
     } else {
       // Reset current player to first active player after button
       this.currentPlayerIndex = this.getNextActivePlayerIndex(
         this.dealerButtonIndex,
       );
-      this.startBettingRound();
+      await this.startBettingRound();
     }
   }
 
   /**
    * Deal the turn
    */
-  dealTurn() {
+  async dealTurn() {
     this.phase = GamePhase.TURN;
 
     // Burn one card
@@ -961,19 +961,19 @@ export class GameEngine extends WildcardEventEmitter {
     if (activePlayers.length <= 1) {
       // No betting needed - all players except one (or none) are all-in
       // Progress directly to next phase
-      this.endBettingRound();
+      await this.endBettingRound();
     } else {
       this.currentPlayerIndex = this.getNextActivePlayerIndex(
         this.dealerButtonIndex,
       );
-      this.startBettingRound();
+      await this.startBettingRound();
     }
   }
 
   /**
    * Deal the river
    */
-  dealRiver() {
+  async dealRiver() {
     this.phase = GamePhase.RIVER;
 
     // Burn one card
@@ -996,12 +996,12 @@ export class GameEngine extends WildcardEventEmitter {
     if (activePlayers.length <= 1) {
       // No betting needed - all players except one (or none) are all-in
       // Progress directly to next phase (showdown)
-      this.endBettingRound();
+      await this.endBettingRound();
     } else {
       this.currentPlayerIndex = this.getNextActivePlayerIndex(
         this.dealerButtonIndex,
       );
-      this.startBettingRound();
+      await this.startBettingRound();
     }
   }
 
