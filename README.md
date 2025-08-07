@@ -8,7 +8,7 @@ What's your kicker? This library handles the poker basics pretty well.
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
 [![GitHub Package](https://img.shields.io/badge/npm-GitHub%20Packages-blue)](https://github.com/jkraybill/poker-game-manager/packages)
 
-## ✨ What's New in v2.1.8
+## ✨ What's New in v3.0.0
 
 ### Strict Action Validation 🚨
 - **Action enum is now mandatory** - String actions like 'FOLD' will crash immediately

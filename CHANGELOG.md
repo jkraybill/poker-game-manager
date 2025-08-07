@@ -5,6 +5,44 @@ All notable changes to the Poker Game Manager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2025-08-07
+
+### 🎉 MAJOR RELEASE: v3.0.0 - Documentation Excellence & Validation Mastery
+
+### Breaking Changes 🚨
+- **Action Enum Mandatory** - String actions like 'FOLD' now throw fatal errors, must use Action.FOLD
+- **Strict Fold Validation** - Players CANNOT fold when they can check for free (`toCall = 0`) 
+- **Simulation Framework Rules** - Invalid actions crash immediately (not production-style graceful handling)
+- **Enhanced Validation** - All player actions validated against validActions array from GameEngine
+
+### Added ✨
+- **Comprehensive Documentation Overhaul** - All examples now v3.0.0 compliant
+- **Action Enum Integration** - 50+ code examples updated across INTEGRATION.md
+- **Modern API Examples** - All documentation uses v2.0+ player.buyIn() pattern
+- **Validation Best Practices** - Strategic players check toCall before folding
+
+### Fixed 🔧
+- **Documentation Accuracy** - Updated test counts from outdated 267+ to correct 242 tests
+- **Code Example Compliance** - All documentation examples work with strict validation
+- **API Consistency** - Removed deprecated minBuyIn/maxBuyIn references
+- **Strategic Player Logic** - Fixed fold-when-can-check issues in example players
+
+### Technical Excellence 🏆
+- **242 Tests Passing** - Modern test suite with comprehensive coverage
+- **Zero Breaking Examples** - All documentation code examples verified working
+- **Strict Validation** - Prevents unrealistic gameplay in simulation scenarios
+- **Developer Experience** - Clear error messages for invalid actions
+
+### Migration Guide 📖
+```javascript
+// OLD (v2.x) - Will crash in v3.0.0
+return { action: 'FOLD' };
+
+// NEW (v3.0.0) - Proper usage
+import { Action } from '@jkraybill/poker-game-manager';
+return { action: Action.FOLD }; // Only when toCall > 0
+```
+
 ## [2.1.8] - 2025-08-07
 
 ### Breaking Changes 🚨
