@@ -144,14 +144,17 @@ describe('Race Condition - Simple Reproduction', () => {
 
     const eventSequence = [];
 
-    // Hook into GameEngine's hand:complete (internal event)
-    table.gameEngine.on('hand:complete', ({ winners }) => {
-      eventSequence.push({
-        event: 'GameEngine.hand:complete',
-        timestamp: Date.now(),
-        winners: winners.map(w => ({ id: w.playerId, amount: w.amount })),
+    // Set up a one-time listener for game:started to hook into gameEngine
+    table.once('game:started', () => {
+      // Now gameEngine exists, hook into its hand:complete event
+      table.gameEngine.on('hand:complete', ({ winners }) => {
+        eventSequence.push({
+          event: 'GameEngine.hand:complete',
+          timestamp: Date.now(),
+          winners: winners.map(w => ({ id: w.playerId, amount: w.amount })),
+        });
+        console.log('🔧 GameEngine.hand:complete fired');
       });
-      console.log('🔧 GameEngine.hand:complete fired');
     });
 
     // Hook into Table's hand:ended (external event)  
