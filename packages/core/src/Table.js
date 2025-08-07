@@ -209,16 +209,23 @@ export class Table extends WildcardEventEmitter {
 
       eventsToForward.forEach((eventName) => {
         this.gameEngine.on(eventName, (data) => {
-          // Map hand:complete to hand:ended for backward compatibility
-          const emitEventName =
-            eventName === 'hand:complete' ? 'hand:ended' : eventName;
-          this.emit(emitEventName, {
+          // Special handling for hand:complete to fix race condition
+          if (eventName === 'hand:complete') {
+            // Store the hand:ended data but don't emit yet
+            this.pendingHandEndedData = {
+              ...data,
+              tableId: this.id,
+              gameNumber: this.gameCount,
+            };
+            return;
+          }
+
+          // Emit other events immediately
+          this.emit(eventName, {
             ...data,
             tableId: this.id,
             gameNumber: this.gameCount,
           });
-
-          // Don't check here - it's too late, players are already removed
         });
       });
 
@@ -422,6 +429,16 @@ export class Table extends WildcardEventEmitter {
   }
 
   /**
+   * Emit the delayed hand:ended event after all elimination processing is complete
+   */
+  emitHandEndedAfterEliminations() {
+    if (this.pendingHandEndedData) {
+      this.emit('hand:ended', this.pendingHandEndedData);
+      this.pendingHandEndedData = null;
+    }
+  }
+
+  /**
    * Handle game end
    */
   handleGameEnd(_result) {
@@ -518,10 +535,16 @@ export class Table extends WildcardEventEmitter {
             for (const { playerId } of playersToEliminate) {
               this.removePlayer(playerId);
             }
+
+            // NOW emit hand:ended after all elimination processing is complete
+            this.emitHandEndedAfterEliminations();
           },
           playersToEliminate.length * 10 + 50,
         ); // Wait for all eliminations + buffer
       });
+    } else {
+      // No players to eliminate - emit hand:ended immediately
+      this.emitHandEndedAfterEliminations();
     }
 
     // Clean up game engine
