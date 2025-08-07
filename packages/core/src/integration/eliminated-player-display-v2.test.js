@@ -177,11 +177,12 @@ describe('Eliminated Player Display (v2)', () => {
 
     // Log the result for clarity
     console.log('✅ Eliminated player not shown in active list');
-    console.log(
-      `Active players after elimination: ${postEliminationActivePlayers.map((p) => p.id).join(', ')}`,
-    );
-
-    console.log('✅ Issue #34 verified: Eliminated players not in active list');
+    if (postEliminationActivePlayers) {
+      console.log(
+        `Active players after elimination: ${postEliminationActivePlayers.map((p) => p.id).join(', ')}`,
+      );
+      console.log('✅ Issue #34 verified: Eliminated players not in active list');
+    }
   });
 
   it('should handle all players eliminated scenario', async () => {
