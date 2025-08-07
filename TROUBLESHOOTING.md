@@ -2,7 +2,7 @@
 
 ## Common Development Issues & Solutions
 
-> **Note**: This covers general development issues. The core poker engine is production-ready and extensively tested with 260+ tests.
+> **Note**: This covers general development issues. The core poker engine is production-ready and extensively tested with 242 tests.
 
 ### 1. All Tests Failing with Dealer Button Errors
 **Symptom**: Tests fail with position/betting order issues

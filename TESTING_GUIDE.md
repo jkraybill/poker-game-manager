@@ -1,6 +1,6 @@
 # 🎯 POKER TESTING MASTERY GUIDE
 
-> **260+ Tests: Championship-Grade Testing Excellence**
+> **242 Tests: Championship-Grade Testing Excellence**
 > 
 > This guide covers the world-class testing framework that powers our tournament-ready poker engine. All tests use the comprehensive test utilities framework for maximum maintainability and precision.
 
@@ -8,7 +8,7 @@
 
 ### 🚀 Testing Commands for Poker Excellence
 ```bash
-# 🎯 FULL TEST SUITE (260+ passing tests!)
+# 🎯 FULL TEST SUITE (242 passing tests!)
 npm test
 
 # 🎲 GRANULAR POKER SCENARIOS
@@ -144,8 +144,6 @@ Each core component has comprehensive unit test coverage:
 // This eliminates position randomness and ensures consistent test results
 const table = manager.createTable({
   blinds: { small: 10, big: 20 },
-  minBuyIn: 1000,
-  maxBuyIn: 1000,
   minPlayers: 2,      // Force specific player count
   maxPlayers: 9,      // Prevent over-subscription
   dealerButton: 0,    // 🎯 CRITICAL: Deterministic positioning
@@ -237,7 +235,11 @@ class MultiStackPlayer extends Player {
       }
     }
     
-    return { action: Action.FOLD };
+    // Only fold if facing a bet, otherwise check
+    if (toCall > 0) {
+      return { action: Action.FOLD };
+    }
+    return { action: Action.CHECK };
   }
 }
 ```
@@ -309,7 +311,13 @@ class ButtonStealPlayer extends Player {
       return this.createBBDefense(gameState);
     }
     
-    return { action: Action.FOLD };
+    // Only fold if facing a bet, otherwise check
+    const myState = gameState.players[this.id];
+    const toCall = gameState.currentBet - myState.bet;
+    if (toCall > 0) {
+      return { action: Action.FOLD };
+    }
+    return { action: Action.CHECK };
   }
   
   isButtonStealSpot(gameState, playerStates) {

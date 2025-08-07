@@ -33,7 +33,7 @@ What's your kicker? This library handles the poker basics pretty well.
 
 ### What's Working:
 - ✅ **Texas Hold'em Rules** - Dead button, side pots, the usual stuff
-- ✅ **244 Tests** - All passing with strict validation
+- ✅ **242 Tests** - All passing with strict validation
 - ✅ **Tournament Ready** - Tables accept any stack size now
 - ✅ **Event-Driven** - Woof woof! Events fire when things happen
 - ✅ **Clean Code** - No legacy junk cluttering things up
@@ -99,7 +99,12 @@ class MyPlayer extends Player {
     if (validActions.includes(Action.CALL) && toCall <= 20) {
       return { action: Action.CALL };
     }
-    return { action: Action.FOLD }; // I've seen better hands
+    // Only fold if facing a bet (toCall > 0)
+    if (validActions.includes(Action.FOLD)) {
+      return { action: Action.FOLD };
+    }
+    // Check if we can check for free
+    return { action: Action.CHECK };
   }
 }
 
@@ -162,7 +167,7 @@ const { PokerGameManager, Player } = require('@jkraybill/poker-game-manager');
 - **Clean APIs** - Straightforward to use
 - **Event-Driven** - React to game events as they happen
 - **Flexible Players** - Any player implementation can connect
-- **Good Testing** - 267 tests covering the important stuff
+- **Good Testing** - 242 tests covering the important stuff
 - **JSDoc Types** - Documented interfaces
 
 ### Production Ready
@@ -182,7 +187,7 @@ const { PokerGameManager, Player } = require('@jkraybill/poker-game-manager');
 ## 🧪 Development
 
 ```bash
-# Run all tests (267 passing - not bad!)
+# Run all tests (242 passing - not bad!)
 npm test
 
 # Run specific scenarios - What's your kicker?
@@ -243,7 +248,7 @@ This release handles **single-table Texas Hold'em** pretty well:
 ✅ **Rule Implementation** - Texas Hold'em rules work correctly  
 ✅ **Edge Cases** - All-ins, side pots, eliminations handled  
 ✅ **Tournament Rules** - Dead button positioning like the pros use  
-✅ **Testing Coverage** - 267 tests prove it works  
+✅ **Testing Coverage** - 242 tests prove it works  
 ✅ **Performance** - Fast enough for real use  
 ✅ **Clean Code** - Event-driven architecture that makes sense  
 

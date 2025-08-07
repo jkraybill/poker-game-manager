@@ -46,23 +46,29 @@ npm install @jkraybill/poker-game-manager
 Here's how to get a game running - nothing fancy:
 
 ```javascript
-import { PokerGameManager, Player } from './packages/core/src/index.js';
+import { PokerGameManager, Player, Action } from './packages/core/src/index.js';
 
 // Make a basic player
 class SimplePlayer extends Player {
   async getAction(gameState) {
     const { validActions, toCall } = gameState;
     
-    // Simple strategy: call if it's cheap, fold if it's not
-    if (validActions.includes('CALL') && toCall <= 40) {
-      return { action: 'CALL' };
+    // Simple strategy: call if it's cheap, otherwise check/fold appropriately
+    if (validActions.includes(Action.CALL) && toCall <= 40) {
+      return { action: Action.CALL };
     }
     
-    if (validActions.includes('CHECK')) {
-      return { action: 'CHECK' };
+    if (validActions.includes(Action.CHECK)) {
+      return { action: Action.CHECK };
     }
     
-    return { action: 'FOLD' }; // I've seen better!
+    // Only fold if facing a bet (toCall > 0)
+    if (validActions.includes(Action.FOLD)) {
+      return { action: Action.FOLD }; // I've seen better!
+    }
+    
+    // Fallback (should not reach here with proper validActions)
+    return { action: Action.CHECK };
   }
 }
 
@@ -73,10 +79,18 @@ const table = manager.createTable({
   maxPlayers: 6
 });
 
-// Add some players
-table.addPlayer(new SimplePlayer('Alice'));
-table.addPlayer(new SimplePlayer('Bob'));
-table.addPlayer(new SimplePlayer('Charlie'));
+// Add some players (v2.0: must set chips first!)
+const alice = new SimplePlayer('Alice');
+alice.buyIn(1000); // Set chips before adding
+table.addPlayer(alice);
+
+const bob = new SimplePlayer('Bob');
+bob.buyIn(1000);
+table.addPlayer(bob);
+
+const charlie = new SimplePlayer('Charlie');
+charlie.buyIn(1000);
+table.addPlayer(charlie);
 
 // Listen for results - woof woof!
 table.on('hand:ended', (result) => {
@@ -96,7 +110,7 @@ table.tryStartGame();
 Every player needs to extend the `Player` class. You mainly need to implement `getAction()`:
 
 ```javascript
-import { Player } from './packages/core/src/Player.js';
+import { Player, Action } from './packages/core/src/Player.js';
 
 class MyPlayer extends Player {
   constructor(name, options = {}) {
@@ -106,7 +120,7 @@ class MyPlayer extends Player {
 
   // This is the important one - make decisions here
   async getAction(gameState) {
-    // Return: { action: 'FOLD|CHECK|CALL|BET|RAISE|ALL_IN', amount?: number }
+    // Return: { action: Action.FOLD|Action.CHECK|Action.CALL|Action.BET|Action.RAISE|Action.ALL_IN, amount?: number }
   }
 
   // These are optional but useful
@@ -133,15 +147,20 @@ class CallingStation extends Player {
     const { validActions, toCall } = gameState;
     
     // Just call everything - not great strategy but simple!
-    if (validActions.includes('CALL')) {
-      return { action: 'CALL' };
+    if (validActions.includes(Action.CALL)) {
+      return { action: Action.CALL };
     }
     
-    if (validActions.includes('CHECK')) {
-      return { action: 'CHECK' };
+    if (validActions.includes(Action.CHECK)) {
+      return { action: Action.CHECK };
     }
     
-    return { action: 'FOLD' };
+    // Only fold if facing a bet
+    if (validActions.includes(Action.FOLD)) {
+      return { action: Action.FOLD };
+    }
+    
+    return { action: Action.CHECK };
   }
 }
 ```
@@ -155,16 +174,21 @@ class PotOddsPlayer extends Player {
     // Calculate pot odds - basic poker math
     const potOdds = toCall / (potSize + toCall);
     
-    if (validActions.includes('CHECK')) {
-      return { action: 'CHECK' }; // Free cards? Yes please
+    if (validActions.includes(Action.CHECK)) {
+      return { action: Action.CHECK }; // Free cards? Yes please
     }
     
     // Call if we're getting good odds
-    if (validActions.includes('CALL') && potOdds < 0.3) {
-      return { action: 'CALL' };
+    if (validActions.includes(Action.CALL) && potOdds < 0.3) {
+      return { action: Action.CALL };
     }
     
-    return { action: 'FOLD' }; // I've seen better odds!
+    // Only fold if facing a bet
+    if (validActions.includes(Action.FOLD)) {
+      return { action: Action.FOLD }; // I've seen better odds!
+    }
+    
+    return { action: Action.CHECK };
   }
 }
 ```
@@ -185,14 +209,18 @@ class PositionalPlayer extends Player {
     const aggression = isLatePosition ? 0.7 : 0.3;
     
     if (phase === 'PRE_FLOP' && currentBet === 0 && Math.random() < aggression) {
-      return { action: 'BET', amount: gameState.minRaise };
+      return { action: Action.BET, amount: gameState.minRaise };
     }
     
-    if (validActions.includes('CHECK')) {
-      return { action: 'CHECK' };
+    if (validActions.includes(Action.CHECK)) {
+      return { action: Action.CHECK };
     }
     
-    return { action: 'FOLD' };
+    if (validActions.includes(Action.FOLD)) {
+      return { action: Action.FOLD };
+    }
+    
+    return { action: Action.CHECK };
   }
 }
 ```
@@ -216,11 +244,11 @@ The `gameState` object tells you everything happening at the table:
       bet: 20,                             // What they've bet this round
       state: 'ACTIVE|FOLDED|ALL_IN',       // What they're doing
       hasActed: true,                      // Have they acted this round?
-      lastAction: 'CALL'                   // What they did last
+      lastAction: Action.CALL              // What they did last
     }
   },
   
-  validActions: ['FOLD', 'CALL', 'RAISE'], // What you can do
+  validActions: [Action.FOLD, Action.CALL, Action.RAISE], // What you can do
   
   // These are calculated for you - woof woof!
   toCall: 20,           // Amount to call
@@ -285,7 +313,7 @@ table.on('pot:updated', ({ total }) => {
 Here's a more complete example with different player types:
 
 ```javascript
-import { PokerGameManager, Player } from './packages/core/src/index.js';
+import { PokerGameManager, Player, Action } from './packages/core/src/index.js';
 
 // Tight player - folds a lot
 class TightPlayer extends Player {
@@ -293,16 +321,21 @@ class TightPlayer extends Player {
     const { validActions, toCall, potSize } = gameState;
     const potOdds = toCall / (potSize + toCall);
     
-    if (validActions.includes('CHECK')) {
-      return { action: 'CHECK' };
+    if (validActions.includes(Action.CHECK)) {
+      return { action: Action.CHECK };
     }
     
     // Only call with really good odds
-    if (validActions.includes('CALL') && potOdds < 0.2) {
-      return { action: 'CALL' };
+    if (validActions.includes(Action.CALL) && potOdds < 0.2) {
+      return { action: Action.CALL };
     }
     
-    return { action: 'FOLD' }; // I've seen better!
+    // Only fold if facing a bet
+    if (validActions.includes(Action.FOLD)) {
+      return { action: Action.FOLD }; // I've seen better!
+    }
+    
+    return { action: Action.CHECK };
   }
 }
 
@@ -312,16 +345,20 @@ class LoosePlayer extends Player {
     const { validActions, toCall, potSize } = gameState;
     const potOdds = toCall / (potSize + toCall);
     
-    if (validActions.includes('CHECK')) {
-      return { action: 'CHECK' };
+    if (validActions.includes(Action.CHECK)) {
+      return { action: Action.CHECK };
     }
     
     // Call with okay odds
-    if (validActions.includes('CALL') && potOdds < 0.4) {
-      return { action: 'CALL' };
+    if (validActions.includes(Action.CALL) && potOdds < 0.4) {
+      return { action: Action.CALL };
     }
     
-    return { action: 'FOLD' };
+    if (validActions.includes(Action.FOLD)) {
+      return { action: Action.FOLD };
+    }
+    
+    return { action: Action.CHECK };
   }
 }
 
@@ -331,23 +368,27 @@ class AggressivePlayer extends Player {
     const { validActions, currentBet } = gameState;
     
     // Try to bet or raise first
-    if (validActions.includes('RAISE') && Math.random() < 0.4) {
-      return { action: 'RAISE', amount: gameState.minRaise };
+    if (validActions.includes(Action.RAISE) && Math.random() < 0.4) {
+      return { action: Action.RAISE, amount: gameState.minRaise };
     }
     
-    if (validActions.includes('BET') && Math.random() < 0.3) {
-      return { action: 'BET', amount: gameState.minRaise };
+    if (validActions.includes(Action.BET) && Math.random() < 0.3) {
+      return { action: Action.BET, amount: gameState.minRaise };
     }
     
-    if (validActions.includes('CHECK')) {
-      return { action: 'CHECK' };
+    if (validActions.includes(Action.CHECK)) {
+      return { action: Action.CHECK };
     }
     
-    if (validActions.includes('CALL') && Math.random() < 0.6) {
-      return { action: 'CALL' };
+    if (validActions.includes(Action.CALL) && Math.random() < 0.6) {
+      return { action: Action.CALL };
     }
     
-    return { action: 'FOLD' };
+    if (validActions.includes(Action.FOLD)) {
+      return { action: Action.FOLD };
+    }
+    
+    return { action: Action.CHECK };
   }
 }
 
@@ -359,10 +400,21 @@ const table = manager.createTable({
 });
 
 // Add different player types - variety is the spice of life!
-table.addPlayer(new TightPlayer('Tight Tom'));
-table.addPlayer(new LoosePlayer('Loose Lucy'));  
-table.addPlayer(new AggressivePlayer('Aggressive Anna'));
-table.addPlayer(new TightPlayer('Conservative Carl'));
+const tightTom = new TightPlayer('Tight Tom');
+tightTom.buyIn(2000);
+table.addPlayer(tightTom);
+
+const looseLucy = new LoosePlayer('Loose Lucy');
+looseLucy.buyIn(2000);
+table.addPlayer(looseLucy);
+
+const aggressiveAnna = new AggressivePlayer('Aggressive Anna');
+aggressiveAnna.buyIn(2000);
+table.addPlayer(aggressiveAnna);
+
+const conservativeCarl = new TightPlayer('Conservative Carl');
+conservativeCarl.buyIn(2000);
+table.addPlayer(conservativeCarl);
 
 let handCount = 0;
 
@@ -419,9 +471,14 @@ const customDeck = [
 
 table.setCustomDeck(customDeck);
 
-// Add your test players
-table.addPlayer(new YourPlayerClass('Test Player 1'));
-table.addPlayer(new SimplePlayer('Test Player 2'));
+// Add your test players (v2.0: set chips first!)
+const testPlayer1 = new YourPlayerClass('Test Player 1');
+testPlayer1.buyIn(1000);
+table.addPlayer(testPlayer1);
+
+const testPlayer2 = new SimplePlayer('Test Player 2');
+testPlayer2.buyIn(1000);
+table.addPlayer(testPlayer2);
 
 // Run the test
 table.tryStartGame();
@@ -481,13 +538,13 @@ receiveGameUpdate(update)        // Game state changes
 
 **Action Format:**
 ```javascript
-// What you return from getAction()
-{ action: 'FOLD' }                    // Give up
-{ action: 'CHECK' }                   // No bet, no call
-{ action: 'CALL' }                    // Match the bet
-{ action: 'BET', amount: 50 }         // First to bet
-{ action: 'RAISE', amount: 100 }      // Increase the bet (total amount)
-{ action: 'ALL_IN' }                  // Everything!
+// What you return from getAction() - MUST use Action enum!
+{ action: Action.FOLD }                    // Give up (only when toCall > 0)
+{ action: Action.CHECK }                   // No bet, no call
+{ action: Action.CALL }                    // Match the bet
+{ action: Action.BET, amount: 50 }         // First to bet
+{ action: Action.RAISE, amount: 100 }      // Increase the bet (total amount)
+{ action: Action.ALL_IN }                  // Everything!
 ```
 
 ### Important Events
@@ -536,9 +593,11 @@ When players run out of chips, they get eliminated:
 table.on('player:eliminated', ({ playerId, finalChips }) => {
   console.log(`${playerId} is out! (had ${finalChips} chips)`);
   
-  // Maybe add a new player?
+  // Maybe add a new player? (v2.0: set chips first!)
   if (table.getPlayerCount() < 4) {
-    table.addPlayer(new SomePlayer('New Player'));
+    const newPlayer = new SomePlayer('New Player');
+    newPlayer.buyIn(1000);
+    table.addPlayer(newPlayer);
   }
 });
 ```
@@ -555,7 +614,7 @@ table.on('player:action', ({ playerId, action }) => {
   
   const stats = playerStats.get(playerId);
   stats.actions++;
-  if (action === 'FOLD') stats.folds++;
+  if (action === Action.FOLD) stats.folds++;
 });
 
 table.on('hand:ended', () => {
