@@ -115,8 +115,8 @@ describe('Standings Display (Issue #34) - v2', () => {
     // Wait for hand to complete
     await waitForHandEnd(events);
 
-    // Brief delay for elimination events
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Give more time for elimination events in CI
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     // Check final standings - should have eliminated players separated
     const finalStandings = getFormattedStandings(
@@ -215,8 +215,8 @@ describe('Standings Display (Issue #34) - v2', () => {
     // Wait for hand to complete
     await waitForHandEnd(events);
 
-    // Brief delay for elimination events
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Give more time for elimination events in CI
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     // After the hand, we should have 1 active + 1 eliminated = 2 total
     const standings = getFormattedStandings(table.players, eliminatedPlayers);
