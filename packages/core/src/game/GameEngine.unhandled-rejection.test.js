@@ -28,7 +28,7 @@ describe('GameEngine - Unhandled Promise Rejection Bug', () => {
     // Create a player that tries to fold when they can check
     // This player will be the BB and try to fold when toCall = 0
     class BadFoldPlayer extends Player {
-      async getAction(gameState) {
+      getAction(gameState) {
         const myState = gameState.players[this.id];
         const toCall = Math.max(0, gameState.currentBet - myState.bet);
         
@@ -65,7 +65,7 @@ describe('GameEngine - Unhandled Promise Rejection Bug', () => {
     
     // Create a normal player for SB position
     class NormalPlayer extends Player {
-      async getAction(gameState) {
+      getAction(gameState) {
         const myState = gameState.players[this.id];
         const toCall = Math.max(0, gameState.currentBet - myState.bet);
         
@@ -137,7 +137,7 @@ describe('GameEngine - Unhandled Promise Rejection Bug', () => {
     // 1. If actionCallCount > 1, the validation error was swallowed
     // 2. If rejectionOccurred is true, we had an unhandled rejection
     
-    console.log(`\n=== Test Results ===`);
+    console.log('\n=== Test Results ===');
     console.log(`getAction was called ${actionCallCount} times`);
     console.log(`Unhandled rejection occurred: ${rejectionOccurred}`);
     
