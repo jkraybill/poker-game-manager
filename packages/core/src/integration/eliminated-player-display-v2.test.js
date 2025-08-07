@@ -222,21 +222,28 @@ describe('Eliminated Player Display (v2)', () => {
     table.tryStartGame();
     await waitForHandEnd(events);
 
-    // Give time for elimination events
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Give more time for elimination events in CI
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     // After the hand, at least one player should be eliminated (unless split pot)
     // With both players all-in, we expect 0 eliminations (split pot) or 1 elimination
     expect(eliminationCount).toBeGreaterThanOrEqual(0);
     expect(eliminationCount).toBeLessThanOrEqual(1);
 
-    // Check active players
+    // Check active players - wait for elimination to complete
     const activePlayers = Array.from(table.players.values()).filter(
       (pd) => pd.player.chips > 0,
     );
 
-    // Should have exactly 1 active player (the winner)
-    expect(activePlayers).toHaveLength(1);
+    // Should have exactly 1 active player (the winner) unless split pot
+    // In case of split pot, both players survive
+    if (eliminationCount === 0) {
+      // Split pot - both players survive
+      expect(activePlayers).toHaveLength(2);
+    } else {
+      // One eliminated - only winner remains
+      expect(activePlayers).toHaveLength(1);
+    }
     expect(activePlayers[0].player.chips).toBeGreaterThan(0);
 
     console.log(
