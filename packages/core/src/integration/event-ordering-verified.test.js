@@ -115,22 +115,22 @@ describe('Event Ordering - Verified (Issue #33)', () => {
       console.log(`  ${e.event} at ${e.timestamp}`);
     });
 
-    // Verify hand:ended came before handleGameEnd
+    // Verify handleGameEnd runs first, then hand:ended (fixed in v3.0.2)
     const handEndedEvent = eventLog.find((e) => e.event === 'hand:ended');
     const handleGameEndEvent = eventLog.find((e) => e.event === 'handleGameEnd');
 
     expect(handEndedEvent).toBeTruthy();
     expect(handleGameEndEvent).toBeTruthy();
 
-    // Check order in array (more reliable than timestamp comparison)
+    // Check order in array - handleGameEnd should be BEFORE hand:ended now
     const handEndedIndex = eventLog.findIndex((e) => e.event === 'hand:ended');
     const handleGameEndIndex = eventLog.findIndex(
       (e) => e.event === 'handleGameEnd',
     );
-    expect(handEndedIndex).toBeLessThan(handleGameEndIndex);
+    expect(handleGameEndIndex).toBeLessThan(handEndedIndex);
   });
 
-  it('should ensure elimination events fire after hand:ended', async () => {
+  it('should ensure elimination events fire BEFORE hand:ended (fixed in v3.0.2)', async () => {
     const eventLog = [];
     let handEndedFired = false;
 
