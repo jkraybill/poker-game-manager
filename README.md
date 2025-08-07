@@ -8,7 +8,14 @@ What's your kicker? This library handles the poker basics pretty well.
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
 [![GitHub Package](https://img.shields.io/badge/npm-GitHub%20Packages-blue)](https://github.com/jkraybill/poker-game-manager/packages)
 
-## ✨ What's New in v3.0.0
+## ✨ What's New in v3.0.2
+
+### Race Condition Fix 🏁
+- **Fixed `hand:ended` timing** - Now fires AFTER elimination processing completes
+- **Chip conservation guaranteed** - External systems always see consistent state
+- **Tournament integrity** - No more temporary "missing chips" during eliminations
+
+## Previous v3.0.0 Changes
 
 ### Strict Action Validation 🚨
 - **Action enum is now mandatory** - String actions like 'FOLD' will crash immediately
@@ -33,13 +40,14 @@ What's your kicker? This library handles the poker basics pretty well.
 
 ### What's Working:
 - ✅ **Texas Hold'em Rules** - Dead button, side pots, the usual stuff
-- ✅ **242 Tests** - All passing with strict validation
+- ✅ **249 Tests** - All passing with strict validation
 - ✅ **Tournament Ready** - Tables accept any stack size now
-- ✅ **Event-Driven** - Woof woof! Events fire when things happen
+- ✅ **Event-Driven** - Events fire in correct order (eliminations before hand:ended)
 - ✅ **Clean Code** - No legacy junk cluttering things up
 - ✅ **Lightning Fast** - 32x faster hand evaluation with caching
 - ✅ **Memory Efficient** - Object pooling reduces GC pressure
 - ✅ **Strict Validation** - Invalid actions crash immediately (no silent failures!)
+- ✅ **Race-Condition Free** - Proper event synchronization for tournament managers
 
 ## 🚀 Quick Start
 

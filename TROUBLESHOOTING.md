@@ -2,7 +2,7 @@
 
 ## Common Development Issues & Solutions
 
-> **Note**: This covers general development issues. The core poker engine is production-ready and extensively tested with 242 tests.
+> **Note**: This covers general development issues. The core poker engine is production-ready and extensively tested with 249 tests.
 
 ### 1. All Tests Failing with Dealer Button Errors
 **Symptom**: Tests fail with position/betting order issues
@@ -86,7 +86,16 @@ import { Player } from './Player.js';
 - 3 players: Player 0 = Button, Player 1 = SB, Player 2 = BB
 - 4+ players: Player 0 = Button, then SB, BB, UTG, MP, CO...
 
-### 8. Race Conditions in Tests
+### 8. Chip Conservation Issues (Fixed in v3.0.2)
+**Symptom**: External systems see temporary chip losses during eliminations
+**Root Cause**: `hand:ended` fired before elimination processing completed
+**Status**: ✅ FIXED in v3.0.2 - Events now properly synchronized
+**Details**: 
+- `player:eliminated` now always fires BEFORE `hand:ended`
+- External tournament managers see consistent state
+- No API changes required
+
+### 9. Race Conditions in Tests
 **Symptom**: Tests pass individually but fail when run together
 **Solutions**:
 ```javascript

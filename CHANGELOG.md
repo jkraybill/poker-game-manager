@@ -5,6 +5,24 @@ All notable changes to the Poker Game Manager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.2] - 2025-08-07
+
+### Fixed 🔧
+- **Race Condition in Event Timing** - `hand:ended` now fires AFTER elimination processing completes
+- **Chip Conservation Guaranteed** - External tournament managers always see consistent chip state
+- **Player Count Accuracy** - Eliminated players removed before `hand:ended` event fires
+
+### Technical Details
+- Delayed `hand:ended` event emission until after all Table-level processing
+- Synchronized elimination events with proper ordering
+- No API breaking changes - only timing adjustments for correctness
+
+## [3.0.1] - 2025-08-07
+
+### Fixed 🔧
+- **Unhandled Promise Rejections** - Fixed async/await chain in GameEngine for proper error propagation
+- **Test Suite Stability** - All 249 tests now pass consistently in CI environment
+
 ## [3.0.0] - 2025-08-07
 
 ### 🎉 MAJOR RELEASE: v3.0.0 - Documentation Excellence & Validation Mastery

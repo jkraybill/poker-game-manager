@@ -1,4 +1,9 @@
-# Response to PGM v2.1.7 Progressive Chip Loss Report
+# Response to Chip Conservation Bug Reports
+
+## UPDATE: v3.0.2 Released - Race Condition Fixed!
+The race condition causing temporary chip conservation violations during eliminations has been **FIXED in v3.0.2**. Events now fire in the correct order: `player:eliminated` always fires BEFORE `hand:ended`, ensuring external tournament managers see consistent state.
+
+## Original Response to PGM v2.1.7 Progressive Chip Loss Report
 
 ## Executive Summary
 The reported progressive chip loss issue **cannot be reproduced** with poker-game-manager v2.1.7. Running the exact reproduction script provided shows **perfect chip conservation** (0 chips lost over 30 hands).
