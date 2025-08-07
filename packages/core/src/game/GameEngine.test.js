@@ -109,6 +109,9 @@ describe('GameEngine', () => {
     });
 
     it('should start a new hand', () => {
+      // Mock promptNextPlayer to prevent async game loop
+      const promptSpy = vi.spyOn(gameEngine, 'promptNextPlayer').mockResolvedValue();
+      
       const handStartedSpy = vi.fn();
       gameEngine.on('hand:started', handStartedSpy);
 
@@ -118,9 +121,15 @@ describe('GameEngine', () => {
         players: ['player1', 'player2', 'player3'],
         dealerButton: gameEngine.dealerButtonIndex,
       });
+      
+      // Restore original implementation
+      promptSpy.mockRestore();
     });
 
     it('should deal hole cards to all players', () => {
+      // Mock promptNextPlayer to prevent async game loop
+      const promptSpy = vi.spyOn(gameEngine, 'promptNextPlayer').mockResolvedValue();
+      
       gameEngine.start();
 
       expect(mockPlayers[0].player.receivePrivateCards).toHaveBeenCalledWith(
@@ -129,9 +138,15 @@ describe('GameEngine', () => {
           expect.objectContaining({ rank: expect.any(String) }),
         ]),
       );
+      
+      // Restore original implementation
+      promptSpy.mockRestore();
     });
 
     it('should post blinds', () => {
+      // Mock promptNextPlayer to prevent async game loop
+      const promptSpy = vi.spyOn(gameEngine, 'promptNextPlayer').mockResolvedValue();
+      
       const potUpdatedSpy = vi.fn();
       gameEngine.on('pot:updated', potUpdatedSpy);
 
@@ -139,11 +154,20 @@ describe('GameEngine', () => {
 
       // Should have two pot updates for small and big blind
       expect(potUpdatedSpy).toHaveBeenCalledTimes(2);
+      
+      // Restore original implementation
+      promptSpy.mockRestore();
     });
 
     it('should throw error if game already in progress', () => {
+      // Mock promptNextPlayer to prevent async game loop
+      const promptSpy = vi.spyOn(gameEngine, 'promptNextPlayer').mockResolvedValue();
+      
       gameEngine.start();
       expect(() => gameEngine.start()).toThrow('Game already in progress');
+      
+      // Restore original implementation
+      promptSpy.mockRestore();
     });
   });
 
@@ -182,6 +206,8 @@ describe('GameEngine', () => {
           });
         });
       });
+      // Mock promptNextPlayer to prevent the game loop from running automatically
+      vi.spyOn(gameEngine, 'promptNextPlayer').mockResolvedValue();
       gameEngine.start();
     });
 
@@ -190,9 +216,14 @@ describe('GameEngine', () => {
       if (gameEngine.phase !== 'ENDED') {
         gameEngine.abort();
       }
+      // Restore all mocks
+      vi.restoreAllMocks();
     });
 
     it('should reject fold action when check is available', async () => {
+      // Restore real promptNextPlayer for this test
+      gameEngine.promptNextPlayer.mockRestore();
+      
       // Set up BB with option to check (everyone called)
       const sbIndex = gameEngine.getNextActivePlayerIndex(gameEngine.dealerButtonIndex);
       const bbIndex = gameEngine.getNextActivePlayerIndex(sbIndex);
@@ -223,6 +254,9 @@ describe('GameEngine', () => {
     });
 
     it('should handle check action when valid', async () => {
+      // Restore real promptNextPlayer for this test
+      gameEngine.promptNextPlayer.mockRestore();
+      
       // In a simpler test, just verify that check works when current bet matches player bet
       // Skip to a state where everyone has acted and it's time for someone to check
 
@@ -275,10 +309,13 @@ describe('GameEngine', () => {
     });
 
     it('should progress through all betting rounds', () => {
+      // Mock promptNextPlayer to prevent async game loop
+      const promptSpy = vi.spyOn(gameEngine, 'promptNextPlayer').mockResolvedValue();
+      
       const communityCardsSpy = vi.fn();
       gameEngine.on('cards:community', communityCardsSpy);
 
-      // Start the game but immediately abort to prevent background processing
+      // Start the game
       gameEngine.start();
       
       // Manually set up pre-flop betting completion state
@@ -300,8 +337,8 @@ describe('GameEngine', () => {
         phase: 'FLOP',
       });
       
-      // Abort to prevent further processing
-      gameEngine.abort();
+      // Restore original implementation
+      promptSpy.mockRestore();
     });
   });
 
@@ -314,6 +351,9 @@ describe('GameEngine', () => {
     });
 
     it('should end hand when only one player remains', () => {
+      // Mock promptNextPlayer to prevent async game loop
+      const promptSpy = vi.spyOn(gameEngine, 'promptNextPlayer').mockResolvedValue();
+      
       const handCompleteSpy = vi.fn();
       gameEngine.on('hand:complete', handCompleteSpy);
 
@@ -334,6 +374,9 @@ describe('GameEngine', () => {
           board: expect.any(Array),
         }),
       );
+      
+      // Restore original implementation
+      promptSpy.mockRestore();
     });
   });
 
@@ -346,6 +389,9 @@ describe('GameEngine', () => {
     });
 
     it('should abort the game', () => {
+      // Mock promptNextPlayer to prevent async game loop
+      const promptSpy = vi.spyOn(gameEngine, 'promptNextPlayer').mockResolvedValue();
+      
       const abortSpy = vi.fn();
       gameEngine.on('game:aborted', abortSpy);
 
@@ -354,6 +400,9 @@ describe('GameEngine', () => {
 
       expect(gameEngine.phase).toBe('ENDED');
       expect(abortSpy).toHaveBeenCalled();
+      
+      // Restore original implementation
+      promptSpy.mockRestore();
     });
   });
 });
