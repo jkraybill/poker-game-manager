@@ -29,7 +29,7 @@ class MockPlayer extends Player {
       }
       
       return Promise.resolve({
-        action: action,
+        action,
         playerId: config.id,
         timestamp: Date.now(),
       });
@@ -162,7 +162,7 @@ describe('GameEngine', () => {
           }
           
           return Promise.resolve({
-            action: action,
+            action,
             playerId: mp.player.id,
             timestamp: Date.now(),
           });
