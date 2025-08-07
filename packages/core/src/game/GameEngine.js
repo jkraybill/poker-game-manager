@@ -725,7 +725,16 @@ export class GameEngine extends WildcardEventEmitter {
     if (callAmount > 0) {
       player.chips -= callAmount;
       player.bet += callAmount;
-      this.potManager.addToPot(player, callAmount);
+      
+      // Add to pot and check if all chips were accepted
+      const result = this.potManager.addToPot(player, callAmount);
+      const uncalledAmount = callAmount - result.totalContributed;
+      
+      // Return any uncalled chips to the player
+      if (uncalledAmount > 0) {
+        player.chips += uncalledAmount;
+        player.bet -= uncalledAmount;
+      }
 
       if (player.chips === 0) {
         player.state = PlayerState.ALL_IN;
@@ -741,7 +750,16 @@ export class GameEngine extends WildcardEventEmitter {
 
     player.chips -= actualAmount;
     player.bet += actualAmount;
-    this.potManager.addToPot(player, actualAmount);
+    
+    // Add to pot and check if all chips were accepted
+    const result = this.potManager.addToPot(player, actualAmount);
+    const uncalledAmount = actualAmount - result.totalContributed;
+    
+    // Return any uncalled chips to the player
+    if (uncalledAmount > 0) {
+      player.chips += uncalledAmount;
+      player.bet -= uncalledAmount;
+    }
 
     if (player.chips === 0) {
       player.state = PlayerState.ALL_IN;
