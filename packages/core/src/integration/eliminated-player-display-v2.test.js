@@ -30,30 +30,52 @@ describe('Eliminated Player Display (v2)', () => {
 
   it('should not show eliminated players in active player list', async () => {
     // Strategy: Always go all-in to force elimination
-    const alwaysAllInStrategy = ({ myState }) => {
-      // Always go all-in if we have chips
-      if (myState.chips > 0) {
+    const alwaysAllInStrategy = ({ myState, validActions }) => {
+      // Always go all-in if we have chips and it's valid
+      if (myState.chips > 0 && validActions.includes(Action.ALL_IN)) {
         return {
           action: Action.ALL_IN,
           amount: myState.chips,
         };
       }
+      
+      // Otherwise use the first available valid action
+      if (validActions.includes(Action.CHECK)) {
+        return {
+          action: Action.CHECK,
+        };
+      }
+      
+      if (validActions.includes(Action.CALL)) {
+        return {
+          action: Action.CALL,
+        };
+      }
+      
       return {
-        action: Action.CHECK,
+        action: Action.FOLD,
       };
     };
 
     // Regular calling strategy for other players
-    const callStrategy = ({ toCall }) => {
-      if (toCall > 0) {
+    const callStrategy = ({ validActions, toCall }) => {
+      // Use validActions to ensure we only take valid actions
+      if (validActions.includes(Action.CALL) && toCall > 0) {
         return {
           action: Action.CALL,
           amount: toCall,
         };
       }
 
+      if (validActions.includes(Action.CHECK)) {
+        return {
+          action: Action.CHECK,
+        };
+      }
+
+      // Fallback to FOLD if nothing else is available
       return {
-        action: Action.CHECK,
+        action: Action.FOLD,
       };
     };
 
