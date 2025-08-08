@@ -6,9 +6,9 @@
 
 **WHAT WE BUILT**: A tournament-ready poker engine that rivals commercial solutions in quality and exceeds them in comprehensiveness. This isn't just another poker library - it's a **championship-grade foundation** that proves mastery of poker software engineering.
 
-## 🎉 v3.0.2 PRODUCTION READY! 🚀
+## 🎉 v3.0.3 PRODUCTION READY! 🚀
 
-**STATUS: SINGLE-TABLE TEXAS HOLD'EM MASTERED** 🏆
+**STATUS: SINGLE-TABLE TEXAS HOLD'EM MASTERED WITH PERFECT CHIP CONSERVATION** 🏆
 
 We've built something **extraordinary** - a rock-solid, tournament-ready poker engine that exceeds professional standards:
 

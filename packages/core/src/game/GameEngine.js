@@ -434,7 +434,7 @@ export class GameEngine extends WildcardEventEmitter {
         state: player.state,
         hasActed: player.hasActed,
         lastAction: player.lastAction,
-        toCall
+        toCall,
       },
       table: {
         activePlayers: activePlayers.length,
@@ -443,23 +443,23 @@ export class GameEngine extends WildcardEventEmitter {
         dealerButton: this.dealerButtonIndex,
         currentPlayerIndex: this.currentPlayerIndex,
         bigBlind: this.config.bigBlind,
-        smallBlind: this.config.smallBlind
+        smallBlind: this.config.smallBlind,
       },
       attemptedAction: {
         action: action?.action,
-        amount: action?.amount
+        amount: action?.amount,
       },
       bettingHistory: {
         raiseHistory: this.raiseHistory,
         lastRaiseSize: this.getLastRaiseSize(),
-        minRaiseIncrement: this.getMinimumRaiseIncrement()
+        minRaiseIncrement: this.getMinimumRaiseIncrement(),
       },
       playerBets: this.players.map(p => ({
         id: p.id,
         bet: p.bet,
         chips: p.chips,
-        state: p.state
-      }))
+        state: p.state,
+      })),
     };
   }
 
@@ -476,7 +476,7 @@ export class GameEngine extends WildcardEventEmitter {
       throw new Error(
         `Invalid action: action object is ${action ? 'missing action property' : 'undefined'}. ` +
         'Expected format: { action: Action.FOLD, amount?: number }\n' +
-        `Game State: ${JSON.stringify(context, null, 2)}`
+        `Game State: ${JSON.stringify(context, null, 2)}`,
       );
     }
 
@@ -489,7 +489,7 @@ export class GameEngine extends WildcardEventEmitter {
         `Invalid action type: ${receivedAction}. ` +
         `Must use Action enum values: ${validActionValues.join(', ')}. ` +
         'Example: { action: Action.ALL_IN } not { action: "allIn" }\n' +
-        `Game State: ${JSON.stringify(context, null, 2)}`
+        `Game State: ${JSON.stringify(context, null, 2)}`,
       );
     }
 
@@ -499,10 +499,10 @@ export class GameEngine extends WildcardEventEmitter {
         if (toCall <= 0) {
           const context = this.buildErrorContext(player, action);
           throw new Error(
-            `Cannot fold when you can check for free.\n` +
+            'Cannot fold when you can check for free.\n' +
             `Reason: Player can check (toCall=${toCall}, currentBet=${currentBet}, playerBet=${player.bet})\n` +
-            `Solution: Use Action.CHECK instead of Action.FOLD\n` +
-            `Game State: ${JSON.stringify(context, null, 2)}`
+            'Solution: Use Action.CHECK instead of Action.FOLD\n' +
+            `Game State: ${JSON.stringify(context, null, 2)}`,
           );
         }
         return;
@@ -511,10 +511,10 @@ export class GameEngine extends WildcardEventEmitter {
         if (toCall > 0) {
           const context = this.buildErrorContext(player, action);
           throw new Error(
-            `Cannot check when facing a bet.\n` +
+            'Cannot check when facing a bet.\n' +
             `Reason: Player must call ${toCall} chips (currentBet=${currentBet}, playerBet=${player.bet})\n` +
-            `Solutions: Use Action.CALL to match the bet, Action.RAISE to increase it, or Action.FOLD to give up\n` +
-            `Game State: ${JSON.stringify(context, null, 2)}`
+            'Solutions: Use Action.CALL to match the bet, Action.RAISE to increase it, or Action.FOLD to give up\n' +
+            `Game State: ${JSON.stringify(context, null, 2)}`,
           );
         }
         return;
@@ -523,19 +523,19 @@ export class GameEngine extends WildcardEventEmitter {
         if (toCall <= 0) {
           const context = this.buildErrorContext(player, action);
           throw new Error(
-            `Nothing to call.\n` +
+            'Nothing to call.\n' +
             `Reason: No bet to match (currentBet=${currentBet}, playerBet=${player.bet}, toCall=${toCall})\n` +
-            `Solution: Use Action.CHECK instead of Action.CALL\n` +
-            `Game State: ${JSON.stringify(context, null, 2)}`
+            'Solution: Use Action.CHECK instead of Action.CALL\n' +
+            `Game State: ${JSON.stringify(context, null, 2)}`,
           );
         }
         if (toCall > player.chips) {
           const context = this.buildErrorContext(player, action);
           throw new Error(
-            `Insufficient chips to call.\n` +
+            'Insufficient chips to call.\n' +
             `Reason: Need ${toCall} chips to call but player only has ${player.chips} chips\n` +
             `Solution: Use Action.ALL_IN to go all-in with remaining ${player.chips} chips, or Action.FOLD\n` +
-            `Game State: ${JSON.stringify(context, null, 2)}`
+            `Game State: ${JSON.stringify(context, null, 2)}`,
           );
         }
         return;
@@ -544,11 +544,11 @@ export class GameEngine extends WildcardEventEmitter {
         if (currentBet > 0) {
           const context = this.buildErrorContext(player, action);
           throw new Error(
-            `Cannot bet when facing a bet - use raise.\n` +
+            'Cannot bet when facing a bet - use raise.\n' +
             `Reason: There's already a bet of ${currentBet} on the table\n` +
             `Solution: Use Action.RAISE to increase the bet to ${action.amount || 'desired amount'}\n` +
             `Current bet details: ${this.players.filter(p => p.bet > 0).map(p => `${p.id}: ${p.bet} chips`).join(', ')}\n` +
-            `Game State: ${JSON.stringify(context, null, 2)}`
+            `Game State: ${JSON.stringify(context, null, 2)}`,
           );
         }
         const betResult = this.validateBetAmount(action.amount, player);
@@ -558,7 +558,7 @@ export class GameEngine extends WildcardEventEmitter {
             `Invalid bet amount: ${action.amount}.\n` +
             `Reason: ${betResult.reason}\n` +
             `Constraints: Minimum bet=${this.config.bigBlind}, Player chips=${player.chips}\n` +
-            `Game State: ${JSON.stringify(context, null, 2)}`
+            `Game State: ${JSON.stringify(context, null, 2)}`,
           );
         }
         return;
@@ -568,10 +568,10 @@ export class GameEngine extends WildcardEventEmitter {
         if (currentBet === 0) {
           const context = this.buildErrorContext(player, action);
           throw new Error(
-            `Cannot raise without a bet - use bet.\n` +
-            `Reason: No current bet to raise (currentBet=0)\n` +
+            'Cannot raise without a bet - use bet.\n' +
+            'Reason: No current bet to raise (currentBet=0)\n' +
             `Solution: Use Action.BET with amount ${action.amount || this.config.bigBlind}\n` +
-            `Game State: ${JSON.stringify(context, null, 2)}`
+            `Game State: ${JSON.stringify(context, null, 2)}`,
           );
         }
         const raiseResult = this.validateRaiseAmount(action.amount, player);
@@ -583,7 +583,7 @@ export class GameEngine extends WildcardEventEmitter {
             `Reason: ${raiseResult.reason}\n` +
             `Constraints: Current bet=${currentBet}, Minimum raise to=${minRaise}, Player chips=${player.chips}, Player current bet=${player.bet}\n` +
             `Raise history this round: ${this.raiseHistory.length > 0 ? this.raiseHistory.join(', ') : 'none'}\n` +
-            `Game State: ${JSON.stringify(context, null, 2)}`
+            `Game State: ${JSON.stringify(context, null, 2)}`,
           );
         }
         return;
@@ -628,18 +628,16 @@ export class GameEngine extends WildcardEventEmitter {
    */
   validateRaiseAmount(amount, player) {
     const currentBet = this.getCurrentBet();
-    const toCall = currentBet - player.bet;
 
     // The 'amount' parameter appears to be the total bet amount (raise TO)
     // not the raise increment (raise BY)
     const proposedTotalBet = amount;
-    const raiseIncrement = proposedTotalBet - currentBet;
 
     // Rule 5.2.2.2: Check if player has already acted and betting wasn't reopened
     if (player.hasActed) {
       return {
         valid: false,
-        reason: `Cannot re-raise - betting was not reopened by a full raise. Player already acted this round. ` +
+        reason: 'Cannot re-raise - betting was not reopened by a full raise. Player already acted this round. ' +
                 `Last raise size: ${this.getLastRaiseSize()}, Minimum full raise: ${this.getMinimumRaiseIncrement()}`,
       };
     }

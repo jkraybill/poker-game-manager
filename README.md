@@ -8,7 +8,15 @@ What's your kicker? This library handles the poker basics pretty well.
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
 [![GitHub Package](https://img.shields.io/badge/npm-GitHub%20Packages-blue)](https://github.com/jkraybill/poker-game-manager/packages)
 
-## ✨ What's New in v3.0.2
+## ✨ What's New in v3.0.3
+
+### Critical Chip Conservation Fix 💰
+- **CRITICAL FIX**: Resolved chip conservation bug that caused up to 15% of chips to disappear
+- **Fixed uncalled bet handling** - Complex side pot scenarios now properly refund uncalled chips
+- **Added comprehensive test suite** - Multiple chip conservation tests ensure perfect chip tracking
+- **100% chip conservation guaranteed** - All game scenarios maintain exact chip totals
+
+## Previous v3.0.2 Changes
 
 ### Race Condition Fix 🏁
 - **Fixed `hand:ended` timing** - Now fires AFTER elimination processing completes
