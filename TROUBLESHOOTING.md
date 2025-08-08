@@ -4,6 +4,32 @@
 
 > **Note**: This covers general development issues. The core poker engine is production-ready and extensively tested with 247 tests.
 
+### Understanding Enhanced Error Messages (v3.0.4+)
+
+Since v3.0.4, all betting validation errors include comprehensive game state to help debug issues. When you see an error like:
+
+```
+Cannot bet when facing a bet - use raise.
+Reason: There's already a bet of 40 on the table
+Solution: Use Action.RAISE to increase the bet to 100
+Current bet details: player1: 40 chips, player2: 20 chips
+Game State: { ... }
+```
+
+The error message contains:
+- **Reason**: Why the action is invalid
+- **Solution**: What action to use instead with correct syntax
+- **Game State**: Complete snapshot including:
+  - `gamePhase`: Current betting round (PRE_FLOP, FLOP, etc.)
+  - `currentBet`: Amount players need to match
+  - `pot`: Total pot size
+  - `player`: Acting player's state (chips, bet, toCall amount)
+  - `table`: Table state (active players, board cards, blinds)
+  - `bettingHistory`: Raise history for minimum raise calculations
+  - `playerBets`: All players' current bets
+
+Use this information to debug why your player implementation is attempting invalid actions.
+
 ### 1. All Tests Failing with Dealer Button Errors
 **Symptom**: Tests fail with position/betting order issues
 **Cause**: Non-deterministic dealer button position
@@ -86,8 +112,13 @@ import { Player } from './Player.js';
 - 3 players: Player 0 = Button, Player 1 = SB, Player 2 = BB
 - 4+ players: Player 0 = Button, then SB, BB, UTG, MP, CO...
 
-### 8. Chip Conservation Issues (Fixed in v3.0.2)
-**Symptom**: External systems see temporary chip losses during eliminations
+### 8. Chip Conservation Issues (Fixed in v3.0.3)
+**Symptom**: Chips disappearing from game (up to 15% loss reported)
+**Root Cause**: Uncalled bets not refunded when `potManager.addToPot()` couldn't add all chips
+**Status**: ✅ FIXED in v3.0.3 - 100% chip conservation guaranteed
+
+### 9. Event Ordering Issues (Fixed in v3.0.2)
+**Symptom**: External systems see temporary chip losses during eliminations  
 **Root Cause**: `hand:ended` fired before elimination processing completed
 **Status**: ✅ FIXED in v3.0.2 - Events now properly synchronized
 **Details**: 

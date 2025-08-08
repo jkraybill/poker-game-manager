@@ -5,6 +5,27 @@ All notable changes to the Poker Game Manager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.4] - 2025-08-08
+
+### Enhanced 🎯
+- **Detailed Error Messages** - Invalid betting actions now include comprehensive game state for debugging
+- **Error Context Helper** - New `buildErrorContext()` method provides full table/player/betting information
+- **Actionable Solutions** - Each error suggests the correct action to take with proper syntax
+- **Complete Game State** - Errors include pot size, all player bets, raise history, and valid actions
+
+## [3.0.3] - 2025-08-08
+
+### Critical Fixes 🚨
+- **CRITICAL CHIP CONSERVATION FIX** - Resolved bug causing up to 15% of chips to disappear in complex side pot scenarios
+- **Uncalled Bet Refunds** - Properly returns uncalled chips when `potManager.addToPot()` cannot add all chips to any pot
+- **100% Chip Conservation** - Perfect chip tracking guaranteed in all game scenarios including multi-way all-ins
+
+### Technical Details
+- Check return value from `potManager.addToPot()` in `handleCall()` and `handleBet()` methods
+- Refund any chips that couldn't be added to pots back to the player
+- Added comprehensive chip conservation test suite (test-chip-loss.js, test-customer-bug-repro.js)
+- All 247+ tests passing with perfect chip conservation
+
 ## [3.0.2] - 2025-08-07
 
 ### Fixed 🔧

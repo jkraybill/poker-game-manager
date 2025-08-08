@@ -415,6 +415,55 @@ export class GameEngine extends WildcardEventEmitter {
   }
 
   /**
+   * Build detailed error context for debugging
+   */
+  buildErrorContext(player, action) {
+    const currentBet = this.getCurrentBet();
+    const toCall = currentBet - player.bet;
+    const activePlayers = this.players.filter(p => p.state === PlayerState.ACTIVE);
+    const allInPlayers = this.players.filter(p => p.state === PlayerState.ALL_IN);
+    
+    return {
+      gamePhase: this.phase,
+      currentBet,
+      pot: this.potManager ? this.potManager.getTotal() : 0,
+      player: {
+        id: player.id,
+        chips: player.chips,
+        bet: player.bet,
+        state: player.state,
+        hasActed: player.hasActed,
+        lastAction: player.lastAction,
+        toCall
+      },
+      table: {
+        activePlayers: activePlayers.length,
+        allInPlayers: allInPlayers.length,
+        board: this.board,
+        dealerButton: this.dealerButtonIndex,
+        currentPlayerIndex: this.currentPlayerIndex,
+        bigBlind: this.config.bigBlind,
+        smallBlind: this.config.smallBlind
+      },
+      attemptedAction: {
+        action: action?.action,
+        amount: action?.amount
+      },
+      bettingHistory: {
+        raiseHistory: this.raiseHistory,
+        lastRaiseSize: this.getLastRaiseSize(),
+        minRaiseIncrement: this.getMinimumRaiseIncrement()
+      },
+      playerBets: this.players.map(p => ({
+        id: p.id,
+        bet: p.bet,
+        chips: p.chips,
+        state: p.state
+      }))
+    };
+  }
+
+  /**
    * Validate a player action according to poker rules
    */
   validateAction(player, action) {
@@ -423,21 +472,24 @@ export class GameEngine extends WildcardEventEmitter {
 
     // Check if action is defined
     if (!action || !action.action) {
+      const context = this.buildErrorContext(player, action);
       throw new Error(
         `Invalid action: action object is ${action ? 'missing action property' : 'undefined'}. ` +
-        'Expected format: { action: Action.FOLD, amount?: number }',
+        'Expected format: { action: Action.FOLD, amount?: number }\n' +
+        `Game State: ${JSON.stringify(context, null, 2)}`
       );
     }
 
     // First, enforce that only Action enum values are accepted
     const validActionValues = Object.values(Action);
     if (!validActionValues.includes(action.action)) {
-      // Throw a hard error to force proper API usage
+      const context = this.buildErrorContext(player, action);
       const receivedAction = typeof action.action === 'string' ? `"${action.action}"` : action.action;
       throw new Error(
         `Invalid action type: ${receivedAction}. ` +
         `Must use Action enum values: ${validActionValues.join(', ')}. ` +
-        'Example: { action: Action.ALL_IN } not { action: "allIn" }',
+        'Example: { action: Action.ALL_IN } not { action: "allIn" }\n' +
+        `Game State: ${JSON.stringify(context, null, 2)}`
       );
     }
 
@@ -445,43 +497,94 @@ export class GameEngine extends WildcardEventEmitter {
       case Action.FOLD:
         // Fold is only valid when facing a bet (simulation framework rule)
         if (toCall <= 0) {
-          throw new Error('Cannot fold when you can check for free. Developer error: invalid game logic.');
+          const context = this.buildErrorContext(player, action);
+          throw new Error(
+            `Cannot fold when you can check for free.\n` +
+            `Reason: Player can check (toCall=${toCall}, currentBet=${currentBet}, playerBet=${player.bet})\n` +
+            `Solution: Use Action.CHECK instead of Action.FOLD\n` +
+            `Game State: ${JSON.stringify(context, null, 2)}`
+          );
         }
         return;
 
       case Action.CHECK:
         if (toCall > 0) {
-          throw new Error('Cannot check when facing a bet. Developer error: invalid game logic.');
+          const context = this.buildErrorContext(player, action);
+          throw new Error(
+            `Cannot check when facing a bet.\n` +
+            `Reason: Player must call ${toCall} chips (currentBet=${currentBet}, playerBet=${player.bet})\n` +
+            `Solutions: Use Action.CALL to match the bet, Action.RAISE to increase it, or Action.FOLD to give up\n` +
+            `Game State: ${JSON.stringify(context, null, 2)}`
+          );
         }
         return;
 
       case Action.CALL:
         if (toCall <= 0) {
-          throw new Error('Nothing to call. Developer error: invalid game logic.');
+          const context = this.buildErrorContext(player, action);
+          throw new Error(
+            `Nothing to call.\n` +
+            `Reason: No bet to match (currentBet=${currentBet}, playerBet=${player.bet}, toCall=${toCall})\n` +
+            `Solution: Use Action.CHECK instead of Action.CALL\n` +
+            `Game State: ${JSON.stringify(context, null, 2)}`
+          );
         }
         if (toCall > player.chips) {
-          throw new Error('Insufficient chips to call. Developer error: invalid game logic.');
+          const context = this.buildErrorContext(player, action);
+          throw new Error(
+            `Insufficient chips to call.\n` +
+            `Reason: Need ${toCall} chips to call but player only has ${player.chips} chips\n` +
+            `Solution: Use Action.ALL_IN to go all-in with remaining ${player.chips} chips, or Action.FOLD\n` +
+            `Game State: ${JSON.stringify(context, null, 2)}`
+          );
         }
         return;
 
       case Action.BET: {
         if (currentBet > 0) {
-          throw new Error('Cannot bet when facing a bet - use raise. Developer error: invalid game logic.');
+          const context = this.buildErrorContext(player, action);
+          throw new Error(
+            `Cannot bet when facing a bet - use raise.\n` +
+            `Reason: There's already a bet of ${currentBet} on the table\n` +
+            `Solution: Use Action.RAISE to increase the bet to ${action.amount || 'desired amount'}\n` +
+            `Current bet details: ${this.players.filter(p => p.bet > 0).map(p => `${p.id}: ${p.bet} chips`).join(', ')}\n` +
+            `Game State: ${JSON.stringify(context, null, 2)}`
+          );
         }
         const betResult = this.validateBetAmount(action.amount, player);
         if (!betResult.valid) {
-          throw new Error(`Invalid bet: ${betResult.reason}. Developer error.`);
+          const context = this.buildErrorContext(player, action);
+          throw new Error(
+            `Invalid bet amount: ${action.amount}.\n` +
+            `Reason: ${betResult.reason}\n` +
+            `Constraints: Minimum bet=${this.config.bigBlind}, Player chips=${player.chips}\n` +
+            `Game State: ${JSON.stringify(context, null, 2)}`
+          );
         }
         return;
       }
 
       case Action.RAISE: {
         if (currentBet === 0) {
-          throw new Error('Cannot raise without a bet - use bet. Developer error: invalid game logic.');
+          const context = this.buildErrorContext(player, action);
+          throw new Error(
+            `Cannot raise without a bet - use bet.\n` +
+            `Reason: No current bet to raise (currentBet=0)\n` +
+            `Solution: Use Action.BET with amount ${action.amount || this.config.bigBlind}\n` +
+            `Game State: ${JSON.stringify(context, null, 2)}`
+          );
         }
         const raiseResult = this.validateRaiseAmount(action.amount, player);
         if (!raiseResult.valid) {
-          throw new Error(`Invalid raise: ${raiseResult.reason}. Developer error.`);
+          const context = this.buildErrorContext(player, action);
+          const minRaise = currentBet + this.getMinimumRaiseIncrement();
+          throw new Error(
+            `Invalid raise amount: ${action.amount}.\n` +
+            `Reason: ${raiseResult.reason}\n` +
+            `Constraints: Current bet=${currentBet}, Minimum raise to=${minRaise}, Player chips=${player.chips}, Player current bet=${player.bet}\n` +
+            `Raise history this round: ${this.raiseHistory.length > 0 ? this.raiseHistory.join(', ') : 'none'}\n` +
+            `Game State: ${JSON.stringify(context, null, 2)}`
+          );
         }
         return;
       }
@@ -506,14 +609,14 @@ export class GameEngine extends WildcardEventEmitter {
     if (amount < minBet) {
       return {
         valid: false,
-        reason: `Minimum bet is ${minBet}`,
+        reason: `Minimum bet is ${minBet} (big blind), but tried to bet ${amount}. Player has ${player.chips} chips available`,
       };
     }
 
     if (amount > player.chips) {
       return {
         valid: false,
-        reason: 'Insufficient chips',
+        reason: `Insufficient chips: tried to bet ${amount} but player only has ${player.chips} chips. Use Action.ALL_IN to bet all remaining chips`,
       };
     }
 
@@ -525,25 +628,29 @@ export class GameEngine extends WildcardEventEmitter {
    */
   validateRaiseAmount(amount, player) {
     const currentBet = this.getCurrentBet();
-    // const toCall = currentBet - player.bet;
+    const toCall = currentBet - player.bet;
 
     // The 'amount' parameter appears to be the total bet amount (raise TO)
     // not the raise increment (raise BY)
     const proposedTotalBet = amount;
-    // const raiseIncrement = proposedTotalBet - currentBet;
+    const raiseIncrement = proposedTotalBet - currentBet;
 
     // Rule 5.2.2.2: Check if player has already acted and betting wasn't reopened
     if (player.hasActed) {
       return {
         valid: false,
-        reason: 'Cannot re-raise - betting was not reopened by a full raise',
+        reason: `Cannot re-raise - betting was not reopened by a full raise. Player already acted this round. ` +
+                `Last raise size: ${this.getLastRaiseSize()}, Minimum full raise: ${this.getMinimumRaiseIncrement()}`,
       };
     }
 
     if (proposedTotalBet > player.chips + player.bet) {
+      const maxRaise = player.chips + player.bet;
       return {
         valid: false,
-        reason: 'Insufficient chips for raise',
+        reason: `Insufficient chips for raise to ${proposedTotalBet}. ` +
+                `Player has ${player.chips} chips, current bet is ${player.bet}, ` +
+                `maximum possible raise is to ${maxRaise}. Use Action.ALL_IN to go all-in`,
       };
     }
 
@@ -554,7 +661,9 @@ export class GameEngine extends WildcardEventEmitter {
     if (proposedTotalBet < minTotalBet) {
       return {
         valid: false,
-        reason: `Minimum total bet is ${minTotalBet}`,
+        reason: `Minimum raise is to ${minTotalBet} (current bet: ${currentBet} + minimum increment: ${minRaiseIncrement}). ` +
+                `Attempted raise to ${proposedTotalBet} is too small. ` +
+                `Previous raises this round: ${this.raiseHistory.length > 0 ? this.raiseHistory.join(', ') : 'none'}`,
       };
     }
     return { valid: true };

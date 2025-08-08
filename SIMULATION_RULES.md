@@ -78,11 +78,29 @@ This is a **simulation framework**, not a production poker room. As such:
   - Attempting invalid actions (fold when can check)
 
 ### Validation Errors
-All validation errors throw immediately with descriptive messages:
-- `"Cannot fold when you can check for free. Developer error: invalid game logic."`
-- `"Cannot check when facing a bet. Developer error: invalid game logic."`
-- `"Nothing to call. Developer error: invalid game logic."`
-- `"Cannot bet when facing a bet - use raise. Developer error: invalid game logic."`
+All validation errors throw immediately with highly detailed messages including full game state:
+- **FOLD errors**: Include toCall amount, current bet, player bet, and suggest CHECK
+- **CHECK errors**: Show amount to call and suggest CALL/RAISE/FOLD alternatives
+- **CALL errors**: Detail missing bet or insufficient chips with ALL_IN suggestion
+- **BET errors**: Clarify existing bet amount and suggest RAISE with correct syntax
+- **RAISE errors**: Show minimum raise requirements, chip constraints, and raise history
+
+Example enhanced error message:
+```
+Cannot bet when facing a bet - use raise.
+Reason: There's already a bet of 40 on the table
+Solution: Use Action.RAISE to increase the bet to 100
+Current bet details: player1: 40 chips, player2: 20 chips
+Game State: {
+  "gamePhase": "PRE_FLOP",
+  "currentBet": 40,
+  "pot": 60,
+  "player": { /* full player state */ },
+  "table": { /* full table state */ },
+  "bettingHistory": { /* raise history */ },
+  "playerBets": [ /* all player bets */ ]
+}
+```
 
 ## Implementation Details
 
