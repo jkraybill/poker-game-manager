@@ -34,12 +34,13 @@ describe('Concurrent Table Starts', () => {
         const globalId = tableId * 8 + playerId;
         const player = new Player({ 
           id: `player-${globalId}`, 
-          name: `P${globalId}` 
+          name: `P${globalId}`, 
         });
         player.chips = 10000;
         
         // Track decisions per player to detect infinite loops
         player.decisionCount = new Map();
+        // eslint-disable-next-line require-await
         player.getAction = async function(gameState) {
           const stateKey = `${gameState.phase}-${gameState.currentBet}-${gameState.pot}`;
           const count = (this.decisionCount.get(stateKey) || 0) + 1;
@@ -65,15 +66,10 @@ describe('Concurrent Table Starts', () => {
 
     // Track game starts
     let gamesStarted = 0;
-    let gamesEnded = 0;
     
     tables.forEach(table => {
       table.on('game:started', () => {
         gamesStarted++;
-      });
-      
-      table.on('hand:ended', () => {
-        gamesEnded++;
       });
     });
 
@@ -98,7 +94,7 @@ describe('Concurrent Table Starts', () => {
     // Check that no player was asked for the same decision too many times
     players.forEach(player => {
       if (player.decisionCount) {
-        for (const [state, count] of player.decisionCount.entries()) {
+        for (const [, count] of player.decisionCount.entries()) {
           expect(count).toBeLessThanOrEqual(3);
         }
       }
@@ -121,11 +117,13 @@ describe('Concurrent Table Starts', () => {
     for (let i = 0; i < 4; i++) {
       const player1 = new Player({ id: `t1-p${i}`, name: `T1P${i}` });
       player1.chips = 1000;
+      // eslint-disable-next-line require-await
       player1.getAction = async () => ({ action: Action.FOLD });
       table1.addPlayer(player1);
       
       const player2 = new Player({ id: `t2-p${i}`, name: `T2P${i}` });
       player2.chips = 1000;
+      // eslint-disable-next-line require-await
       player2.getAction = async () => ({ action: Action.FOLD });
       table2.addPlayer(player2);
     }
@@ -141,7 +139,7 @@ describe('Concurrent Table Starts', () => {
     // Start both tables concurrently
     const [r1, r2] = await Promise.all([
       table1.tryStartGame(),
-      table2.tryStartGame()
+      table2.tryStartGame(),
     ]);
     
     expect(r1).toBe(true);
