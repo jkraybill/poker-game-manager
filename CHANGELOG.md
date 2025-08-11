@@ -5,6 +5,20 @@ All notable changes to the Poker Game Manager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.5] - 2025-08-11
+
+### Enhanced 🚀
+- **Fail-Fast on Contract Violations** - Player errors now immediately crash the game with no retry attempts
+- **Fatal Error Messages** - Clear indication when players violate the contract (throw errors, return invalid actions, timeout)
+- **No Retry Logic** - Any exception from player methods causes immediate game termination
+- **Comprehensive Test Suite** - Added 5 tests verifying fail-fast behavior in all scenarios
+
+### Technical Details
+- Wrapped `player.getAction()` and `player.receivePrivateCards()` in try-catch blocks
+- Errors throw fatal exceptions with descriptive messages indicating contract violations
+- Ensures broken player implementations are caught immediately during development
+- All 266 tests passing including new fail-fast tests
+
 ## [3.0.4] - 2025-08-08
 
 ### Enhanced 🎯

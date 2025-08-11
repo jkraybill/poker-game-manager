@@ -1,15 +1,18 @@
-# SESSION CONTEXT - Poker Game Manager v3.0.3
+# SESSION CONTEXT - Poker Game Manager v3.0.5
 
-## 🎉 v3.0.3 CRITICAL CHIP CONSERVATION FIX! 💰
+## 🚀 v3.0.5 FAIL-FAST CONTRACT ENFORCEMENT!
 
-**STATUS: PRODUCTION READY - Perfect Chip Conservation** ✅
+**STATUS: PRODUCTION READY - Rock-Solid Stability** ✅
 
-### **Current Release: v3.0.3**
-- **💰 CRITICAL FIX**: Resolved chip conservation bug causing up to 15% chip loss
-- **🔧 UNCALLED BETS**: Properly refunds uncalled chips in side pot scenarios
-- **✅ 100% CHIP CONSERVATION**: Perfect chip tracking in all scenarios
-- **✅ COMPREHENSIVE TESTS**: Added chip conservation test suite
-- **✅ 247+ TESTS PASSING**: All tests passing with perfect chip tracking
+### **Current Release: v3.0.5**
+- **🚀 FAIL-FAST**: Player contract violations immediately crash with no retry
+- **📢 CLEAR ERRORS**: Fatal errors indicate exactly which player broke contract
+- **🔧 DEVELOPER-FRIENDLY**: Broken implementations caught immediately
+- **✅ 266 TESTS PASSING**: Comprehensive test coverage including fail-fast tests
+
+### **Previous v3.0.3-3.0.4 Features**
+- **💰 CHIP CONSERVATION**: 100% perfect chip tracking guaranteed
+- **🎯 ERROR MESSAGES**: Detailed validation errors with full game state
 
 ### **v3.0 Breaking Changes**
 - **Action Enum Mandatory**: String actions throw fatal errors

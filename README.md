@@ -8,12 +8,24 @@ What's your kicker? This library handles the poker basics pretty well.
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
 [![GitHub Package](https://img.shields.io/badge/npm-GitHub%20Packages-blue)](https://github.com/jkraybill/poker-game-manager/packages)
 
-## ✨ What's New in v3.0.3
+## ✨ What's New in v3.0.5
+
+### Fail-Fast Contract Enforcement 🚀
+- **No Retry on Errors** - Player contract violations immediately crash the game
+- **Clear Error Messages** - Fatal errors indicate exactly which player broke the contract
+- **Developer-Friendly** - Broken player implementations caught immediately during development
+- **Comprehensive Testing** - 266 tests ensure rock-solid stability
+
+## Previous v3.0.4 Changes
+
+### Enhanced Error Messages 🎯
+- **Detailed Validation Errors** - Invalid actions include full game state for debugging
+- **Actionable Solutions** - Each error suggests the correct action with proper syntax
+
+## Previous v3.0.3 Changes
 
 ### Critical Chip Conservation Fix 💰
 - **CRITICAL FIX**: Resolved chip conservation bug that caused up to 15% of chips to disappear
-- **Fixed uncalled bet handling** - Complex side pot scenarios now properly refund uncalled chips
-- **Added comprehensive test suite** - Multiple chip conservation tests ensure perfect chip tracking
 - **100% chip conservation guaranteed** - All game scenarios maintain exact chip totals
 
 ## Previous v3.0.2 Changes

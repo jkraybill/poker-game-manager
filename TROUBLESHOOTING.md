@@ -2,7 +2,21 @@
 
 ## Common Development Issues & Solutions
 
-> **Note**: This covers general development issues. The core poker engine is production-ready and extensively tested with 247 tests.
+> **Note**: This covers general development issues. The core poker engine is production-ready and extensively tested with 266 tests.
+
+### Fail-Fast Contract Enforcement (v3.0.5+)
+
+Since v3.0.5, the library enforces strict fail-fast behavior on player contract violations:
+
+- **No Retry Logic**: Any exception from `player.getAction()` or `player.receivePrivateCards()` immediately crashes the game
+- **Fatal Errors**: Clear messages indicate which player violated the contract and how
+- **Developer-Friendly**: Broken player implementations are caught immediately during development
+
+Example error:
+```
+Fatal: Player broken-bot threw error in getAction(): Database connection failed.
+This is a contract violation. Players must return valid actions or timeout gracefully.
+```
 
 ### Understanding Enhanced Error Messages (v3.0.4+)
 
