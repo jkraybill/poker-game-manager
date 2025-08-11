@@ -133,9 +133,9 @@ export class Table extends WildcardEventEmitter {
 
   /**
    * Start a new game if conditions are met
-   * @returns {boolean} True if game started successfully, false otherwise
+   * @returns {Promise<boolean>} True if game started successfully, false otherwise
    */
-  tryStartGame() {
+  async tryStartGame() {
     if (this.state !== TableState.WAITING) {
       return false;
     }
@@ -244,7 +244,7 @@ export class Table extends WildcardEventEmitter {
         players: Array.from(this.players.keys()),
       });
 
-      this.gameEngine.start();
+      await this.gameEngine.start();
 
       // Clear custom deck after use
       this.customDeck = null;
