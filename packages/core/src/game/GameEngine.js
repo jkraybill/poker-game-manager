@@ -146,8 +146,16 @@ export class GameEngine extends WildcardEventEmitter {
       const cards = this.playerHands.get(player.id);
       cards.push(this.deck.draw());
 
-      // Notify player of their cards
-      player.receivePrivateCards(cards);
+      // Notify player of their cards - fail fast on any error
+      try {
+        player.receivePrivateCards(cards);
+      } catch (error) {
+        // Player broke contract - fatal error, no retry
+        throw new Error(
+          `Fatal: Player ${player.id} threw error in receivePrivateCards(): ${error.message}. ` +
+          'This is a contract violation. Players must not throw errors from notification methods.',
+        );
+      }
 
       this.emit('cards:dealt', {
         playerId: player.id,
@@ -384,14 +392,25 @@ export class GameEngine extends WildcardEventEmitter {
       );
     });
 
+    let action;
     try {
-      const action = await Promise.race([
+      action = await Promise.race([
         currentPlayer.getAction(gameState),
         timeoutPromise,
       ]);
-
-      // Clear the timeout since action completed
+    } catch (error) {
+      // Clear timeout immediately
       clearTimeout(timeoutId);
+      
+      // Player broke contract - fatal error, no retry
+      throw new Error(
+        `Fatal: Player ${currentPlayer.id} threw error in getAction(): ${error.message}. ` +
+        'This is a contract violation. Players must return valid actions or timeout gracefully.',
+      );
+    }
+
+    // Clear the timeout since action completed
+    clearTimeout(timeoutId);
 
       // Check if the player returned a valid action
       if (!action) {
@@ -403,15 +422,6 @@ export class GameEngine extends WildcardEventEmitter {
       }
       
       await this.handlePlayerAction(currentPlayer, action);
-    } catch (error) {
-      // Clear timeout if it exists
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      
-      // ALL errors should crash - timeouts are developer bugs in a simulation
-      throw error;
-    }
   }
 
   /**
