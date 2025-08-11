@@ -170,7 +170,7 @@ describe('Standings Display (Issue #34) - v2', () => {
     });
 
     // Summary should reflect the changes
-    expect(finalStandings.summary.playersRemaining).toBe(1);
+    expect(finalStandings.summary.playersRemaining).toBe(totalActivePlayers);
     expect(finalStandings.summary.totalChipsInPlay).toBeGreaterThan(0);
     expect(finalStandings.summary.averageStack).toBeGreaterThan(0);
 
