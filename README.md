@@ -8,13 +8,26 @@ What's your kicker? This library handles the poker basics pretty well.
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
 [![GitHub Package](https://img.shields.io/badge/npm-GitHub%20Packages-blue)](https://github.com/jkraybill/poker-game-manager/packages)
 
-## ✨ What's New in v3.0.5
+## 🚨 Breaking Changes in v4.0.0
+
+### `tryStartGame()` is now async
+- **MUST await the method** - Returns `Promise<boolean>` instead of `boolean`
+- **Fixes race conditions** - Properly awaits internal async operations
+- **Prevents infinite loops** - Resolves issues with concurrent table starts
+
+```javascript
+// Before (v3.x)
+const started = table.tryStartGame();
+
+// After (v4.x)
+const started = await table.tryStartGame();
+```
+
+## Previous v3.0.5 Changes
 
 ### Fail-Fast Contract Enforcement 🚀
 - **No Retry on Errors** - Player contract violations immediately crash the game
 - **Clear Error Messages** - Fatal errors indicate exactly which player broke the contract
-- **Developer-Friendly** - Broken player implementations caught immediately during development
-- **Comprehensive Testing** - 266 tests ensure rock-solid stability
 
 ## Previous v3.0.4 Changes
 

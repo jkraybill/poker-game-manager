@@ -5,6 +5,34 @@ All notable changes to the Poker Game Manager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.0] - 2025-08-11
+
+### 🚨 BREAKING CHANGES
+- **`tryStartGame()` is now async** - Returns `Promise<boolean>` instead of `boolean`
+  - All callers MUST now await this method: `await table.tryStartGame()`
+  - This change was necessary to fix race conditions with concurrent tables
+
+### Fixed 🔧
+- **Race Condition with Concurrent Tables** - Fixed infinite loop bug when multiple tables start simultaneously
+  - `gameEngine.start()` is now properly awaited, preventing race conditions
+  - Resolves issue where players were asked for same decision multiple times
+  - Fixes problems reported with 32-player tournaments across 4 tables
+
+### Migration Guide
+```javascript
+// OLD (v3.x)
+const started = table.tryStartGame();
+if (started) {
+  console.log('Game started');
+}
+
+// NEW (v4.x) 
+const started = await table.tryStartGame();
+if (started) {
+  console.log('Game started');
+}
+```
+
 ## [3.0.5] - 2025-08-11
 
 ### Enhanced 🚀
