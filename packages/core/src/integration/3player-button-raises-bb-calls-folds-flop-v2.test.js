@@ -136,8 +136,7 @@ describe('3-player: Button raises, BB calls, then folds to flop bet (v2)', () =>
       return player;
     });
 
-    // Track positions and button player
-    let buttonPlayer = null;
+    // Track positions
     const positions = {};
 
     // Assign positions when hand starts
@@ -160,10 +159,6 @@ describe('3-player: Button raises, BB calls, then folds to flop bet (v2)', () =>
           player.isBB = idx === bbPos;
           player.hasRaisedPreflop = false; // Reset for new hand
           player.hasBetFlop = false;
-          
-          if (idx === dealerButton) {
-            buttonPlayer = player;
-          }
         }
       });
     });

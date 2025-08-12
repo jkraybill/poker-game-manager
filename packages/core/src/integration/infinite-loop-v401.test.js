@@ -44,7 +44,7 @@ describe('Infinite Loop v4.0.1 Reproduction', () => {
           `INFINITE LOOP DETECTED: ${this.name} asked for same decision ${count} times\n` +
           `State: phase=${gameState.phase}, pot=${gameState.pot}, currentBet=${gameState.currentBet}, ` +
           `toCall=${gameState.currentBet - gameState.players[this.id].bet}, myChips=${gameState.players[this.id].chips}\n` +
-          `validActions=${JSON.stringify(gameState.validActions)}`
+          `validActions=${JSON.stringify(gameState.validActions)}`,
         );
       }
       
@@ -77,7 +77,7 @@ describe('Infinite Loop v4.0.1 Reproduction', () => {
           `INFINITE LOOP DETECTED: ${this.name} asked for same decision ${count} times\n` +
           `State: phase=${gameState.phase}, pot=${gameState.pot}, currentBet=${gameState.currentBet}, ` +
           `toCall=${gameState.currentBet - gameState.players[this.id].bet}, myChips=${gameState.players[this.id].chips}\n` +
-          `validActions=${JSON.stringify(gameState.validActions)}`
+          `validActions=${JSON.stringify(gameState.validActions)}`,
         );
       }
       
@@ -110,7 +110,7 @@ describe('Infinite Loop v4.0.1 Reproduction', () => {
       
       if (count > 10) {
         throw new Error(
-          `INFINITE LOOP DETECTED: ${this.name} asked for same decision ${count} times`
+          `INFINITE LOOP DETECTED: ${this.name} asked for same decision ${count} times`,
         );
       }
       
@@ -175,7 +175,7 @@ describe('Infinite Loop v4.0.1 Reproduction', () => {
         entry => entry.player === this.id && 
                  entry.phase === gameState.phase &&
                  entry.currentBet === gameState.currentBet &&
-                 Date.now() - entry.timestamp < 100 // Within 100ms
+                 Date.now() - entry.timestamp < 100, // Within 100ms
       );
       
       if (recentRequests.length > 3) {
@@ -206,7 +206,7 @@ describe('Infinite Loop v4.0.1 Reproduction', () => {
         entry => entry.player === this.id && 
                  entry.phase === gameState.phase &&
                  entry.currentBet === gameState.currentBet &&
-                 Date.now() - entry.timestamp < 100
+                 Date.now() - entry.timestamp < 100,
       );
       
       if (recentRequests.length > 3) {
