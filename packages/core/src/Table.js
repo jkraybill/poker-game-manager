@@ -146,7 +146,7 @@ export class Table extends WildcardEventEmitter {
         [TableState.CLOSED]: 'CLOSED',
         [TableState.WAITING]: 'WAITING',
       };
-      return {
+      const failureResult = {
         success: false,
         reason: 'TABLE_NOT_READY',
         details: {
@@ -154,13 +154,21 @@ export class Table extends WildcardEventEmitter {
           message: `Table is not in WAITING state. Current state: ${stateNames[this.state] || this.state}`,
           tableId: this.id,
           gameCount: this.gameCount,
+          timestamp: new Date().toISOString(),
+          isGameInProgress: this.state === TableState.IN_PROGRESS,
+          gameEngine: this.gameEngine ? 'exists' : 'null',
         },
       };
+      
+      // Emit failure event for debugging
+      this.emit('game:start-failed', failureResult);
+      
+      return failureResult;
     }
 
     // Check player count
     if (this.players.size < this.config.minPlayers) {
-      return {
+      const failureResult = {
         success: false,
         reason: 'INSUFFICIENT_PLAYERS',
         details: {
@@ -169,8 +177,21 @@ export class Table extends WildcardEventEmitter {
           message: `Need at least ${this.config.minPlayers} players to start. Currently have ${this.players.size} players.`,
           tableId: this.id,
           playerIds: Array.from(this.players.keys()),
+          playerDetails: Array.from(this.players.entries()).map(([id, data]) => ({
+            id,
+            name: data.player.name,
+            chips: data.player.chips,
+            seatNumber: data.seatNumber,
+          })),
+          timestamp: new Date().toISOString(),
+          waitingListSize: this.waitingList.length,
         },
       };
+      
+      // Emit failure event for debugging
+      this.emit('game:start-failed', failureResult);
+      
+      return failureResult;
     }
 
     // Check if all players have chips
@@ -187,7 +208,7 @@ export class Table extends WildcardEventEmitter {
     
     const activePlayers = this.players.size - playersWithNoChips.length;
     if (activePlayers < this.config.minPlayers) {
-      return {
+      const failureResult = {
         success: false,
         reason: 'INSUFFICIENT_ACTIVE_PLAYERS',
         details: {
@@ -195,10 +216,23 @@ export class Table extends WildcardEventEmitter {
           activePlayers,
           minPlayers: this.config.minPlayers,
           playersWithNoChips,
+          allPlayerChips: Array.from(this.players.entries()).map(([id, data]) => ({
+            id,
+            name: data.player.name,
+            chips: data.player.chips,
+            state: data.state,
+          })),
           message: `Only ${activePlayers} players have chips. Need at least ${this.config.minPlayers} active players.`,
           tableId: this.id,
+          timestamp: new Date().toISOString(),
+          tableState: this.state,
         },
       };
+      
+      // Emit failure event for debugging
+      this.emit('game:start-failed', failureResult);
+      
+      return failureResult;
     }
 
     this.state = TableState.IN_PROGRESS;
@@ -216,6 +250,9 @@ export class Table extends WildcardEventEmitter {
       chipSnapshot.set(playerId, playerData.player.chips);
     }
 
+    // Define activePlayersList early for error handling
+    let activePlayersList = [];
+    
     try {
       // Initialize game engine
       // Sort players by seat number to ensure correct position order
@@ -227,7 +264,7 @@ export class Table extends WildcardEventEmitter {
       const positions = this.calculateDeadButtonPositions();
       
       // Convert seat-based positions to player array indices
-      const activePlayersList = sortedPlayers
+      activePlayersList = sortedPlayers
         .filter((pd) => pd.player.chips > 0)
         .map((pd) => pd.player);
       
@@ -337,17 +374,35 @@ export class Table extends WildcardEventEmitter {
       });
       
       // Game failed to start with engine error
-      return {
+      const failureResult = {
         success: false,
         reason: 'ENGINE_ERROR',
         details: {
           error: error.message,
+          errorName: error.name,
           stack: error.stack,
           tableId: this.id,
           gameCount: this.gameCount,
           message: `Failed to start game engine: ${error.message}`,
+          timestamp: new Date().toISOString(),
+          tableState: this.state,
+          playerCount: this.players.size,
+          playerIds: Array.from(this.players.keys()),
+          config: {
+            blinds: this.config.blinds,
+            minPlayers: this.config.minPlayers,
+            maxPlayers: this.config.maxPlayers,
+            variant: this.config.variant,
+          },
+          customDeck: this.customDeck ? 'present' : 'null',
+          activePlayersList: activePlayersList?.length || 0,
         },
       };
+      
+      // Emit failure event for debugging
+      this.emit('game:start-failed', failureResult);
+      
+      return failureResult;
     }
   }
 
