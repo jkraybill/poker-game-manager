@@ -5,6 +5,21 @@ All notable changes to the Poker Game Manager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.4.1] - 2025-08-12
+
+### Enhanced 📚
+- **Documentation Excellence** - Comprehensive documentation update across all files
+  - Updated README.md with championship-grade description and modern v4.4.0 examples
+  - Enhanced INTEGRATION.md with position-aware player implementation patterns
+  - Modernized SESSION_CONTEXT.md with v4.4.0 focus and position API quick start
+  - Added comprehensive keywords to package.json for better discoverability
+  - Complete CHANGELOG.md entries for all v4.x releases
+
+### Developer Experience 🚀
+- **Up-to-Date Examples** - All documentation examples now reflect current v4.4.0 API
+- **Position API Showcase** - Comprehensive examples of position-aware strategic players
+- **Improved Discoverability** - Enhanced package.json keywords for npm search
+
 ## [4.4.0] - 2025-08-12
 
 ### Added ✨

@@ -6,7 +6,17 @@ Championship-grade single-table Texas Hold'em engine for Node.js with comprehens
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
 [![GitHub Package](https://img.shields.io/badge/npm-GitHub%20Packages-blue)](https://github.com/jkraybill/poker-game-manager/packages)
 
-## 🚀 What's New in v4.4.0
+## 🚀 What's New in v4.4.1
+
+### Documentation Excellence 📚
+**v4.4.1** brings comprehensive documentation updates with modern examples showcasing the full v4.4.0 feature set:
+
+- **Enhanced Integration Guide** - Complete position-aware player implementation patterns
+- **Modern Quick Start** - Updated examples using current v4.4.0 position API  
+- **Championship Branding** - All documentation reflects the championship-grade quality
+- **Improved Discoverability** - Enhanced npm keywords for better search visibility
+
+## Position Information API (v4.4.0)
 
 ### Enhanced Position Information API 🎯
 The `hand:started` event now provides comprehensive position information:
