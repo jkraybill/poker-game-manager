@@ -362,27 +362,6 @@ export class GameEngine extends WildcardEventEmitter {
 
     if (!currentPlayer || currentPlayer.state !== PlayerState.ACTIVE) {
       this.moveToNextActivePlayer();
-      // After moving, check if we found a valid player
-      const newPlayer = this.players[this.currentPlayerIndex];
-      if (!newPlayer || newPlayer.state !== PlayerState.ACTIVE || newPlayer.hasActed) {
-        // No valid player to act - this shouldn't happen if isBettingRoundComplete works correctly
-        // But we add this check to prevent infinite loops
-        return;
-      }
-      return;
-    }
-    
-    // Additional safety check: don't prompt a player who has already acted
-    if (currentPlayer.hasActed) {
-      // Try to find another player
-      this.moveToNextActivePlayer();
-      const newPlayer = this.players[this.currentPlayerIndex];
-      if (!newPlayer || newPlayer.state !== PlayerState.ACTIVE || newPlayer.hasActed) {
-        // No valid player to act
-        return;
-      }
-      // Recursively call to prompt the new player
-      await this.promptNextPlayer();
       return;
     }
 
@@ -762,6 +741,8 @@ export class GameEngine extends WildcardEventEmitter {
         break;
       case Action.BET:
         this.handleBet(player, action.amount);
+        // A bet opens a new betting round - reset hasActed for all other active players
+        this.reopenBetting(player);
         break;
       case Action.RAISE:
         this.handleRaise(player, action.amount);
@@ -783,9 +764,22 @@ export class GameEngine extends WildcardEventEmitter {
       await this.endBettingRound();
     } else {
       // Continue to next player
+      const prevIndex = this.currentPlayerIndex;
       this.moveToNextActivePlayer();
-      // Only continue if game is still running
-      if (this.phase !== GamePhase.ENDED) {
+      
+      // Check if we found a valid next player
+      const currentPlayer = this.players[this.currentPlayerIndex];
+      if (this.currentPlayerIndex === prevIndex || 
+          !currentPlayer || 
+          currentPlayer.state !== PlayerState.ACTIVE || 
+          currentPlayer.hasActed) {
+        // No valid next player found - this means all active players have acted
+        // but betting round is not complete (bets not matched)
+        // This shouldn't happen in normal flow but can occur in edge cases
+        // Force end betting round to prevent stuck games
+        await this.endBettingRound();
+      } else if (this.phase !== GamePhase.ENDED) {
+        // Valid next player found, continue
         await this.promptNextPlayer();
       }
     }
