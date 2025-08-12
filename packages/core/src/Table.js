@@ -144,7 +144,7 @@ export class Table extends WildcardEventEmitter {
       const stateNames = {
         [TableState.IN_PROGRESS]: 'IN_PROGRESS',
         [TableState.CLOSED]: 'CLOSED',
-        [TableState.WAITING]: 'WAITING'
+        [TableState.WAITING]: 'WAITING',
       };
       return {
         success: false,
@@ -153,8 +153,8 @@ export class Table extends WildcardEventEmitter {
           currentState: stateNames[this.state] || this.state,
           message: `Table is not in WAITING state. Current state: ${stateNames[this.state] || this.state}`,
           tableId: this.id,
-          gameCount: this.gameCount
-        }
+          gameCount: this.gameCount,
+        },
       };
     }
 
@@ -168,8 +168,8 @@ export class Table extends WildcardEventEmitter {
           minPlayers: this.config.minPlayers,
           message: `Need at least ${this.config.minPlayers} players to start. Currently have ${this.players.size} players.`,
           tableId: this.id,
-          playerIds: Array.from(this.players.keys())
-        }
+          playerIds: Array.from(this.players.keys()),
+        },
       };
     }
 
@@ -180,7 +180,7 @@ export class Table extends WildcardEventEmitter {
         playersWithNoChips.push({
           id: playerId,
           name: playerData.player.name,
-          chips: playerData.player.chips
+          chips: playerData.player.chips,
         });
       }
     }
@@ -196,8 +196,8 @@ export class Table extends WildcardEventEmitter {
           minPlayers: this.config.minPlayers,
           playersWithNoChips,
           message: `Only ${activePlayers} players have chips. Need at least ${this.config.minPlayers} active players.`,
-          tableId: this.id
-        }
+          tableId: this.id,
+        },
       };
     }
 
@@ -315,8 +315,8 @@ export class Table extends WildcardEventEmitter {
           gameNumber: this.gameCount,
           playerCount: activePlayersList.length,
           blinds: this.config.blinds,
-          message: `Game #${this.gameCount} started successfully with ${activePlayersList.length} players`
-        }
+          message: `Game #${this.gameCount} started successfully with ${activePlayersList.length} players`,
+        },
       };
     } catch (error) {
       // If game fails to start, revert state and refund blinds
@@ -345,8 +345,8 @@ export class Table extends WildcardEventEmitter {
           stack: error.stack,
           tableId: this.id,
           gameCount: this.gameCount,
-          message: `Failed to start game engine: ${error.message}`
-        }
+          message: `Failed to start game engine: ${error.message}`,
+        },
       };
     }
   }

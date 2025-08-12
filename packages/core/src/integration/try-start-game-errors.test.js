@@ -138,9 +138,11 @@ describe('Table tryStartGame Error Reporting', () => {
     player2.chips = 1000;
     
     // Player that throws an error during game initialization
+    // eslint-disable-next-line require-await
     player1.getAction = async () => {
       throw new Error('Simulated player error');
     };
+    // eslint-disable-next-line require-await
     player2.getAction = async () => ({ action: Action.CHECK });
     
     table.addPlayer(player1);
@@ -194,7 +196,7 @@ describe('Table tryStartGame Error Reporting', () => {
       minPlayers: 4,
       tableId: 'test-table-123',
       playerIds: ['alice', 'bob'],
-      message: expect.stringContaining('Need at least 4 players')
+      message: expect.stringContaining('Need at least 4 players'),
     });
   });
 
@@ -212,12 +214,14 @@ describe('Table tryStartGame Error Reporting', () => {
     player2.chips = 2000;
     
     // Simple players that end the hand quickly
+    // eslint-disable-next-line require-await
     player1.getAction = async (gameState) => {
       if (gameState.currentBet > 0) {
         return { action: Action.FOLD };
       }
       return { action: Action.CHECK };
     };
+    // eslint-disable-next-line require-await
     player2.getAction = async () => ({ action: Action.CHECK });
     
     table.addPlayer(player1);
@@ -233,7 +237,7 @@ describe('Table tryStartGame Error Reporting', () => {
       gameNumber: 1,
       playerCount: 2,
       blinds: { small: 25, big: 50 },
-      message: expect.stringContaining('Game #1 started successfully')
+      message: expect.stringContaining('Game #1 started successfully'),
     });
     
     // Clean up

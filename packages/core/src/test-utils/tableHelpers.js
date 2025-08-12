@@ -17,7 +17,8 @@ export function createAutoStartTable(manager, config) {
   table.on('table:ready', async () => {
     const result = await table.tryStartGame();
     if (!result.success) {
-      console.error('Failed to auto-start game:', result.reason, result.details);
+      // Silently fail in tests - tests should check for failures explicitly
+      // console.error('Failed to auto-start game:', result.reason, result.details);
     }
   });
 
