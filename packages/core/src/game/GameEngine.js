@@ -229,7 +229,7 @@ export class GameEngine extends WildcardEventEmitter {
       this.currentPlayerIndex = sbIndex;
     } else {
       // Normal: UTG acts first (player after BB)
-      this.currentPlayerIndex = this.getNextActivePlayerIndex(bbIndex);
+      this.currentPlayerIndex = this.getNextActivePlayerIndex(bbIndex, false);
     }
   }
 
@@ -362,6 +362,27 @@ export class GameEngine extends WildcardEventEmitter {
 
     if (!currentPlayer || currentPlayer.state !== PlayerState.ACTIVE) {
       this.moveToNextActivePlayer();
+      // After moving, check if we found a valid player
+      const newPlayer = this.players[this.currentPlayerIndex];
+      if (!newPlayer || newPlayer.state !== PlayerState.ACTIVE || newPlayer.hasActed) {
+        // No valid player to act - this shouldn't happen if isBettingRoundComplete works correctly
+        // But we add this check to prevent infinite loops
+        return;
+      }
+      return;
+    }
+    
+    // Additional safety check: don't prompt a player who has already acted
+    if (currentPlayer.hasActed) {
+      // Try to find another player
+      this.moveToNextActivePlayer();
+      const newPlayer = this.players[this.currentPlayerIndex];
+      if (!newPlayer || newPlayer.state !== PlayerState.ACTIVE || newPlayer.hasActed) {
+        // No valid player to act
+        return;
+      }
+      // Recursively call to prompt the new player
+      await this.promptNextPlayer();
       return;
     }
 
@@ -1067,6 +1088,7 @@ export class GameEngine extends WildcardEventEmitter {
       // Reset current player to first active player after button
       this.currentPlayerIndex = this.getNextActivePlayerIndex(
         this.dealerButtonIndex,
+        false, // Don't skip acted players when starting new round
       );
       await this.startBettingRound();
     }
@@ -1102,6 +1124,7 @@ export class GameEngine extends WildcardEventEmitter {
     } else {
       this.currentPlayerIndex = this.getNextActivePlayerIndex(
         this.dealerButtonIndex,
+        false, // Don't skip acted players when starting new round
       );
       await this.startBettingRound();
     }
@@ -1137,6 +1160,7 @@ export class GameEngine extends WildcardEventEmitter {
     } else {
       this.currentPlayerIndex = this.getNextActivePlayerIndex(
         this.dealerButtonIndex,
+        false, // Don't skip acted players when starting new round
       );
       await this.startBettingRound();
     }
@@ -1252,16 +1276,29 @@ export class GameEngine extends WildcardEventEmitter {
 
   /**
    * Get next active player index
+   * @param {number} currentIndex - Current player index
+   * @param {boolean} skipActedPlayers - If true, skip players who have already acted
    */
-  getNextActivePlayerIndex(currentIndex) {
+  getNextActivePlayerIndex(currentIndex, skipActedPlayers = false) {
     let nextIndex = (currentIndex + 1) % this.players.length;
+    let loopCount = 0;
 
-    while (nextIndex !== currentIndex) {
+    while (nextIndex !== currentIndex && loopCount < this.players.length) {
       const player = this.players[nextIndex];
       if (player.state === PlayerState.ACTIVE) {
-        return nextIndex;
+        // If we're skipping acted players, check hasActed
+        if (!skipActedPlayers || !player.hasActed) {
+          return nextIndex;
+        }
       }
       nextIndex = (nextIndex + 1) % this.players.length;
+      loopCount++;
+    }
+
+    // If we've looped through all players and found none, return -1 to indicate no valid player
+    // This prevents infinite loops when all active players have acted
+    if (skipActedPlayers && loopCount >= this.players.length) {
+      return -1;
     }
 
     return currentIndex;
@@ -1269,11 +1306,19 @@ export class GameEngine extends WildcardEventEmitter {
 
   /**
    * Move to next active player
+   * @param {boolean} skipActedPlayers - If true, skip players who have already acted (for betting rounds)
    */
-  moveToNextActivePlayer() {
-    this.currentPlayerIndex = this.getNextActivePlayerIndex(
+  moveToNextActivePlayer(skipActedPlayers = true) {
+    // When moving to next player during betting, skip players who have already acted
+    const nextIndex = this.getNextActivePlayerIndex(
       this.currentPlayerIndex,
+      skipActedPlayers,
     );
+    
+    // If no valid next player found (all have acted), keep current index
+    if (nextIndex !== -1) {
+      this.currentPlayerIndex = nextIndex;
+    }
   }
 
   /**
