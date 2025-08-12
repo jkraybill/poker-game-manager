@@ -117,10 +117,11 @@ describe('GameEngine', () => {
 
       await gameEngine.start();
 
-      expect(handStartedSpy).toHaveBeenCalledWith({
+      expect(handStartedSpy).toHaveBeenCalledWith(expect.objectContaining({
         players: ['player1', 'player2', 'player3'],
         dealerButton: gameEngine.dealerButtonIndex,
-      });
+        positions: expect.any(Object),
+      }));
       
       // Restore original implementation
       promptSpy.mockRestore();

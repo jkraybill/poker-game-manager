@@ -69,9 +69,13 @@ export class GameEngine extends WildcardEventEmitter {
       throw new Error('Game already in progress');
     }
 
+    // Calculate position information before blinds are posted
+    const positionInfo = this.calculatePositionInfo();
+
     this.emit('hand:started', {
       players: this.players.map((p) => p.id),
       dealerButton: this.dealerButtonIndex,
+      positions: positionInfo,
     });
 
     this.initializeHand();
@@ -1417,6 +1421,154 @@ export class GameEngine extends WildcardEventEmitter {
     }
 
     return validActions;
+  }
+
+  /**
+   * Calculate position information for all players
+   * @returns {Object} Position mapping with player IDs and their roles
+   */
+  calculatePositionInfo() {
+    const activePlayers = this.players.filter((p) => p.chips > 0);
+    
+    if (activePlayers.length < 2) {
+      return {
+        button: null,
+        smallBlind: null,
+        bigBlind: null,
+        utg: null,
+        positions: {},
+        playerOrder: [],
+      };
+    }
+
+    const positions = {};
+    const playerOrder = this.players.map(p => p.id);
+    
+    let buttonPlayerId = null;
+    let smallBlindPlayerId = null;
+    let bigBlindPlayerId = null;
+    let utgPlayerId = null;
+
+    // Use explicit position indices if provided (dead button rule)
+    if (this.bigBlindPlayerIndex !== undefined && this.bigBlindPlayerIndex !== null) {
+      const bbPlayer = this.players[this.bigBlindPlayerIndex];
+      if (bbPlayer) {
+        bigBlindPlayerId = bbPlayer.id;
+        positions[bbPlayer.id] = 'big-blind';
+      }
+      
+      if (!this.isDeadSmallBlind && this.smallBlindPlayerIndex !== undefined && this.smallBlindPlayerIndex !== null) {
+        const sbPlayer = this.players[this.smallBlindPlayerIndex];
+        if (sbPlayer) {
+          smallBlindPlayerId = sbPlayer.id;
+          positions[sbPlayer.id] = 'small-blind';
+        }
+      }
+
+      // Button is either explicit or derived
+      if (this.buttonPlayerIndex !== undefined && this.buttonPlayerIndex !== null) {
+        const buttonPlayer = this.players[this.buttonPlayerIndex];
+        if (buttonPlayer) {
+          buttonPlayerId = buttonPlayer.id;
+          positions[buttonPlayer.id] = positions[buttonPlayer.id] || 'button';
+        }
+      }
+      
+      // Calculate UTG for explicit positions (3+ players)
+      if (activePlayers.length >= 3 && this.bigBlindPlayerIndex !== undefined && this.bigBlindPlayerIndex !== null) {
+        const utgIndex = (this.bigBlindPlayerIndex + 1) % this.players.length;
+        const utgPlayer = this.players[utgIndex];
+        if (utgPlayer && utgPlayer.chips > 0) {
+          utgPlayerId = utgPlayer.id;
+          positions[utgPlayer.id] = 'under-the-gun';
+        }
+      }
+    } else {
+      // Fallback calculation for backward compatibility
+      let sbIndex, bbIndex;
+      
+      if (activePlayers.length === 2) {
+        // Heads-up: button is small blind
+        sbIndex = this.dealerButtonIndex;
+        bbIndex = this.getNextActivePlayerIndex(sbIndex);
+        
+        const sbPlayer = this.players[sbIndex];
+        const bbPlayer = this.players[bbIndex];
+        
+        if (sbPlayer) {
+          buttonPlayerId = sbPlayer.id;
+          smallBlindPlayerId = sbPlayer.id;
+          positions[sbPlayer.id] = 'button-small-blind';
+        }
+        if (bbPlayer) {
+          bigBlindPlayerId = bbPlayer.id;
+          positions[bbPlayer.id] = 'big-blind';
+        }
+      } else {
+        // Multi-way: separate button, SB, BB
+        const buttonIndex = this.dealerButtonIndex;
+        sbIndex = (buttonIndex + 1) % this.players.length;
+        bbIndex = (sbIndex + 1) % this.players.length;
+        
+        const buttonPlayer = this.players[buttonIndex];
+        const sbPlayer = this.players[sbIndex];
+        const bbPlayer = this.players[bbIndex];
+        
+        if (buttonPlayer) {
+          buttonPlayerId = buttonPlayer.id;
+          positions[buttonPlayer.id] = 'button';
+        }
+        if (sbPlayer) {
+          smallBlindPlayerId = sbPlayer.id;
+          positions[sbPlayer.id] = 'small-blind';
+        }
+        if (bbPlayer) {
+          bigBlindPlayerId = bbPlayer.id;
+          positions[bbPlayer.id] = 'big-blind';
+        }
+        
+        // UTG is next player after BB (in 3+ player games)
+        if (activePlayers.length >= 3) {
+          const utgIndex = (bbIndex + 1) % this.players.length;
+          const utgPlayer = this.players[utgIndex];
+          if (utgPlayer && utgPlayer.chips > 0) {
+            utgPlayerId = utgPlayer.id;
+            positions[utgPlayer.id] = 'under-the-gun';
+          }
+        }
+      }
+    }
+    
+    // Mark remaining active players with positional names if possible
+    if (activePlayers.length >= 4) {
+      const remainingPlayers = activePlayers.filter(
+        p => !positions[p.id],
+      );
+      
+      // Simple position naming for multi-way games
+      remainingPlayers.forEach((player, index) => {
+        if (!positions[player.id]) {
+          if (remainingPlayers.length > 2 && index < remainingPlayers.length - 2) {
+            positions[player.id] = 'middle-position';
+          } else if (index === remainingPlayers.length - 2) {
+            positions[player.id] = 'cutoff';
+          } else if (index === remainingPlayers.length - 1) {
+            positions[player.id] = 'late-position';
+          }
+        }
+      });
+    }
+
+    return {
+      button: buttonPlayerId,
+      smallBlind: smallBlindPlayerId,
+      bigBlind: bigBlindPlayerId,
+      utg: utgPlayerId,
+      positions, // Map of playerId -> position name
+      playerOrder, // Array of all player IDs in seat order
+      isDeadButton: this.isDeadButton,
+      isDeadSmallBlind: this.isDeadSmallBlind,
+    };
   }
 
   /**
