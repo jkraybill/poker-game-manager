@@ -1,7 +1,7 @@
 {
   "name": "@jkraybill/poker-game-manager",
   "version": "4.4.0",
-  "description": "Championship-grade single-table Texas Hold'em engine with tournament-standard rules and comprehensive testing",
+  "description": "Championship-grade single-table Texas Hold'em engine for Node.js with comprehensive position information and integer-validated betting",
   "main": "dist/index.cjs",
   "module": "packages/core/src/index.js",
   "type": "module",
@@ -24,7 +24,15 @@
     "game",
     "cards",
     "multiplayer",
-    "api"
+    "api",
+    "tournament",
+    "championship",
+    "position-information",
+    "side-pots",
+    "dead-button",
+    "integer-validation",
+    "event-driven",
+    "nodejs"
   ],
   "author": "JK Raybill",
   "license": "MIT",

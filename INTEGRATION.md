@@ -225,6 +225,197 @@ class PositionalPlayer extends Player {
 }
 ```
 
+## Position-Aware Players (New in v4.4.0)
+
+The library now provides comprehensive position information in the `hand:started` event, making it much easier to implement sophisticated positional strategies:
+
+### Using the Position API
+
+```javascript
+class AdvancedPositionalPlayer extends Player {
+  constructor(config) {
+    super(config);
+    this.currentPosition = null;
+    this.tablePositions = null;
+  }
+
+  // Called when hand starts - update position info
+  onHandStarted(positions) {
+    this.currentPosition = positions.positions[this.id];
+    this.tablePositions = positions;
+  }
+
+  async getAction(gameState) {
+    const { validActions, toCall, currentBet, bigBlind } = gameState;
+    
+    // Position-based strategy
+    switch(this.currentPosition) {
+      case 'button':
+        return this.playButtonStrategy(gameState);
+      case 'small-blind':
+        return this.playSmallBlindStrategy(gameState);
+      case 'big-blind':
+        return this.playBigBlindStrategy(gameState);
+      case 'under-the-gun':
+        return this.playUTGStrategy(gameState);
+      case 'middle-position':
+        return this.playMiddlePositionStrategy(gameState);
+      case 'cutoff':
+        return this.playCutoffStrategy(gameState);
+      default:
+        return this.playDefaultStrategy(gameState);
+    }
+  }
+
+  playButtonStrategy(gameState) {
+    const { validActions, toCall, currentBet, bigBlind } = gameState;
+    
+    // Aggressive from the button
+    if (currentBet === 0 && validActions.includes(Action.BET)) {
+      return { action: Action.BET, amount: bigBlind * 3 };
+    }
+    
+    if (validActions.includes(Action.RAISE) && toCall <= bigBlind * 2) {
+      return { action: Action.RAISE, amount: currentBet + bigBlind * 2 };
+    }
+    
+    if (validActions.includes(Action.CALL) && toCall <= bigBlind * 3) {
+      return { action: Action.CALL };
+    }
+    
+    return this.playDefaultStrategy(gameState);
+  }
+
+  playBigBlindStrategy(gameState) {
+    const { validActions, toCall, bigBlind } = gameState;
+    
+    // Defend big blind with reasonable hands
+    if (validActions.includes(Action.CALL) && toCall <= bigBlind * 3) {
+      return { action: Action.CALL };
+    }
+    
+    if (validActions.includes(Action.CHECK)) {
+      return { action: Action.CHECK };
+    }
+    
+    return this.playDefaultStrategy(gameState);
+  }
+
+  playUTGStrategy(gameState) {
+    const { validActions } = gameState;
+    
+    // Tight from under the gun
+    if (validActions.includes(Action.CHECK)) {
+      return { action: Action.CHECK };
+    }
+    
+    if (validActions.includes(Action.FOLD)) {
+      return { action: Action.FOLD };
+    }
+    
+    return this.playDefaultStrategy(gameState);
+  }
+
+  playDefaultStrategy(gameState) {
+    const { validActions, toCall } = gameState;
+    
+    if (validActions.includes(Action.CHECK)) {
+      return { action: Action.CHECK };
+    }
+    
+    if (validActions.includes(Action.CALL) && toCall <= 20) {
+      return { action: Action.CALL };
+    }
+    
+    if (validActions.includes(Action.FOLD)) {
+      return { action: Action.FOLD };
+    }
+    
+    return { action: Action.CHECK };
+  }
+}
+```
+
+### Setting Up Position-Aware Games
+
+```javascript
+// Set up the table
+const manager = new PokerGameManager();
+const table = manager.createTable({
+  blinds: { small: 10, big: 20 },
+  maxPlayers: 6
+});
+
+// Add position-aware players
+const players = [
+  new AdvancedPositionalPlayer({ id: 'alice', name: 'Alice' }),
+  new AdvancedPositionalPlayer({ id: 'bob', name: 'Bob' }),
+  new AdvancedPositionalPlayer({ id: 'charlie', name: 'Charlie' }),
+];
+
+players.forEach(player => {
+  player.chips = 1000;
+  table.addPlayer(player);
+});
+
+// Update players with position information when each hand starts
+table.on('hand:started', ({ positions }) => {
+  console.log('Hand started with positions:', positions);
+  
+  // Update all players with their current positions
+  Object.entries(positions.positions).forEach(([playerId, position]) => {
+    const playerData = table.players.get(playerId);
+    if (playerData && playerData.player.onHandStarted) {
+      playerData.player.onHandStarted(positions);
+    }
+  });
+});
+
+// Start the game
+await table.tryStartGame();
+```
+
+### Available Position Information
+
+The position API provides rich information for strategic decision-making:
+
+```javascript
+positions = {
+  // Primary positions (player IDs)
+  button: "alice",           // Player on the button
+  smallBlind: "bob",         // Small blind player
+  bigBlind: "charlie",       // Big blind player  
+  utg: "david",             // Under the gun player (null if < 3 players)
+  
+  // Position mapping (all players)
+  positions: {
+    "alice": "button",
+    "bob": "small-blind", 
+    "charlie": "big-blind",
+    "david": "under-the-gun",
+    "eve": "middle-position",
+    "frank": "cutoff"
+  },
+  
+  // Additional context
+  playerOrder: ["alice", "bob", "charlie", "david", "eve", "frank"],
+  isDeadButton: false,       // Whether button is on eliminated player
+  isDeadSmallBlind: false    // Whether small blind is dead this hand
+}
+```
+
+**Position Names:**
+- `button` - Dealer button (acts last post-flop)
+- `small-blind` - Small blind position
+- `big-blind` - Big blind position
+- `under-the-gun` - First to act pre-flop (after BB)
+- `middle-position` - Middle positions in larger games
+- `cutoff` - Seat before the button
+- `late-position` - Late position players
+- `button-small-blind` - Heads-up: button is also small blind
+
+See [POSITION_API_EXAMPLE.md](./POSITION_API_EXAMPLE.md) for complete usage examples and advanced patterns.
+
 ## Game State
 
 The `gameState` object tells you everything happening at the table:

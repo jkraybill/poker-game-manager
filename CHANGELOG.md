@@ -5,6 +5,92 @@ All notable changes to the Poker Game Manager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.4.0] - 2025-08-12
+
+### Added ✨
+- **Comprehensive Position Information API** - Enhanced `hand:started` event with detailed position data
+  - Primary positions: `button`, `smallBlind`, `bigBlind`, `utg` (player IDs)
+  - Position mapping: All players mapped to descriptive names (`"button"`, `"small-blind"`, `"big-blind"`, `"under-the-gun"`, `"middle-position"`, `"cutoff"`, `"late-position"`)
+  - Player order array and dead button status information
+  - Full backward compatibility with existing `dealerButton` field
+- **Position API Documentation** - Complete usage examples in `POSITION_API_EXAMPLE.md`
+- **Comprehensive Test Suite** - 5 new tests covering 2-6 player position scenarios
+
+### Enhanced 🚀
+- **Strategic Player Development** - Position-aware strategies now much easier to implement
+- **Dead Button Support** - Full position tracking even with eliminated players
+- **Developer Experience** - No more manual position calculation required
+
+```javascript
+// New position API usage
+table.on('hand:started', ({ positions }) => {
+  console.log(`Button: ${positions.button}`);
+  console.log(`Big Blind: ${positions.bigBlind}`);
+  console.log(`All positions:`, positions.positions);
+});
+```
+
+## [4.3.0] - 2025-08-12
+
+### Added ✨
+- **Integer Validation for All Monetary Values** - Comprehensive validation prevents floating-point precision issues
+  - All chip amounts enforced as integers with graceful rounding
+  - All bet amounts validated and rounded to nearest integer
+  - All pot amounts guaranteed to be integers
+  - Blind amounts validated at table creation
+- **Validation Utilities** - New `validateIntegerAmount` and `ensureInteger` functions
+- **Comprehensive Test Suite** - Complete integer validation testing across all monetary operations
+
+### Enhanced 🚀
+- **Chip Precision** - Eliminates floating-point math errors in poker calculations
+- **Backward Compatibility** - Existing code continues to work with automatic rounding
+- **Developer Safety** - Clear error messages for invalid amounts
+
+### Technical Details
+- Validation applied at all entry points: player chips, betting actions, pot calculations
+- Fractional amounts automatically rounded before validation (e.g., 100.5 → 101)
+- All 296 tests passing with integer validation enabled
+
+## [4.2.0] - 2025-08-12
+
+### Enhanced 🚀
+- **Enhanced GameState Validation Numbers** - Improved validation context for debugging
+- **Code Quality Improvements** - ESLint compliance across all source files
+- **Documentation Updates** - Improved inline documentation and examples
+
+### Fixed 🔧
+- **ESLint Compliance** - Resolved all linting warnings and errors
+- **Code Consistency** - Standardized formatting and naming conventions
+
+## [4.1.0] - 2025-08-12
+
+### 🚨 BREAKING CHANGES
+- **Enhanced `tryStartGame()` Result Object** - Returns detailed result instead of boolean
+
+### Added ✨
+- **Comprehensive Game Start Diagnostics** - Detailed failure information with structured results
+- **Error Context** - Full debugging information including player states, chip counts, and error traces
+- **Failure Categorization** - Specific error reasons: `TABLE_NOT_READY`, `INSUFFICIENT_PLAYERS`, `INSUFFICIENT_ACTIVE_PLAYERS`, `ENGINE_ERROR`
+
+```javascript
+// NEW (v4.1.0+)
+const result = await table.tryStartGame();
+if (!result.success) {
+  console.error(`Failed: ${result.reason}`);
+  console.error(`Details:`, result.details.message);
+  // result.details contains complete diagnostic information
+}
+```
+
+### Enhanced 🚀
+- **Developer Experience** - Know exactly why games fail to start
+- **Tournament Integration** - Better error handling for tournament systems
+- **Debugging Support** - Rich diagnostic information for troubleshooting
+
+### Migration Guide
+- Change `if (await table.tryStartGame())` to `if ((await table.tryStartGame()).success)`
+- Access failure details through `result.reason` and `result.details`
+
 ## [4.0.0] - 2025-08-11
 
 ### 🚨 BREAKING CHANGES
