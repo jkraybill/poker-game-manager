@@ -28,7 +28,7 @@ describe('Event Ordering - Fixed (Issue #33)', () => {
     cleanupTables(manager);
   });
 
-  it('should fire player:eliminated after hand:ended when player has 0 chips', async () => {
+  it('should fire player:eliminated before hand:ended when player has 0 chips', async () => {
     const eventLog = [];
 
     // Track events
@@ -137,10 +137,10 @@ describe('Event Ordering - Fixed (Issue #33)', () => {
       expect(eliminationEvents.length).toBe(1);
       expect(eliminationEvents[0].playerId).toBe('poor');
 
-      // Elimination should come after hand:ended
+      // Elimination should come before hand:ended
       const handEndedTime = handEndedEvents[0].timestamp;
       const eliminationTime = eliminationEvents[0].timestamp;
-      expect(eliminationTime).toBeGreaterThan(handEndedTime);
+      expect(eliminationTime).toBeLessThanOrEqual(handEndedTime);
 
       console.log(
         '\nTiming:',

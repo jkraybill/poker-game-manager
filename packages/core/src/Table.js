@@ -527,15 +527,11 @@ export class Table extends WildcardEventEmitter {
     }
 
     // Now emit hand:ended AFTER eliminations have been processed
-    // Use setTimeout to ensure distinct timestamps for proper event ordering
+    // Events are already in the correct order (eliminations first, then hand:ended)
     if (this.pendingHandEndedData) {
       const dataToEmit = this.pendingHandEndedData;
       this.pendingHandEndedData = null;
-      
-      // Small delay (1ms) to ensure elimination events have distinct earlier timestamps
-      setTimeout(() => {
-        this.emit('hand:ended', dataToEmit);
-      }, 1);
+      this.emit('hand:ended', dataToEmit);
     }
 
     // Clean up game engine

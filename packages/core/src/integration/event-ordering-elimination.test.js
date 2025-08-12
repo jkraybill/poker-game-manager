@@ -158,10 +158,11 @@ describe('Event Ordering - Elimination (Issue #33)', () => {
     expect(eliminationEvents).toHaveLength(1);
 
     // Verify ordering - elimination must come BEFORE hand:ended (fixed in v3.0.2)
-    const handTime = handEndedEvents[0].timestamp;
-    const elimTime = eliminationEvents[0].timestamp;
+    // Since events are emitted synchronously, check array order instead of timestamps
+    const elimIndex = eventLog.findIndex((e) => e.event === 'player:eliminated');
+    const handIndex = eventLog.findIndex((e) => e.event === 'hand:ended');
 
-    expect(elimTime).toBeLessThan(handTime);
+    expect(elimIndex).toBeLessThan(handIndex);
 
     // Verify the correct player was eliminated (player2 who had 50 chips)
     expect(eliminationEvents[0].playerId).toBe(player2.id);
