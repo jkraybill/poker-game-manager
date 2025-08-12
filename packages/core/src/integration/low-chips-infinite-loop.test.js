@@ -30,6 +30,7 @@ describe('Low Chips Infinite Loop Bug (v4.0.0)', () => {
     // Create players with varying chip counts
     const player1 = new Player({ id: 'p1', name: 'Player1' });
     player1.chips = 10000;
+    // eslint-disable-next-line require-await
     player1.getAction = async function(gameState) {
       const key = `${this.id}-${gameState.phase}-${gameState.currentBet}-${gameState.pot}`;
       const count = (actionRequests.get(key) || 0) + 1;
@@ -48,6 +49,7 @@ describe('Low Chips Infinite Loop Bug (v4.0.0)', () => {
 
     const player2 = new Player({ id: 'p2', name: 'Player2' });
     player2.chips = 209; // Just over 1 BB - this triggers the bug
+    // eslint-disable-next-line require-await
     player2.getAction = async function(gameState) {
       const key = `${this.id}-${gameState.phase}-${gameState.currentBet}-${gameState.pot}`;
       const count = (actionRequests.get(key) || 0) + 1;
@@ -125,7 +127,6 @@ describe('Low Chips Infinite Loop Bug (v4.0.0)', () => {
 
     // Track game events
     let handStarted = false;
-    let handEnded = false;
     
     table.on('hand:started', () => {
       handStarted = true;
@@ -133,7 +134,6 @@ describe('Low Chips Infinite Loop Bug (v4.0.0)', () => {
     });
     
     table.on('hand:ended', () => {
-      handEnded = true;
       console.log('Hand ended');
     });
     
@@ -180,6 +180,7 @@ describe('Low Chips Infinite Loop Bug (v4.0.0)', () => {
 
     const poorPlayer = new Player({ id: 'poor', name: 'Poor' });
     poorPlayer.chips = 250; // Can't afford the 1000 raise
+    // eslint-disable-next-line require-await
     poorPlayer.getAction = async function(gameState) {
       decisionCount++;
       

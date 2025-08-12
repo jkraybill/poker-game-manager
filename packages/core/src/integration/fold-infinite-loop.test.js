@@ -18,15 +18,12 @@ describe('Fold Action Infinite Loop Fix', () => {
     });
 
     let foldPlayerDecisions = 0;
-    let raisePlayerDecisions = 0;
-    let callPlayerDecisions = 0;
 
     // Player who will raise
     const raiser = new Player({ id: 'raiser', name: 'Raiser' });
     raiser.chips = 5000;
     // eslint-disable-next-line require-await
     raiser.getAction = async function(gameState) {
-      raisePlayerDecisions++;
       // Raise on first action
       if (gameState.phase === 'PRE_FLOP' && gameState.currentBet === 200) {
         console.log('Raiser: Raising to 500');
@@ -38,6 +35,7 @@ describe('Fold Action Infinite Loop Fix', () => {
     // Player who will fold
     const folder = new Player({ id: 'folder', name: 'Folder' });
     folder.chips = 1000;
+    // eslint-disable-next-line require-await
     folder.getAction = async function(gameState) {
       foldPlayerDecisions++;
       console.log(`Folder decision #${foldPlayerDecisions}:`, {
@@ -68,7 +66,6 @@ describe('Fold Action Infinite Loop Fix', () => {
     caller.chips = 5000;
     // eslint-disable-next-line require-await
     caller.getAction = async function(gameState) {
-      callPlayerDecisions++;
       const toCall = gameState.currentBet - gameState.players[this.id].bet;
       if (toCall > 0) {
         console.log('Caller: Calling');
