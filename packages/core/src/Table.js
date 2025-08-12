@@ -437,7 +437,8 @@ export class Table extends WildcardEventEmitter {
    * Handle game end
    */
   handleGameEnd(_result) {
-    this.state = TableState.WAITING;
+    // Don't change state to WAITING yet - do it after all cleanup and events
+    // This prevents race conditions where clients try to start new games too early
 
     // Update chip counts are already handled by GameEngine via player.chips setter
     // No need to update here since Player instances are shared
@@ -539,6 +540,10 @@ export class Table extends WildcardEventEmitter {
       this.gameEngine.removeAllListeners();
       this.gameEngine = null;
     }
+
+    // NOW it's safe to change state to WAITING
+    // All cleanup is done, events have been emitted
+    this.state = TableState.WAITING;
 
     // Game has ended - table consumer can start a new game if desired
   }
