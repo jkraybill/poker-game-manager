@@ -139,8 +139,9 @@ export class Table extends WildcardEventEmitter {
    *   - details: object with additional context about the failure
    */
   async tryStartGame() {
-    // Check table state
-    if (this.state !== TableState.WAITING) {
+    try {
+      // Check table state
+      if (this.state !== TableState.WAITING) {
       const stateNames = {
         [TableState.IN_PROGRESS]: 'IN_PROGRESS',
         [TableState.CLOSED]: 'CLOSED',
@@ -235,25 +236,27 @@ export class Table extends WildcardEventEmitter {
       return failureResult;
     }
 
-    this.state = TableState.IN_PROGRESS;
-    this.gameCount++;
-
-    // Capture starting chip counts for this hand (needed for elimination ordering)
-    this.handStartingChips.clear();
-    for (const [playerId, playerData] of this.players.entries()) {
-      this.handStartingChips.set(playerId, playerData.player.chips);
-    }
-
+    // Define activePlayersList early for error handling
+    let activePlayersList = [];
+    
     // Track chip counts before starting (for blind refund if needed)
     const chipSnapshot = new Map();
     for (const [playerId, playerData] of this.players.entries()) {
       chipSnapshot.set(playerId, playerData.player.chips);
     }
-
-    // Define activePlayersList early for error handling
-    let activePlayersList = [];
+    
+    // Only change state to IN_PROGRESS when we're actually ready to start
+    // This prevents race conditions if an error occurs during setup
     
     try {
+      this.state = TableState.IN_PROGRESS;
+      this.gameCount++;
+
+      // Capture starting chip counts for this hand (needed for elimination ordering)
+      this.handStartingChips.clear();
+      for (const [playerId, playerData] of this.players.entries()) {
+        this.handStartingChips.set(playerId, playerData.player.chips);
+      }
       // Initialize game engine
       // Sort players by seat number to ensure correct position order
       const sortedPlayers = Array.from(this.players.values()).sort(
@@ -402,6 +405,38 @@ export class Table extends WildcardEventEmitter {
       // Emit failure event for debugging
       this.emit('game:start-failed', failureResult);
       
+      return failureResult;
+    }
+    } catch (unexpectedError) {
+      // Catch any unexpected errors that happen outside the inner try-catch
+      // Ensure we ALWAYS return an object and emit the failure event
+      
+      // Revert state if it was changed
+      if (this.state === TableState.IN_PROGRESS && !this.gameEngine) {
+        this.state = TableState.WAITING;
+      }
+      
+      const failureResult = {
+        success: false,
+        reason: 'UNEXPECTED_ERROR',
+        details: {
+          error: unexpectedError.message || 'Unknown error',
+          errorName: unexpectedError.name || 'Error',
+          stack: unexpectedError.stack,
+          tableId: this.id,
+          gameCount: this.gameCount,
+          message: `Unexpected error in tryStartGame: ${unexpectedError.message || 'Unknown error'}`,
+          timestamp: new Date().toISOString(),
+          tableState: this.state,
+          playerCount: this.players?.size || 0,
+          playerIds: this.players ? Array.from(this.players.keys()) : [],
+        },
+      };
+      
+      // Emit failure event for debugging
+      this.emit('game:start-failed', failureResult);
+      
+      // Always return an object, never throw
       return failureResult;
     }
   }
