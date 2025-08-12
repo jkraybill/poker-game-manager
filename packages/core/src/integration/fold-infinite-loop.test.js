@@ -90,7 +90,7 @@ describe('Fold Action Infinite Loop Fix', () => {
 
     // Start game
     const started = await table.tryStartGame();
-    expect(started).toBe(true);
+    expect(started.success).toBe(true);
 
     // Wait for actions to process
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -150,7 +150,7 @@ describe('Fold Action Infinite Loop Fix', () => {
     }
 
     const started = await table.tryStartGame();
-    expect(started).toBe(true);
+    expect(started.success).toBe(true);
 
     // Wait for hand to complete
     await new Promise(resolve => setTimeout(resolve, 500));

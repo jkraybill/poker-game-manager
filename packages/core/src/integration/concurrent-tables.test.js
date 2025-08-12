@@ -82,7 +82,7 @@ describe('Concurrent Table Starts', () => {
     // All tables should have started successfully
     expect(results).toHaveLength(4);
     results.forEach(result => {
-      expect(result).toBe(true);
+      expect(result.success).toBe(true);
     });
     
     // Wait for games to process a bit
@@ -142,8 +142,8 @@ describe('Concurrent Table Starts', () => {
       table2.tryStartGame(),
     ]);
     
-    expect(r1).toBe(true);
-    expect(r2).toBe(true);
+    expect(r1.success).toBe(true);
+    expect(r2.success).toBe(true);
     
     // Wait for events to settle
     await new Promise(resolve => setTimeout(resolve, 100));

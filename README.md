@@ -8,20 +8,36 @@ What's your kicker? This library handles the poker basics pretty well.
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
 [![GitHub Package](https://img.shields.io/badge/npm-GitHub%20Packages-blue)](https://github.com/jkraybill/poker-game-manager/packages)
 
-## 🚨 Breaking Changes in v4.0.0
+## 🚨 Breaking Changes in v4.1.0
 
-### `tryStartGame()` is now async
-- **MUST await the method** - Returns `Promise<boolean>` instead of `boolean`
-- **Fixes race conditions** - Properly awaits internal async operations
-- **Prevents infinite loops** - Resolves issues with concurrent table starts
+### `tryStartGame()` now returns detailed result object
+- **Returns object with success status and details** - Provides comprehensive failure information
+- **Detailed error reasons** - Know exactly why a game failed to start
+- **Debugging context** - Full details about table state, player counts, and error messages
 
 ```javascript
-// Before (v3.x)
-const started = table.tryStartGame();
+// Before (v4.0.x)
+const started = await table.tryStartGame(); // returns boolean
 
-// After (v4.x)
-const started = await table.tryStartGame();
+// After (v4.1.x)
+const result = await table.tryStartGame();
+if (!result.success) {
+  console.error(`Failed to start game: ${result.reason}`);
+  console.error(`Details: ${result.details.message}`);
+  // result.reason can be:
+  // - 'TABLE_NOT_READY' - Table is not in WAITING state
+  // - 'INSUFFICIENT_PLAYERS' - Not enough players joined
+  // - 'INSUFFICIENT_ACTIVE_PLAYERS' - Players have no chips
+  // - 'ENGINE_ERROR' - Game engine failed to initialize
+}
 ```
+
+## Previous v4.0.x Changes
+
+### `tryStartGame()` is now async (v4.0.0)
+- **MUST await the method** - Returns `Promise` instead of synchronous value
+- **Fixes race conditions** - Properly awaits internal async operations
+- **Prevents infinite loops** - Resolves issues with concurrent table starts
 
 ## Previous v3.0.5 Changes
 

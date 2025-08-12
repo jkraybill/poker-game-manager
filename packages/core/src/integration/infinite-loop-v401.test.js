@@ -134,7 +134,7 @@ describe('Infinite Loop v4.0.1 Reproduction', () => {
     // Start game
     console.log('Starting game...');
     const started = await table.tryStartGame();
-    expect(started).toBe(true);
+    expect(started.success).toBe(true);
 
     // Wait for hand to complete
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -224,7 +224,7 @@ describe('Infinite Loop v4.0.1 Reproduction', () => {
     table.addPlayer(player2);
 
     const started = await table.tryStartGame();
-    expect(started).toBe(true);
+    expect(started.success).toBe(true);
 
     // Wait for hand
     await new Promise(resolve => setTimeout(resolve, 500));

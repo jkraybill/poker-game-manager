@@ -51,7 +51,7 @@ describe('Debug Timeout Issue', () => {
 
     console.log('Starting game...');
     const started = await table.tryStartGame();
-    expect(started).toBe(true);
+    expect(started.success).toBe(true);
 
     // Wait for hand to complete
     await new Promise((resolve, reject) => {

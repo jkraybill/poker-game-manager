@@ -14,8 +14,11 @@ export function createAutoStartTable(manager, config) {
   const table = manager.createTable(config);
 
   // Auto-start when ready (mimics old behavior for tests)
-  table.on('table:ready', () => {
-    table.tryStartGame();
+  table.on('table:ready', async () => {
+    const result = await table.tryStartGame();
+    if (!result.success) {
+      console.error('Failed to auto-start game:', result.reason, result.details);
+    }
   });
 
   return table;
@@ -36,9 +39,13 @@ export function createManualTable(manager, config) {
   return {
     table,
     isReady: () => isReady,
-    startGame: () => {
+    startGame: async () => {
       if (isReady) {
-        table.tryStartGame();
+        const result = await table.tryStartGame();
+        if (!result.success) {
+          throw new Error(`Failed to start game: ${result.reason} - ${result.details.message}`);
+        }
+        return result;
       } else {
         throw new Error('Table not ready - need minimum players');
       }
@@ -55,10 +62,14 @@ export function waitForTableReadyAndStart(table, timeout = 2000) {
       reject(new Error('Table did not become ready in time'));
     }, timeout);
 
-    table.once('table:ready', () => {
+    table.once('table:ready', async () => {
       clearTimeout(timer);
-      table.tryStartGame();
-      resolve();
+      const result = await table.tryStartGame();
+      if (result.success) {
+        resolve(result);
+      } else {
+        reject(new Error(`Failed to start game: ${result.reason} - ${result.details.message}`));
+      }
     });
   });
 }

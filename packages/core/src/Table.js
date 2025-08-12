@@ -133,15 +133,72 @@ export class Table extends WildcardEventEmitter {
 
   /**
    * Start a new game if conditions are met
-   * @returns {Promise<boolean>} True if game started successfully, false otherwise
+   * @returns {Promise<Object>} Result object with success status and details
+   *   - success: boolean indicating if game started
+   *   - reason: string explaining why game failed to start (if applicable)
+   *   - details: object with additional context about the failure
    */
   async tryStartGame() {
+    // Check table state
     if (this.state !== TableState.WAITING) {
-      return false;
+      const stateNames = {
+        [TableState.IN_PROGRESS]: 'IN_PROGRESS',
+        [TableState.CLOSED]: 'CLOSED',
+        [TableState.WAITING]: 'WAITING'
+      };
+      return {
+        success: false,
+        reason: 'TABLE_NOT_READY',
+        details: {
+          currentState: stateNames[this.state] || this.state,
+          message: `Table is not in WAITING state. Current state: ${stateNames[this.state] || this.state}`,
+          tableId: this.id,
+          gameCount: this.gameCount
+        }
+      };
     }
 
+    // Check player count
     if (this.players.size < this.config.minPlayers) {
-      return false;
+      return {
+        success: false,
+        reason: 'INSUFFICIENT_PLAYERS',
+        details: {
+          currentPlayers: this.players.size,
+          minPlayers: this.config.minPlayers,
+          message: `Need at least ${this.config.minPlayers} players to start. Currently have ${this.players.size} players.`,
+          tableId: this.id,
+          playerIds: Array.from(this.players.keys())
+        }
+      };
+    }
+
+    // Check if all players have chips
+    const playersWithNoChips = [];
+    for (const [playerId, playerData] of this.players.entries()) {
+      if (playerData.player.chips <= 0) {
+        playersWithNoChips.push({
+          id: playerId,
+          name: playerData.player.name,
+          chips: playerData.player.chips
+        });
+      }
+    }
+    
+    const activePlayers = this.players.size - playersWithNoChips.length;
+    if (activePlayers < this.config.minPlayers) {
+      return {
+        success: false,
+        reason: 'INSUFFICIENT_ACTIVE_PLAYERS',
+        details: {
+          totalPlayers: this.players.size,
+          activePlayers,
+          minPlayers: this.config.minPlayers,
+          playersWithNoChips,
+          message: `Only ${activePlayers} players have chips. Need at least ${this.config.minPlayers} active players.`,
+          tableId: this.id
+        }
+      };
     }
 
     this.state = TableState.IN_PROGRESS;
@@ -170,7 +227,7 @@ export class Table extends WildcardEventEmitter {
       const positions = this.calculateDeadButtonPositions();
       
       // Convert seat-based positions to player array indices
-      const activePlayers = sortedPlayers
+      const activePlayersList = sortedPlayers
         .filter((pd) => pd.player.chips > 0)
         .map((pd) => pd.player);
       
@@ -180,7 +237,7 @@ export class Table extends WildcardEventEmitter {
 
       this.gameEngine = new GameEngine({
         variant: this.config.variant,
-        players: activePlayers,
+        players: activePlayersList,
         blinds: this.config.blinds,
         timeout: this.config.timeout,
         dealerButton: this.currentDealerButton,
@@ -250,7 +307,17 @@ export class Table extends WildcardEventEmitter {
       this.customDeck = null;
       
       // Game started successfully
-      return true;
+      return {
+        success: true,
+        reason: 'GAME_STARTED',
+        details: {
+          tableId: this.id,
+          gameNumber: this.gameCount,
+          playerCount: activePlayersList.length,
+          blinds: this.config.blinds,
+          message: `Game #${this.gameCount} started successfully with ${activePlayersList.length} players`
+        }
+      };
     } catch (error) {
       // If game fails to start, revert state and refund blinds
       this.state = TableState.WAITING;
@@ -269,8 +336,18 @@ export class Table extends WildcardEventEmitter {
         error: error.message,
       });
       
-      // Game failed to start
-      return false;
+      // Game failed to start with engine error
+      return {
+        success: false,
+        reason: 'ENGINE_ERROR',
+        details: {
+          error: error.message,
+          stack: error.stack,
+          tableId: this.id,
+          gameCount: this.gameCount,
+          message: `Failed to start game engine: ${error.message}`
+        }
+      };
     }
   }
 

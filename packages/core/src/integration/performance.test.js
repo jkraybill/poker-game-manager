@@ -49,8 +49,11 @@ describe('Performance - No setTimeout Regression', () => {
       handsCompleted++;
       // Auto-start next hand
       if (handsCompleted < targetHands) {
-        setImmediate(() => {
-          table.tryStartGame();
+        setImmediate(async () => {
+          const result = await table.tryStartGame();
+          if (!result.success) {
+            console.error('Failed to start next hand:', result.reason);
+          }
         });
       }
     });
@@ -58,7 +61,8 @@ describe('Performance - No setTimeout Regression', () => {
     const startTime = Date.now();
     
     // Start first game
-    await table.tryStartGame();
+    const startResult = await table.tryStartGame();
+    expect(startResult.success).toBe(true);
     
     // Wait for all hands to complete
     await new Promise(resolve => {

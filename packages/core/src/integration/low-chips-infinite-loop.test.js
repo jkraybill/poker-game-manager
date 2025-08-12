@@ -144,7 +144,7 @@ describe('Low Chips Infinite Loop Bug (v4.0.0)', () => {
     // Start the game - this should NOT cause infinite loop
     console.log('Starting game...');
     const started = await table.tryStartGame();
-    expect(started).toBe(true);
+    expect(started.success).toBe(true);
     
     // Wait for hand to complete
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -209,7 +209,7 @@ describe('Low Chips Infinite Loop Bug (v4.0.0)', () => {
     table.addPlayer(poorPlayer);
 
     const started = await table.tryStartGame();
-    expect(started).toBe(true);
+    expect(started.success).toBe(true);
     
     // Wait for hand to process
     await new Promise(resolve => setTimeout(resolve, 500));
