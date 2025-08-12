@@ -21,9 +21,9 @@ describe('tryStartGame Always Returns Object', () => {
       get() {
         throw new Error('Simulated chips getter error');
       },
-      set(value) {
+      set(_value) {
         // Allow setting but break getting
-      }
+      },
     });
     
     brokenPlayer.chips = 1000; // Set works
@@ -169,7 +169,7 @@ describe('tryStartGame Always Returns Object', () => {
     
     // Simulate the client's Promise.race pattern
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Timeout')), 5000)
+      setTimeout(() => reject(new Error('Timeout')), 5000),
     );
     
     const result = await Promise.race([
@@ -178,7 +178,7 @@ describe('tryStartGame Always Returns Object', () => {
         // MUST return the result!
         return res;
       }),
-      timeoutPromise
+      timeoutPromise,
     ]).catch(err => {
       console.log('Promise.race caught:', err.message);
       return { success: false, reason: 'TIMEOUT', details: { error: err.message } };

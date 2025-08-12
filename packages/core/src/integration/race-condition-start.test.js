@@ -21,7 +21,9 @@ describe('TournamentManager Race Condition - tryStartGame', () => {
     player2.chips = 1000;
     
     // Simple folding players to ensure game starts quickly without engine errors
+    // eslint-disable-next-line require-await
     player1.getAction = async () => ({ action: Action.FOLD });
+    // eslint-disable-next-line require-await
     player2.getAction = async () => ({ action: Action.FOLD });
     
     table.addPlayer(player1);
@@ -87,7 +89,9 @@ describe('TournamentManager Race Condition - tryStartGame', () => {
     player2.chips = 1000;
     
     // Simple folding players to avoid game engine complications
+    // eslint-disable-next-line require-await
     player1.getAction = async () => ({ action: Action.FOLD });
+    // eslint-disable-next-line require-await
     player2.getAction = async () => ({ action: Action.FOLD });
     
     table.addPlayer(player1);
