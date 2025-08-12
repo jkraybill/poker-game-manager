@@ -754,22 +754,23 @@ export class GameEngine extends WildcardEventEmitter {
   async handlePlayerAction(player, action) {
     const endTimer = monitor.startTimer('handlePlayerAction');
     
+    // Ensure amount is an integer before validation
+    if (action.amount !== undefined) {
+      action.amount = ensureInteger(action.amount, 'action amount');
+    }
+    
     // Validate the action - will throw if invalid (developer error)
     this.validateAction(player, action);
 
     // Store the player's last action
     player.lastAction = action.action;
 
-    // Ensure amount is an integer if present
-    const eventData = {
+    // Emit the action event (amount already ensured to be integer above)
+    this.emit('player:action', {
       playerId: player.id,
       action: action.action,
-    };
-    if (action.amount !== undefined) {
-      eventData.amount = ensureInteger(action.amount, 'action amount');
-    }
-    
-    this.emit('player:action', eventData);
+      amount: action.amount,
+    });
 
     // Mark player as having acted BEFORE processing the action
     // This prevents infinite loops where fold ends the hand but player isn't marked as acted
