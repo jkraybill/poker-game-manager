@@ -22,6 +22,7 @@ describe('Enhanced GameState Validation Numbers', () => {
     // Player 1: Small blind
     const player1 = new Player({ id: 'p1', name: 'Small Blind' });
     player1.chips = 1000;
+    // eslint-disable-next-line require-await
     player1.getAction = async (gameState) => {
       gameStatesSeen.push({
         playerId: 'p1',
@@ -43,6 +44,7 @@ describe('Enhanced GameState Validation Numbers', () => {
     // Player 2: Big blind
     const player2 = new Player({ id: 'p2', name: 'Big Blind' });
     player2.chips = 1000;
+    // eslint-disable-next-line require-await
     player2.getAction = async (gameState) => {
       gameStatesSeen.push({
         playerId: 'p2',
@@ -117,6 +119,7 @@ describe('Enhanced GameState Validation Numbers', () => {
     const player1 = new Player({ id: 'raiser', name: 'Raiser' });
     player1.chips = 1000;
     let raiseCount = 0;
+    // eslint-disable-next-line require-await
     player1.getAction = async (gameState) => {
       gameStatesTracked.push({
         playerId: 'raiser',
@@ -141,6 +144,7 @@ describe('Enhanced GameState Validation Numbers', () => {
     const player2 = new Player({ id: 'counter', name: 'Counter' });
     player2.chips = 1000;
     let counterCount = 0;
+    // eslint-disable-next-line require-await
     player2.getAction = async (gameState) => {
       gameStatesTracked.push({
         playerId: 'counter', 
@@ -174,7 +178,7 @@ describe('Enhanced GameState Validation Numbers', () => {
     
     // Find the second action by raiser (after counter-raise to 120)
     const raiserSecondAction = gameStatesTracked.find(gs => 
-      gs.playerId === 'raiser' && gs.actionNumber === 2
+      gs.playerId === 'raiser' && gs.actionNumber === 2,
     );
     
     if (raiserSecondAction) {
@@ -208,6 +212,7 @@ describe('Enhanced GameState Validation Numbers', () => {
     // Short stack player
     const shortStack = new Player({ id: 'short', name: 'Short Stack' });
     shortStack.chips = 50; // Only 50 chips
+    // eslint-disable-next-line require-await
     shortStack.getAction = async (gameState) => {
       gameStatesRecorded.push({
         playerId: 'short',
@@ -226,6 +231,7 @@ describe('Enhanced GameState Validation Numbers', () => {
     // Big stack player
     const bigStack = new Player({ id: 'big', name: 'Big Stack' });
     bigStack.chips = 1000;
+    // eslint-disable-next-line require-await
     bigStack.getAction = async (gameState) => {
       gameStatesRecorded.push({
         playerId: 'big',
