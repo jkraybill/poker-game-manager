@@ -1,6 +1,6 @@
 {
   "name": "@jkraybill/poker-game-manager",
-  "version": "4.0.2",
+  "version": "4.0.3",
   "description": "Championship-grade single-table Texas Hold'em engine with tournament-standard rules and comprehensive testing",
   "main": "dist/index.cjs",
   "module": "packages/core/src/index.js",
