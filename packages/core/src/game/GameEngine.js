@@ -376,6 +376,26 @@ export class GameEngine extends WildcardEventEmitter {
 
     // Calculate betting details
     const bettingDetails = this.calculateBettingDetails(currentPlayer);
+    
+    // Add validation-relevant numbers to gameState for player convenience
+    gameState.toCall = bettingDetails.toCall;
+    gameState.minRaise = bettingDetails.minRaise;
+    gameState.maxRaise = bettingDetails.maxRaise;
+    gameState.potSize = bettingDetails.potSize;
+    gameState.currentBet = bettingDetails.currentBet;
+    
+    // Add additional validation context
+    gameState.players[currentPlayer.id].toCall = bettingDetails.toCall;
+    gameState.players[currentPlayer.id].canRaise = bettingDetails.maxRaise > bettingDetails.currentBet;
+    gameState.players[currentPlayer.id].effectiveStack = currentPlayer.chips;
+    
+    // Add betting history context for min raise calculations
+    gameState.bettingHistory = {
+      raiseHistory: [...this.raiseHistory],
+      lastBettor: this.lastBettor?.id || null,
+      lastRaiseSize: this.raiseHistory.length > 0 ? this.raiseHistory[this.raiseHistory.length - 1] : 0,
+      minRaiseIncrement: bettingDetails.minRaise - bettingDetails.currentBet,
+    };
 
     this.emit('action:requested', {
       playerId: currentPlayer.id,
