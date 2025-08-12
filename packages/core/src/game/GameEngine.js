@@ -723,6 +723,10 @@ export class GameEngine extends WildcardEventEmitter {
       amount: action.amount,
     });
 
+    // Mark player as having acted BEFORE processing the action
+    // This prevents infinite loops where fold ends the hand but player isn't marked as acted
+    player.hasActed = true;
+
     let handEnded = false;
 
     switch (action.action) {
@@ -751,8 +755,6 @@ export class GameEngine extends WildcardEventEmitter {
       endTimer();
       return;
     }
-
-    player.hasActed = true;
 
     // Check if betting round is complete after this action
     const isComplete = this.isBettingRoundComplete();
