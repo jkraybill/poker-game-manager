@@ -2,6 +2,7 @@ import { nanoid } from 'nanoid';
 import { WildcardEventEmitter } from './base/WildcardEventEmitter.js';
 import { GameEngine } from './game/GameEngine.js';
 import { TableState, PlayerState } from './types/index.js';
+import { validateIntegerAmount } from './utils/validation.js';
 
 /**
  * Represents a poker table that manages games and players
@@ -11,13 +12,26 @@ export class Table extends WildcardEventEmitter {
     super();
 
     this.id = config.id || nanoid();
+    
+    // Validate blinds are integers
+    const validatedBlinds = {
+      small: validateIntegerAmount(
+        config.blinds?.small ?? 10,
+        'small blind',
+      ),
+      big: validateIntegerAmount(
+        config.blinds?.big ?? 20,
+        'big blind',
+      ),
+    };
+    
     this.config = {
+      ...config,
       variant: config.variant || 'texas-holdem',
       maxPlayers: config.maxPlayers || 9,
       minPlayers: config.minPlayers || 2,
-      blinds: config.blinds || { small: 10, big: 20 },
+      blinds: validatedBlinds, // Ensure validated blinds override any spread config
       timeout: config.timeout || 30000,
-      ...config,
     };
 
     this.players = new Map();

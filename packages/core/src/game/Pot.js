@@ -1,3 +1,5 @@
+import { ensureInteger } from '../utils/validation.js';
+
 /**
  * Represents a single pot in a poker game
  * Tracks contributions and eligible players
@@ -20,6 +22,9 @@ export class Pot {
    * @returns {number} Amount actually contributed (may be less if pot is capped)
    */
   addContribution(player, amount) {
+    // Ensure amount is an integer
+    const intAmount = ensureInteger(amount, 'pot contribution');
+    
     // Check if player is eligible
     if (!this.eligiblePlayers.some((p) => p.id === player.id)) {
       return 0;
@@ -27,12 +32,12 @@ export class Pot {
 
     // Check if pot is capped
     const currentContribution = this.contributions.get(player) || 0;
-    let allowedAmount = amount;
+    let allowedAmount = intAmount;
 
     if (this.maxContributionPerPlayer !== null) {
       const remainingAllowed =
         this.maxContributionPerPlayer - currentContribution;
-      allowedAmount = Math.min(amount, remainingAllowed);
+      allowedAmount = Math.min(intAmount, remainingAllowed);
     }
 
     if (allowedAmount > 0) {
@@ -58,6 +63,8 @@ export class Pot {
    * @param {number} maxPerPlayer - Maximum contribution per player
    */
   cap(maxPerPlayer) {
+    // Ensure cap is an integer
+    maxPerPlayer = ensureInteger(maxPerPlayer, 'pot cap');
     this.maxContributionPerPlayer = maxPerPlayer;
     this.isActive = false;
   }

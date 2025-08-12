@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid';
 import { WildcardEventEmitter } from './base/WildcardEventEmitter.js';
+import { ensureInteger } from './utils/validation.js';
 
 /**
  * Base Player class that implementations should extend or follow as interface
@@ -88,8 +89,10 @@ export class Player extends WildcardEventEmitter {
    * @param {number} amount - New chip amount
    */
   set chips(amount) {
+    // Ensure chips are always integers
+    const intAmount = ensureInteger(amount, 'chips');
     const oldAmount = this._chips;
-    this._chips = Math.max(0, amount); // Never go negative
+    this._chips = Math.max(0, intAmount); // Never go negative
 
     if (oldAmount !== this._chips) {
       this.emit('chips:changed', {
@@ -107,10 +110,12 @@ export class Player extends WildcardEventEmitter {
    * @returns {number} New chip count
    */
   addChips(amount) {
-    if (amount < 0) {
+    // Ensure amount is an integer
+    const intAmount = ensureInteger(amount, 'chip amount to add');
+    if (intAmount < 0) {
       throw new Error('Cannot add negative chips');
     }
-    this.chips = this._chips + amount;
+    this.chips = this._chips + intAmount;
     return this._chips;
   }
 

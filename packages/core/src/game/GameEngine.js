@@ -4,6 +4,7 @@ import { Deck } from './Deck.js';
 import { PotManager } from './PotManager.js';
 import { HandEvaluator } from './HandEvaluator.js';
 import { Player } from '../Player.js';
+import { validateIntegerAmount, ensureInteger } from '../utils/validation.js';
 // import { gameStatePool } from '../utils/performance.js'; // Not using pool to avoid reset issues
 import { monitor } from '../utils/monitoring.js';
 
@@ -15,9 +16,10 @@ export class GameEngine extends WildcardEventEmitter {
   constructor(config) {
     super();
 
+    // Validate and ensure blinds are integers
     this.config = {
-      smallBlind: config.blinds.small,
-      bigBlind: config.blinds.big,
+      smallBlind: validateIntegerAmount(config.blinds.small, 'small blind'),
+      bigBlind: validateIntegerAmount(config.blinds.big, 'big blind'),
       timeout: config.timeout || 30000,
       ...config,
     };
@@ -28,8 +30,8 @@ export class GameEngine extends WildcardEventEmitter {
       if (p instanceof Player) {
         return p;
       } else if (p.player instanceof Player) {
-        // Transfer chips from wrapper to Player instance
-        p.player.chips = p.chips;
+        // Transfer chips from wrapper to Player instance (ensure integer)
+        p.player.chips = ensureInteger(p.chips, 'player.chips');
         return p.player;
       } else {
         throw new Error('Invalid player format');
@@ -633,30 +635,51 @@ export class GameEngine extends WildcardEventEmitter {
    * Validate bet amount according to poker rules
    */
   validateBetAmount(amount, player) {
-    // Rule 5.2.1.1: Opening bet must be at least the big blind
-    const minBet = this.config.bigBlind;
+    // First validate it's an integer
+    try {
+      const validatedAmount = validateIntegerAmount(amount, 'bet amount');
+      
+      // Rule 5.2.1.1: Opening bet must be at least the big blind
+      const minBet = this.config.bigBlind;
 
-    if (amount < minBet) {
+      if (validatedAmount < minBet) {
+        return {
+          valid: false,
+          reason: `Minimum bet is ${minBet} (big blind), but tried to bet ${validatedAmount}. Player has ${player.chips} chips available`,
+        };
+      }
+
+      if (validatedAmount > player.chips) {
+        return {
+          valid: false,
+          reason: `Insufficient chips: tried to bet ${validatedAmount} but player only has ${player.chips} chips. Use Action.ALL_IN to bet all remaining chips`,
+        };
+      }
+
+      return { valid: true };
+    } catch (error) {
       return {
         valid: false,
-        reason: `Minimum bet is ${minBet} (big blind), but tried to bet ${amount}. Player has ${player.chips} chips available`,
+        reason: error.message,
       };
     }
-
-    if (amount > player.chips) {
-      return {
-        valid: false,
-        reason: `Insufficient chips: tried to bet ${amount} but player only has ${player.chips} chips. Use Action.ALL_IN to bet all remaining chips`,
-      };
-    }
-
-    return { valid: true };
   }
 
   /**
    * Validate raise amount according to poker rules
    */
   validateRaiseAmount(amount, player) {
+    // First validate it's an integer
+    try {
+      const validatedAmount = validateIntegerAmount(amount, 'raise amount');
+      amount = validatedAmount;
+    } catch (error) {
+      return {
+        valid: false,
+        reason: error.message,
+      };
+    }
+    
     const currentBet = this.getCurrentBet();
 
     // The 'amount' parameter appears to be the total bet amount (raise TO)
@@ -737,11 +760,16 @@ export class GameEngine extends WildcardEventEmitter {
     // Store the player's last action
     player.lastAction = action.action;
 
-    this.emit('player:action', {
+    // Ensure amount is an integer if present
+    const eventData = {
       playerId: player.id,
       action: action.action,
-      amount: action.amount,
-    });
+    };
+    if (action.amount !== undefined) {
+      eventData.amount = ensureInteger(action.amount, 'action amount');
+    }
+    
+    this.emit('player:action', eventData);
 
     // Mark player as having acted BEFORE processing the action
     // This prevents infinite loops where fold ends the hand but player isn't marked as acted
@@ -900,7 +928,9 @@ export class GameEngine extends WildcardEventEmitter {
    * Handle bet action
    */
   handleBet(player, amount, blindType = '') {
-    const actualAmount = Math.min(amount, player.chips);
+    // Ensure amount is an integer
+    const intAmount = ensureInteger(amount, 'bet amount');
+    const actualAmount = Math.min(intAmount, player.chips);
 
     player.chips -= actualAmount;
     player.bet += actualAmount;
@@ -929,14 +959,16 @@ export class GameEngine extends WildcardEventEmitter {
    * Handle raise action - tracks raise increments
    */
   handleRaise(player, amount) {
+    // Ensure amount is an integer
+    const intAmount = ensureInteger(amount, 'raise amount');
     const currentBet = this.getCurrentBet();
-    const raiseIncrement = amount - currentBet;
+    const raiseIncrement = intAmount - currentBet;
 
     // Track this raise increment for minimum re-raise validation
     this.raiseHistory.push(raiseIncrement);
 
     // Use the same betting logic as handleBet
-    this.handleBet(player, amount);
+    this.handleBet(player, intAmount);
 
     // Check if this raise reopens betting (Rule 5.2.2.2)
     const minRaiseIncrement = this.getMinimumRaiseIncrement();

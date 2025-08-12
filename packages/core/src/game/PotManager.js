@@ -1,6 +1,7 @@
 import { Pot } from './Pot.js';
 import { EventEmitter } from 'eventemitter3';
 import { HandEvaluator } from './HandEvaluator.js';
+import { ensureInteger } from '../utils/validation.js';
 
 /**
  * Manages all pots in a poker game
@@ -58,16 +59,17 @@ export class PotManager extends EventEmitter {
    * @param {number} amount - Amount to add
    */
   addDeadMoney(amount) {
+    const intAmount = ensureInteger(amount, 'dead money');
     const mainPot = this.pots[0];
     if (mainPot) {
-      mainPot.amount += amount;
+      mainPot.amount += intAmount;
 
       // Emit pot update event
       this.emit('pot:updated', {
         potId: mainPot.id,
         potName: mainPot.name,
         total: mainPot.amount,
-        deadMoney: amount,
+        deadMoney: intAmount,
       });
     }
   }
@@ -79,7 +81,8 @@ export class PotManager extends EventEmitter {
    * @returns {Object} Distribution details
    */
   addToPot(player, amount) {
-    let remainingAmount = amount;
+    const intAmount = ensureInteger(amount, 'pot contribution');
+    let remainingAmount = intAmount;
     const distributions = [];
 
     // Distribute across pots in order
@@ -118,7 +121,7 @@ export class PotManager extends EventEmitter {
     }
 
     return {
-      totalContributed: amount - remainingAmount,
+      totalContributed: intAmount - remainingAmount,
       distributions,
     };
   }
