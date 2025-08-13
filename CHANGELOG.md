@@ -5,6 +5,27 @@ All notable changes to the Poker Game Manager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.4.2] - 2025-08-12
+
+### Added ✨
+- **WildcardEventEmitter Export** - Now fully exported for client usage
+  - Available via main export: `import { WildcardEventEmitter } from '@jkraybill/poker-game-manager'`
+  - Direct import path: `import { WildcardEventEmitter } from '@jkraybill/poker-game-manager/wildcard-event-emitter'`
+  - Enables advanced event monitoring, debugging, and analytics for client applications
+  - Zero overhead when not used - EventEmitter3 based for optimal performance
+
+### Enhanced 📚
+- **Comprehensive WildcardEventEmitter Documentation** - Complete guide with use cases and examples
+  - Event logging and debugging patterns
+  - Analytics collection strategies
+  - Tournament event aggregation examples
+  - Performance considerations and best practices
+
+### Developer Experience 🚀
+- **Extended Event System** - Clients can now build custom components with wildcard event support
+- **Improved Debugging** - Listen to all events with a single `on('*', ...)` listener
+- **Event Forwarding** - Easy event proxying between components
+
 ## [4.4.1] - 2025-08-12
 
 ### Enhanced 📚

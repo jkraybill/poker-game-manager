@@ -1,6 +1,6 @@
 {
   "name": "@jkraybill/poker-game-manager",
-  "version": "4.4.1",
+  "version": "4.4.2",
   "description": "Championship-grade single-table Texas Hold'em engine for Node.js with comprehensive position information and integer-validated betting",
   "main": "dist/index.cjs",
   "module": "packages/core/src/index.js",
@@ -70,6 +70,10 @@
     "./types": {
       "import": "./packages/core/src/types/index.js",
       "require": "./dist/types.cjs"
+    },
+    "./wildcard-event-emitter": {
+      "import": "./packages/core/src/base/WildcardEventEmitter.js",
+      "require": "./dist/base/WildcardEventEmitter.cjs"
     },
     "./game/*": {
       "import": "./packages/core/src/game/*.js",

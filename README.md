@@ -6,15 +6,16 @@ Championship-grade single-table Texas Hold'em engine for Node.js with comprehens
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
 [![GitHub Package](https://img.shields.io/badge/npm-GitHub%20Packages-blue)](https://github.com/jkraybill/poker-game-manager/packages)
 
-## 🚀 What's New in v4.4.1
+## 🚀 What's New in v4.4.2
 
-### Documentation Excellence 📚
-**v4.4.1** brings comprehensive documentation updates with modern examples showcasing the full v4.4.0 feature set:
+### WildcardEventEmitter Now Fully Exported! 🎯
+**v4.4.2** exposes the powerful `WildcardEventEmitter` class for client applications:
 
-- **Enhanced Integration Guide** - Complete position-aware player implementation patterns
-- **Modern Quick Start** - Updated examples using current v4.4.0 position API  
-- **Championship Branding** - All documentation reflects the championship-grade quality
-- **Improved Discoverability** - Enhanced npm keywords for better search visibility
+- **Advanced Event Monitoring** - Listen to ALL events with a single `on('*', ...)` listener
+- **Perfect for Debugging** - Capture complete event flow for analysis
+- **Analytics Ready** - Build comprehensive event tracking systems
+- **Zero Overhead** - EventEmitter3 based for optimal performance
+- **Full Documentation** - Complete guide with examples and best practices
 
 ## Position Information API (v4.4.0)
 
@@ -192,6 +193,10 @@ import { Action, GamePhase } from '@jkraybill/poker-game-manager/types';
 // Game components
 import { HandEvaluator, Deck, GameEngine } from '@jkraybill/poker-game-manager';
 
+// Event system (v4.4.2+)
+import { WildcardEventEmitter } from '@jkraybill/poker-game-manager';
+import { WildcardEventEmitter } from '@jkraybill/poker-game-manager/wildcard-event-emitter';
+
 // Validation utilities (v4.3.0+)
 import { validateIntegerAmount, ensureInteger } from '@jkraybill/poker-game-manager/utils/validation';
 
@@ -227,6 +232,7 @@ const { PokerGameManager, Player } = require('@jkraybill/poker-game-manager');
 ## 📚 Documentation
 
 - **[Position API Examples](./POSITION_API_EXAMPLE.md)** - Comprehensive position usage guide
+- **[WildcardEventEmitter Guide](./WILDCARD_EVENT_EMITTER.md)** - Advanced event monitoring and debugging
 - **[Integration Guide](./INTEGRATION.md)** - Player implementation patterns
 - **[Testing Guide](./TESTING_GUIDE.md)** - Test utilities and patterns
 - **[Poker Rules](./POKER-RULES.md)** - Complete rule reference
