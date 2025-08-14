@@ -16,7 +16,8 @@
     "test:coverage": "vitest --run --coverage",
     "lint": "eslint packages/core/src packages/ai/src --ext .js",
     "format": "prettier --write \"packages/**/*.{js,json,md}\"",
-    "prepublishOnly": "npm run lint && npm test && npm run build"
+    "prepublishOnly": "npm run lint && npm test && npm run build",
+    "prepare": "husky"
   },
   "keywords": [
     "poker",
@@ -50,6 +51,7 @@
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.29.1",
+    "husky": "^9.1.7",
     "prettier": "^3.1.1",
     "vitest": "^3.2.4"
   },
