@@ -59,6 +59,8 @@ export class GameEngine extends WildcardEventEmitter {
     this.lastBettor = null;
     this.customDeck = config.customDeck || null;
     this.raiseHistory = []; // Track raise increments in current round
+    this.bettingRoundStarted = null; // v4.4.7: Track which phase started betting to prevent duplicates
+    this.endingBettingRound = false; // v4.4.7: Prevent promptNextPlayer after endBettingRound starts
   }
 
   /**
@@ -101,6 +103,8 @@ export class GameEngine extends WildcardEventEmitter {
     this.roundBets.clear();
     this.playerHands.clear();
     this.raiseHistory = []; // Reset raise history for new hand
+    this.bettingRoundStarted = null; // v4.4.7: Reset betting round tracking for new hand
+    this.endingBettingRound = false; // v4.4.7: Reset betting round ending flag for new hand
 
     // Initialize pot manager with Player instances directly
     this.potManager = new PotManager(this.players);
@@ -250,6 +254,9 @@ export class GameEngine extends WildcardEventEmitter {
    * Start a new betting round
    */
   async startBettingRound() {
+    // v4.4.7: Reset flag when new betting round starts
+    this.endingBettingRound = false;
+
     // Reset round state
     for (const player of this.players) {
       if (player.state === PlayerState.ACTIVE) {
@@ -375,6 +382,11 @@ export class GameEngine extends WildcardEventEmitter {
   async promptNextPlayer() {
     // Don't create promises if game is already ended/aborted
     if (this.phase === GamePhase.ENDED) {
+      return;
+    }
+
+    // v4.4.7: Don't prompt if betting round is being ended (prevents race condition)
+    if (this.endingBettingRound) {
       return;
     }
 
@@ -1039,6 +1051,9 @@ export class GameEngine extends WildcardEventEmitter {
     // Now do the actual bet
     this.handleBet(player, allInAmount);
 
+    // CRITICAL: Set player state to ALL_IN after going all-in
+    player.state = PlayerState.ALL_IN;
+
     // Check if this all-in reopens betting (Rule 5.2.2.2)
     // An all-in less than a full raise does not reopen betting
     const raiseIncrement = totalBet - currentBet;
@@ -1126,6 +1141,12 @@ export class GameEngine extends WildcardEventEmitter {
    * End the current betting round
    */
   async endBettingRound() {
+    // v4.4.7: Prevent multiple calls to endBettingRound for the same phase (race condition fix)
+    if (this.endingBettingRound) {
+      return;
+    }
+    this.endingBettingRound = true;
+
     this.potManager.endBettingRound();
 
     // Clear option flags
@@ -1146,7 +1167,14 @@ export class GameEngine extends WildcardEventEmitter {
         break;
       case GamePhase.RIVER:
         this.showdown();
+        // v4.4.7: Reset flag after showdown since hand is complete (no more betting rounds)
+        this.endingBettingRound = false;
         break;
+    }
+
+    // v4.4.7: Reset flag after phase transition (except for RIVER which resets above)
+    if (this.phase !== GamePhase.RIVER) {
+      this.endingBettingRound = false;
     }
   }
 
@@ -1175,8 +1203,8 @@ export class GameEngine extends WildcardEventEmitter {
 
     if (activePlayers.length <= 1) {
       // No betting needed - all players except one (or none) are all-in
-      // Progress directly to next phase
-      await this.endBettingRound();
+      // Progress directly to next phase without calling endBettingRound (avoids mutex issue)
+      await this.dealTurn();
     } else {
       // Reset current player to first active player after button
       this.currentPlayerIndex = this.getNextActivePlayerIndex(
@@ -1212,8 +1240,8 @@ export class GameEngine extends WildcardEventEmitter {
 
     if (activePlayers.length <= 1) {
       // No betting needed - all players except one (or none) are all-in
-      // Progress directly to next phase
-      await this.endBettingRound();
+      // Progress directly to next phase without calling endBettingRound (avoids mutex issue)
+      await this.dealRiver();
     } else {
       this.currentPlayerIndex = this.getNextActivePlayerIndex(
         this.dealerButtonIndex,
@@ -1248,8 +1276,8 @@ export class GameEngine extends WildcardEventEmitter {
 
     if (activePlayers.length <= 1) {
       // No betting needed - all players except one (or none) are all-in
-      // Progress directly to next phase (showdown)
-      await this.endBettingRound();
+      // Progress directly to showdown without calling endBettingRound (avoids mutex issue)
+      this.showdown();
     } else {
       this.currentPlayerIndex = this.getNextActivePlayerIndex(
         this.dealerButtonIndex,

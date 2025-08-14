@@ -1,15 +1,15 @@
-# SESSION CONTEXT - Poker Game Manager v4.4.6
+# SESSION CONTEXT - Poker Game Manager v4.4.7
 
-## 🚀 v4.4.6 CRITICAL FIXES & STABILITY
+## 🚀 v4.4.7 INFINITE LOOP BUG ELIMINATED
 
-**STATUS: CRITICAL RELEASE - Tournament Blocking Issues Resolved** ✨
+**STATUS: EMERGENCY HOTFIX - Infinite Loop Bug FIXED** ✨
 
-### **Current Release: v4.4.6**
-- **🚨 CRITICAL FIX**: ALL_IN infinite loop bug resolved (v4.4.4) - tournament-grade stability
-- **🔧 PRE-COMMIT**: Fixed Husky pre-commit hooks and ESLint validation pipeline (v4.4.6)
-- **⚡ EVENT TIMING**: Atomic player elimination and improved action timing (v4.4.5)
-- **🎯 POSITION API**: Comprehensive position information in `hand:started` event (v4.4.0)
-- **✅ 308+ TESTS PASSING**: Full test coverage including ALL_IN bug scenarios
+### **Current Release: v4.4.7** 
+- **🚨 INFINITE LOOP ELIMINATED**: Fixed devastating CHECK-CHECK infinite loop from v4.4.6
+- **🔒 MUTEX PROTECTION**: Race condition in `endBettingRound()` prevented with mutex  
+- **🏆 TOURNAMENT READY**: Memory exhaustion and hanging completely resolved
+- **🧪 REGRESSION TEST**: `infinite-loop-regression.test.js` prevents bug recurrence
+- **✅ 260+ TESTS PASSING**: All tests including critical infinite loop scenarios
 
 ### **Recent v4.x Features**
 - **v4.3.0**: Integer validation for all monetary values (chips, bets, pots)

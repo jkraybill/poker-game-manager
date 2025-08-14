@@ -5,6 +5,18 @@ All notable changes to the Poker Game Manager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.4.7] - 2025-08-14
+
+### Fixed 🔧
+- **CRITICAL: Infinite Loop Bug** - Fixed race condition causing CHECK-CHECK infinite loops that plagued v4.4.6
+- **Mutex Protection** - Added `endingBettingRound` mutex to prevent duplicate `endBettingRound()` calls
+- **Tournament Stability** - Eliminated infinite loops that caused memory exhaustion in tournament simulations
+
+### Enhanced 🚀  
+- **Regression Test** - Added comprehensive `infinite-loop-regression.test.js` to prevent bug recurrence
+- **Game Reliability** - Tournament simulations now run indefinitely without hanging
+- **Memory Management** - Fixed memory leaks caused by infinite action loops
+
 ## [4.4.6] - 2025-08-14
 
 ### Fixed 🔧

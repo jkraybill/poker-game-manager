@@ -6,15 +6,16 @@ Championship-grade single-table Texas Hold'em engine for Node.js with comprehens
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
 [![GitHub Package](https://img.shields.io/badge/npm-GitHub%20Packages-blue)](https://github.com/jkraybill/poker-game-manager/packages)
 
-## 🚀 What's New in v4.4.6
+## 🚀 What's New in v4.4.7
 
-### Critical Tournament Fixes! 🚨
-**v4.4.6** resolves tournament-blocking issues:
+### CRITICAL: Infinite Loop Bug FIXED! 🚨
+**v4.4.7** resolves the devastating infinite loop bug reported in v4.4.6:
 
-- **ALL_IN Infinite Loop Fix** - Eliminates infinite loops when players go all-in (v4.4.4)
-- **Pre-commit Hook Repairs** - Fixed ESLint and pre-commit validation pipeline (v4.4.6)  
-- **Event Timing Improvements** - Atomic player elimination and action event timing (v4.4.5)
-- **Championship Stability** - Tournament-grade reliability for production use
+- **✅ CHECK-CHECK Infinite Loop ELIMINATED** - Fixed race condition causing tournament hangs 
+- **✅ Mutex Protection** - `endingBettingRound` mutex prevents duplicate betting round calls
+- **✅ Tournament Stability** - Memory exhaustion and infinite loops completely resolved
+- **✅ Regression Protection** - Comprehensive test prevents bug recurrence
+- **✅ Production Ready** - Tournament simulations run indefinitely without issues
 
 ### WildcardEventEmitter Fully Exported! 🎯 (v4.4.2)
 **v4.4.2** exposed the powerful `WildcardEventEmitter` class for client applications:

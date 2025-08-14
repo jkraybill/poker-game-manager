@@ -26,26 +26,44 @@ describe('hand:ended Event State Timing Issue - Stress Test', () => {
       // Add players with fast actions to increase event throughput
       const player1 = new Player({ id: `p${i}-1`, name: `Player ${i}-1` });
       player1.chips = 1000;
-      // Mix of instant folds and checks to create different timing patterns
-      player1.getAction = async () => {
+      // Mix of instant folds and calls to create different timing patterns
+      player1.getAction = async (gameState) => {
         // Add tiny random delay to simulate real player timing variance
         if (Math.random() < 0.1) {
           await new Promise((resolve) =>
             setTimeout(resolve, Math.random() * 5),
           );
         }
-        return { action: Math.random() < 0.7 ? Action.FOLD : Action.CHECK };
+        // Check if we need to call or can check
+        const myState = gameState.players[player1.id];
+        const toCall = gameState.currentBet - myState.bet;
+        if (toCall > 0) {
+          // Must call or fold when facing a bet
+          return { action: Math.random() < 0.7 ? Action.FOLD : Action.CALL };
+        } else {
+          // Can check when no bet to call
+          return { action: Action.CHECK };
+        }
       };
 
       const player2 = new Player({ id: `p${i}-2`, name: `Player ${i}-2` });
       player2.chips = 1000;
-      player2.getAction = async () => {
+      player2.getAction = async (gameState) => {
         if (Math.random() < 0.1) {
           await new Promise((resolve) =>
             setTimeout(resolve, Math.random() * 5),
           );
         }
-        return { action: Action.CHECK };
+        // Check if we need to call or can check
+        const myState = gameState.players[player2.id];
+        const toCall = gameState.currentBet - myState.bet;
+        if (toCall > 0) {
+          // Always call when facing a bet
+          return { action: Action.CALL };
+        } else {
+          // Check when no bet to call
+          return { action: Action.CHECK };
+        }
       };
 
       table.addPlayer(player1);
@@ -226,7 +244,18 @@ describe('hand:ended Event State Timing Issue - Stress Test', () => {
 
       const player2 = new Player({ id: `tp${i}-2`, name: `TPlayer ${i}-2` });
       player2.chips = 1000;
-      player2.getAction = () => ({ action: Action.CHECK });
+      player2.getAction = (gameState) => {
+        // Check if we need to call or can check
+        const myState = gameState.players[player2.id];
+        const toCall = gameState.currentBet - myState.bet;
+        if (toCall > 0) {
+          // Call when facing a bet
+          return { action: Action.CALL };
+        } else {
+          // Check when no bet to call
+          return { action: Action.CHECK };
+        }
+      };
 
       table.addPlayer(player1);
       table.addPlayer(player2);
