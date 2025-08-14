@@ -232,7 +232,7 @@ describe('Chip Tracking (v2)', () => {
           (p) => p.id === winner.playerId,
         );
         const playerChips = player ? player.chips : 0;
-        
+
         if (winner.amount > 0) {
           // Only expect increase if they actually won money
           expect(playerChips).toBeGreaterThan(initialChips);

@@ -324,7 +324,9 @@ describe('Tournament Elimination Ordering (Issue #28)', () => {
             '❌ WRONG ORDER: Medium Stack eliminated before Small Stack',
           );
         } else {
-          console.log('❌ ISSUE #28 CONFIRMED: Both eliminated simultaneously!');
+          console.log(
+            '❌ ISSUE #28 CONFIRMED: Both eliminated simultaneously!',
+          );
         }
       }
     } else {

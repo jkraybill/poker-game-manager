@@ -11,7 +11,7 @@ class MockPlayer extends Player {
     this.getAction = vi.fn().mockImplementation((gameState) => {
       // Use validActions if provided by GameEngine
       const validActions = gameState.validActions || [];
-      
+
       // Simple strategy: prefer CHECK over CALL over FOLD
       let action;
       if (validActions.includes(Action.CHECK)) {
@@ -24,10 +24,15 @@ class MockPlayer extends Player {
         action = Action.ALL_IN;
       } else {
         // This should never happen if GameEngine is working correctly
-        console.error('No valid actions available for player', config.id, 'validActions:', validActions);
+        console.error(
+          'No valid actions available for player',
+          config.id,
+          'validActions:',
+          validActions,
+        );
         action = Action.CHECK; // Fallback
       }
-      
+
       return Promise.resolve({
         action,
         playerId: config.id,
@@ -110,27 +115,33 @@ describe('GameEngine', () => {
 
     it('should start a new hand', async () => {
       // Mock promptNextPlayer to prevent async game loop
-      const promptSpy = vi.spyOn(gameEngine, 'promptNextPlayer').mockResolvedValue();
-      
+      const promptSpy = vi
+        .spyOn(gameEngine, 'promptNextPlayer')
+        .mockResolvedValue();
+
       const handStartedSpy = vi.fn();
       gameEngine.on('hand:started', handStartedSpy);
 
       await gameEngine.start();
 
-      expect(handStartedSpy).toHaveBeenCalledWith(expect.objectContaining({
-        players: ['player1', 'player2', 'player3'],
-        dealerButton: gameEngine.dealerButtonIndex,
-        positions: expect.any(Object),
-      }));
-      
+      expect(handStartedSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          players: ['player1', 'player2', 'player3'],
+          dealerButton: gameEngine.dealerButtonIndex,
+          positions: expect.any(Object),
+        }),
+      );
+
       // Restore original implementation
       promptSpy.mockRestore();
     });
 
     it('should deal hole cards to all players', async () => {
       // Mock promptNextPlayer to prevent async game loop
-      const promptSpy = vi.spyOn(gameEngine, 'promptNextPlayer').mockResolvedValue();
-      
+      const promptSpy = vi
+        .spyOn(gameEngine, 'promptNextPlayer')
+        .mockResolvedValue();
+
       await gameEngine.start();
 
       expect(mockPlayers[0].player.receivePrivateCards).toHaveBeenCalledWith(
@@ -139,15 +150,17 @@ describe('GameEngine', () => {
           expect.objectContaining({ rank: expect.any(String) }),
         ]),
       );
-      
+
       // Restore original implementation
       promptSpy.mockRestore();
     });
 
     it('should post blinds', async () => {
       // Mock promptNextPlayer to prevent async game loop
-      const promptSpy = vi.spyOn(gameEngine, 'promptNextPlayer').mockResolvedValue();
-      
+      const promptSpy = vi
+        .spyOn(gameEngine, 'promptNextPlayer')
+        .mockResolvedValue();
+
       const potUpdatedSpy = vi.fn();
       gameEngine.on('pot:updated', potUpdatedSpy);
 
@@ -155,18 +168,22 @@ describe('GameEngine', () => {
 
       // Should have two pot updates for small and big blind
       expect(potUpdatedSpy).toHaveBeenCalledTimes(2);
-      
+
       // Restore original implementation
       promptSpy.mockRestore();
     });
 
     it('should throw error if game already in progress', async () => {
       // Mock promptNextPlayer to prevent async game loop
-      const promptSpy = vi.spyOn(gameEngine, 'promptNextPlayer').mockResolvedValue();
-      
+      const promptSpy = vi
+        .spyOn(gameEngine, 'promptNextPlayer')
+        .mockResolvedValue();
+
       await gameEngine.start();
-      await expect(gameEngine.start()).rejects.toThrow('Game already in progress');
-      
+      await expect(gameEngine.start()).rejects.toThrow(
+        'Game already in progress',
+      );
+
       // Restore original implementation
       promptSpy.mockRestore();
     });
@@ -183,7 +200,7 @@ describe('GameEngine', () => {
         mp.player.getAction.mockImplementation((gameState) => {
           // Use validActions if provided by GameEngine
           const validActions = gameState.validActions || [];
-          
+
           // Simple strategy: prefer CHECK over CALL over FOLD
           let action;
           if (validActions.includes(Action.CHECK)) {
@@ -196,10 +213,15 @@ describe('GameEngine', () => {
             action = Action.ALL_IN;
           } else {
             // This should never happen if GameEngine is working correctly
-            console.error('No valid actions available for player', mp.player.id, 'validActions:', validActions);
+            console.error(
+              'No valid actions available for player',
+              mp.player.id,
+              'validActions:',
+              validActions,
+            );
             action = Action.CHECK; // Fallback
           }
-          
+
           return Promise.resolve({
             action,
             playerId: mp.player.id,
@@ -224,11 +246,13 @@ describe('GameEngine', () => {
     it('should reject fold action when check is available', async () => {
       // Restore real promptNextPlayer for this test
       gameEngine.promptNextPlayer.mockRestore();
-      
+
       // Set up BB with option to check (everyone called)
-      const sbIndex = gameEngine.getNextActivePlayerIndex(gameEngine.dealerButtonIndex);
+      const sbIndex = gameEngine.getNextActivePlayerIndex(
+        gameEngine.dealerButtonIndex,
+      );
       const bbIndex = gameEngine.getNextActivePlayerIndex(sbIndex);
-      
+
       // Make everyone call to BB
       mockPlayers.forEach((mp, idx) => {
         if (idx !== bbIndex) {
@@ -237,11 +261,11 @@ describe('GameEngine', () => {
           mp.hasActed = true;
         }
       });
-      
+
       gameEngine.currentPlayerIndex = bbIndex;
       const bbPlayer = mockPlayers[bbIndex];
       bbPlayer.hasActed = false;
-      
+
       // Try to fold when check is available
       bbPlayer.player.getAction.mockResolvedValue({
         action: Action.FOLD,
@@ -257,7 +281,7 @@ describe('GameEngine', () => {
     it('should handle check action when valid', async () => {
       // Restore real promptNextPlayer for this test
       gameEngine.promptNextPlayer.mockRestore();
-      
+
       // In a simpler test, just verify that check works when current bet matches player bet
       // Skip to a state where everyone has acted and it's time for someone to check
 
@@ -298,7 +322,6 @@ describe('GameEngine', () => {
         amount: undefined,
       });
     });
-
   });
 
   describe('betting rounds', () => {
@@ -311,20 +334,22 @@ describe('GameEngine', () => {
 
     it('should progress through all betting rounds', async () => {
       // Mock promptNextPlayer to prevent async game loop
-      const promptSpy = vi.spyOn(gameEngine, 'promptNextPlayer').mockResolvedValue();
-      
+      const promptSpy = vi
+        .spyOn(gameEngine, 'promptNextPlayer')
+        .mockResolvedValue();
+
       const communityCardsSpy = vi.fn();
       gameEngine.on('cards:community', communityCardsSpy);
 
       // Start the game
       await gameEngine.start();
-      
+
       // Manually set up pre-flop betting completion state
       for (let i = 0; i < 3; i++) {
         gameEngine.players[i].hasActed = true;
         gameEngine.players[i].bet = gameEngine.getCurrentBet();
       }
-      
+
       // Manually trigger betting round end to see flop
       await gameEngine.endBettingRound();
 
@@ -337,7 +362,7 @@ describe('GameEngine', () => {
         ]),
         phase: 'FLOP',
       });
-      
+
       // Restore original implementation
       promptSpy.mockRestore();
     });
@@ -353,8 +378,10 @@ describe('GameEngine', () => {
 
     it('should end hand when only one player remains', async () => {
       // Mock promptNextPlayer to prevent async game loop
-      const promptSpy = vi.spyOn(gameEngine, 'promptNextPlayer').mockResolvedValue();
-      
+      const promptSpy = vi
+        .spyOn(gameEngine, 'promptNextPlayer')
+        .mockResolvedValue();
+
       const handCompleteSpy = vi.fn();
       gameEngine.on('hand:complete', handCompleteSpy);
 
@@ -375,7 +402,7 @@ describe('GameEngine', () => {
           board: expect.any(Array),
         }),
       );
-      
+
       // Restore original implementation
       promptSpy.mockRestore();
     });
@@ -391,8 +418,10 @@ describe('GameEngine', () => {
 
     it('should abort the game', async () => {
       // Mock promptNextPlayer to prevent async game loop
-      const promptSpy = vi.spyOn(gameEngine, 'promptNextPlayer').mockResolvedValue();
-      
+      const promptSpy = vi
+        .spyOn(gameEngine, 'promptNextPlayer')
+        .mockResolvedValue();
+
       const abortSpy = vi.fn();
       gameEngine.on('game:aborted', abortSpy);
 
@@ -401,7 +430,7 @@ describe('GameEngine', () => {
 
       expect(gameEngine.phase).toBe('ENDED');
       expect(abortSpy).toHaveBeenCalled();
-      
+
       // Restore original implementation
       promptSpy.mockRestore();
     });

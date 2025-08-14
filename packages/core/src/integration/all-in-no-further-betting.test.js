@@ -1,10 +1,10 @@
 /**
  * Test for All-In No Further Betting Bug
- * 
+ *
  * When all players except one are all-in, the remaining player with chips
  * should NOT be prompted for any further betting actions. The hand should
  * proceed directly to showdown through flop/turn/river without any action requests.
- * 
+ *
  * Bug Report: After an all-in is called by a bigger stack, the bigger stack
  * is incorrectly allowed to continue betting on subsequent streets.
  */
@@ -140,7 +140,7 @@ describe('All-In No Further Betting Bug', () => {
 
       // Verify the hand played out correctly
       const { winners, actions } = events;
-      
+
       // Debug output
       console.log('Winners:', winners);
       console.log('Actions:', actions);
@@ -285,9 +285,9 @@ describe('All-In No Further Betting Bug', () => {
 
       // Verify we got preflop actions (all-ins and call)
       expect(actions.length).toBeGreaterThan(0);
-      
+
       // Count all-in actions
-      const allInActions = actions.filter(a => a.action === Action.ALL_IN);
+      const allInActions = actions.filter((a) => a.action === Action.ALL_IN);
       expect(allInActions.length).toBeGreaterThanOrEqual(2); // At least 2 all-ins
 
       // Verify no action requests on later streets

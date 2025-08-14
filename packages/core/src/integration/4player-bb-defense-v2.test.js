@@ -190,7 +190,9 @@ describe('4-Player Big Blind Defense (v2)', () => {
     ).toBeDefined();
 
     // Turn and River: both check
-    expect(turnActions.filter((a) => a.action === Action.CHECK)).toHaveLength(2);
+    expect(turnActions.filter((a) => a.action === Action.CHECK)).toHaveLength(
+      2,
+    );
     expect(riverActions.filter((a) => a.action === Action.CHECK)).toHaveLength(
       2,
     );
@@ -209,7 +211,9 @@ describe('4-Player Big Blind Defense (v2)', () => {
       const expectedPerWinner = Math.floor(290 / winners.length);
       winners.forEach((w) => {
         expect(w.amount).toBeGreaterThanOrEqual(expectedPerWinner);
-        expect(w.amount).toBeLessThanOrEqual(expectedPerWinner + winners.length);
+        expect(w.amount).toBeLessThanOrEqual(
+          expectedPerWinner + winners.length,
+        );
       });
     }
   });

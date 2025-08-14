@@ -15,7 +15,7 @@ describe('Event Ordering - Verified (Issue #33)', () => {
   let manager, table;
 
   beforeEach(() => {
-    ;({ manager, table } = createTestTable('standard', {
+    ({ manager, table } = createTestTable('standard', {
       minPlayers: 2,
       dealerButton: 0,
     }));
@@ -117,7 +117,9 @@ describe('Event Ordering - Verified (Issue #33)', () => {
 
     // Verify handleGameEnd runs first, then hand:ended (fixed in v3.0.2)
     const handEndedEvent = eventLog.find((e) => e.event === 'hand:ended');
-    const handleGameEndEvent = eventLog.find((e) => e.event === 'handleGameEnd');
+    const handleGameEndEvent = eventLog.find(
+      (e) => e.event === 'handleGameEnd',
+    );
 
     expect(handEndedEvent).toBeTruthy();
     expect(handleGameEndEvent).toBeTruthy();
@@ -221,7 +223,9 @@ describe('Event Ordering - Verified (Issue #33)', () => {
       });
 
       // And elimination should come after hand:ended in the log
-      const handEndedIndex = eventLog.findIndex((e) => e.event === 'hand:ended');
+      const handEndedIndex = eventLog.findIndex(
+        (e) => e.event === 'hand:ended',
+      );
       const firstElimIndex = eventLog.findIndex(
         (e) => e.event === 'player:eliminated',
       );

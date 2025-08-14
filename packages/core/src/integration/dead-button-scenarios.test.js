@@ -1,13 +1,13 @@
 /**
  * Dead Button and Dead Small Blind Scenarios - Comprehensive Test Suite
- * 
+ *
  * Tests the implementation of tournament-standard dead button rules as specified
  * in POKER-RULES.md section 3. These rules are critical for tournament integrity.
- * 
+ *
  * CORE PRINCIPLE: The big blind always moves forward one position each hand.
  * The button and small blind are calculated relative to the big blind position,
  * even if this means placing them on eliminated players' empty seats (dead positions).
- * 
+ *
  * Key Rules from POKER-RULES.md:
  * - 3.1.1: Tournament play uses a dead button
  * - 3.1.2: Small blind may have the button
@@ -52,14 +52,26 @@ describe('Dead Button Tournament Rules', () => {
 
       // Create players with basic fold strategy
       const players = [
-        new StrategicPlayer({ name: 'Player A', strategy: STRATEGIES.alwaysFold }), // Button
-        new StrategicPlayer({ name: 'Player B', strategy: STRATEGIES.alwaysFold }), // SB - will be eliminated
-        new StrategicPlayer({ name: 'Player C', strategy: STRATEGIES.alwaysFold }), // BB
-        new StrategicPlayer({ name: 'Player D', strategy: STRATEGIES.alwaysFold }), // UTG
+        new StrategicPlayer({
+          name: 'Player A',
+          strategy: STRATEGIES.alwaysFold,
+        }), // Button
+        new StrategicPlayer({
+          name: 'Player B',
+          strategy: STRATEGIES.alwaysFold,
+        }), // SB - will be eliminated
+        new StrategicPlayer({
+          name: 'Player C',
+          strategy: STRATEGIES.alwaysFold,
+        }), // BB
+        new StrategicPlayer({
+          name: 'Player D',
+          strategy: STRATEGIES.alwaysFold,
+        }), // UTG
       ];
 
       // Add players
-      players.forEach(p => table.addPlayer(p));
+      players.forEach((p) => table.addPlayer(p));
 
       // First hand - establish positions
       const events1 = setupEventCapture(table);
@@ -78,23 +90,23 @@ describe('Dead Button Tournament Rules', () => {
 
       // Check dead button positions BEFORE starting second hand
 
-      // Second hand - should implement dead button rule  
+      // Second hand - should implement dead button rule
       const events2 = setupEventCapture(table);
       table.tryStartGame();
       await waitForHandEnd(events2);
-      
+
       const positions = table.calculateDeadButtonPositions();
-      
+
       // Verify dead button detection works correctly
       // When player B (small blind position) is eliminated, check the algorithm results
       expect(positions).toBeDefined();
       expect(positions.isDeadButton).toBeDefined();
       expect(positions.isDeadSmallBlind).toBeDefined();
-      
+
       // Key insight: This test verifies the dead button calculation algorithm
       // The specific dead button scenario depends on the exact button/blind positions
       // and which players are eliminated when
-      
+
       // BB should advance to next player (D)
       expect(table.lastBigBlindPlayerId).toBe(players[3].id); // Player D
 
@@ -111,13 +123,25 @@ describe('Dead Button Tournament Rules', () => {
       // Expected Hand 2: B=Button, D=SB, A=BB (normal progression)
 
       const players = [
-        new StrategicPlayer({ name: 'Player A', strategy: STRATEGIES.alwaysFold }), // Button
-        new StrategicPlayer({ name: 'Player B', strategy: STRATEGIES.alwaysFold }), // SB
-        new StrategicPlayer({ name: 'Player C', strategy: STRATEGIES.alwaysFold }), // BB - will be eliminated
-        new StrategicPlayer({ name: 'Player D', strategy: STRATEGIES.alwaysFold }), // UTG
+        new StrategicPlayer({
+          name: 'Player A',
+          strategy: STRATEGIES.alwaysFold,
+        }), // Button
+        new StrategicPlayer({
+          name: 'Player B',
+          strategy: STRATEGIES.alwaysFold,
+        }), // SB
+        new StrategicPlayer({
+          name: 'Player C',
+          strategy: STRATEGIES.alwaysFold,
+        }), // BB - will be eliminated
+        new StrategicPlayer({
+          name: 'Player D',
+          strategy: STRATEGIES.alwaysFold,
+        }), // UTG
       ];
 
-      players.forEach(p => table.addPlayer(p));
+      players.forEach((p) => table.addPlayer(p));
 
       // First hand
       const events1 = setupEventCapture(table);
@@ -131,7 +155,7 @@ describe('Dead Button Tournament Rules', () => {
         playerData.player.chips = 0;
       }
 
-      // Check positions before second hand  
+      // Check positions before second hand
       const positions = table.calculateDeadButtonPositions();
 
       // Second hand - should progress normally without dead positions
@@ -143,7 +167,7 @@ describe('Dead Button Tournament Rules', () => {
       // Need to check actual results rather than assume no dead positions
       // The test should verify that the game progresses correctly regardless
       expect(positions).toBeDefined();
-      
+
       // BB should advance to D
       expect(table.lastBigBlindPlayerId).toBe(players[3].id); // Player D
     });
@@ -157,13 +181,25 @@ describe('Dead Button Tournament Rules', () => {
       // Expected Hand 2: Button=Dead(A's seat), SB=B, BB=D
 
       const players = [
-        new StrategicPlayer({ name: 'Player A', strategy: STRATEGIES.alwaysFold }), // Button - will be eliminated
-        new StrategicPlayer({ name: 'Player B', strategy: STRATEGIES.alwaysFold }), // SB
-        new StrategicPlayer({ name: 'Player C', strategy: STRATEGIES.alwaysFold }), // BB  
-        new StrategicPlayer({ name: 'Player D', strategy: STRATEGIES.alwaysFold }), // UTG
+        new StrategicPlayer({
+          name: 'Player A',
+          strategy: STRATEGIES.alwaysFold,
+        }), // Button - will be eliminated
+        new StrategicPlayer({
+          name: 'Player B',
+          strategy: STRATEGIES.alwaysFold,
+        }), // SB
+        new StrategicPlayer({
+          name: 'Player C',
+          strategy: STRATEGIES.alwaysFold,
+        }), // BB
+        new StrategicPlayer({
+          name: 'Player D',
+          strategy: STRATEGIES.alwaysFold,
+        }), // UTG
       ];
 
-      players.forEach(p => table.addPlayer(p));
+      players.forEach((p) => table.addPlayer(p));
 
       // First hand
       const events1 = setupEventCapture(table);
@@ -188,10 +224,10 @@ describe('Dead Button Tournament Rules', () => {
       // When button is eliminated, check if dead button is correctly detected
       // The algorithm should detect when button position falls on eliminated player
       expect(positions).toBeDefined();
-      
-      // BB should advance to D  
+
+      // BB should advance to D
       expect(table.lastBigBlindPlayerId).toBe(players[3].id); // Player D
-      
+
       // B keeps SB position (rule 3.1.2: SB may have button)
     });
   });
@@ -204,13 +240,25 @@ describe('Dead Button Tournament Rules', () => {
       // Expected Hand 2: A=Button, D=SB, A=BB (heads-up)
 
       const players = [
-        new StrategicPlayer({ name: 'Player A', strategy: STRATEGIES.alwaysFold }), // Button
-        new StrategicPlayer({ name: 'Player B', strategy: STRATEGIES.alwaysFold }), // SB - will be eliminated
-        new StrategicPlayer({ name: 'Player C', strategy: STRATEGIES.alwaysFold }), // BB - will be eliminated
-        new StrategicPlayer({ name: 'Player D', strategy: STRATEGIES.alwaysFold }), // UTG
+        new StrategicPlayer({
+          name: 'Player A',
+          strategy: STRATEGIES.alwaysFold,
+        }), // Button
+        new StrategicPlayer({
+          name: 'Player B',
+          strategy: STRATEGIES.alwaysFold,
+        }), // SB - will be eliminated
+        new StrategicPlayer({
+          name: 'Player C',
+          strategy: STRATEGIES.alwaysFold,
+        }), // BB - will be eliminated
+        new StrategicPlayer({
+          name: 'Player D',
+          strategy: STRATEGIES.alwaysFold,
+        }), // UTG
       ];
 
-      players.forEach(p => table.addPlayer(p));
+      players.forEach((p) => table.addPlayer(p));
 
       // First hand
       const events1 = setupEventCapture(table);
@@ -235,11 +283,11 @@ describe('Dead Button Tournament Rules', () => {
       await waitForHandEnd(events2);
 
       const positions = table.calculateDeadButtonPositions();
-      
+
       // Should transition to heads-up rules (3.2: SB is on button)
       expect(positions.isDeadButton).toBe(false);
       expect(positions.isDeadSmallBlind).toBe(false);
-      
+
       // In heads-up, button should equal small blind
       expect(positions.buttonIndex).toBe(positions.smallBlindIndex);
     });
@@ -250,12 +298,21 @@ describe('Dead Button Tournament Rules', () => {
       // Test going from 3 players to heads-up ensuring no double BB posting
 
       const players = [
-        new StrategicPlayer({ name: 'Player A', strategy: STRATEGIES.alwaysFold }), // Button
-        new StrategicPlayer({ name: 'Player B', strategy: STRATEGIES.alwaysFold }), // SB - will be eliminated
-        new StrategicPlayer({ name: 'Player C', strategy: STRATEGIES.alwaysFold }), // BB
+        new StrategicPlayer({
+          name: 'Player A',
+          strategy: STRATEGIES.alwaysFold,
+        }), // Button
+        new StrategicPlayer({
+          name: 'Player B',
+          strategy: STRATEGIES.alwaysFold,
+        }), // SB - will be eliminated
+        new StrategicPlayer({
+          name: 'Player C',
+          strategy: STRATEGIES.alwaysFold,
+        }), // BB
       ];
 
-      players.forEach(p => table.addPlayer(p));
+      players.forEach((p) => table.addPlayer(p));
 
       // First hand - 3 players
       const events1 = setupEventCapture(table);
@@ -280,7 +337,7 @@ describe('Dead Button Tournament Rules', () => {
 
       // Critical rule: No player should post BB twice in a row
       expect(secondHandBB).not.toBe(firstHandBB);
-      
+
       // Should now follow heads-up rules (3.2.1: SB is on button)
       const positions = table.calculateDeadButtonPositions();
       expect(positions.buttonIndex).toBe(positions.smallBlindIndex);
@@ -293,16 +350,28 @@ describe('Dead Button Tournament Rules', () => {
 
       // Create player with insufficient chips for small blind
       const players = [
-        new StrategicPlayer({ name: 'Button Player', strategy: STRATEGIES.alwaysFold }),
-        new StrategicPlayer({ name: 'Short Stack', strategy: STRATEGIES.alwaysFold }), // Will have < 10 chips for SB
-        new StrategicPlayer({ name: 'BB Player', strategy: STRATEGIES.alwaysFold }),
-        new StrategicPlayer({ name: 'UTG Player', strategy: STRATEGIES.alwaysFold }),
+        new StrategicPlayer({
+          name: 'Button Player',
+          strategy: STRATEGIES.alwaysFold,
+        }),
+        new StrategicPlayer({
+          name: 'Short Stack',
+          strategy: STRATEGIES.alwaysFold,
+        }), // Will have < 10 chips for SB
+        new StrategicPlayer({
+          name: 'BB Player',
+          strategy: STRATEGIES.alwaysFold,
+        }),
+        new StrategicPlayer({
+          name: 'UTG Player',
+          strategy: STRATEGIES.alwaysFold,
+        }),
       ];
 
       // Set short stack to have only 5 chips (less than SB)
       players[1].chips = 5;
 
-      players.forEach(p => table.addPlayer(p));
+      players.forEach((p) => table.addPlayer(p));
 
       const events = setupEventCapture(table);
       table.tryStartGame();
@@ -320,13 +389,25 @@ describe('Dead Button Tournament Rules', () => {
       // Verify that dead button implementation ensures fair blind rotation
 
       const players = [
-        new StrategicPlayer({ name: 'Player A', strategy: STRATEGIES.alwaysFold }),
-        new StrategicPlayer({ name: 'Player B', strategy: STRATEGIES.alwaysFold }),
-        new StrategicPlayer({ name: 'Player C', strategy: STRATEGIES.alwaysFold }),
-        new StrategicPlayer({ name: 'Player D', strategy: STRATEGIES.alwaysFold }),
+        new StrategicPlayer({
+          name: 'Player A',
+          strategy: STRATEGIES.alwaysFold,
+        }),
+        new StrategicPlayer({
+          name: 'Player B',
+          strategy: STRATEGIES.alwaysFold,
+        }),
+        new StrategicPlayer({
+          name: 'Player C',
+          strategy: STRATEGIES.alwaysFold,
+        }),
+        new StrategicPlayer({
+          name: 'Player D',
+          strategy: STRATEGIES.alwaysFold,
+        }),
       ];
 
-      players.forEach(p => table.addPlayer(p));
+      players.forEach((p) => table.addPlayer(p));
 
       // Track BB posting order over multiple hands
       const bbOrder = [];
@@ -363,8 +444,10 @@ describe('Dead Button Tournament Rules', () => {
 
       // Verify all remaining players eventually post BB
       const uniqueBBPlayers = [...new Set(bbOrder)];
-      const activePlayers = players.filter(p => p.chips > 0);
-      expect(uniqueBBPlayers.length).toBeGreaterThanOrEqual(Math.min(3, activePlayers.length));
+      const activePlayers = players.filter((p) => p.chips > 0);
+      expect(uniqueBBPlayers.length).toBeGreaterThanOrEqual(
+        Math.min(3, activePlayers.length),
+      );
     });
   });
 
@@ -374,11 +457,17 @@ describe('Dead Button Tournament Rules', () => {
       // when no eliminations occur
 
       const players = [
-        new StrategicPlayer({ name: 'Player 1', strategy: STRATEGIES.alwaysFold }),
-        new StrategicPlayer({ name: 'Player 2', strategy: STRATEGIES.alwaysFold }),
+        new StrategicPlayer({
+          name: 'Player 1',
+          strategy: STRATEGIES.alwaysFold,
+        }),
+        new StrategicPlayer({
+          name: 'Player 2',
+          strategy: STRATEGIES.alwaysFold,
+        }),
       ];
 
-      players.forEach(p => table.addPlayer(p));
+      players.forEach((p) => table.addPlayer(p));
 
       // Normal heads-up hand
       const events = setupEventCapture(table);

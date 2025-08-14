@@ -15,7 +15,7 @@ describe('Event Ordering - Fixed (Issue #33)', () => {
   let manager, table;
 
   beforeEach(() => {
-    ;({ manager, table } = createTestTable('standard', {
+    ({ manager, table } = createTestTable('standard', {
       blinds: { small: 10, big: 20 },
       minBuyIn: 40,
       maxBuyIn: 200,
@@ -57,17 +57,17 @@ describe('Event Ordering - Fixed (Issue #33)', () => {
       strategy: ({ gameState, myState }) => {
         const currentBet = gameState.currentBet;
         const toCall = currentBet - myState.bet;
-        
+
         // In preflop, always raise big to put pressure
         if (gameState.phase === 'preFlop' && toCall > 0) {
           return { action: Action.RAISE, amount: myState.chips };
         }
-        
+
         // Post-flop, just call
         if (toCall > 0) {
           return { action: Action.CALL, amount: toCall };
         }
-        
+
         return { action: Action.CHECK };
       },
     });
@@ -166,7 +166,7 @@ describe('Event Ordering - Fixed (Issue #33)', () => {
 
   it('should handle multiple eliminations in correct order', async () => {
     // Test with 3 players where 2 get eliminated
-    ;({ manager, table } = createTestTable('standard', {
+    ({ manager, table } = createTestTable('standard', {
       blinds: { small: 10, big: 20 },
       minBuyIn: 30,
       maxBuyIn: 200,

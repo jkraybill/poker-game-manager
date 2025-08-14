@@ -6,7 +6,7 @@ import { Action } from '../types/index.js';
 describe('hand:ended Event State Timing Issue', () => {
   let manager;
   let table1, table2;
-  
+
   beforeEach(() => {
     manager = new PokerGameManager();
   });
@@ -18,9 +18,9 @@ describe('hand:ended Event State Timing Issue', () => {
       blinds: { small: 10, big: 20 },
       minPlayers: 2,
     });
-    
+
     table2 = manager.createTable({
-      id: 'table-2', 
+      id: 'table-2',
       blinds: { small: 10, big: 20 },
       minPlayers: 2,
     });
@@ -29,15 +29,15 @@ describe('hand:ended Event State Timing Issue', () => {
     const player1 = new Player({ id: 'p1', name: 'Player 1' });
     player1.chips = 1000;
     player1.getAction = () => ({ action: Action.FOLD });
-    
+
     const player2 = new Player({ id: 'p2', name: 'Player 2' });
     player2.chips = 1000;
     player2.getAction = () => ({ action: Action.CHECK });
-    
+
     const player3 = new Player({ id: 'p3', name: 'Player 3' });
     player3.chips = 1000;
     player3.getAction = () => ({ action: Action.FOLD });
-    
+
     const player4 = new Player({ id: 'p4', name: 'Player 4' });
     player4.chips = 1000;
     player4.getAction = () => ({ action: Action.CHECK });
@@ -66,7 +66,9 @@ describe('hand:ended Event State Timing Issue', () => {
             // But let's check if that's actually true
             const isInProgress = table.isGameInProgress();
             stateAtHandEnded[table.id] = isInProgress;
-            console.log(`[${table.id}] hand:ended fired, isGameInProgress: ${isInProgress}`);
+            console.log(
+              `[${table.id}] hand:ended fired, isGameInProgress: ${isInProgress}`,
+            );
             table.off('hand:ended', handler);
             resolve();
           };
@@ -97,7 +99,7 @@ describe('hand:ended Event State Timing Issue', () => {
 
     // Now try to play a second round - this is where the client gets stuck
     console.log('\n--- Trying to play second round ---');
-    
+
     // Reset tracking
     stateAtHandEnded.table1 = null;
     stateAtHandEnded.table2 = null;
@@ -109,8 +111,8 @@ describe('hand:ended Event State Timing Issue', () => {
     console.log(`  Table 2 isGameInProgress: ${table2.isGameInProgress()}`);
 
     // After event loop tick, state should be updated
-    await new Promise(resolve => setImmediate(resolve));
-    
+    await new Promise((resolve) => setImmediate(resolve));
+
     console.log('After event loop tick:');
     console.log(`  Table 1 isGameInProgress: ${table1.isGameInProgress()}`);
     console.log(`  Table 2 isGameInProgress: ${table2.isGameInProgress()}`);
@@ -119,7 +121,7 @@ describe('hand:ended Event State Timing Issue', () => {
     expect(table1.isGameInProgress()).toBe(false);
     expect(table2.isGameInProgress()).toBe(false);
 
-    // This demonstrates the problem: 
+    // This demonstrates the problem:
     // 1. hand:ended fires while isGameInProgress() is still true
     // 2. Client code that assumes hand:ended means "ready for next hand" gets confused
     // 3. They have to wait for next tick or add workarounds
@@ -132,7 +134,7 @@ describe('hand:ended Event State Timing Issue', () => {
       blinds: { small: 10, big: 20 },
       minPlayers: 2,
     });
-    
+
     const player1 = new Player({ id: 'p1', name: 'Player 1' });
     player1.chips = 1000;
     player1.getAction = ({ validActions, toCall }) => {
@@ -145,7 +147,7 @@ describe('hand:ended Event State Timing Issue', () => {
       }
       return { action: Action.CALL };
     };
-    
+
     const player2 = new Player({ id: 'p2', name: 'Player 2' });
     player2.chips = 1000;
     player2.getAction = ({ validActions }) => {
@@ -194,7 +196,7 @@ describe('hand:ended Event State Timing Issue', () => {
     // Try to play second hand immediately (simulating sequential tournament processing)
     // This should now work correctly with the fix
     await tournamentRound();
-    
+
     // FIXED: Tables are no longer skipped!
     expect(tablesSkipped).toBe(0);
     expect(handsPlayed).toBe(2); // Now correctly plays both hands

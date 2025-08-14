@@ -32,25 +32,27 @@ describe('Concurrent Table Starts', () => {
       // Add 8 players per table
       for (let playerId = 0; playerId < 8; playerId++) {
         const globalId = tableId * 8 + playerId;
-        const player = new Player({ 
-          id: `player-${globalId}`, 
-          name: `P${globalId}`, 
+        const player = new Player({
+          id: `player-${globalId}`,
+          name: `P${globalId}`,
         });
         player.chips = 10000;
-        
+
         // Track decisions per player to detect infinite loops
         player.decisionCount = new Map();
         // eslint-disable-next-line require-await
-        player.getAction = async function(gameState) {
+        player.getAction = async function (gameState) {
           const stateKey = `${gameState.phase}-${gameState.currentBet}-${gameState.pot}`;
           const count = (this.decisionCount.get(stateKey) || 0) + 1;
           this.decisionCount.set(stateKey, count);
-          
+
           // Fail if asked for same decision too many times
           if (count > 3) {
-            throw new Error(`Infinite loop detected: Player ${this.id} asked for same decision ${count} times`);
+            throw new Error(
+              `Infinite loop detected: Player ${this.id} asked for same decision ${count} times`,
+            );
           }
-          
+
           // Simple strategy
           const toCall = gameState.currentBet - gameState.players[this.id].bet;
           if (toCall > 0) {
@@ -58,7 +60,7 @@ describe('Concurrent Table Starts', () => {
           }
           return { action: Action.CHECK };
         };
-        
+
         table.addPlayer(player);
         players.push(player);
       }
@@ -66,33 +68,33 @@ describe('Concurrent Table Starts', () => {
 
     // Track game starts
     let gamesStarted = 0;
-    
-    tables.forEach(table => {
+
+    tables.forEach((table) => {
       table.on('game:started', () => {
         gamesStarted++;
       });
     });
 
     // Start all tables concurrently - this is where the bug would manifest
-    const startPromises = tables.map(table => table.tryStartGame());
-    
+    const startPromises = tables.map((table) => table.tryStartGame());
+
     // All starts should complete without errors
     const results = await Promise.all(startPromises);
-    
+
     // All tables should have started successfully
     expect(results).toHaveLength(4);
-    results.forEach(result => {
+    results.forEach((result) => {
       expect(result.success).toBe(true);
     });
-    
+
     // Wait for games to process a bit
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
     // Verify no infinite loops occurred
     expect(gamesStarted).toBe(4);
-    
+
     // Check that no player was asked for the same decision too many times
-    players.forEach(player => {
+    players.forEach((player) => {
       if (player.decisionCount) {
         for (const [, count] of player.decisionCount.entries()) {
           expect(count).toBeLessThanOrEqual(3);
@@ -107,12 +109,12 @@ describe('Concurrent Table Starts', () => {
       id: 'table-1',
       blinds: { small: 10, big: 20 },
     });
-    
+
     const table2 = manager.createTable({
       id: 'table-2',
       blinds: { small: 10, big: 20 },
     });
-    
+
     // Add players
     for (let i = 0; i < 4; i++) {
       const player1 = new Player({ id: `t1-p${i}`, name: `T1P${i}` });
@@ -120,34 +122,34 @@ describe('Concurrent Table Starts', () => {
       // eslint-disable-next-line require-await
       player1.getAction = async () => ({ action: Action.FOLD });
       table1.addPlayer(player1);
-      
+
       const player2 = new Player({ id: `t2-p${i}`, name: `T2P${i}` });
       player2.chips = 1000;
       // eslint-disable-next-line require-await
       player2.getAction = async () => ({ action: Action.FOLD });
       table2.addPlayer(player2);
     }
-    
+
     // Track events to ensure proper sequencing
     const events = [];
-    
+
     table1.on('game:started', () => events.push('t1:started'));
     table1.on('hand:started', () => events.push('t1:hand:started'));
     table2.on('game:started', () => events.push('t2:started'));
     table2.on('hand:started', () => events.push('t2:hand:started'));
-    
+
     // Start both tables concurrently
     const [r1, r2] = await Promise.all([
       table1.tryStartGame(),
       table2.tryStartGame(),
     ]);
-    
+
     expect(r1.success).toBe(true);
     expect(r2.success).toBe(true);
-    
+
     // Wait for events to settle
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     // Both games should have started properly
     expect(events).toContain('t1:started');
     expect(events).toContain('t2:started');

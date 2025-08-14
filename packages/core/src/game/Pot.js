@@ -24,7 +24,7 @@ export class Pot {
   addContribution(player, amount) {
     // Ensure amount is an integer
     const intAmount = ensureInteger(amount, 'pot contribution');
-    
+
     // Check if player is eligible
     if (!this.eligiblePlayers.some((p) => p.id === player.id)) {
       return 0;

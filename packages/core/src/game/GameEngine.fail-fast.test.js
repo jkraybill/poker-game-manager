@@ -37,9 +37,11 @@ describe('GameEngine - Fail Fast on Contract Violations', () => {
 
     // Start the game and expect it to throw asynchronously
     const gamePromise = gameEngine.start();
-    
+
     // The error will be thrown when the player action is requested
-    await expect(gamePromise).rejects.toThrow('Fatal: Player broken threw error in getAction()');
+    await expect(gamePromise).rejects.toThrow(
+      'Fatal: Player broken threw error in getAction()',
+    );
   });
 
   it('should immediately throw fatal error when player.receivePrivateCards() throws', async () => {
@@ -60,7 +62,10 @@ describe('GameEngine - Fail Fast on Contract Violations', () => {
       }
     }
 
-    const player1 = new CardRejectingPlayer({ id: 'card-rejecter', name: 'Rejecter' });
+    const player1 = new CardRejectingPlayer({
+      id: 'card-rejecter',
+      name: 'Rejecter',
+    });
     const player2 = new Player({ id: 'normal', name: 'Normal' });
     player2.chips = 1000;
     // eslint-disable-next-line require-await
@@ -73,7 +78,9 @@ describe('GameEngine - Fail Fast on Contract Violations', () => {
     });
 
     // The game should crash immediately when dealing cards
-    await expect(gameEngine.start()).rejects.toThrow('Fatal: Player card-rejecter threw error in receivePrivateCards()');
+    await expect(gameEngine.start()).rejects.toThrow(
+      'Fatal: Player card-rejecter threw error in receivePrivateCards()',
+    );
   });
 
   it('should NOT retry when player returns invalid action', async () => {
@@ -95,7 +102,10 @@ describe('GameEngine - Fail Fast on Contract Violations', () => {
       }
     }
 
-    const player1 = new NullReturningPlayer({ id: 'null-player', name: 'Null' });
+    const player1 = new NullReturningPlayer({
+      id: 'null-player',
+      name: 'Null',
+    });
     const player2 = new Player({ id: 'normal', name: 'Normal' });
     player2.chips = 1000;
     // eslint-disable-next-line require-await
@@ -131,7 +141,10 @@ describe('GameEngine - Fail Fast on Contract Violations', () => {
       }
     }
 
-    const player1 = new ContextualErrorPlayer({ id: 'context-player', name: 'Context' });
+    const player1 = new ContextualErrorPlayer({
+      id: 'context-player',
+      name: 'Context',
+    });
     const player2 = new Player({ id: 'normal', name: 'Normal' });
     player2.chips = 1000;
     // eslint-disable-next-line require-await
@@ -153,8 +166,12 @@ describe('GameEngine - Fail Fast on Contract Violations', () => {
 
     // Verify the error message includes context
     expect(capturedError).toBeDefined();
-    expect(capturedError.message).toContain('Fatal: Player context-player threw error');
-    expect(capturedError.message).toContain('player.strategy is not a function');
+    expect(capturedError.message).toContain(
+      'Fatal: Player context-player threw error',
+    );
+    expect(capturedError.message).toContain(
+      'player.strategy is not a function',
+    );
     expect(capturedError.message).toContain('contract violation');
   });
 
@@ -186,6 +203,8 @@ describe('GameEngine - Fail Fast on Contract Violations', () => {
     });
 
     // Start the game and expect it to timeout
-    await expect(gameEngine.start()).rejects.toThrow('Fatal: Player hanging threw error in getAction(): Player hanging action timeout');
+    await expect(gameEngine.start()).rejects.toThrow(
+      'Fatal: Player hanging threw error in getAction(): Player hanging action timeout',
+    );
   });
 });

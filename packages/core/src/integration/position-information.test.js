@@ -5,7 +5,7 @@ import { Action } from '../types/index.js';
 
 describe('Position Information in hand:started Event', () => {
   let manager;
-  
+
   beforeEach(() => {
     manager = new PokerGameManager();
   });
@@ -47,7 +47,7 @@ describe('Position Information in hand:started Event', () => {
     expect(result.success).toBe(true);
 
     // Wait for event processing
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Verify position information
     expect(positionData).toBeDefined();
@@ -76,15 +76,17 @@ describe('Position Information in hand:started Event', () => {
 
     let positionData = null;
 
-    const players = ['Button', 'Small Blind', 'Big Blind', 'UTG'].map((name, i) => {
-      const player = new Player({ id: `p${i + 1}`, name });
-      player.chips = 1000;
-      // eslint-disable-next-line require-await
-      player.getAction = async () => ({ action: Action.FOLD });
-      return player;
-    });
+    const players = ['Button', 'Small Blind', 'Big Blind', 'UTG'].map(
+      (name, i) => {
+        const player = new Player({ id: `p${i + 1}`, name });
+        player.chips = 1000;
+        // eslint-disable-next-line require-await
+        player.getAction = async () => ({ action: Action.FOLD });
+        return player;
+      },
+    );
 
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
 
     // Capture position information
     table.on('hand:started', ({ positions }) => {
@@ -95,7 +97,7 @@ describe('Position Information in hand:started Event', () => {
     expect(result.success).toBe(true);
 
     // Wait for event processing
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Verify position information
     expect(positionData).toBeDefined();
@@ -134,7 +136,7 @@ describe('Position Information in hand:started Event', () => {
       return player;
     });
 
-    players.forEach(p => table.addPlayer(p));
+    players.forEach((p) => table.addPlayer(p));
 
     // Capture position information
     table.on('hand:started', ({ positions }) => {
@@ -145,7 +147,7 @@ describe('Position Information in hand:started Event', () => {
     expect(result.success).toBe(true);
 
     // Wait for event processing
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Verify key position information
     expect(positionData).toBeDefined();
@@ -164,7 +166,14 @@ describe('Position Information in hand:started Event', () => {
     expect(Object.keys(positionData.positions)).toHaveLength(6);
 
     // Verify player order contains all players
-    expect(positionData.playerOrder).toEqual(['p1', 'p2', 'p3', 'p4', 'p5', 'p6']);
+    expect(positionData.playerOrder).toEqual([
+      'p1',
+      'p2',
+      'p3',
+      'p4',
+      'p5',
+      'p6',
+    ]);
 
     table.close();
   });
@@ -201,7 +210,7 @@ describe('Position Information in hand:started Event', () => {
     expect(result.success).toBe(true);
 
     // Wait for event processing
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Verify position information exists
     expect(positionData).toBeDefined();
@@ -244,7 +253,7 @@ describe('Position Information in hand:started Event', () => {
     expect(result.success).toBe(true);
 
     // Wait for event processing
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Verify backward compatibility fields still exist
     expect(handStartedData).toBeDefined();

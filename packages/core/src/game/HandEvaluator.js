@@ -235,8 +235,12 @@ export class HandEvaluator {
    */
   static compareHands(hand1, hand2) {
     // Convert to pokersolver format and compare
-    const cards1 = hand1.cards.map((card) => this.cardToPokersolverFormat(card));
-    const cards2 = hand2.cards.map((card) => this.cardToPokersolverFormat(card));
+    const cards1 = hand1.cards.map((card) =>
+      this.cardToPokersolverFormat(card),
+    );
+    const cards2 = hand2.cards.map((card) =>
+      this.cardToPokersolverFormat(card),
+    );
 
     const solved1 = Hand.solve(cards1);
     const solved2 = Hand.solve(cards2);

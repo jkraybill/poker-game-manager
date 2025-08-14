@@ -187,8 +187,11 @@ describe('5-Player Complex Side Pots (v2)', () => {
     console.log('Side pots created:', potsToCheck.length);
 
     // After fix: Pots should be cleared after distribution (chip conservation fix)
-    const totalPotAmount = potsToCheck.reduce((sum, pot) => sum + pot.amount, 0);
-    expect(totalPotAmount).toBe(0);  // Fixed: Pots cleared after distribution
+    const totalPotAmount = potsToCheck.reduce(
+      (sum, pot) => sum + pot.amount,
+      0,
+    );
+    expect(totalPotAmount).toBe(0); // Fixed: Pots cleared after distribution
     console.log('Total pot amount after distribution:', totalPotAmount);
 
     // Verify winners were determined

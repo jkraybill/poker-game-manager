@@ -17,7 +17,7 @@ describe('Eliminated Player Display', () => {
   let manager, table, events;
 
   beforeEach(() => {
-    ;({ manager, table } = createTestTable('standard', {
+    ({ manager, table } = createTestTable('standard', {
       blinds: { small: 10, big: 20 },
       minBuyIn: 100,
       maxBuyIn: 100,

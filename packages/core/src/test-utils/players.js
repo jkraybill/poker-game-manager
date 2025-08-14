@@ -64,9 +64,7 @@ export class StrategicPlayer extends Player {
 export const STRATEGIES = {
   // Basic strategies
   alwaysFold: ({ toCall }) =>
-    toCall > 0
-      ? { action: Action.FOLD }
-      : { action: Action.CHECK },
+    toCall > 0 ? { action: Action.FOLD } : { action: Action.CHECK },
   alwaysCheck: () => ({ action: Action.CHECK }),
   alwaysCall: ({ toCall }) =>
     toCall > 0
@@ -173,7 +171,10 @@ export const STRATEGIES = {
   floatAndBluff: ({ gameState, myState, player }) => {
     // Call flop, bet turn if checked to
     if (gameState.phase === 'flop' && gameState.currentBet > 0) {
-      return { action: Action.CALL, amount: gameState.currentBet - myState.bet };
+      return {
+        action: Action.CALL,
+        amount: gameState.currentBet - myState.bet,
+      };
     }
     if (
       gameState.phase === 'turn' &&
@@ -303,7 +304,17 @@ function getPositionNames(tableSize) {
     case 8:
       return ['button', 'sb', 'bb', 'utg', 'utg+1', 'mp', 'mp+1', 'co'];
     case 9:
-      return ['button', 'sb', 'bb', 'utg', 'utg+1', 'utg+2', 'mp', 'mp+1', 'co'];
+      return [
+        'button',
+        'sb',
+        'bb',
+        'utg',
+        'utg+1',
+        'utg+2',
+        'mp',
+        'mp+1',
+        'co',
+      ];
     default:
       throw new Error(`Unsupported table size: ${tableSize}`);
   }

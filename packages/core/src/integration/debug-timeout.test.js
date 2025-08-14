@@ -22,9 +22,11 @@ describe('Debug Timeout Issue', () => {
     player1.chips = 1000;
     let p1Calls = 0;
     // eslint-disable-next-line require-await
-    player1.getAction = async function(gameState) {
+    player1.getAction = async function (gameState) {
       p1Calls++;
-      console.log(`P1 called ${p1Calls} times - phase: ${gameState.phase}, toCall: ${gameState.currentBet - gameState.players[this.id].bet}`);
+      console.log(
+        `P1 called ${p1Calls} times - phase: ${gameState.phase}, toCall: ${gameState.currentBet - gameState.players[this.id].bet}`,
+      );
       const toCall = gameState.currentBet - gameState.players[this.id].bet;
       if (toCall > 0) {
         return { action: Action.CALL };
@@ -36,9 +38,11 @@ describe('Debug Timeout Issue', () => {
     player2.chips = 1000;
     let p2Calls = 0;
     // eslint-disable-next-line require-await
-    player2.getAction = async function(gameState) {
+    player2.getAction = async function (gameState) {
       p2Calls++;
-      console.log(`P2 called ${p2Calls} times - phase: ${gameState.phase}, toCall: ${gameState.currentBet - gameState.players[this.id].bet}`);
+      console.log(
+        `P2 called ${p2Calls} times - phase: ${gameState.phase}, toCall: ${gameState.currentBet - gameState.players[this.id].bet}`,
+      );
       const toCall = gameState.currentBet - gameState.players[this.id].bet;
       if (toCall > 0) {
         return { action: Action.CALL };

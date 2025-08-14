@@ -152,7 +152,9 @@ describe('Issue #11 - Minimal Pot Distribution Bug', () => {
       return ({ player }) => {
         if (actionIndex < actions.length) {
           const action = actions[actionIndex++];
-          console.log(`${player.name}: ${action.action} ${action.amount || ''}`);
+          console.log(
+            `${player.name}: ${action.action} ${action.amount || ''}`,
+          );
           return action;
         }
         return { action: Action.CHECK };

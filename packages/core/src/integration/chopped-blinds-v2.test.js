@@ -206,7 +206,8 @@ describe('Chopped Blinds Scenarios (v2)', () => {
     table.on('hand:ended', ({ winners }) => {
       if (winners && winners.length > 0) {
         // Check if hand went to showdown
-        showdownOccurred = winners[0]?.hand && winners[0].hand !== 'Won by fold';
+        showdownOccurred =
+          winners[0]?.hand && winners[0].hand !== 'Won by fold';
       }
     });
 

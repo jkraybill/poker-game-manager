@@ -16,11 +16,21 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
       expect(validateIntegerAmount('50', 'test')).toBe(50);
 
       // Invalid inputs should throw
-      expect(() => validateIntegerAmount(10.5, 'test')).toThrow('test must be an integer');
-      expect(() => validateIntegerAmount(-5, 'test')).toThrow('test must be non-negative');
-      expect(() => validateIntegerAmount('abc', 'test')).toThrow('test must be a number');
-      expect(() => validateIntegerAmount(null, 'test')).toThrow('test is required');
-      expect(() => validateIntegerAmount(undefined, 'test')).toThrow('test is required');
+      expect(() => validateIntegerAmount(10.5, 'test')).toThrow(
+        'test must be an integer',
+      );
+      expect(() => validateIntegerAmount(-5, 'test')).toThrow(
+        'test must be non-negative',
+      );
+      expect(() => validateIntegerAmount('abc', 'test')).toThrow(
+        'test must be a number',
+      );
+      expect(() => validateIntegerAmount(null, 'test')).toThrow(
+        'test is required',
+      );
+      expect(() => validateIntegerAmount(undefined, 'test')).toThrow(
+        'test is required',
+      );
     });
 
     it('should ensure integer by rounding when necessary', () => {
@@ -37,7 +47,7 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
   describe('Blind validation', () => {
     it('should reject non-integer blinds', () => {
       const manager = new PokerGameManager();
-      
+
       // Fractional blinds should throw
       expect(() => {
         manager.createTable({
@@ -68,10 +78,10 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
         id: 'valid-blinds',
         blinds: { small: 10, big: 20 },
       });
-      
+
       expect(table.config.blinds.small).toBe(10);
       expect(table.config.blinds.big).toBe(20);
-      
+
       table.close();
     });
   });
@@ -79,18 +89,18 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
   describe('Player chip validation', () => {
     it('should round fractional chip amounts', () => {
       const player = new Player({ id: 'p1', name: 'Test Player' });
-      
+
       // Setting fractional chips should round
       player.chips = 100.5;
       expect(player.chips).toBe(101);
-      
+
       player.chips = 50.3;
       expect(player.chips).toBe(50);
-      
+
       // Adding fractional chips should round
       player.addChips(25.7);
       expect(player.chips).toBe(76); // 50 + 26
-      
+
       // Negative chips become 0
       player.chips = -100;
       expect(player.chips).toBe(0);
@@ -98,10 +108,10 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
 
     it('should handle string chip amounts', () => {
       const player = new Player({ id: 'p2', name: 'String Player' });
-      
+
       player.chips = '1000';
       expect(player.chips).toBe(1000);
-      
+
       player.addChips('250');
       expect(player.chips).toBe(1250);
     });
@@ -118,7 +128,7 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
       });
 
       let errorCaught = null;
-      
+
       const player1 = new Player({ id: 'p1', name: 'Bettor' });
       player1.chips = 1000;
       // eslint-disable-next-line require-await
@@ -144,18 +154,18 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
       });
 
       const result = await table.tryStartGame();
-      
+
       // The fractional bet should be caught by validation
       if (result.success) {
         // Wait for game to process
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
-      
+
       // Either the game should fail or the bet should be rounded
       // In our implementation, ensureInteger rounds, so 50.5 becomes 51
       // No error should be thrown since we handle it gracefully
       expect(errorCaught).toBeNull();
-      
+
       table.close();
     });
 
@@ -170,7 +180,7 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
 
       let actualBetAmount = null;
       let betDetected = false;
-      
+
       const player1 = new Player({ id: 'p1', name: 'Bettor' });
       player1.chips = 1000;
       let actionCount1 = 0;
@@ -186,7 +196,9 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
           return { action: Action.BET, amount: 75.5 };
         }
         // Otherwise check/fold
-        return gameState.toCall > 0 ? { action: Action.FOLD } : { action: Action.CHECK };
+        return gameState.toCall > 0
+          ? { action: Action.FOLD }
+          : { action: Action.CHECK };
       };
 
       const player2 = new Player({ id: 'p2', name: 'Caller' });
@@ -194,7 +206,9 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
       // eslint-disable-next-line require-await
       player2.getAction = async (gameState) => {
         // Just check or fold
-        return gameState.toCall > 0 ? { action: Action.FOLD } : { action: Action.CHECK };
+        return gameState.toCall > 0
+          ? { action: Action.FOLD }
+          : { action: Action.CHECK };
       };
 
       table.addPlayer(player1);
@@ -209,18 +223,21 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
       });
 
       const startResult = await table.tryStartGame();
-      
+
       // Debug why game isn't starting
       if (!startResult.success) {
-        console.log('Game failed to start:', JSON.stringify(startResult, null, 2));
+        console.log(
+          'Game failed to start:',
+          JSON.stringify(startResult, null, 2),
+        );
       }
-      
+
       // The game should start successfully
       expect(startResult.success).toBe(true);
-      
+
       // Wait for game to process
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
       // Either we detected the bet and it was rounded, or we just verify integer validation works
       if (betDetected && actualBetAmount !== null) {
         expect(actualBetAmount).toBe(76);
@@ -228,7 +245,7 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
         // At minimum, verify that the fractional bet was handled without crashing
         expect(startResult.success).toBe(true);
       }
-      
+
       table.close();
     });
 
@@ -242,7 +259,7 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
       });
 
       let raiseAmount = null;
-      
+
       const player1 = new Player({ id: 'p1', name: 'Raiser' });
       player1.chips = 1000;
       let p1ActionCount = 0;
@@ -254,7 +271,11 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
           return { action: Action.CALL };
         }
         // Second action: if post-flop and no bet, bet with fractional amount
-        if (p1ActionCount === 2 && gameState.toCall === 0 && gameState.currentBet === 0) {
+        if (
+          p1ActionCount === 2 &&
+          gameState.toCall === 0 &&
+          gameState.currentBet === 0
+        ) {
           return { action: Action.BET, amount: 100.8 }; // Should be rounded to 101
         }
         // If there's a bet, try to raise with fractional amount
@@ -262,7 +283,9 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
           return { action: Action.RAISE, amount: gameState.currentBet + 50.8 }; // Should be rounded
         }
         // Otherwise check or fold
-        return gameState.toCall > 0 ? { action: Action.FOLD } : { action: Action.CHECK };
+        return gameState.toCall > 0
+          ? { action: Action.FOLD }
+          : { action: Action.CHECK };
       };
 
       const player2 = new Player({ id: 'p2', name: 'BB Checker' });
@@ -270,7 +293,9 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
       // eslint-disable-next-line require-await
       player2.getAction = async (gameState) => {
         // Just check or fold
-        return gameState.toCall > 0 ? { action: Action.FOLD } : { action: Action.CHECK };
+        return gameState.toCall > 0
+          ? { action: Action.FOLD }
+          : { action: Action.CHECK };
       };
 
       table.addPlayer(player1);
@@ -287,21 +312,24 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
       });
 
       const startResult = await table.tryStartGame();
-      
+
       // Debug why game isn't starting
       if (!startResult.success) {
-        console.log('Game failed to start:', JSON.stringify(startResult, null, 2));
+        console.log(
+          'Game failed to start:',
+          JSON.stringify(startResult, null, 2),
+        );
       }
-      
+
       // The game should start successfully
       expect(startResult.success).toBe(true);
-      
+
       // Wait for the raise action to be emitted
       await Promise.race([
         raisePromise,
-        new Promise(resolve => setTimeout(resolve, 300)),
+        new Promise((resolve) => setTimeout(resolve, 300)),
       ]);
-      
+
       // Either we captured the raise amount or just verify the game worked
       if (raiseAmount !== null) {
         expect(raiseAmount).toBe(101);
@@ -309,7 +337,7 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
         // At minimum, verify the game started with integer validation
         expect(startResult.success).toBe(true);
       }
-      
+
       table.close();
     });
   });
@@ -329,7 +357,9 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
       // eslint-disable-next-line require-await
       player1.getAction = async (gameState) => {
         // Only call if there's something to call, otherwise check
-        return gameState.toCall > 0 ? { action: Action.CALL } : { action: Action.CHECK };
+        return gameState.toCall > 0
+          ? { action: Action.CALL }
+          : { action: Action.CHECK };
       };
 
       const player2 = new Player({ id: 'p2', name: 'Player 2' });
@@ -341,7 +371,7 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
       table.addPlayer(player2);
 
       let finalPot = null;
-      
+
       // Wait for hand completion
       const handCompletePromise = new Promise((resolve) => {
         table.on('hand:complete', (data) => {
@@ -351,21 +381,24 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
       });
 
       const startResult = await table.tryStartGame();
-      
+
       // Debug why game isn't starting
       if (!startResult.success) {
-        console.log('Game failed to start:', JSON.stringify(startResult, null, 2));
+        console.log(
+          'Game failed to start:',
+          JSON.stringify(startResult, null, 2),
+        );
       }
-      
+
       // The game should start successfully
       expect(startResult.success).toBe(true);
-      
+
       // Wait for hand to complete
       await Promise.race([
         handCompletePromise,
-        new Promise(resolve => setTimeout(resolve, 200)),
+        new Promise((resolve) => setTimeout(resolve, 200)),
       ]);
-      
+
       // Pot should be an integer if we captured it
       if (finalPot !== null) {
         expect(Number.isInteger(finalPot)).toBe(true);
@@ -375,7 +408,7 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
         // At minimum, verify the game started with integer validation
         expect(startResult.success).toBe(true);
       }
-      
+
       table.close();
     });
 
@@ -402,7 +435,7 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
       table.addPlayer(player2);
 
       let allInAmount = null;
-      
+
       // Wait for all-in action
       const allInPromise = new Promise((resolve) => {
         table.on('player:action', (data) => {
@@ -416,13 +449,13 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
 
       const startResult = await table.tryStartGame();
       expect(startResult.success).toBe(true);
-      
+
       // Wait for all-in action
       await Promise.race([
         allInPromise,
-        new Promise(resolve => setTimeout(resolve, 200)),
+        new Promise((resolve) => setTimeout(resolve, 200)),
       ]);
-      
+
       // All-in amount should be an integer if captured
       if (allInAmount !== null) {
         expect(Number.isInteger(allInAmount)).toBe(true);
@@ -430,7 +463,7 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
         // If no event was captured, at least verify the game started
         expect(startResult.success).toBe(true);
       }
-      
+
       table.close();
     });
   });
@@ -438,29 +471,35 @@ describe('Integer Validation for Chips, Bets, and Pots', () => {
   describe('Edge cases', () => {
     it('should handle very large integer amounts', () => {
       const player = new Player({ id: 'rich', name: 'Rich Player' });
-      
+
       const largeAmount = 1000000000; // 1 billion
       player.chips = largeAmount;
       expect(player.chips).toBe(largeAmount);
-      
+
       // Should still validate as integer
       expect(validateIntegerAmount(largeAmount, 'large')).toBe(largeAmount);
     });
 
     it('should handle zero amounts correctly', () => {
       const player = new Player({ id: 'broke', name: 'Broke Player' });
-      
+
       player.chips = 0;
       expect(player.chips).toBe(0);
-      
+
       // Zero is a valid integer amount
       expect(validateIntegerAmount(0, 'zero')).toBe(0);
     });
 
     it('should reject NaN and Infinity', () => {
-      expect(() => validateIntegerAmount(NaN, 'nan')).toThrow('nan must be a number');
-      expect(() => validateIntegerAmount(Infinity, 'inf')).toThrow('inf must be an integer');
-      expect(() => validateIntegerAmount(-Infinity, 'neginf')).toThrow('neginf must be an integer');
+      expect(() => validateIntegerAmount(NaN, 'nan')).toThrow(
+        'nan must be a number',
+      );
+      expect(() => validateIntegerAmount(Infinity, 'inf')).toThrow(
+        'inf must be an integer',
+      );
+      expect(() => validateIntegerAmount(-Infinity, 'neginf')).toThrow(
+        'neginf must be an integer',
+      );
     });
   });
 });

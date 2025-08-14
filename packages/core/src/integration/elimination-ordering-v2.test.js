@@ -21,7 +21,7 @@ describe('Tournament Elimination Ordering (Issue #28) - v2', () => {
   let manager, table, events;
 
   beforeEach(() => {
-    ;({ manager, table } = createTestTable('standard', {
+    ({ manager, table } = createTestTable('standard', {
       id: 'elimination-order-test',
       blinds: { small: 5, big: 10 },
       minBuyIn: 30,
@@ -195,7 +195,9 @@ describe('Tournament Elimination Ordering (Issue #28) - v2', () => {
             '❌ WRONG ORDER: Medium Stack eliminated before Small Stack',
           );
         } else {
-          console.log('❌ ISSUE #28 CONFIRMED: Both eliminated simultaneously!');
+          console.log(
+            '❌ ISSUE #28 CONFIRMED: Both eliminated simultaneously!',
+          );
         }
       }
     } else {
@@ -210,8 +212,8 @@ describe('Tournament Elimination Ordering (Issue #28) - v2', () => {
 
   it('should demonstrate the potential issue with simultaneous eliminations', async () => {
     // Reset table for new test
-    table.close()
-    ;({ manager, table } = createTestTable('standard', {
+    table.close();
+    ({ manager, table } = createTestTable('standard', {
       id: 'simultaneous-elim-test',
       blinds: { small: 5, big: 10 },
       minBuyIn: 30,
@@ -343,8 +345,8 @@ describe('Tournament Elimination Ordering (Issue #28) - v2', () => {
 
   it('should handle single elimination correctly (baseline test)', async () => {
     // Reset table
-    table.close()
-    ;({ manager, table } = createTestTable('standard', {
+    table.close();
+    ({ manager, table } = createTestTable('standard', {
       blinds: { small: 5, big: 10 },
       minPlayers: 2,
       dealerButton: 0,

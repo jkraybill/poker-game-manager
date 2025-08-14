@@ -104,7 +104,7 @@ describe('7-Player Poker Scenarios (v2)', () => {
       // Split pot - handle remainder distribution
       const baseAmount = Math.floor(140 / winners.length);
       const remainder = 140 % winners.length;
-      
+
       winners.forEach((w, index) => {
         // First 'remainder' winners get 1 extra chip
         const expectedAmount = index < remainder ? baseAmount + 1 : baseAmount;
@@ -327,7 +327,7 @@ describe('7-Player Poker Scenarios (v2)', () => {
         (sum, pot) => sum + pot.amount,
         0,
       );
-      expect(calculatedTotal).toBe(0);  // Fixed: Pots cleared after distribution
+      expect(calculatedTotal).toBe(0); // Fixed: Pots cleared after distribution
     } else {
       // If we don't have detailed pot info, at least verify we have a total pot
       expect(totalPot).toBeGreaterThan(0);
@@ -389,7 +389,9 @@ describe('7-Player Poker Scenarios (v2)', () => {
         const raisers = playerStates.filter(
           (p) => p.lastAction === Action.RAISE,
         );
-        const callers = playerStates.filter((p) => p.lastAction === Action.CALL);
+        const callers = playerStates.filter(
+          (p) => p.lastAction === Action.CALL,
+        );
 
         if (raisers.length === 1 && callers.length >= 1) {
           squeezePlayed = true;

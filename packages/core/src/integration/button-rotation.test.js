@@ -11,7 +11,7 @@ describe('Dealer Button Rotation (Issue #36)', () => {
   let players;
 
   beforeEach(() => {
-    ;({ manager, table } = createTestTable('standard', {
+    ({ manager, table } = createTestTable('standard', {
       blinds: { small: 10, big: 20 },
       minBuyIn: 1000,
       maxBuyIn: 1000,
@@ -117,7 +117,7 @@ describe('Dealer Button Rotation (Issue #36)', () => {
 
   it('should skip eliminated players when rotating button', async () => {
     // Create 4 players for this test
-    ;({ manager, table } = createTestTable('standard', {
+    ({ manager, table } = createTestTable('standard', {
       blinds: { small: 10, big: 20 },
       minBuyIn: 100,
       maxBuyIn: 100,

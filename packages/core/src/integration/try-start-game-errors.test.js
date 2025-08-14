@@ -20,17 +20,17 @@ describe('Table tryStartGame Error Reporting', () => {
     const player2 = new Player({ id: 'p2', name: 'Player 2' });
     player1.chips = 1000;
     player2.chips = 1000;
-    
+
     // Track when action is requested
     let gameStarted = false;
     table.on('game:started', () => {
       gameStarted = true;
     });
-    
+
     // Players that take some time but do respond
     player1.getAction = async (gameState) => {
       // Small delay but still respond
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       const toCall = gameState.currentBet - gameState.players[player1.id].bet;
       if (toCall > 0) {
         return { action: Action.CALL };
@@ -38,10 +38,10 @@ describe('Table tryStartGame Error Reporting', () => {
       return { action: Action.CHECK };
     };
     player2.getAction = async () => {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       return { action: Action.CHECK };
     };
-    
+
     table.addPlayer(player1);
     table.addPlayer(player2);
 
@@ -52,9 +52,9 @@ describe('Table tryStartGame Error Reporting', () => {
     expect(firstResult.details.playerCount).toBe(2);
 
     // Wait for game to actually start
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
     expect(gameStarted).toBe(true);
-    
+
     // Table should be in progress now
     expect(table.state).toBe(TableState.IN_PROGRESS);
 
@@ -64,7 +64,7 @@ describe('Table tryStartGame Error Reporting', () => {
     expect(secondResult.reason).toBe('TABLE_NOT_READY');
     expect(secondResult.details.currentState).toBe('IN_PROGRESS');
     expect(secondResult.details.message).toContain('not in WAITING state');
-    
+
     // Clean up - close table to stop the game
     table.close();
   }, 15000); // Increase timeout for this test
@@ -78,7 +78,7 @@ describe('Table tryStartGame Error Reporting', () => {
 
     const player1 = new Player({ id: 'p1', name: 'Player 1' });
     player1.chips = 1000;
-    
+
     table.addPlayer(player1);
 
     // Try to start with only 1 player when 3 are required
@@ -101,11 +101,11 @@ describe('Table tryStartGame Error Reporting', () => {
     const player1 = new Player({ id: 'p1', name: 'Player 1' });
     const player2 = new Player({ id: 'p2', name: 'Player 2' });
     const player3 = new Player({ id: 'p3', name: 'Player 3' });
-    
+
     player1.chips = 1000;
     player2.chips = 0; // No chips
     player3.chips = -10; // Negative chips (shouldn't happen but test it)
-    
+
     table.addPlayer(player1);
     table.addPlayer(player2);
     table.addPlayer(player3);
@@ -136,7 +136,7 @@ describe('Table tryStartGame Error Reporting', () => {
     const player2 = new Player({ id: 'p2', name: 'Player 2' });
     player1.chips = 1000;
     player2.chips = 1000;
-    
+
     // Player that throws an error during game initialization
     // eslint-disable-next-line require-await
     player1.getAction = async () => {
@@ -144,7 +144,7 @@ describe('Table tryStartGame Error Reporting', () => {
     };
     // eslint-disable-next-line require-await
     player2.getAction = async () => ({ action: Action.CHECK });
-    
+
     table.addPlayer(player1);
     table.addPlayer(player2);
 
@@ -159,10 +159,10 @@ describe('Table tryStartGame Error Reporting', () => {
     expect(result.details.stack).toBeDefined();
     expect(result.details.tableId).toBe(table.id);
     expect(result.details.message).toContain('Failed to start game engine');
-    
+
     // Verify state reverted to WAITING
     expect(table.state).toBe(TableState.WAITING);
-    
+
     // Verify chips were refunded (no blinds taken)
     expect(player1.chips).toBe(1000);
     expect(player2.chips).toBe(1000);
@@ -178,16 +178,16 @@ describe('Table tryStartGame Error Reporting', () => {
 
     const player1 = new Player({ id: 'alice', name: 'Alice' });
     const player2 = new Player({ id: 'bob', name: 'Bob' });
-    
+
     player1.chips = 500;
     player2.chips = 0;
-    
+
     table.addPlayer(player1);
     table.addPlayer(player2);
 
     // Try to start with insufficient players
     const result = await table.tryStartGame();
-    
+
     // Check all details are present for debugging
     expect(result.success).toBe(false);
     expect(result.reason).toBe('INSUFFICIENT_PLAYERS');
@@ -212,7 +212,7 @@ describe('Table tryStartGame Error Reporting', () => {
     const player2 = new Player({ id: 'p2', name: 'Player 2' });
     player1.chips = 2000;
     player2.chips = 2000;
-    
+
     // Simple players that end the hand quickly
     // eslint-disable-next-line require-await
     player1.getAction = async (gameState) => {
@@ -223,13 +223,13 @@ describe('Table tryStartGame Error Reporting', () => {
     };
     // eslint-disable-next-line require-await
     player2.getAction = async () => ({ action: Action.CHECK });
-    
+
     table.addPlayer(player1);
     table.addPlayer(player2);
 
     // Start game successfully
     const result = await table.tryStartGame();
-    
+
     expect(result.success).toBe(true);
     expect(result.reason).toBe('GAME_STARTED');
     expect(result.details).toMatchObject({
@@ -239,7 +239,7 @@ describe('Table tryStartGame Error Reporting', () => {
       blinds: { small: 25, big: 50 },
       message: expect.stringContaining('Game #1 started successfully'),
     });
-    
+
     // Clean up
     table.close();
   });

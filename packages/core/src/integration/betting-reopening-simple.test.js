@@ -252,7 +252,9 @@ describe('Issue #32 - Betting Reopening Rules', () => {
       );
 
       if (p1RaisesAfterAllIn.length > 0) {
-        console.log('BUG DETECTED: P1 was allowed to raise after small all-in!');
+        console.log(
+          'BUG DETECTED: P1 was allowed to raise after small all-in!',
+        );
       } else {
         console.log('GOOD: P1 was not allowed to raise after small all-in');
       }

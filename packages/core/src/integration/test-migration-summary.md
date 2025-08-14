@@ -221,7 +221,7 @@ this.emit('hand:complete', {
   winners: winnersArray,
   board: this.board,
   sidePots: this.getSidePotInfo(),
-})
+});
 ```
 
 ## Benefits Demonstrated
@@ -256,13 +256,13 @@ The `setupEventCapture` utility eliminates repetitive event handling:
 
 ```javascript
 // Old way: Manual event tracking
-const actions = []
+const actions = [];
 table.on('player:action', ({ playerId, action }) => {
-  actions.push({ playerId, action })
-})
+  actions.push({ playerId, action });
+});
 
 // New way: Automatic capture
-const events = setupEventCapture(table)
+const events = setupEventCapture(table);
 // Access via: events.actions, events.winners, etc.
 ```
 

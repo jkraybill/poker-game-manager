@@ -14,7 +14,7 @@ describe('Issue #32 - Betting Reopening Rules (v2)', () => {
   let events;
 
   beforeEach(() => {
-    ;({ manager, table } = createTestTable('standard', {
+    ({ manager, table } = createTestTable('standard', {
       blinds: { small: 50, big: 100 },
       minBuyIn: 1000,
       maxBuyIn: 2000,
@@ -127,7 +127,6 @@ describe('Issue #32 - Betting Reopening Rules (v2)', () => {
 
     // Strategy: Player 3 goes all-in
     const p3Strategy = ({ myState }) => {
-
       // Always go all-in
       return {
         action: Action.ALL_IN,
@@ -230,7 +229,9 @@ describe('Issue #32 - Betting Reopening Rules (v2)', () => {
       );
 
       if (p1RaisesAfterAllIn.length > 0) {
-        console.log('BUG DETECTED: P1 was allowed to raise after small all-in!');
+        console.log(
+          'BUG DETECTED: P1 was allowed to raise after small all-in!',
+        );
       } else {
         console.log('GOOD: P1 was not allowed to raise after small all-in');
       }

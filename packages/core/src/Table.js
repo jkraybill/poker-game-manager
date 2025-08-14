@@ -12,19 +12,13 @@ export class Table extends WildcardEventEmitter {
     super();
 
     this.id = config.id || nanoid();
-    
+
     // Validate blinds are integers
     const validatedBlinds = {
-      small: validateIntegerAmount(
-        config.blinds?.small ?? 10,
-        'small blind',
-      ),
-      big: validateIntegerAmount(
-        config.blinds?.big ?? 20,
-        'big blind',
-      ),
+      small: validateIntegerAmount(config.blinds?.small ?? 10, 'small blind'),
+      big: validateIntegerAmount(config.blinds?.big ?? 20, 'big blind'),
     };
-    
+
     this.config = {
       ...config,
       variant: config.variant || 'texas-holdem',
@@ -60,7 +54,10 @@ export class Table extends WildcardEventEmitter {
   addPlayer(player) {
     if (this.players.size >= this.config.maxPlayers) {
       this.waitingList.push(player);
-      this.emit('player:waiting', { player, position: this.waitingList.length });
+      this.emit('player:waiting', {
+        player,
+        position: this.waitingList.length,
+      });
       return false;
     }
 
@@ -156,280 +153,284 @@ export class Table extends WildcardEventEmitter {
     try {
       // Check table state
       if (this.state !== TableState.WAITING) {
-      const stateNames = {
-        [TableState.IN_PROGRESS]: 'IN_PROGRESS',
-        [TableState.CLOSED]: 'CLOSED',
-        [TableState.WAITING]: 'WAITING',
-      };
-      const failureResult = {
-        success: false,
-        reason: 'TABLE_NOT_READY',
-        details: {
-          currentState: stateNames[this.state] || this.state,
-          message: `Table is not in WAITING state. Current state: ${stateNames[this.state] || this.state}`,
-          tableId: this.id,
-          gameCount: this.gameCount,
-          timestamp: new Date().toISOString(),
-          isGameInProgress: this.state === TableState.IN_PROGRESS,
-          gameEngine: this.gameEngine ? 'exists' : 'null',
-        },
-      };
-      
-      // Emit failure event for debugging
-      this.emit('game:start-failed', failureResult);
-      
-      return failureResult;
-    }
+        const stateNames = {
+          [TableState.IN_PROGRESS]: 'IN_PROGRESS',
+          [TableState.CLOSED]: 'CLOSED',
+          [TableState.WAITING]: 'WAITING',
+        };
+        const failureResult = {
+          success: false,
+          reason: 'TABLE_NOT_READY',
+          details: {
+            currentState: stateNames[this.state] || this.state,
+            message: `Table is not in WAITING state. Current state: ${stateNames[this.state] || this.state}`,
+            tableId: this.id,
+            gameCount: this.gameCount,
+            timestamp: new Date().toISOString(),
+            isGameInProgress: this.state === TableState.IN_PROGRESS,
+            gameEngine: this.gameEngine ? 'exists' : 'null',
+          },
+        };
 
-    // Check player count
-    if (this.players.size < this.config.minPlayers) {
-      const failureResult = {
-        success: false,
-        reason: 'INSUFFICIENT_PLAYERS',
-        details: {
-          currentPlayers: this.players.size,
-          minPlayers: this.config.minPlayers,
-          message: `Need at least ${this.config.minPlayers} players to start. Currently have ${this.players.size} players.`,
-          tableId: this.id,
-          playerIds: Array.from(this.players.keys()),
-          playerDetails: Array.from(this.players.entries()).map(([id, data]) => ({
-            id,
-            name: data.player.name,
-            chips: data.player.chips,
-            seatNumber: data.seatNumber,
-          })),
-          timestamp: new Date().toISOString(),
-          waitingListSize: this.waitingList.length,
-        },
-      };
-      
-      // Emit failure event for debugging
-      this.emit('game:start-failed', failureResult);
-      
-      return failureResult;
-    }
+        // Emit failure event for debugging
+        this.emit('game:start-failed', failureResult);
 
-    // Check if all players have chips
-    const playersWithNoChips = [];
-    for (const [playerId, playerData] of this.players.entries()) {
-      if (playerData.player.chips <= 0) {
-        playersWithNoChips.push({
-          id: playerId,
-          name: playerData.player.name,
-          chips: playerData.player.chips,
-        });
+        return failureResult;
       }
-    }
-    
-    const activePlayers = this.players.size - playersWithNoChips.length;
-    if (activePlayers < this.config.minPlayers) {
-      const failureResult = {
-        success: false,
-        reason: 'INSUFFICIENT_ACTIVE_PLAYERS',
-        details: {
-          totalPlayers: this.players.size,
-          activePlayers,
-          minPlayers: this.config.minPlayers,
-          playersWithNoChips,
-          allPlayerChips: Array.from(this.players.entries()).map(([id, data]) => ({
-            id,
-            name: data.player.name,
-            chips: data.player.chips,
-            state: data.state,
-          })),
-          message: `Only ${activePlayers} players have chips. Need at least ${this.config.minPlayers} active players.`,
-          tableId: this.id,
-          timestamp: new Date().toISOString(),
-          tableState: this.state,
-        },
-      };
-      
-      // Emit failure event for debugging
-      this.emit('game:start-failed', failureResult);
-      
-      return failureResult;
-    }
 
-    // Define activePlayersList early for error handling
-    let activePlayersList = [];
-    
-    // Track chip counts before starting (for blind refund if needed)
-    const chipSnapshot = new Map();
-    for (const [playerId, playerData] of this.players.entries()) {
-      chipSnapshot.set(playerId, playerData.player.chips);
-    }
-    
-    // Only change state to IN_PROGRESS when we're actually ready to start
-    // This prevents race conditions if an error occurs during setup
-    
-    try {
-      this.state = TableState.IN_PROGRESS;
-      this.gameCount++;
+      // Check player count
+      if (this.players.size < this.config.minPlayers) {
+        const failureResult = {
+          success: false,
+          reason: 'INSUFFICIENT_PLAYERS',
+          details: {
+            currentPlayers: this.players.size,
+            minPlayers: this.config.minPlayers,
+            message: `Need at least ${this.config.minPlayers} players to start. Currently have ${this.players.size} players.`,
+            tableId: this.id,
+            playerIds: Array.from(this.players.keys()),
+            playerDetails: Array.from(this.players.entries()).map(
+              ([id, data]) => ({
+                id,
+                name: data.player.name,
+                chips: data.player.chips,
+                seatNumber: data.seatNumber,
+              }),
+            ),
+            timestamp: new Date().toISOString(),
+            waitingListSize: this.waitingList.length,
+          },
+        };
 
-      // Capture starting chip counts for this hand (needed for elimination ordering)
-      this.handStartingChips.clear();
+        // Emit failure event for debugging
+        this.emit('game:start-failed', failureResult);
+
+        return failureResult;
+      }
+
+      // Check if all players have chips
+      const playersWithNoChips = [];
       for (const [playerId, playerData] of this.players.entries()) {
-        this.handStartingChips.set(playerId, playerData.player.chips);
+        if (playerData.player.chips <= 0) {
+          playersWithNoChips.push({
+            id: playerId,
+            name: playerData.player.name,
+            chips: playerData.player.chips,
+          });
+        }
       }
-      // Initialize game engine
-      // Sort players by seat number to ensure correct position order
-      const sortedPlayers = Array.from(this.players.values()).sort(
-        (a, b) => a.seatNumber - b.seatNumber,
-      );
 
-      // Calculate dead button positions
-      const positions = this.calculateDeadButtonPositions();
-      
-      // Convert seat-based positions to player array indices
-      activePlayersList = sortedPlayers
-        .filter((pd) => pd.player.chips > 0)
-        .map((pd) => pd.player);
-      
-      const buttonPlayerIndex = positions.buttonIndex;
-      const smallBlindPlayerIndex = positions.smallBlindIndex;
-      const bigBlindPlayerIndex = positions.bigBlindIndex;
+      const activePlayers = this.players.size - playersWithNoChips.length;
+      if (activePlayers < this.config.minPlayers) {
+        const failureResult = {
+          success: false,
+          reason: 'INSUFFICIENT_ACTIVE_PLAYERS',
+          details: {
+            totalPlayers: this.players.size,
+            activePlayers,
+            minPlayers: this.config.minPlayers,
+            playersWithNoChips,
+            allPlayerChips: Array.from(this.players.entries()).map(
+              ([id, data]) => ({
+                id,
+                name: data.player.name,
+                chips: data.player.chips,
+                state: data.state,
+              }),
+            ),
+            message: `Only ${activePlayers} players have chips. Need at least ${this.config.minPlayers} active players.`,
+            tableId: this.id,
+            timestamp: new Date().toISOString(),
+            tableState: this.state,
+          },
+        };
 
-      this.gameEngine = new GameEngine({
-        variant: this.config.variant,
-        players: activePlayersList,
-        blinds: this.config.blinds,
-        timeout: this.config.timeout,
-        dealerButton: this.currentDealerButton,
-        customDeck: this.customDeck,
-        buttonPlayerIndex,
-        smallBlindPlayerIndex,
-        bigBlindPlayerIndex,
-        isDeadButton: positions.isDeadButton,
-        isDeadSmallBlind: positions.isDeadSmallBlind,
-      });
+        // Emit failure event for debugging
+        this.emit('game:start-failed', failureResult);
 
-      // Forward specific game events we care about
-      const eventsToForward = [
-        'game:started',
-        'hand:started',
-        'cards:dealt',
-        'cards:community',
-        'action:requested',
-        'action:performed',
-        'player:action',
-        'pot:updated',
-        'round:ended',
-        'hand:complete',
-        'chips:awarded',
-      ];
+        return failureResult;
+      }
 
-      eventsToForward.forEach((eventName) => {
-        this.gameEngine.on(eventName, (data) => {
-          // Special handling for hand:complete to ensure proper event ordering
-          if (eventName === 'hand:complete') {
-            // Store the hand:ended data but handle it in handleGameEnd
-            this.pendingHandEndedData = {
+      // Define activePlayersList early for error handling
+      let activePlayersList = [];
+
+      // Track chip counts before starting (for blind refund if needed)
+      const chipSnapshot = new Map();
+      for (const [playerId, playerData] of this.players.entries()) {
+        chipSnapshot.set(playerId, playerData.player.chips);
+      }
+
+      // Only change state to IN_PROGRESS when we're actually ready to start
+      // This prevents race conditions if an error occurs during setup
+
+      try {
+        this.state = TableState.IN_PROGRESS;
+        this.gameCount++;
+
+        // Capture starting chip counts for this hand (needed for elimination ordering)
+        this.handStartingChips.clear();
+        for (const [playerId, playerData] of this.players.entries()) {
+          this.handStartingChips.set(playerId, playerData.player.chips);
+        }
+        // Initialize game engine
+        // Sort players by seat number to ensure correct position order
+        const sortedPlayers = Array.from(this.players.values()).sort(
+          (a, b) => a.seatNumber - b.seatNumber,
+        );
+
+        // Calculate dead button positions
+        const positions = this.calculateDeadButtonPositions();
+
+        // Convert seat-based positions to player array indices
+        activePlayersList = sortedPlayers
+          .filter((pd) => pd.player.chips > 0)
+          .map((pd) => pd.player);
+
+        const buttonPlayerIndex = positions.buttonIndex;
+        const smallBlindPlayerIndex = positions.smallBlindIndex;
+        const bigBlindPlayerIndex = positions.bigBlindIndex;
+
+        this.gameEngine = new GameEngine({
+          variant: this.config.variant,
+          players: activePlayersList,
+          blinds: this.config.blinds,
+          timeout: this.config.timeout,
+          dealerButton: this.currentDealerButton,
+          customDeck: this.customDeck,
+          buttonPlayerIndex,
+          smallBlindPlayerIndex,
+          bigBlindPlayerIndex,
+          isDeadButton: positions.isDeadButton,
+          isDeadSmallBlind: positions.isDeadSmallBlind,
+        });
+
+        // Forward specific game events we care about
+        const eventsToForward = [
+          'game:started',
+          'hand:started',
+          'cards:dealt',
+          'cards:community',
+          'action:requested',
+          'action:performed',
+          'player:action',
+          'pot:updated',
+          'round:ended',
+          'hand:complete',
+          'chips:awarded',
+        ];
+
+        eventsToForward.forEach((eventName) => {
+          this.gameEngine.on(eventName, (data) => {
+            // Special handling for hand:complete to ensure proper event ordering
+            if (eventName === 'hand:complete') {
+              // Store the hand:ended data but handle it in handleGameEnd
+              this.pendingHandEndedData = {
+                ...data,
+                tableId: this.id,
+                gameNumber: this.gameCount,
+              };
+              // Don't emit hand:ended yet - it will be emitted after eliminations
+              return;
+            }
+
+            // Map hand:complete to hand:ended for backward compatibility
+            const emitEventName =
+              eventName === 'hand:complete' ? 'hand:ended' : eventName;
+            this.emit(emitEventName, {
               ...data,
               tableId: this.id,
               gameNumber: this.gameCount,
-            };
-            // Don't emit hand:ended yet - it will be emitted after eliminations
-            return;
-          }
-          
-          // Map hand:complete to hand:ended for backward compatibility
-          const emitEventName =
-            eventName === 'hand:complete' ? 'hand:ended' : eventName;
-          this.emit(emitEventName, {
-            ...data,
-            tableId: this.id,
-            gameNumber: this.gameCount,
+            });
+
+            // Don't check here - it's too late, players are already removed
           });
-
-          // Don't check here - it's too late, players are already removed
         });
-      });
 
-      this.gameEngine.on('game:ended', (result) => {
-        this.handleGameEnd(result);
-      });
+        this.gameEngine.on('game:ended', (result) => {
+          this.handleGameEnd(result);
+        });
 
-      this.emit('game:started', {
-        tableId: this.id,
-        gameNumber: this.gameCount,
-        players: Array.from(this.players.keys()),
-      });
-
-      await this.gameEngine.start();
-
-      // Clear custom deck after use
-      this.customDeck = null;
-      
-      // Game started successfully
-      return {
-        success: true,
-        reason: 'GAME_STARTED',
-        details: {
+        this.emit('game:started', {
           tableId: this.id,
           gameNumber: this.gameCount,
-          playerCount: activePlayersList.length,
-          blinds: this.config.blinds,
-          message: `Game #${this.gameCount} started successfully with ${activePlayersList.length} players`,
-        },
-      };
-    } catch (error) {
-      // If game fails to start, revert state and refund blinds
-      this.state = TableState.WAITING;
-      
-      // Refund blinds by restoring chip counts
-      for (const [playerId, originalChips] of chipSnapshot.entries()) {
-        const playerData = this.players.get(playerId);
-        if (playerData) {
-          playerData.player.chips = originalChips;
-        }
-      }
-      
-      this.gameEngine = null;
-      this.emit('game:error', {
-        tableId: this.id,
-        error: error.message,
-      });
-      
-      // Game failed to start with engine error
-      const failureResult = {
-        success: false,
-        reason: 'ENGINE_ERROR',
-        details: {
-          error: error.message,
-          errorName: error.name,
-          stack: error.stack,
-          tableId: this.id,
-          gameCount: this.gameCount,
-          message: `Failed to start game engine: ${error.message}`,
-          timestamp: new Date().toISOString(),
-          tableState: this.state,
-          playerCount: this.players.size,
-          playerIds: Array.from(this.players.keys()),
-          config: {
+          players: Array.from(this.players.keys()),
+        });
+
+        await this.gameEngine.start();
+
+        // Clear custom deck after use
+        this.customDeck = null;
+
+        // Game started successfully
+        return {
+          success: true,
+          reason: 'GAME_STARTED',
+          details: {
+            tableId: this.id,
+            gameNumber: this.gameCount,
+            playerCount: activePlayersList.length,
             blinds: this.config.blinds,
-            minPlayers: this.config.minPlayers,
-            maxPlayers: this.config.maxPlayers,
-            variant: this.config.variant,
+            message: `Game #${this.gameCount} started successfully with ${activePlayersList.length} players`,
           },
-          customDeck: this.customDeck ? 'present' : 'null',
-          activePlayersList: activePlayersList?.length || 0,
-        },
-      };
-      
-      // Emit failure event for debugging
-      this.emit('game:start-failed', failureResult);
-      
-      return failureResult;
-    }
+        };
+      } catch (error) {
+        // If game fails to start, revert state and refund blinds
+        this.state = TableState.WAITING;
+
+        // Refund blinds by restoring chip counts
+        for (const [playerId, originalChips] of chipSnapshot.entries()) {
+          const playerData = this.players.get(playerId);
+          if (playerData) {
+            playerData.player.chips = originalChips;
+          }
+        }
+
+        this.gameEngine = null;
+        this.emit('game:error', {
+          tableId: this.id,
+          error: error.message,
+        });
+
+        // Game failed to start with engine error
+        const failureResult = {
+          success: false,
+          reason: 'ENGINE_ERROR',
+          details: {
+            error: error.message,
+            errorName: error.name,
+            stack: error.stack,
+            tableId: this.id,
+            gameCount: this.gameCount,
+            message: `Failed to start game engine: ${error.message}`,
+            timestamp: new Date().toISOString(),
+            tableState: this.state,
+            playerCount: this.players.size,
+            playerIds: Array.from(this.players.keys()),
+            config: {
+              blinds: this.config.blinds,
+              minPlayers: this.config.minPlayers,
+              maxPlayers: this.config.maxPlayers,
+              variant: this.config.variant,
+            },
+            customDeck: this.customDeck ? 'present' : 'null',
+            activePlayersList: activePlayersList?.length || 0,
+          },
+        };
+
+        // Emit failure event for debugging
+        this.emit('game:start-failed', failureResult);
+
+        return failureResult;
+      }
     } catch (unexpectedError) {
       // Catch any unexpected errors that happen outside the inner try-catch
       // Ensure we ALWAYS return an object and emit the failure event
-      
+
       // Revert state if it was changed
       if (this.state === TableState.IN_PROGRESS && !this.gameEngine) {
         this.state = TableState.WAITING;
       }
-      
+
       const failureResult = {
         success: false,
         reason: 'UNEXPECTED_ERROR',
@@ -446,10 +447,10 @@ export class Table extends WildcardEventEmitter {
           playerIds: this.players ? Array.from(this.players.keys()) : [],
         },
       };
-      
+
       // Emit failure event for debugging
       this.emit('game:start-failed', failureResult);
-      
+
       // Always return an object, never throw
       return failureResult;
     }
@@ -533,7 +534,6 @@ export class Table extends WildcardEventEmitter {
       (bbSeatIndex - 2 + allPlayers.length) % allPlayers.length;
     const buttonPlayerData = allPlayers[buttonSeatIndex];
     const isDeadButton = buttonPlayerData.player.chips <= 0;
-
 
     // Find SB position (1 seat before BB by seat order)
     const sbSeatIndex =
@@ -634,7 +634,11 @@ export class Table extends WildcardEventEmitter {
 
     // Track who posted big blind this hand for next hand's dead button calculation
     const gameEngine = this.gameEngine;
-    if (gameEngine && gameEngine.bigBlindPlayerIndex !== undefined && gameEngine.bigBlindPlayerIndex !== null) {
+    if (
+      gameEngine &&
+      gameEngine.bigBlindPlayerIndex !== undefined &&
+      gameEngine.bigBlindPlayerIndex !== null
+    ) {
       // Use the explicit big blind index from game engine
       const bbPlayer = gameEngine.players[gameEngine.bigBlindPlayerIndex];
       if (bbPlayer) {
@@ -708,7 +712,7 @@ export class Table extends WildcardEventEmitter {
       }
     }
 
-    // CRITICAL FIX: Change state to WAITING before emitting hand:ended
+    // CRITICAL FIX (v4.4.3): Change state to WAITING before emitting hand:ended
     // This ensures isGameInProgress() returns false when hand:ended fires,
     // preventing race conditions in tournament managers
     this.state = TableState.WAITING;

@@ -4,7 +4,7 @@ import { Action } from '../types/index.js';
 
 /**
  * Performance Benchmark Suite
- * 
+ *
  * Measures performance of key operations in the poker game manager.
  * Run with: node packages/core/src/benchmarks/performance.bench.js
  */
@@ -14,7 +14,7 @@ class BenchmarkPlayer extends Player {
   getAction(gameState) {
     const myState = gameState.players[this.id];
     const toCall = gameState.currentBet - myState.bet;
-    
+
     if (toCall > 0 && myState.chips >= toCall) {
       return {
         playerId: this.id,
@@ -23,7 +23,7 @@ class BenchmarkPlayer extends Player {
         timestamp: Date.now(),
       };
     }
-    
+
     return {
       playerId: this.id,
       action: Action.CHECK,
@@ -35,12 +35,12 @@ class BenchmarkPlayer extends Player {
 // Benchmark utilities
 function measureTime(fn, iterations = 1000) {
   const times = [];
-  
+
   // Warmup
   for (let i = 0; i < 100; i++) {
     fn();
   }
-  
+
   // Actual measurements
   for (let i = 0; i < iterations; i++) {
     const start = performance.now();
@@ -48,9 +48,9 @@ function measureTime(fn, iterations = 1000) {
     const end = performance.now();
     times.push(end - start);
   }
-  
+
   times.sort((a, b) => a - b);
-  
+
   return {
     min: times[0],
     max: times[times.length - 1],
@@ -74,7 +74,7 @@ function formatResults(name, results) {
 // Benchmarks
 function benchmarkTableCreation() {
   const manager = new PokerGameManager();
-  
+
   const results = measureTime(() => {
     const table = manager.createTable({
       blinds: { small: 10, big: 20 },
@@ -83,7 +83,7 @@ function benchmarkTableCreation() {
     // Clean up
     manager.tables.delete(table.id);
   });
-  
+
   formatResults('Table Creation', results);
 }
 
@@ -93,41 +93,41 @@ function benchmarkPlayerAddition() {
     blinds: { small: 10, big: 20 },
     maxPlayers: 9,
   });
-  
+
   const results = measureTime(() => {
     const player = new BenchmarkPlayer({ name: 'Test' });
     player.buyIn(1000);
     table.addPlayer(player);
     table.removePlayer(player.id);
   });
-  
+
   formatResults('Player Addition/Removal', results);
 }
 
 function benchmarkGameStart() {
   const manager = new PokerGameManager();
-  
+
   const results = measureTime(() => {
     const table = manager.createTable({
       blinds: { small: 10, big: 20 },
       maxPlayers: 9,
     });
-    
+
     // Add players
     for (let i = 0; i < 6; i++) {
       const player = new BenchmarkPlayer({ name: `Player${i}` });
       player.buyIn(1000);
       table.addPlayer(player);
     }
-    
+
     // Start game
     table.tryStartGame();
-    
+
     // Clean up
     table.close();
     manager.tables.delete(table.id);
   });
-  
+
   formatResults('Game Start (6 players)', results);
 }
 
@@ -137,7 +137,7 @@ async function benchmarkSingleAction() {
     blinds: { small: 10, big: 20 },
     maxPlayers: 9,
   });
-  
+
   // Setup game
   const players = [];
   for (let i = 0; i < 6; i++) {
@@ -146,27 +146,27 @@ async function benchmarkSingleAction() {
     table.addPlayer(player);
     players.push(player);
   }
-  
+
   let actionCount = 0;
   let totalTime = 0;
-  
+
   table.on('action:requested', async ({ playerId, gameState }) => {
     const start = performance.now();
-    const player = players.find(p => p.id === playerId);
+    const player = players.find((p) => p.id === playerId);
     if (player) {
       await player.getAction(gameState);
       // Simulate action processing
     }
     const end = performance.now();
-    totalTime += (end - start);
+    totalTime += end - start;
     actionCount++;
   });
-  
+
   table.tryStartGame();
-  
+
   // Wait for some actions
-  await new Promise(resolve => setTimeout(resolve, 100));
-  
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
   console.log('\nSingle Action Processing:'); // eslint-disable-line no-console
   console.log(`  Average: ${(totalTime / actionCount).toFixed(3)}ms`); // eslint-disable-line no-console
   console.log(`  Total actions: ${actionCount}`); // eslint-disable-line no-console
@@ -175,7 +175,7 @@ async function benchmarkSingleAction() {
 async function benchmarkHandEvaluation() {
   // Import HandEvaluator
   const { HandEvaluator } = await import('../game/HandEvaluator.js');
-  
+
   // Test hands
   const testHands = [
     ['As', 'Ks', 'Qs', 'Js', 'Ts'], // Royal flush
@@ -189,12 +189,12 @@ async function benchmarkHandEvaluation() {
     ['Td', 'Th', '8c', '6s', '2d'], // Pair
     ['Kd', 'Qh', 'Jc', '9s', '7d'], // High card
   ];
-  
+
   const results = measureTime(() => {
     const hand = testHands[Math.floor(Math.random() * testHands.length)];
     HandEvaluator.evaluate(hand);
   });
-  
+
   formatResults('Hand Evaluation (pokersolver)', results);
 }
 
@@ -202,41 +202,41 @@ async function benchmarkFullHand() {
   const manager = new PokerGameManager();
   let handsCompleted = 0;
   let totalTime = 0;
-  
+
   const runHand = () => {
     const table = manager.createTable({
       blinds: { small: 10, big: 20 },
       maxPlayers: 9,
     });
-    
+
     // Add players
     for (let i = 0; i < 6; i++) {
       const player = new BenchmarkPlayer({ name: `Player${i}` });
       player.buyIn(1000);
       table.addPlayer(player);
     }
-    
+
     const start = performance.now();
-    
-    return new Promise(resolve => {
+
+    return new Promise((resolve) => {
       table.on('hand:ended', () => {
         const end = performance.now();
-        totalTime += (end - start);
+        totalTime += end - start;
         handsCompleted++;
         table.close();
         manager.tables.delete(table.id);
         resolve();
       });
-      
+
       table.tryStartGame();
     });
   };
-  
+
   // Run multiple hands
   for (let i = 0; i < 100; i++) {
     await runHand();
   }
-  
+
   console.log('\nFull Hand Completion (6 players):'); // eslint-disable-line no-console
   console.log(`  Average: ${(totalTime / handsCompleted).toFixed(3)}ms`); // eslint-disable-line no-console
   console.log(`  Total hands: ${handsCompleted}`); // eslint-disable-line no-console
@@ -246,58 +246,64 @@ async function benchmarkFullHand() {
 async function benchmarkMemoryUsage() {
   const manager = new PokerGameManager();
   const tables = [];
-  
+
   // Get initial memory
   if (global.gc) {
     global.gc();
   }
   const initialMemory = process.memoryUsage();
-  
+
   // Create 100 tables with 6 players each
   for (let i = 0; i < 100; i++) {
     const table = manager.createTable({
       blinds: { small: 10, big: 20 },
       maxPlayers: 9,
     });
-    
+
     for (let j = 0; j < 6; j++) {
       const player = new BenchmarkPlayer({ name: `P${i}-${j}` });
       player.buyIn(1000);
       table.addPlayer(player);
     }
-    
+
     table.tryStartGame();
     tables.push(table);
   }
-  
+
   // Wait for games to process
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
   // Get final memory
   if (global.gc) {
     global.gc();
   }
   const finalMemory = process.memoryUsage();
-  
+
   console.log('\nMemory Usage (100 tables, 6 players each):'); // eslint-disable-line no-console
-  console.log(`  Heap Used: ${((finalMemory.heapUsed - initialMemory.heapUsed) / 1024 / 1024).toFixed(2)}MB`); // eslint-disable-line no-console
-  console.log(`  RSS: ${((finalMemory.rss - initialMemory.rss) / 1024 / 1024).toFixed(2)}MB`); // eslint-disable-line no-console
-  console.log(`  Per Table: ${((finalMemory.heapUsed - initialMemory.heapUsed) / 100 / 1024).toFixed(2)}KB`); // eslint-disable-line no-console
-  
+  console.log(
+    `  Heap Used: ${((finalMemory.heapUsed - initialMemory.heapUsed) / 1024 / 1024).toFixed(2)}MB`,
+  ); // eslint-disable-line no-console
+  console.log(
+    `  RSS: ${((finalMemory.rss - initialMemory.rss) / 1024 / 1024).toFixed(2)}MB`,
+  ); // eslint-disable-line no-console
+  console.log(
+    `  Per Table: ${((finalMemory.heapUsed - initialMemory.heapUsed) / 100 / 1024).toFixed(2)}KB`,
+  ); // eslint-disable-line no-console
+
   // Cleanup
-  tables.forEach(table => table.close());
+  tables.forEach((table) => table.close());
 }
 
 // Run all benchmarks
 async function runBenchmarks() {
   const os = await import('os');
-  
+
   console.log('=== Poker Game Manager Performance Benchmarks ==='); // eslint-disable-line no-console
   console.log(`Node: ${process.version}`); // eslint-disable-line no-console
   console.log(`Platform: ${process.platform} ${process.arch}`); // eslint-disable-line no-console
   console.log(`CPUs: ${os.cpus().length} x ${os.cpus()[0].model}`); // eslint-disable-line no-console
   console.log(`Memory: ${(os.totalmem() / 1024 / 1024 / 1024).toFixed(2)}GB`); // eslint-disable-line no-console
-  
+
   await benchmarkTableCreation();
   await benchmarkPlayerAddition();
   await benchmarkGameStart();
@@ -305,7 +311,7 @@ async function runBenchmarks() {
   await benchmarkHandEvaluation();
   await benchmarkFullHand();
   await benchmarkMemoryUsage();
-  
+
   console.log('\n=== Benchmark Complete ==='); // eslint-disable-line no-console
 }
 

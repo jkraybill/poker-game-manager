@@ -50,46 +50,94 @@ describe('Event Ordering - Elimination (Issue #33)', () => {
     // Create a custom deck where player 1 gets better cards than player 2
     const customDeck = [
       // Player 1 gets AA (will win)
-      { rank: 'A', suit: 's', toString() {
- return 'As'; 
-} },
+      {
+        rank: 'A',
+        suit: 's',
+        toString() {
+          return 'As';
+        },
+      },
       // Player 2 gets 72 (will lose)
-      { rank: '7', suit: 'd', toString() {
- return '7d'; 
-} },
+      {
+        rank: '7',
+        suit: 'd',
+        toString() {
+          return '7d';
+        },
+      },
       // Player 1 second card
-      { rank: 'A', suit: 'h', toString() {
- return 'Ah'; 
-} },
+      {
+        rank: 'A',
+        suit: 'h',
+        toString() {
+          return 'Ah';
+        },
+      },
       // Player 2 second card
-      { rank: '2', suit: 'c', toString() {
- return '2c'; 
-} },
+      {
+        rank: '2',
+        suit: 'c',
+        toString() {
+          return '2c';
+        },
+      },
       // Burn + Community cards that don't help player 2
-      { rank: '3', suit: 'h', toString() {
- return '3h'; 
-} }, // burn
-      { rank: 'K', suit: 's', toString() {
- return 'Ks'; 
-} }, // flop
-      { rank: 'Q', suit: 'h', toString() {
- return 'Qh'; 
-} },
-      { rank: 'J', suit: 'd', toString() {
- return 'Jd'; 
-} },
-      { rank: '4', suit: 'h', toString() {
- return '4h'; 
-} }, // burn
-      { rank: 'T', suit: 'c', toString() {
- return 'Tc'; 
-} }, // turn
-      { rank: '5', suit: 'h', toString() {
- return '5h'; 
-} }, // burn
-      { rank: '9', suit: 's', toString() {
- return '9s'; 
-} }, // river
+      {
+        rank: '3',
+        suit: 'h',
+        toString() {
+          return '3h';
+        },
+      }, // burn
+      {
+        rank: 'K',
+        suit: 's',
+        toString() {
+          return 'Ks';
+        },
+      }, // flop
+      {
+        rank: 'Q',
+        suit: 'h',
+        toString() {
+          return 'Qh';
+        },
+      },
+      {
+        rank: 'J',
+        suit: 'd',
+        toString() {
+          return 'Jd';
+        },
+      },
+      {
+        rank: '4',
+        suit: 'h',
+        toString() {
+          return '4h';
+        },
+      }, // burn
+      {
+        rank: 'T',
+        suit: 'c',
+        toString() {
+          return 'Tc';
+        },
+      }, // turn
+      {
+        rank: '5',
+        suit: 'h',
+        toString() {
+          return '5h';
+        },
+      }, // burn
+      {
+        rank: '9',
+        suit: 's',
+        toString() {
+          return '9s';
+        },
+      }, // river
     ];
 
     table.setCustomDeck(customDeck);
@@ -144,9 +192,9 @@ describe('Event Ordering - Elimination (Issue #33)', () => {
 
     // Wait for hand to complete
     await waitForHandEnd(events);
-    
+
     // Give time for elimination event to fire
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Verify we got both events
     const handEndedEvents = eventLog.filter((e) => e.event === 'hand:ended');
@@ -159,7 +207,9 @@ describe('Event Ordering - Elimination (Issue #33)', () => {
 
     // Verify ordering - elimination must come BEFORE hand:ended (fixed in v3.0.2)
     // Since events are emitted synchronously, check array order instead of timestamps
-    const elimIndex = eventLog.findIndex((e) => e.event === 'player:eliminated');
+    const elimIndex = eventLog.findIndex(
+      (e) => e.event === 'player:eliminated',
+    );
     const handIndex = eventLog.findIndex((e) => e.event === 'hand:ended');
 
     expect(elimIndex).toBeLessThan(handIndex);

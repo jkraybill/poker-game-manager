@@ -46,14 +46,14 @@ export class GameEngine extends WildcardEventEmitter {
       config.dealerButton !== undefined
         ? config.dealerButton
         : Math.floor(Math.random() * this.players.length);
-    
+
     // Dead button rule support - explicit position indices
     this.buttonPlayerIndex = config.buttonPlayerIndex;
     this.smallBlindPlayerIndex = config.smallBlindPlayerIndex;
     this.bigBlindPlayerIndex = config.bigBlindPlayerIndex;
     this.isDeadButton = config.isDeadButton || false;
     this.isDeadSmallBlind = config.isDeadSmallBlind || false;
-    
+
     this.roundBets = new Map();
     this.playerHands = new Map();
     this.lastBettor = null;
@@ -159,7 +159,7 @@ export class GameEngine extends WildcardEventEmitter {
         // Player broke contract - fatal error, no retry
         throw new Error(
           `Fatal: Player ${player.id} threw error in receivePrivateCards(): ${error.message}. ` +
-          'This is a contract violation. Players must not throw errors from notification methods.',
+            'This is a contract violation. Players must not throw errors from notification methods.',
         );
       }
 
@@ -184,17 +184,24 @@ export class GameEngine extends WildcardEventEmitter {
     let sbIndex, bbIndex, sbPlayer, bbPlayer;
 
     // Use explicit position indices if provided (dead button rule)
-    if (this.bigBlindPlayerIndex !== undefined && this.bigBlindPlayerIndex !== null) {
+    if (
+      this.bigBlindPlayerIndex !== undefined &&
+      this.bigBlindPlayerIndex !== null
+    ) {
       bbIndex = this.bigBlindPlayerIndex;
       bbPlayer = this.players[bbIndex];
-      
-      if (!this.isDeadSmallBlind && this.smallBlindPlayerIndex !== undefined && this.smallBlindPlayerIndex !== null) {
+
+      if (
+        !this.isDeadSmallBlind &&
+        this.smallBlindPlayerIndex !== undefined &&
+        this.smallBlindPlayerIndex !== null
+      ) {
         sbIndex = this.smallBlindPlayerIndex;
         sbPlayer = this.players[sbIndex];
       }
     } else {
       // Fallback to old behavior for backward compatibility
-      
+
       // Special handling for heads-up play
       if (activePlayers.length === 2) {
         // In heads-up, the dealer/button is the small blind
@@ -382,24 +389,28 @@ export class GameEngine extends WildcardEventEmitter {
 
     // Calculate betting details
     const bettingDetails = this.calculateBettingDetails(currentPlayer);
-    
+
     // Add validation-relevant numbers to gameState for player convenience
     gameState.toCall = bettingDetails.toCall;
     gameState.minRaise = bettingDetails.minRaise;
     gameState.maxRaise = bettingDetails.maxRaise;
     gameState.potSize = bettingDetails.potSize;
     gameState.currentBet = bettingDetails.currentBet;
-    
+
     // Add additional validation context
     gameState.players[currentPlayer.id].toCall = bettingDetails.toCall;
-    gameState.players[currentPlayer.id].canRaise = bettingDetails.maxRaise > bettingDetails.currentBet;
+    gameState.players[currentPlayer.id].canRaise =
+      bettingDetails.maxRaise > bettingDetails.currentBet;
     gameState.players[currentPlayer.id].effectiveStack = currentPlayer.chips;
-    
+
     // Add betting history context for min raise calculations
     gameState.bettingHistory = {
       raiseHistory: [...this.raiseHistory],
       lastBettor: this.lastBettor?.id || null,
-      lastRaiseSize: this.raiseHistory.length > 0 ? this.raiseHistory[this.raiseHistory.length - 1] : 0,
+      lastRaiseSize:
+        this.raiseHistory.length > 0
+          ? this.raiseHistory[this.raiseHistory.length - 1]
+          : 0,
       minRaiseIncrement: bettingDetails.minRaise - bettingDetails.currentBet,
     };
 
@@ -413,7 +424,12 @@ export class GameEngine extends WildcardEventEmitter {
     let timeoutId;
     const timeoutPromise = new Promise((_, reject) => {
       timeoutId = setTimeout(
-        () => reject(new Error(`Player ${currentPlayer.id} action timeout after ${this.config.timeout}ms`)),
+        () =>
+          reject(
+            new Error(
+              `Player ${currentPlayer.id} action timeout after ${this.config.timeout}ms`,
+            ),
+          ),
         this.config.timeout,
       );
     });
@@ -427,27 +443,27 @@ export class GameEngine extends WildcardEventEmitter {
     } catch (error) {
       // Clear timeout immediately
       clearTimeout(timeoutId);
-      
+
       // Player broke contract - fatal error, no retry
       throw new Error(
         `Fatal: Player ${currentPlayer.id} threw error in getAction(): ${error.message}. ` +
-        'This is a contract violation. Players must return valid actions or timeout gracefully.',
+          'This is a contract violation. Players must return valid actions or timeout gracefully.',
       );
     }
 
     // Clear the timeout since action completed
     clearTimeout(timeoutId);
 
-      // Check if the player returned a valid action
-      if (!action) {
-        // Player returned undefined/null - this is a developer error, crash immediately
-        throw new Error(
-          `Player ${currentPlayer.id} returned invalid action (undefined/null). ` +
+    // Check if the player returned a valid action
+    if (!action) {
+      // Player returned undefined/null - this is a developer error, crash immediately
+      throw new Error(
+        `Player ${currentPlayer.id} returned invalid action (undefined/null). ` +
           'This is a developer error. Players must always return a valid action object.',
-        );
-      }
-      
-      await this.handlePlayerAction(currentPlayer, action);
+      );
+    }
+
+    await this.handlePlayerAction(currentPlayer, action);
   }
 
   /**
@@ -456,9 +472,13 @@ export class GameEngine extends WildcardEventEmitter {
   buildErrorContext(player, action) {
     const currentBet = this.getCurrentBet();
     const toCall = currentBet - player.bet;
-    const activePlayers = this.players.filter(p => p.state === PlayerState.ACTIVE);
-    const allInPlayers = this.players.filter(p => p.state === PlayerState.ALL_IN);
-    
+    const activePlayers = this.players.filter(
+      (p) => p.state === PlayerState.ACTIVE,
+    );
+    const allInPlayers = this.players.filter(
+      (p) => p.state === PlayerState.ALL_IN,
+    );
+
     return {
       gamePhase: this.phase,
       currentBet,
@@ -490,7 +510,7 @@ export class GameEngine extends WildcardEventEmitter {
         lastRaiseSize: this.getLastRaiseSize(),
         minRaiseIncrement: this.getMinimumRaiseIncrement(),
       },
-      playerBets: this.players.map(p => ({
+      playerBets: this.players.map((p) => ({
         id: p.id,
         bet: p.bet,
         chips: p.chips,
@@ -511,8 +531,8 @@ export class GameEngine extends WildcardEventEmitter {
       const context = this.buildErrorContext(player, action);
       throw new Error(
         `Invalid action: action object is ${action ? 'missing action property' : 'undefined'}. ` +
-        'Expected format: { action: Action.FOLD, amount?: number }\n' +
-        `Game State: ${JSON.stringify(context, null, 2)}`,
+          'Expected format: { action: Action.FOLD, amount?: number }\n' +
+          `Game State: ${JSON.stringify(context, null, 2)}`,
       );
     }
 
@@ -520,12 +540,15 @@ export class GameEngine extends WildcardEventEmitter {
     const validActionValues = Object.values(Action);
     if (!validActionValues.includes(action.action)) {
       const context = this.buildErrorContext(player, action);
-      const receivedAction = typeof action.action === 'string' ? `"${action.action}"` : action.action;
+      const receivedAction =
+        typeof action.action === 'string'
+          ? `"${action.action}"`
+          : action.action;
       throw new Error(
         `Invalid action type: ${receivedAction}. ` +
-        `Must use Action enum values: ${validActionValues.join(', ')}. ` +
-        'Example: { action: Action.ALL_IN } not { action: "allIn" }\n' +
-        `Game State: ${JSON.stringify(context, null, 2)}`,
+          `Must use Action enum values: ${validActionValues.join(', ')}. ` +
+          'Example: { action: Action.ALL_IN } not { action: "allIn" }\n' +
+          `Game State: ${JSON.stringify(context, null, 2)}`,
       );
     }
 
@@ -536,9 +559,9 @@ export class GameEngine extends WildcardEventEmitter {
           const context = this.buildErrorContext(player, action);
           throw new Error(
             'Cannot fold when you can check for free.\n' +
-            `Reason: Player can check (toCall=${toCall}, currentBet=${currentBet}, playerBet=${player.bet})\n` +
-            'Solution: Use Action.CHECK instead of Action.FOLD\n' +
-            `Game State: ${JSON.stringify(context, null, 2)}`,
+              `Reason: Player can check (toCall=${toCall}, currentBet=${currentBet}, playerBet=${player.bet})\n` +
+              'Solution: Use Action.CHECK instead of Action.FOLD\n' +
+              `Game State: ${JSON.stringify(context, null, 2)}`,
           );
         }
         return;
@@ -548,9 +571,9 @@ export class GameEngine extends WildcardEventEmitter {
           const context = this.buildErrorContext(player, action);
           throw new Error(
             'Cannot check when facing a bet.\n' +
-            `Reason: Player must call ${toCall} chips (currentBet=${currentBet}, playerBet=${player.bet})\n` +
-            'Solutions: Use Action.CALL to match the bet, Action.RAISE to increase it, or Action.FOLD to give up\n' +
-            `Game State: ${JSON.stringify(context, null, 2)}`,
+              `Reason: Player must call ${toCall} chips (currentBet=${currentBet}, playerBet=${player.bet})\n` +
+              'Solutions: Use Action.CALL to match the bet, Action.RAISE to increase it, or Action.FOLD to give up\n' +
+              `Game State: ${JSON.stringify(context, null, 2)}`,
           );
         }
         return;
@@ -560,18 +583,18 @@ export class GameEngine extends WildcardEventEmitter {
           const context = this.buildErrorContext(player, action);
           throw new Error(
             'Nothing to call.\n' +
-            `Reason: No bet to match (currentBet=${currentBet}, playerBet=${player.bet}, toCall=${toCall})\n` +
-            'Solution: Use Action.CHECK instead of Action.CALL\n' +
-            `Game State: ${JSON.stringify(context, null, 2)}`,
+              `Reason: No bet to match (currentBet=${currentBet}, playerBet=${player.bet}, toCall=${toCall})\n` +
+              'Solution: Use Action.CHECK instead of Action.CALL\n' +
+              `Game State: ${JSON.stringify(context, null, 2)}`,
           );
         }
         if (toCall > player.chips) {
           const context = this.buildErrorContext(player, action);
           throw new Error(
             'Insufficient chips to call.\n' +
-            `Reason: Need ${toCall} chips to call but player only has ${player.chips} chips\n` +
-            `Solution: Use Action.ALL_IN to go all-in with remaining ${player.chips} chips, or Action.FOLD\n` +
-            `Game State: ${JSON.stringify(context, null, 2)}`,
+              `Reason: Need ${toCall} chips to call but player only has ${player.chips} chips\n` +
+              `Solution: Use Action.ALL_IN to go all-in with remaining ${player.chips} chips, or Action.FOLD\n` +
+              `Game State: ${JSON.stringify(context, null, 2)}`,
           );
         }
         return;
@@ -581,10 +604,13 @@ export class GameEngine extends WildcardEventEmitter {
           const context = this.buildErrorContext(player, action);
           throw new Error(
             'Cannot bet when facing a bet - use raise.\n' +
-            `Reason: There's already a bet of ${currentBet} on the table\n` +
-            `Solution: Use Action.RAISE to increase the bet to ${action.amount || 'desired amount'}\n` +
-            `Current bet details: ${this.players.filter(p => p.bet > 0).map(p => `${p.id}: ${p.bet} chips`).join(', ')}\n` +
-            `Game State: ${JSON.stringify(context, null, 2)}`,
+              `Reason: There's already a bet of ${currentBet} on the table\n` +
+              `Solution: Use Action.RAISE to increase the bet to ${action.amount || 'desired amount'}\n` +
+              `Current bet details: ${this.players
+                .filter((p) => p.bet > 0)
+                .map((p) => `${p.id}: ${p.bet} chips`)
+                .join(', ')}\n` +
+              `Game State: ${JSON.stringify(context, null, 2)}`,
           );
         }
         const betResult = this.validateBetAmount(action.amount, player);
@@ -592,9 +618,9 @@ export class GameEngine extends WildcardEventEmitter {
           const context = this.buildErrorContext(player, action);
           throw new Error(
             `Invalid bet amount: ${action.amount}.\n` +
-            `Reason: ${betResult.reason}\n` +
-            `Constraints: Minimum bet=${this.config.bigBlind}, Player chips=${player.chips}\n` +
-            `Game State: ${JSON.stringify(context, null, 2)}`,
+              `Reason: ${betResult.reason}\n` +
+              `Constraints: Minimum bet=${this.config.bigBlind}, Player chips=${player.chips}\n` +
+              `Game State: ${JSON.stringify(context, null, 2)}`,
           );
         }
         return;
@@ -605,9 +631,9 @@ export class GameEngine extends WildcardEventEmitter {
           const context = this.buildErrorContext(player, action);
           throw new Error(
             'Cannot raise without a bet - use bet.\n' +
-            'Reason: No current bet to raise (currentBet=0)\n' +
-            `Solution: Use Action.BET with amount ${action.amount || this.config.bigBlind}\n` +
-            `Game State: ${JSON.stringify(context, null, 2)}`,
+              'Reason: No current bet to raise (currentBet=0)\n' +
+              `Solution: Use Action.BET with amount ${action.amount || this.config.bigBlind}\n` +
+              `Game State: ${JSON.stringify(context, null, 2)}`,
           );
         }
         const raiseResult = this.validateRaiseAmount(action.amount, player);
@@ -616,10 +642,10 @@ export class GameEngine extends WildcardEventEmitter {
           const minRaise = currentBet + this.getMinimumRaiseIncrement();
           throw new Error(
             `Invalid raise amount: ${action.amount}.\n` +
-            `Reason: ${raiseResult.reason}\n` +
-            `Constraints: Current bet=${currentBet}, Minimum raise to=${minRaise}, Player chips=${player.chips}, Player current bet=${player.bet}\n` +
-            `Raise history this round: ${this.raiseHistory.length > 0 ? this.raiseHistory.join(', ') : 'none'}\n` +
-            `Game State: ${JSON.stringify(context, null, 2)}`,
+              `Reason: ${raiseResult.reason}\n` +
+              `Constraints: Current bet=${currentBet}, Minimum raise to=${minRaise}, Player chips=${player.chips}, Player current bet=${player.bet}\n` +
+              `Raise history this round: ${this.raiseHistory.length > 0 ? this.raiseHistory.join(', ') : 'none'}\n` +
+              `Game State: ${JSON.stringify(context, null, 2)}`,
           );
         }
         return;
@@ -631,7 +657,9 @@ export class GameEngine extends WildcardEventEmitter {
 
       default:
         // This should never happen now due to the enum check above
-        throw new Error(`Unexpected action validation error for: ${action.action}`);
+        throw new Error(
+          `Unexpected action validation error for: ${action.action}`,
+        );
     }
   }
 
@@ -642,7 +670,7 @@ export class GameEngine extends WildcardEventEmitter {
     // First validate it's an integer
     try {
       const validatedAmount = validateIntegerAmount(amount, 'bet amount');
-      
+
       // Rule 5.2.1.1: Opening bet must be at least the big blind
       const minBet = this.config.bigBlind;
 
@@ -683,7 +711,7 @@ export class GameEngine extends WildcardEventEmitter {
         reason: error.message,
       };
     }
-    
+
     const currentBet = this.getCurrentBet();
 
     // The 'amount' parameter appears to be the total bet amount (raise TO)
@@ -694,8 +722,9 @@ export class GameEngine extends WildcardEventEmitter {
     if (player.hasActed) {
       return {
         valid: false,
-        reason: 'Cannot re-raise - betting was not reopened by a full raise. Player already acted this round. ' +
-                `Last raise size: ${this.getLastRaiseSize()}, Minimum full raise: ${this.getMinimumRaiseIncrement()}`,
+        reason:
+          'Cannot re-raise - betting was not reopened by a full raise. Player already acted this round. ' +
+          `Last raise size: ${this.getLastRaiseSize()}, Minimum full raise: ${this.getMinimumRaiseIncrement()}`,
       };
     }
 
@@ -703,9 +732,10 @@ export class GameEngine extends WildcardEventEmitter {
       const maxRaise = player.chips + player.bet;
       return {
         valid: false,
-        reason: `Insufficient chips for raise to ${proposedTotalBet}. ` +
-                `Player has ${player.chips} chips, current bet is ${player.bet}, ` +
-                `maximum possible raise is to ${maxRaise}. Use Action.ALL_IN to go all-in`,
+        reason:
+          `Insufficient chips for raise to ${proposedTotalBet}. ` +
+          `Player has ${player.chips} chips, current bet is ${player.bet}, ` +
+          `maximum possible raise is to ${maxRaise}. Use Action.ALL_IN to go all-in`,
       };
     }
 
@@ -716,9 +746,10 @@ export class GameEngine extends WildcardEventEmitter {
     if (proposedTotalBet < minTotalBet) {
       return {
         valid: false,
-        reason: `Minimum raise is to ${minTotalBet} (current bet: ${currentBet} + minimum increment: ${minRaiseIncrement}). ` +
-                `Attempted raise to ${proposedTotalBet} is too small. ` +
-                `Previous raises this round: ${this.raiseHistory.length > 0 ? this.raiseHistory.join(', ') : 'none'}`,
+        reason:
+          `Minimum raise is to ${minTotalBet} (current bet: ${currentBet} + minimum increment: ${minRaiseIncrement}). ` +
+          `Attempted raise to ${proposedTotalBet} is too small. ` +
+          `Previous raises this round: ${this.raiseHistory.length > 0 ? this.raiseHistory.join(', ') : 'none'}`,
       };
     }
     return { valid: true };
@@ -757,12 +788,12 @@ export class GameEngine extends WildcardEventEmitter {
    */
   async handlePlayerAction(player, action) {
     const endTimer = monitor.startTimer('handlePlayerAction');
-    
+
     // Ensure amount is an integer before validation
     if (action.amount !== undefined) {
       action.amount = ensureInteger(action.amount, 'action amount');
     }
-    
+
     // Validate the action - will throw if invalid (developer error)
     this.validateAction(player, action);
 
@@ -819,13 +850,15 @@ export class GameEngine extends WildcardEventEmitter {
       // Continue to next player
       const prevIndex = this.currentPlayerIndex;
       this.moveToNextActivePlayer();
-      
+
       // Check if we found a valid next player
       const currentPlayer = this.players[this.currentPlayerIndex];
-      if (this.currentPlayerIndex === prevIndex || 
-          !currentPlayer || 
-          currentPlayer.state !== PlayerState.ACTIVE || 
-          currentPlayer.hasActed) {
+      if (
+        this.currentPlayerIndex === prevIndex ||
+        !currentPlayer ||
+        currentPlayer.state !== PlayerState.ACTIVE ||
+        currentPlayer.hasActed
+      ) {
         // No valid next player found - this means all active players have acted
         // but betting round is not complete (bets not matched)
         // This shouldn't happen in normal flow but can occur in edge cases
@@ -836,7 +869,7 @@ export class GameEngine extends WildcardEventEmitter {
         await this.promptNextPlayer();
       }
     }
-    
+
     endTimer();
   }
 
@@ -912,11 +945,11 @@ export class GameEngine extends WildcardEventEmitter {
     if (callAmount > 0) {
       player.chips -= callAmount;
       player.bet += callAmount;
-      
+
       // Add to pot and check if all chips were accepted
       const result = this.potManager.addToPot(player, callAmount);
       const uncalledAmount = callAmount - result.totalContributed;
-      
+
       // Return any uncalled chips to the player
       if (uncalledAmount > 0) {
         player.chips += uncalledAmount;
@@ -939,11 +972,11 @@ export class GameEngine extends WildcardEventEmitter {
 
     player.chips -= actualAmount;
     player.bet += actualAmount;
-    
+
     // Add to pot and check if all chips were accepted
     const result = this.potManager.addToPot(player, actualAmount);
     const uncalledAmount = actualAmount - result.totalContributed;
-    
+
     // Return any uncalled chips to the player
     if (uncalledAmount > 0) {
       player.chips += uncalledAmount;
@@ -1130,7 +1163,7 @@ export class GameEngine extends WildcardEventEmitter {
     const activePlayers = this.players.filter(
       (p) => p.state === PlayerState.ACTIVE,
     );
-    
+
     if (activePlayers.length <= 1) {
       // No betting needed - all players except one (or none) are all-in
       // Progress directly to next phase
@@ -1167,7 +1200,7 @@ export class GameEngine extends WildcardEventEmitter {
     const activePlayers = this.players.filter(
       (p) => p.state === PlayerState.ACTIVE,
     );
-    
+
     if (activePlayers.length <= 1) {
       // No betting needed - all players except one (or none) are all-in
       // Progress directly to next phase
@@ -1203,7 +1236,7 @@ export class GameEngine extends WildcardEventEmitter {
     const activePlayers = this.players.filter(
       (p) => p.state === PlayerState.ACTIVE,
     );
-    
+
     if (activePlayers.length <= 1) {
       // No betting needed - all players except one (or none) are all-in
       // Progress directly to next phase (showdown)
@@ -1365,7 +1398,7 @@ export class GameEngine extends WildcardEventEmitter {
       this.currentPlayerIndex,
       skipActedPlayers,
     );
-    
+
     // If no valid next player found (all have acted), keep current index
     if (nextIndex !== -1) {
       this.currentPlayerIndex = nextIndex;
@@ -1429,7 +1462,7 @@ export class GameEngine extends WildcardEventEmitter {
    */
   calculatePositionInfo() {
     const activePlayers = this.players.filter((p) => p.chips > 0);
-    
+
     if (activePlayers.length < 2) {
       return {
         button: null,
@@ -1442,22 +1475,29 @@ export class GameEngine extends WildcardEventEmitter {
     }
 
     const positions = {};
-    const playerOrder = this.players.map(p => p.id);
-    
+    const playerOrder = this.players.map((p) => p.id);
+
     let buttonPlayerId = null;
     let smallBlindPlayerId = null;
     let bigBlindPlayerId = null;
     let utgPlayerId = null;
 
     // Use explicit position indices if provided (dead button rule)
-    if (this.bigBlindPlayerIndex !== undefined && this.bigBlindPlayerIndex !== null) {
+    if (
+      this.bigBlindPlayerIndex !== undefined &&
+      this.bigBlindPlayerIndex !== null
+    ) {
       const bbPlayer = this.players[this.bigBlindPlayerIndex];
       if (bbPlayer) {
         bigBlindPlayerId = bbPlayer.id;
         positions[bbPlayer.id] = 'big-blind';
       }
-      
-      if (!this.isDeadSmallBlind && this.smallBlindPlayerIndex !== undefined && this.smallBlindPlayerIndex !== null) {
+
+      if (
+        !this.isDeadSmallBlind &&
+        this.smallBlindPlayerIndex !== undefined &&
+        this.smallBlindPlayerIndex !== null
+      ) {
         const sbPlayer = this.players[this.smallBlindPlayerIndex];
         if (sbPlayer) {
           smallBlindPlayerId = sbPlayer.id;
@@ -1466,16 +1506,23 @@ export class GameEngine extends WildcardEventEmitter {
       }
 
       // Button is either explicit or derived
-      if (this.buttonPlayerIndex !== undefined && this.buttonPlayerIndex !== null) {
+      if (
+        this.buttonPlayerIndex !== undefined &&
+        this.buttonPlayerIndex !== null
+      ) {
         const buttonPlayer = this.players[this.buttonPlayerIndex];
         if (buttonPlayer) {
           buttonPlayerId = buttonPlayer.id;
           positions[buttonPlayer.id] = positions[buttonPlayer.id] || 'button';
         }
       }
-      
+
       // Calculate UTG for explicit positions (3+ players)
-      if (activePlayers.length >= 3 && this.bigBlindPlayerIndex !== undefined && this.bigBlindPlayerIndex !== null) {
+      if (
+        activePlayers.length >= 3 &&
+        this.bigBlindPlayerIndex !== undefined &&
+        this.bigBlindPlayerIndex !== null
+      ) {
         const utgIndex = (this.bigBlindPlayerIndex + 1) % this.players.length;
         const utgPlayer = this.players[utgIndex];
         if (utgPlayer && utgPlayer.chips > 0) {
@@ -1486,15 +1533,15 @@ export class GameEngine extends WildcardEventEmitter {
     } else {
       // Fallback calculation for backward compatibility
       let sbIndex, bbIndex;
-      
+
       if (activePlayers.length === 2) {
         // Heads-up: button is small blind
         sbIndex = this.dealerButtonIndex;
         bbIndex = this.getNextActivePlayerIndex(sbIndex);
-        
+
         const sbPlayer = this.players[sbIndex];
         const bbPlayer = this.players[bbIndex];
-        
+
         if (sbPlayer) {
           buttonPlayerId = sbPlayer.id;
           smallBlindPlayerId = sbPlayer.id;
@@ -1509,11 +1556,11 @@ export class GameEngine extends WildcardEventEmitter {
         const buttonIndex = this.dealerButtonIndex;
         sbIndex = (buttonIndex + 1) % this.players.length;
         bbIndex = (sbIndex + 1) % this.players.length;
-        
+
         const buttonPlayer = this.players[buttonIndex];
         const sbPlayer = this.players[sbIndex];
         const bbPlayer = this.players[bbIndex];
-        
+
         if (buttonPlayer) {
           buttonPlayerId = buttonPlayer.id;
           positions[buttonPlayer.id] = 'button';
@@ -1526,7 +1573,7 @@ export class GameEngine extends WildcardEventEmitter {
           bigBlindPlayerId = bbPlayer.id;
           positions[bbPlayer.id] = 'big-blind';
         }
-        
+
         // UTG is next player after BB (in 3+ player games)
         if (activePlayers.length >= 3) {
           const utgIndex = (bbIndex + 1) % this.players.length;
@@ -1538,17 +1585,18 @@ export class GameEngine extends WildcardEventEmitter {
         }
       }
     }
-    
+
     // Mark remaining active players with positional names if possible
     if (activePlayers.length >= 4) {
-      const remainingPlayers = activePlayers.filter(
-        p => !positions[p.id],
-      );
-      
+      const remainingPlayers = activePlayers.filter((p) => !positions[p.id]);
+
       // Simple position naming for multi-way games
       remainingPlayers.forEach((player, index) => {
         if (!positions[player.id]) {
-          if (remainingPlayers.length > 2 && index < remainingPlayers.length - 2) {
+          if (
+            remainingPlayers.length > 2 &&
+            index < remainingPlayers.length - 2
+          ) {
             positions[player.id] = 'middle-position';
           } else if (index === remainingPlayers.length - 2) {
             positions[player.id] = 'cutoff';
@@ -1576,7 +1624,7 @@ export class GameEngine extends WildcardEventEmitter {
    */
   buildGameState() {
     const endTimer = monitor.startTimer('buildGameState');
-    
+
     // Create a fresh game state object instead of using the pool
     // This prevents issues with the object being reset while still in use
     const gameState = {
@@ -1589,7 +1637,7 @@ export class GameEngine extends WildcardEventEmitter {
       smallBlind: this.config.smallBlind,
       players: {},
     };
-    
+
     // Add player states
     for (const player of this.players) {
       gameState.players[player.id] = {
@@ -1614,7 +1662,7 @@ export class GameEngine extends WildcardEventEmitter {
     this.emit('game:aborted');
     this.removeAllListeners();
   }
-  
+
   /**
    * Release a game state back to the pool
    * @deprecated No longer using object pool for game state

@@ -8,7 +8,6 @@ import {
   STRATEGIES,
 } from '../../test-utils/index.js';
 
-
 describe('Dealer Button Rotation', () => {
   let manager, table, events;
   let players;
@@ -25,9 +24,21 @@ describe('Dealer Button Rotation', () => {
 
     // Create 3 test players using alwaysCall strategy
     players = [
-      new StrategicPlayer({ id: 'player-1', name: 'Player 1', strategy: STRATEGIES.alwaysCall }),
-      new StrategicPlayer({ id: 'player-2', name: 'Player 2', strategy: STRATEGIES.alwaysCall }),
-      new StrategicPlayer({ id: 'player-3', name: 'Player 3', strategy: STRATEGIES.alwaysCall }),
+      new StrategicPlayer({
+        id: 'player-1',
+        name: 'Player 1',
+        strategy: STRATEGIES.alwaysCall,
+      }),
+      new StrategicPlayer({
+        id: 'player-2',
+        name: 'Player 2',
+        strategy: STRATEGIES.alwaysCall,
+      }),
+      new StrategicPlayer({
+        id: 'player-3',
+        name: 'Player 3',
+        strategy: STRATEGIES.alwaysCall,
+      }),
     ];
   });
 
@@ -53,10 +64,10 @@ describe('Dealer Button Rotation', () => {
     for (let i = 0; i < handCount; i++) {
       table.tryStartGame();
       await waitForHandEnd(events);
-      
+
       // Small delay between hands
       if (i < handCount - 1) {
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
       }
     }
 
@@ -126,8 +137,16 @@ describe('Dealer Button Rotation', () => {
     const headsUpEvents = setupEventCapture(headsUpTable);
 
     const headsUpPlayers = [
-      new StrategicPlayer({ id: 'player-1', name: 'Player 1', strategy: STRATEGIES.alwaysCall }),
-      new StrategicPlayer({ id: 'player-2', name: 'Player 2', strategy: STRATEGIES.alwaysCall }),
+      new StrategicPlayer({
+        id: 'player-1',
+        name: 'Player 1',
+        strategy: STRATEGIES.alwaysCall,
+      }),
+      new StrategicPlayer({
+        id: 'player-2',
+        name: 'Player 2',
+        strategy: STRATEGIES.alwaysCall,
+      }),
     ];
 
     // Track button positions
@@ -142,10 +161,10 @@ describe('Dealer Button Rotation', () => {
     for (let i = 0; i < 3; i++) {
       headsUpTable.tryStartGame();
       await waitForHandEnd(headsUpEvents);
-      
+
       // Small delay between hands
       if (i < 2) {
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
       }
     }
 

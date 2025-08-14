@@ -5,21 +5,21 @@
  * separately, addressing Issue #34.
  */
 
-import { PokerGameManager } from '../src/PokerGameManager.js'
-import { Player } from '../src/Player.js'
-import { Action } from '../src/types/index.js'
-import { getFormattedStandings } from '../src/utils/playerStatus.js'
+import { PokerGameManager } from '../src/PokerGameManager.js';
+import { Player } from '../src/Player.js';
+import { Action } from '../src/types/index.js';
+import { getFormattedStandings } from '../src/utils/playerStatus.js';
 
 // Create simple player for testing
 class SimplePlayer extends Player {
   constructor(config) {
-    super(config)
-    this.targetAction = config.targetAction || 'check'
+    super(config);
+    this.targetAction = config.targetAction || 'check';
   }
 
   getAction(gameState) {
-    const myState = gameState.players[this.id]
-    const toCall = gameState.currentBet - myState.bet
+    const myState = gameState.players[this.id];
+    const toCall = gameState.currentBet - myState.bet;
 
     // Simple strategy based on config
     if (this.targetAction === 'all-in' && myState.chips > 0) {
@@ -28,7 +28,7 @@ class SimplePlayer extends Player {
         action: Action.ALL_IN,
         amount: myState.chips,
         timestamp: Date.now(),
-      }
+      };
     }
 
     if (toCall > 0 && toCall <= myState.chips) {
@@ -37,21 +37,21 @@ class SimplePlayer extends Player {
         action: Action.CALL,
         amount: toCall,
         timestamp: Date.now(),
-      }
+      };
     }
 
     return {
       playerId: this.id,
       action: Action.CHECK,
       timestamp: Date.now(),
-    }
+    };
   }
 }
 
 async function demonstrateStandings() {
-  console.log('=== Player Standings Display Example ===\n')
+  console.log('=== Player Standings Display Example ===\n');
 
-  const manager = new PokerGameManager()
+  const manager = new PokerGameManager();
   const table = manager.createTable({
     id: 'standings-demo',
     blinds: { small: 10, big: 20 },
@@ -59,14 +59,14 @@ async function demonstrateStandings() {
     maxBuyIn: 500,
     minPlayers: 4,
     dealerButton: 0,
-  })
+  });
 
   // Track eliminated players for proper standings display (Issue #34)
-  const eliminatedPlayers = []
+  const eliminatedPlayers = [];
 
   table.on('player:eliminated', ({ playerId }) => {
-    const playerName = players.find((p) => p.id === playerId)?.name || playerId
-    console.log(`\n🔴 ${playerName} has been eliminated!`)
+    const playerName = players.find((p) => p.id === playerId)?.name || playerId;
+    console.log(`\n🔴 ${playerName} has been eliminated!`);
 
     eliminatedPlayers.push({
       id: playerId,
@@ -75,8 +75,8 @@ async function demonstrateStandings() {
       seatNumber: 0, // Seat number not available in elimination event
       status: 'eliminated',
       eliminationOrder: eliminatedPlayers.length + 1,
-    })
-  })
+    });
+  });
 
   // Add players with different chip amounts
   const players = [
@@ -84,74 +84,74 @@ async function demonstrateStandings() {
     new SimplePlayer({ name: 'Bob', targetAction: 'all-in' }),
     new SimplePlayer({ name: 'Charlie', targetAction: 'check' }),
     new SimplePlayer({ name: 'David', targetAction: 'all-in' }),
-  ]
+  ];
 
-  players.forEach((p) => table.addPlayer(p))
+  players.forEach((p) => table.addPlayer(p));
 
   // Set custom chip amounts
-  table.players.get(players[0].id).player.chips = 500 // Alice - big stack
-  table.players.get(players[1].id).player.chips = 50 // Bob - short stack (will go all-in)
-  table.players.get(players[2].id).player.chips = 300 // Charlie - medium stack
-  table.players.get(players[3].id).player.chips = 20 // David - micro stack (will go all-in)
+  table.players.get(players[0].id).player.chips = 500; // Alice - big stack
+  table.players.get(players[1].id).player.chips = 50; // Bob - short stack (will go all-in)
+  table.players.get(players[2].id).player.chips = 300; // Charlie - medium stack
+  table.players.get(players[3].id).player.chips = 20; // David - micro stack (will go all-in)
 
-  console.log('Initial standings:')
-  displayStandings(table, eliminatedPlayers)
+  console.log('Initial standings:');
+  displayStandings(table, eliminatedPlayers);
 
   // Play a hand
-  console.log('\n--- Playing Hand 1 ---')
-  await playHand(table)
+  console.log('\n--- Playing Hand 1 ---');
+  await playHand(table);
 
-  console.log('\nStandings after Hand 1:')
-  displayStandings(table, eliminatedPlayers)
+  console.log('\nStandings after Hand 1:');
+  displayStandings(table, eliminatedPlayers);
 
   // If players remain, play another hand
-  const standings = getFormattedStandings(table.players, eliminatedPlayers)
+  const standings = getFormattedStandings(table.players, eliminatedPlayers);
   if (standings.standings.length >= 2) {
-    console.log('\n--- Playing Hand 2 ---')
-    await playHand(table)
+    console.log('\n--- Playing Hand 2 ---');
+    await playHand(table);
 
-    console.log('\nStandings after Hand 2:')
-    displayStandings(table, eliminatedPlayers)
+    console.log('\nStandings after Hand 2:');
+    displayStandings(table, eliminatedPlayers);
   }
 
   // Clean up
-  table.close()
+  table.close();
 }
 
 function displayStandings(table, eliminatedPlayerData = []) {
   const { standings, eliminated, summary } = getFormattedStandings(
     table.players,
-    eliminatedPlayerData
-  )
+    eliminatedPlayerData,
+  );
 
   // Display active players
-  console.log('\n=== ACTIVE PLAYERS ===')
+  console.log('\n=== ACTIVE PLAYERS ===');
   if (standings.length > 0) {
     standings.forEach((player) => {
       console.log(
-        `${player.rank}. ${player.name}: $${player.chips} (Seat ${player.seatNumber})`
-      )
-    })
+        `${player.rank}. ${player.name}: $${player.chips} (Seat ${player.seatNumber})`,
+      );
+    });
 
-    console.log(`\nTotal chips in play: $${summary.totalChipsInPlay}`)
-    console.log(`Average stack: $${summary.averageStack}`)
+    console.log(`\nTotal chips in play: $${summary.totalChipsInPlay}`);
+    console.log(`Average stack: $${summary.averageStack}`);
   } else {
-    console.log('No active players')
+    console.log('No active players');
   }
 
   // Display eliminated players (Issue #34 fix)
   if (eliminated.length > 0) {
-    console.log('\n=== ELIMINATED ===')
+    console.log('\n=== ELIMINATED ===');
     eliminated.forEach((player) => {
       console.log(
-        `${player.name}: Eliminated (order: ${player.eliminationOrder || 'unknown'})`
-      )
-    })
+        `${player.name}: Eliminated (order: ${player.eliminationOrder || 'unknown'})`,
+      );
+    });
   }
 
   console.log(
-    `\nPlayers remaining: ${summary.playersRemaining}/${standings.length + eliminated.length}`
-  )
+    `\nPlayers remaining: ${summary.playersRemaining}/${standings.length + eliminated.length}`,
+  );
 }
 
 async function playHand(table) {
@@ -162,16 +162,16 @@ async function playHand(table) {
         winners.map((w) => ({
           player: table.players.get(w.playerId)?.player.name || w.playerId,
           amount: w.amount,
-        }))
-      )
+        })),
+      );
 
       // Give time for events to process
-      setTimeout(resolve, 100)
-    })
+      setTimeout(resolve, 100);
+    });
 
-    table.tryStartGame()
-  })
+    table.tryStartGame();
+  });
 }
 
 // Run the example
-demonstrateStandings().catch(console.error)
+demonstrateStandings().catch(console.error);

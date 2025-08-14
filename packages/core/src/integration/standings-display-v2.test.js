@@ -40,7 +40,6 @@ describe('Standings Display (Issue #34) - v2', () => {
     manager = result.manager;
     table = result.table;
 
-
     // All-in strategy
     const allInStrategy = ({ myState }) => {
       if (myState.chips > 0) {
@@ -121,11 +120,14 @@ describe('Standings Display (Issue #34) - v2', () => {
 
     // Debug: Check actual table state
     const actualTablePlayers = Array.from(table.players.values());
-    console.log('Table players after wait:', actualTablePlayers.map(pd => ({
-      name: pd.player.name,
-      chips: pd.player.chips,
-      id: pd.player.id,
-    })));
+    console.log(
+      'Table players after wait:',
+      actualTablePlayers.map((pd) => ({
+        name: pd.player.name,
+        chips: pd.player.chips,
+        id: pd.player.id,
+      })),
+    );
     console.log('Eliminated count:', eliminatedCount);
     console.log('Eliminated players tracked:', eliminatedPlayers.length);
 
@@ -151,17 +153,17 @@ describe('Standings Display (Issue #34) - v2', () => {
     // The exact distribution depends on the cards dealt
     const totalActivePlayers = finalStandings.standings.length;
     const totalEliminated = finalStandings.eliminated.length;
-    
+
     // There should be at least one winner (could be split pot)
     expect(totalActivePlayers).toBeGreaterThanOrEqual(1);
     expect(totalActivePlayers).toBeLessThanOrEqual(3); // Max 3 in case of 3-way split
-    
+
     // Active players should have chips
-    finalStandings.standings.forEach(player => {
+    finalStandings.standings.forEach((player) => {
       expect(player.chips).toBeGreaterThan(0);
       expect(player.status).toBe('active');
     });
-    
+
     // Total should still be 3 players
     expect(totalActivePlayers + totalEliminated).toBe(3);
     finalStandings.eliminated.forEach((player) => {

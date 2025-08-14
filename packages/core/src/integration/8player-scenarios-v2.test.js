@@ -109,7 +109,16 @@ describe('8-Player Poker Scenarios (v2)', () => {
     };
 
     // Create players
-    const positions = ['button', 'sb', 'bb', 'utg', 'utg+1', 'mp1', 'mp2', 'co'];
+    const positions = [
+      'button',
+      'sb',
+      'bb',
+      'utg',
+      'utg+1',
+      'mp1',
+      'mp2',
+      'co',
+    ];
     positions.forEach((pos, idx) => {
       const player = new StrategicPlayer({
         name: `Player ${idx + 1} (${pos.toUpperCase()})`,
@@ -193,7 +202,16 @@ describe('8-Player Poker Scenarios (v2)', () => {
     };
 
     // Create 8 passive players
-    const positions = ['button', 'sb', 'bb', 'utg', 'utg+1', 'mp1', 'mp2', 'co'];
+    const positions = [
+      'button',
+      'sb',
+      'bb',
+      'utg',
+      'utg+1',
+      'mp1',
+      'mp2',
+      'co',
+    ];
     const players = positions.map((pos, idx) => {
       const player = new StrategicPlayer({
         name: `Player ${idx + 1} (${pos.toUpperCase()})`,
@@ -240,7 +258,9 @@ describe('8-Player Poker Scenarios (v2)', () => {
       const expectedPerWinner = Math.floor(320 / winners.length);
       winners.forEach((w) => {
         expect(w.amount).toBeGreaterThanOrEqual(expectedPerWinner);
-        expect(w.amount).toBeLessThanOrEqual(expectedPerWinner + winners.length); // Account for odd chips
+        expect(w.amount).toBeLessThanOrEqual(
+          expectedPerWinner + winners.length,
+        ); // Account for odd chips
       });
     }
   });

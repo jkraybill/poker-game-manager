@@ -18,7 +18,7 @@ describe('Dead Button Advanced Scenarios', () => {
 
   beforeEach(() => {
     // Use test utilities for table creation
-    ;({ manager, table } = createTestTable('standard', {
+    ({ manager, table } = createTestTable('standard', {
       minPlayers: 2,
       dealerButton: 0,
     }));

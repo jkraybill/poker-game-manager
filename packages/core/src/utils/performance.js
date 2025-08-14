@@ -42,7 +42,7 @@ export class LRUCache {
     if (!this.cache.has(key)) {
       return undefined;
     }
-    
+
     // Move to end (most recently used)
     const value = this.cache.get(key);
     this.cache.delete(key);
@@ -56,7 +56,7 @@ export class LRUCache {
       const firstKey = this.cache.keys().next().value;
       this.cache.delete(firstKey);
     }
-    
+
     // Add/update
     this.cache.delete(key);
     this.cache.set(key, value);
@@ -80,7 +80,7 @@ export class LRUCache {
  */
 export function createCardKey(cards) {
   return cards
-    .map(c => typeof c === 'string' ? c : c.toString())
+    .map((c) => (typeof c === 'string' ? c : c.toString()))
     .sort()
     .join(',');
 }
@@ -105,7 +105,7 @@ export class EventBatcher {
     if (!this.batches.has(event)) {
       this.batches.set(event, []);
     }
-    
+
     this.batches.get(event).push(data);
 
     // Clear existing timer
@@ -118,7 +118,7 @@ export class EventBatcher {
       const batch = this.batches.get(event);
       this.batches.delete(event);
       this.timers.delete(event);
-      
+
       if (batch.length === 1) {
         this.emitter.emit(event, batch[0]);
       } else {

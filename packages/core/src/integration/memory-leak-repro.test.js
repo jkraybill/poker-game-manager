@@ -102,7 +102,6 @@ describe('Table Auto-Start Behavior', () => {
       // With the fix, we should have exactly 1 game (no auto-restart)
       expect(gameCount).toBe(1);
       expect(handCount).toBe(1);
-
     },
   );
 
@@ -126,7 +125,9 @@ describe('Table Auto-Start Behavior', () => {
         let actionCount = 0;
         return ({ gameState, player }) => {
           actionCount++;
-          console.log(`📊 Strategy called: actionCount=${actionCount}, currentBet=${gameState.currentBet}, playerId=${player.id}`);
+          console.log(
+            `📊 Strategy called: actionCount=${actionCount}, currentBet=${gameState.currentBet}, playerId=${player.id}`,
+          );
 
           // First action when facing big blind: raise
           if (actionCount === 1 && gameState.currentBet === 20) {
@@ -158,13 +159,13 @@ describe('Table Auto-Start Behavior', () => {
       });
 
       // Add players
-      const player1 = new StrategicPlayer({ 
-        name: 'Player 1', 
-        strategy: createTimingStrategy(), 
+      const player1 = new StrategicPlayer({
+        name: 'Player 1',
+        strategy: createTimingStrategy(),
       });
-      const player2 = new StrategicPlayer({ 
-        name: 'Player 2', 
-        strategy: createTimingStrategy(), 
+      const player2 = new StrategicPlayer({
+        name: 'Player 2',
+        strategy: createTimingStrategy(),
       });
       table.addPlayer(player1);
       table.addPlayer(player2);

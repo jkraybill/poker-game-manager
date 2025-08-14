@@ -23,7 +23,9 @@ export class DeckBuilder {
    */
   dealHoleCards(hands) {
     if (hands.length !== this.playerCount) {
-      throw new Error(`Expected ${this.playerCount} hands, got ${hands.length}`);
+      throw new Error(
+        `Expected ${this.playerCount} hands, got ${hands.length}`,
+      );
     }
 
     // Validate each hand has 2 cards
@@ -268,7 +270,9 @@ export class DeckBuilder {
    */
   static createBoardPlayDeck(playerCount, weakHands, strongBoard) {
     if (weakHands.length !== playerCount) {
-      throw new Error(`Need ${playerCount} weak hands, got ${weakHands.length}`);
+      throw new Error(
+        `Need ${playerCount} weak hands, got ${weakHands.length}`,
+      );
     }
 
     // Convert single cards to pairs for hole cards

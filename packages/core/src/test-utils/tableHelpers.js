@@ -44,7 +44,9 @@ export function createManualTable(manager, config) {
       if (isReady) {
         const result = await table.tryStartGame();
         if (!result.success) {
-          throw new Error(`Failed to start game: ${result.reason} - ${result.details.message}`);
+          throw new Error(
+            `Failed to start game: ${result.reason} - ${result.details.message}`,
+          );
         }
         return result;
       } else {
@@ -69,7 +71,11 @@ export function waitForTableReadyAndStart(table, timeout = 2000) {
       if (result.success) {
         resolve(result);
       } else {
-        reject(new Error(`Failed to start game: ${result.reason} - ${result.details.message}`));
+        reject(
+          new Error(
+            `Failed to start game: ${result.reason} - ${result.details.message}`,
+          ),
+        );
       }
     });
   });

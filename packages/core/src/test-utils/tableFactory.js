@@ -95,7 +95,8 @@ export function createTestTable(config = 'standard', overrides = {}) {
   const manager = new PokerGameManager();
 
   // Get base config
-  const baseConfig = typeof config === 'string' ? TABLE_CONFIGS[config] : config;
+  const baseConfig =
+    typeof config === 'string' ? TABLE_CONFIGS[config] : config;
   if (!baseConfig) {
     throw new Error(
       `Unknown table config: ${config}. Available configs: ${Object.keys(TABLE_CONFIGS).join(', ')}`,
@@ -155,7 +156,7 @@ export function createChipStackTable(
       // Default buy-in if not specified
       player.buyIn(finalConfig.minBuyIn || 1000);
     }
-    
+
     const result = originalAddPlayer(player);
     playerIndex++;
     return result;

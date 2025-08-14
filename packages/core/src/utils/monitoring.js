@@ -18,7 +18,7 @@ export class PerformanceMonitor {
     if (!this.enabled) {
       return () => {};
     }
-    
+
     const startTime = performance.now();
     return () => {
       const duration = performance.now() - startTime;
@@ -33,7 +33,7 @@ export class PerformanceMonitor {
     if (!this.enabled) {
       return;
     }
-    
+
     if (!this.metrics.has(name)) {
       this.metrics.set(name, {
         count: 0,
@@ -43,13 +43,13 @@ export class PerformanceMonitor {
         values: [],
       });
     }
-    
+
     const metric = this.metrics.get(name);
     metric.count++;
     metric.total += value;
     metric.min = Math.min(metric.min, value);
     metric.max = Math.max(metric.max, value);
-    
+
     // Keep last 1000 values for percentile calculations
     metric.values.push(value);
     if (metric.values.length > 1000) {
@@ -62,7 +62,7 @@ export class PerformanceMonitor {
    */
   getMetrics() {
     const summary = {};
-    
+
     for (const [name, metric] of this.metrics) {
       const values = [...metric.values].sort((a, b) => a - b);
       summary[name] = {
@@ -75,7 +75,7 @@ export class PerformanceMonitor {
         p99: values[Math.floor(values.length * 0.99)] || 0,
       };
     }
-    
+
     return summary;
   }
 
@@ -93,10 +93,10 @@ export class PerformanceMonitor {
     if (!this.enabled) {
       return;
     }
-    
+
     const metrics = this.getMetrics();
     console.log('\n=== Performance Metrics ==='); // eslint-disable-line no-console
-    
+
     for (const [name, values] of Object.entries(metrics)) {
       console.log(`\n${name}:`); // eslint-disable-line no-console
       console.log(`  Count: ${values.count}`); // eslint-disable-line no-console

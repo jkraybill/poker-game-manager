@@ -16,7 +16,7 @@ describe('Eliminated Player Display (v2)', () => {
   let manager, table, events;
 
   beforeEach(() => {
-    ;({ manager, table } = createTestTable('standard', {
+    ({ manager, table } = createTestTable('standard', {
       blinds: { small: 10, big: 20 },
       minPlayers: 2,
       dealerButton: 0,
@@ -38,20 +38,20 @@ describe('Eliminated Player Display (v2)', () => {
           amount: myState.chips,
         };
       }
-      
+
       // Otherwise use the first available valid action
       if (validActions.includes(Action.CHECK)) {
         return {
           action: Action.CHECK,
         };
       }
-      
+
       if (validActions.includes(Action.CALL)) {
         return {
           action: Action.CALL,
         };
       }
-      
+
       return {
         action: Action.FOLD,
       };
@@ -156,14 +156,14 @@ describe('Eliminated Player Display (v2)', () => {
     const finalActivePlayers = Array.from(table.players.values())
       .filter((pd) => pd.player.chips > 0)
       .map((pd) => ({ id: pd.player.id, chips: pd.player.chips }));
-    
+
     // Use final state if no elimination occurred
     if (!postEliminationActivePlayers && finalActivePlayers.length < 3) {
       postEliminationActivePlayers = finalActivePlayers;
       eliminationOccurred = true; // Someone must have been eliminated if we have < 3 players
     }
-    
-    // This test is about verifying eliminated players aren't shown, 
+
+    // This test is about verifying eliminated players aren't shown,
     // so we just need to ensure we have a valid state to check
     if (eliminationOccurred) {
       expect(postEliminationActivePlayers).not.toBeNull();
@@ -171,7 +171,9 @@ describe('Eliminated Player Display (v2)', () => {
       expect(postEliminationActivePlayers.length).toBeGreaterThanOrEqual(1);
     } else {
       // Skip test assertions if no elimination occurred (flaky test scenario)
-      console.log('Warning: No elimination occurred in test - skipping elimination checks');
+      console.log(
+        'Warning: No elimination occurred in test - skipping elimination checks',
+      );
       expect(finalActivePlayers.length).toBe(3); // All players still active
     }
 
@@ -181,14 +183,16 @@ describe('Eliminated Player Display (v2)', () => {
       console.log(
         `Active players after elimination: ${postEliminationActivePlayers.map((p) => p.id).join(', ')}`,
       );
-      console.log('✅ Issue #34 verified: Eliminated players not in active list');
+      console.log(
+        '✅ Issue #34 verified: Eliminated players not in active list',
+      );
     }
   });
 
   it('should handle all players eliminated scenario', async () => {
     // Reset table
-    table.close()
-    ;({ manager, table } = createTestTable('standard', {
+    table.close();
+    ({ manager, table } = createTestTable('standard', {
       blinds: { small: 5, big: 10 },
       minPlayers: 2,
       dealerButton: 0,

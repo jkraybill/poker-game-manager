@@ -17,12 +17,12 @@ describe('Debug tryStartGame Failure Details', () => {
 
     // Manually set state to IN_PROGRESS to simulate issue
     table.state = TableState.IN_PROGRESS;
-    
+
     const result = await table.tryStartGame();
-    
+
     // Log the full result for debugging
     console.log('tryStartGame failed with:', JSON.stringify(result, null, 2));
-    
+
     // Verify we get the expected structure
     expect(result).toBeDefined();
     expect(result.success).toBe(false);
@@ -47,12 +47,15 @@ describe('Debug tryStartGame Failure Details', () => {
     const player1 = new Player({ id: 'alice', name: 'Alice' });
     player1.chips = 1000;
     table.addPlayer(player1);
-    
+
     const result = await table.tryStartGame();
-    
+
     // Log the full result for debugging
-    console.log('Insufficient players result:', JSON.stringify(result, null, 2));
-    
+    console.log(
+      'Insufficient players result:',
+      JSON.stringify(result, null, 2),
+    );
+
     expect(result.success).toBe(false);
     expect(result.reason).toBe('INSUFFICIENT_PLAYERS');
     expect(result.details.currentPlayers).toBe(1);
@@ -84,13 +87,16 @@ describe('Debug tryStartGame Failure Details', () => {
 
     // Try to start with no players
     const result = await table.tryStartGame();
-    
+
     // Verify event was emitted
     expect(eventData).toBeDefined();
     expect(eventData).toEqual(result);
     expect(eventData.reason).toBe('INSUFFICIENT_PLAYERS');
-    
-    console.log('game:start-failed event emitted with:', JSON.stringify(eventData, null, 2));
+
+    console.log(
+      'game:start-failed event emitted with:',
+      JSON.stringify(eventData, null, 2),
+    );
   });
 
   it('should return comprehensive debugging for chip issues', async () => {
@@ -104,19 +110,22 @@ describe('Debug tryStartGame Failure Details', () => {
     const player1 = new Player({ id: 'rich', name: 'Rich' });
     const player2 = new Player({ id: 'broke', name: 'Broke' });
     const player3 = new Player({ id: 'poor', name: 'Poor' });
-    
+
     player1.chips = 1000;
     player2.chips = 0;
     player3.chips = 0;
-    
+
     table.addPlayer(player1);
     table.addPlayer(player2);
     table.addPlayer(player3);
-    
+
     const result = await table.tryStartGame();
-    
-    console.log('Insufficient active players result:', JSON.stringify(result, null, 2));
-    
+
+    console.log(
+      'Insufficient active players result:',
+      JSON.stringify(result, null, 2),
+    );
+
     expect(result.success).toBe(false);
     expect(result.reason).toBe('INSUFFICIENT_ACTIVE_PLAYERS');
     expect(result.details.totalPlayers).toBe(3);

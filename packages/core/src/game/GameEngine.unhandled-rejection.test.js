@@ -12,7 +12,7 @@ describe('GameEngine - Unhandled Promise Rejection Bug', () => {
   beforeEach(() => {
     actionCallCount = 0;
     rejectionOccurred = false;
-    
+
     // Track unhandled rejections
     const originalHandler = process.listeners('unhandledRejection')[0];
     process.removeAllListeners('unhandledRejection');
@@ -31,9 +31,11 @@ describe('GameEngine - Unhandled Promise Rejection Bug', () => {
       getAction(gameState) {
         const myState = gameState.players[this.id];
         const toCall = Math.max(0, gameState.currentBet - myState.bet);
-        
-        console.log(`BadFoldPlayer ${this.id}: phase=${gameState.phase}, toCall=${toCall}, validActions=${gameState.validActions}`);
-        
+
+        console.log(
+          `BadFoldPlayer ${this.id}: phase=${gameState.phase}, toCall=${toCall}, validActions=${gameState.validActions}`,
+        );
+
         // In pre-flop, after SB calls, BB has option to check (toCall = 0)
         // Try to fold when check is available - this should crash
         if (gameState.phase === 'PRE_FLOP' && toCall === 0) {
@@ -45,7 +47,7 @@ describe('GameEngine - Unhandled Promise Rejection Bug', () => {
             timestamp: Date.now(),
           };
         }
-        
+
         // Otherwise play normally
         if (toCall > 0) {
           return {
@@ -62,15 +64,17 @@ describe('GameEngine - Unhandled Promise Rejection Bug', () => {
         }
       }
     }
-    
+
     // Create a normal player for SB position
     class NormalPlayer extends Player {
       getAction(gameState) {
         const myState = gameState.players[this.id];
         const toCall = Math.max(0, gameState.currentBet - myState.bet);
-        
-        console.log(`NormalPlayer ${this.id}: phase=${gameState.phase}, toCall=${toCall}`);
-        
+
+        console.log(
+          `NormalPlayer ${this.id}: phase=${gameState.phase}, toCall=${toCall}`,
+        );
+
         // Just call/check as appropriate
         if (toCall > 0) {
           return {
@@ -128,19 +132,19 @@ describe('GameEngine - Unhandled Promise Rejection Bug', () => {
       expect(error.message).toContain('Cannot fold when you can check');
       return; // Test passes
     }
-    
+
     // EXPECTED: The game should have crashed with "Cannot fold when you can check for free"
     // ACTUAL BUG: The validation error becomes an unhandled rejection
     //             and getAction is called multiple times
-    
+
     // This test demonstrates the bug:
     // 1. If actionCallCount > 1, the validation error was swallowed
     // 2. If rejectionOccurred is true, we had an unhandled rejection
-    
+
     console.log('\n=== Test Results ===');
     console.log(`getAction was called ${actionCallCount} times`);
     console.log(`Unhandled rejection occurred: ${rejectionOccurred}`);
-    
+
     // If we get here, the bug is present - the game continued despite invalid action
     // These assertions will FAIL with the current bug
     // and PASS when the bug is fixed
@@ -151,12 +155,12 @@ describe('GameEngine - Unhandled Promise Rejection Bug', () => {
   it('should properly await async validation errors in betting rounds', async () => {
     let errorThrown = false;
     let errorMessage = '';
-    
+
     // Override the game start to catch errors properly
     try {
       // This should throw because startBettingRound is now async and awaited
       await gameEngine.start();
-      
+
       // If we reach here without error, the validation didn't work
       console.log('WARNING: No error was thrown despite invalid action');
     } catch (error) {
@@ -164,7 +168,7 @@ describe('GameEngine - Unhandled Promise Rejection Bug', () => {
       errorMessage = error.message;
       console.log('Caught error properly:', errorMessage);
     }
-    
+
     // With the bug: errorThrown will be false because error is swallowed
     // After fix: errorThrown should be true with proper error message
     expect(errorThrown).toBe(true);

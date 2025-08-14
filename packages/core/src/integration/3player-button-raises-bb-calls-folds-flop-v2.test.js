@@ -150,10 +150,10 @@ describe('3-player: Button raises, BB calls, then folds to flop bet (v2)', () =>
 
       // Get actual players from table to match positions correctly
       const tablePlayers = Array.from(table.players.values());
-      
+
       // Assign roles to players based on actual table positions
       tablePlayers.forEach((playerData, idx) => {
-        const player = players.find(p => p.id === playerData.player.id);
+        const player = players.find((p) => p.id === playerData.player.id);
         if (player) {
           player.isButton = idx === dealerButton;
           player.isBB = idx === bbPos;
@@ -180,7 +180,7 @@ describe('3-player: Button raises, BB calls, then folds to flop bet (v2)', () =>
     const raiseAction = preflopActions.find((a) => a.action === Action.RAISE);
     expect(raiseAction).toBeDefined();
     expect(raiseAction.amount).toBe(100);
-    
+
     // The player who raised is the button
     const actualButtonPlayerId = raiseAction.playerId;
 
@@ -193,9 +193,7 @@ describe('3-player: Button raises, BB calls, then folds to flop bet (v2)', () =>
     expect(winners[0].amount).toBe(410);
 
     // SB should fold - find the player who is not button and not BB
-    const sbPlayer = players.find(
-      (p) => !p.isButton && !p.isBB,
-    );
+    const sbPlayer = players.find((p) => !p.isButton && !p.isBB);
     const sbFold = preflopActions.find(
       (a) => a.playerId === sbPlayer.id && a.action === Action.FOLD,
     );

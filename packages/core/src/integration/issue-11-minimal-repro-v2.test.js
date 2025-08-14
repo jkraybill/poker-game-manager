@@ -25,7 +25,7 @@ describe('Issue #11 - Minimal Pot Distribution Bug (v2)', () => {
   let manager, table, events;
 
   beforeEach(() => {
-    ;({ manager, table } = createTestTable('standard', {
+    ({ manager, table } = createTestTable('standard', {
       tableId: 'exact-bug',
       minPlayers: 3,
       maxPlayers: 3,

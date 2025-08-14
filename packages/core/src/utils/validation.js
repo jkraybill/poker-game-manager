@@ -20,7 +20,9 @@ export function validateIntegerAmount(value, fieldName = 'amount') {
 
   // Check if it's a valid number
   if (typeof numValue !== 'number' || isNaN(numValue)) {
-    throw new Error(`${fieldName} must be a number, got ${typeof value}: ${value}`);
+    throw new Error(
+      `${fieldName} must be a number, got ${typeof value}: ${value}`,
+    );
   }
 
   // Check if it's an integer
@@ -48,14 +50,14 @@ export function ensureInteger(value, fieldName = 'amount') {
   }
 
   const numValue = typeof value === 'string' ? Number(value) : value;
-  
+
   if (isNaN(numValue)) {
     return 0;
   }
 
   // Round to nearest integer if not already an integer
   const intValue = Math.round(numValue);
-  
+
   if (intValue !== numValue && fieldName) {
     // console.warn(`Warning: ${fieldName} ${numValue} was rounded to ${intValue}`);
   }
@@ -71,7 +73,7 @@ export function ensureInteger(value, fieldName = 'amount') {
  */
 export function validateChips(chips) {
   const validatedChips = validateIntegerAmount(chips, 'chips');
-  
+
   // Chips must be positive (except when busted)
   if (validatedChips < 0) {
     throw new Error(`Chips cannot be negative, got ${validatedChips}`);
