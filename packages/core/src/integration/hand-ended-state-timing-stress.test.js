@@ -84,7 +84,7 @@ describe('hand:ended Event State Timing Issue - Stress Test', () => {
                 tableId: table.id,
                 tableIndex,
                 stateWhenHandEnded,
-                timestamp: Date.now()
+                timestamp: Date.now(),
               });
               issueFound = true;
               console.log(`🔴 TIMING ISSUE FOUND at iteration ${iteration}, table ${table.id}!`);
@@ -106,27 +106,27 @@ describe('hand:ended Event State Timing Issue - Stress Test', () => {
               new Promise(resolve => setTimeout(() => {
                 console.log(`Timeout waiting for hand:ended on ${table.id}`);
                 resolve();
-              }, 1000))
+              }, 1000)),
             ]);
             
             return { 
               success: true, 
               tableId: table.id, 
               handEndedFired,
-              stateWhenHandEnded 
+              stateWhenHandEnded, 
             };
           } else {
             return { 
               success: false, 
               tableId: table.id, 
-              reason: result.reason 
+              reason: result.reason, 
             };
           }
         } catch (error) {
           return { 
             error: true, 
             tableId: table.id, 
-            message: error.message 
+            message: error.message, 
           };
         }
       });
@@ -147,7 +147,7 @@ describe('hand:ended Event State Timing Issue - Stress Test', () => {
       }
     }
 
-    console.log(`\n--- Test Results ---`);
+    console.log('\n--- Test Results ---');
     console.log(`Total attempts: ${totalAttempts}`);
     console.log(`Timing issues found: ${timingIssues.length}`);
     
@@ -192,11 +192,11 @@ describe('hand:ended Event State Timing Issue - Stress Test', () => {
       
       const player1 = new Player({ id: `tp${i}-1`, name: `TPlayer ${i}-1` });
       player1.chips = 1000;
-      player1.getAction = async () => ({ action: Action.FOLD });
+      player1.getAction = () => ({ action: Action.FOLD });
       
       const player2 = new Player({ id: `tp${i}-2`, name: `TPlayer ${i}-2` });
       player2.chips = 1000;
-      player2.getAction = async () => ({ action: Action.CHECK });
+      player2.getAction = () => ({ action: Action.CHECK });
       
       table.addPlayer(player1);
       table.addPlayer(player2);

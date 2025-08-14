@@ -28,19 +28,19 @@ describe('hand:ended Event State Timing Issue', () => {
     // Add players to both tables
     const player1 = new Player({ id: 'p1', name: 'Player 1' });
     player1.chips = 1000;
-    player1.getAction = async () => ({ action: Action.FOLD });
+    player1.getAction = () => ({ action: Action.FOLD });
     
     const player2 = new Player({ id: 'p2', name: 'Player 2' });
     player2.chips = 1000;
-    player2.getAction = async () => ({ action: Action.CHECK });
+    player2.getAction = () => ({ action: Action.CHECK });
     
     const player3 = new Player({ id: 'p3', name: 'Player 3' });
     player3.chips = 1000;
-    player3.getAction = async () => ({ action: Action.FOLD });
+    player3.getAction = () => ({ action: Action.FOLD });
     
     const player4 = new Player({ id: 'p4', name: 'Player 4' });
     player4.chips = 1000;
-    player4.getAction = async () => ({ action: Action.CHECK });
+    player4.getAction = () => ({ action: Action.CHECK });
 
     table1.addPlayer(player1);
     table1.addPlayer(player2);
@@ -135,17 +135,23 @@ describe('hand:ended Event State Timing Issue', () => {
     
     const player1 = new Player({ id: 'p1', name: 'Player 1' });
     player1.chips = 1000;
-    player1.getAction = async ({ validActions, toCall }) => {
+    player1.getAction = ({ validActions, toCall }) => {
       // Only fold when there's a bet to call, otherwise check
-      if (toCall > 0) return { action: Action.FOLD };
-      if (validActions.includes(Action.CHECK)) return { action: Action.CHECK };
+      if (toCall > 0) {
+        return { action: Action.FOLD };
+      }
+      if (validActions.includes(Action.CHECK)) {
+        return { action: Action.CHECK };
+      }
       return { action: Action.CALL };
     };
     
     const player2 = new Player({ id: 'p2', name: 'Player 2' });
     player2.chips = 1000;
-    player2.getAction = async ({ validActions }) => {
-      if (validActions.includes(Action.CHECK)) return { action: Action.CHECK };
+    player2.getAction = ({ validActions }) => {
+      if (validActions.includes(Action.CHECK)) {
+        return { action: Action.CHECK };
+      }
       return { action: Action.CALL };
     };
 
