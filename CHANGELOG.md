@@ -5,6 +5,20 @@ All notable changes to the Poker Game Manager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.4.3] - 2025-08-14
+
+### Fixed 🐛
+- **Critical Timing Issue** - Fixed race condition where `isGameInProgress()` returned true when `hand:ended` fired
+  - Table state now changes to `WAITING` before emitting `hand:ended` event
+  - Prevents tournament managers from incorrectly skipping tables
+  - Ensures past-tense events fire only after state changes are complete
+  - Resolves client-reported hanging issues in multi-table tournaments
+
+### Developer Experience 🚀
+- **Test-Driven Fix** - Added comprehensive stress tests to reproduce and verify the timing issue
+  - `hand-ended-state-timing.test.js` - Demonstrates the issue and confirms the fix
+  - `hand-ended-state-timing-stress.test.js` - High-contention stress test with 10 concurrent tables
+
 ## [4.4.2] - 2025-08-12
 
 ### Added ✨

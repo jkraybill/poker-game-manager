@@ -708,7 +708,12 @@ export class Table extends WildcardEventEmitter {
       }
     }
 
-    // Now emit hand:ended AFTER eliminations have been processed
+    // CRITICAL FIX: Change state to WAITING before emitting hand:ended
+    // This ensures isGameInProgress() returns false when hand:ended fires,
+    // preventing race conditions in tournament managers
+    this.state = TableState.WAITING;
+
+    // Now emit hand:ended AFTER eliminations have been processed AND state changed
     // Events are already in the correct order (eliminations first, then hand:ended)
     if (this.pendingHandEndedData) {
       const dataToEmit = this.pendingHandEndedData;
@@ -721,10 +726,6 @@ export class Table extends WildcardEventEmitter {
       this.gameEngine.removeAllListeners();
       this.gameEngine = null;
     }
-
-    // NOW it's safe to change state to WAITING
-    // All cleanup is done, events have been emitted
-    this.state = TableState.WAITING;
 
     // Game has ended - table consumer can start a new game if desired
   }
