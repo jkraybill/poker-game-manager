@@ -6,10 +6,18 @@ Championship-grade single-table Texas Hold'em engine for Node.js with comprehens
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
 [![GitHub Package](https://img.shields.io/badge/npm-GitHub%20Packages-blue)](https://github.com/jkraybill/poker-game-manager/packages)
 
-## 🚀 What's New in v4.4.2
+## 🚀 What's New in v4.4.6
 
-### WildcardEventEmitter Now Fully Exported! 🎯
-**v4.4.2** exposes the powerful `WildcardEventEmitter` class for client applications:
+### Critical Tournament Fixes! 🚨
+**v4.4.6** resolves tournament-blocking issues:
+
+- **ALL_IN Infinite Loop Fix** - Eliminates infinite loops when players go all-in (v4.4.4)
+- **Pre-commit Hook Repairs** - Fixed ESLint and pre-commit validation pipeline (v4.4.6)  
+- **Event Timing Improvements** - Atomic player elimination and action event timing (v4.4.5)
+- **Championship Stability** - Tournament-grade reliability for production use
+
+### WildcardEventEmitter Fully Exported! 🎯 (v4.4.2)
+**v4.4.2** exposed the powerful `WildcardEventEmitter` class for client applications:
 
 - **Advanced Event Monitoring** - Listen to ALL events with a single `on('*', ...)` listener
 - **Perfect for Debugging** - Capture complete event flow for analysis
@@ -218,7 +226,7 @@ const { PokerGameManager, Player } = require('@jkraybill/poker-game-manager');
 - **Clean APIs** - Intuitive interfaces with comprehensive events
 - **Event-Driven Architecture** - React to game changes in real-time
 - **Flexible Player System** - Any player implementation can connect
-- **Championship Testing** - 301 tests covering all scenarios
+- **Championship Testing** - 308+ tests covering all scenarios
 - **Complete Type Definitions** - Full JSDoc documentation
 - **Integer Validation** - All monetary values guaranteed to be integers
 
@@ -241,7 +249,7 @@ const { PokerGameManager, Player } = require('@jkraybill/poker-game-manager');
 ## 🧪 Development
 
 ```bash
-# Test suite (301 tests - championship coverage!)
+# Test suite (308+ tests - championship coverage!)
 npm test
 
 # Specific test categories
@@ -293,7 +301,7 @@ packages/core/src/
 ├── utils/
 │   └── validation.js        # Integer validation utilities
 ├── types/                   # Complete type definitions
-└── integration/             # 63+ integration test files
+└── integration/             # 84+ test files total
 ```
 
 ## 🎯 What This Library Delivers
@@ -304,7 +312,7 @@ packages/core/src/
 ✅ **Position Intelligence** - Comprehensive position tracking and identification  
 ✅ **Tournament Standards** - Dead button, side pots, split pots like the pros  
 ✅ **Integer Precision** - All monetary values validated as integers  
-✅ **Comprehensive Testing** - 301 tests across 63 test files  
+✅ **Comprehensive Testing** - 308+ tests across 84 test files  
 ✅ **Production Performance** - Optimized for real-world usage  
 ✅ **Clean Architecture** - Event-driven design that scales  
 

@@ -2,7 +2,7 @@
 
 ## Common Development Issues & Solutions
 
-> **Note**: This covers general development issues. The core poker engine is production-ready and extensively tested with 266 tests.
+> **Note**: This covers general development issues. The core poker engine is production-ready and extensively tested with 308+ tests.
 
 ### Fail-Fast Contract Enforcement (v3.0.5+)
 

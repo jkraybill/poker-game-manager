@@ -1,6 +1,6 @@
 # 🎯 POKER TESTING MASTERY GUIDE
 
-> **247 Tests: Championship-Grade Testing Excellence**
+> **308+ Tests: Championship-Grade Testing Excellence**
 > 
 > This guide covers the world-class testing framework that powers our tournament-ready poker engine. All tests use the comprehensive test utilities framework for maximum maintainability and precision.
 
@@ -8,7 +8,7 @@
 
 ### 🚀 Testing Commands for Poker Excellence
 ```bash
-# 🎯 FULL TEST SUITE (247 passing tests!)
+# 🎯 FULL TEST SUITE (308+ passing tests!)
 npm test
 
 # 🎲 GRANULAR POKER SCENARIOS

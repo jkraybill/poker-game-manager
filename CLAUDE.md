@@ -91,7 +91,7 @@ git push origin v2.x.x     # Push tag (triggers CI release)
 - **Node Version**: 22.17.0 (required)
 - **Framework**: Pure poker library with no platform dependencies
 - **Game Logic**: Clean event-driven architecture with tournament rules
-- **Testing**: Vitest configured, **260+ tests ALL PASSING** across 63 test files - WORLD-CLASS!
+- **Testing**: Vitest configured, **308+ tests ALL PASSING** across 84 test files - WORLD-CLASS!
 - **Build**: esbuild configured for ESM and CJS output
 - **CI/CD**: GitHub Actions running on Node.js 22 - all tests passing!
 - **Language**: Pure JavaScript (no TypeScript)
@@ -107,7 +107,7 @@ git push origin v2.x.x     # Push tag (triggers CI release)
 - **PotManager**: Betting, pot calculations, and side pot management
 - **Type System**: Complete enums and JSDoc types
 - **Infrastructure**: ESLint, Prettier, Vitest all configured
-- **Tests**: Comprehensive test suite for all core components (260+ tests total)
+- **Tests**: Comprehensive test suite for all core components (308+ tests total)
 - **Test Status**: ALL PASSING - Championship-grade coverage with tournament compliance!
 
 ### Key Patterns
@@ -320,7 +320,7 @@ betting-scenarios.test.js (2157 lines)
 
 ### **🏆 FOUNDATION PHASE: COMPLETE** ✅
 - **✅ Core Engine**: Tournament-grade Texas Hold'em implementation
-- **✅ Testing Excellence**: 260+ tests across 63 files, all passing
+- **✅ Testing Excellence**: 308+ tests across 84 files, all passing
 - **✅ Tournament Rules**: Dead button implementation (Issue #37) - WSOP compliant
 - **✅ Test Infrastructure**: Comprehensive test utilities framework
 - **✅ Zero Technical Debt**: Clean, modern architecture

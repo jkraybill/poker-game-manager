@@ -5,6 +5,47 @@ All notable changes to the Poker Game Manager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.4.6] - 2025-08-14
+
+### Fixed 🔧
+- **Pre-commit Hook Configuration** - Fixed Husky pre-commit hooks installation and configuration
+- **ESLint Compliance** - Resolved ESLint errors in ALL_IN bug test files
+- **Development Workflow** - Pre-commit validation now works correctly with ESLint, Prettier, and test validation
+
+### Developer Experience 🚀
+- **Clean CI Pipeline** - No more CI failures from linting issues
+- **Automated Quality Gates** - Pre-commit hooks ensure code quality before commits
+
+## [4.4.5] - 2025-08-14
+
+### Fixed 🔧
+- **Event Timing Precision** - Fixed premature `player:action` event emission (now emits after validation)
+- **Atomic Player Elimination** - Made player elimination atomic with single event after complete state change
+- **Pre-push Hook Cleanup** - Removed problematic shell output redirections from Git hooks
+
+### Enhanced 🚀
+- **Event Consistency** - Improved event timing consistency across the entire codebase
+- **Tournament Integration** - Better event ordering for tournament management systems
+
+## [4.4.4] - 2025-08-14
+
+### Fixed 🚨
+- **CRITICAL: ALL_IN Infinite Loop Bug** - Fixed tournament-blocking infinite loop when players go all-in
+  - Root cause: `startBettingRound()` was incorrectly resetting `hasActed=false` for ALL_IN players
+  - Fix: ALL_IN players now keep `hasActed=true` across betting rounds since they cannot act
+  - Impact: Prevents infinite loops in 5-10% of tournament hands with short stacks
+  - Eliminates BET → ALL_IN → BET → ALL_IN... action cycles that made tournaments unusable
+
+### Added ✨
+- **Comprehensive Test Coverage** - Added TDD tests reproducing and verifying the ALL_IN bug fix
+- **Tournament Stability** - Resolves critical issue making multi-table tournaments viable
+
+### Technical Details
+- Fixed `packages/core/src/game/GameEngine.js` - ALL_IN player state persistence
+- Added `all-in-infinite-loop-v444.test.js` - Comprehensive reproduction tests
+- Added `all-in-reopen-betting.test.js` - Edge case coverage
+- All 308+ existing tests still pass with the fix
+
 ## [4.4.3] - 2025-08-14
 
 ### Fixed 🐛

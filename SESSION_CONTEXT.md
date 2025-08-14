@@ -1,14 +1,15 @@
-# SESSION CONTEXT - Poker Game Manager v4.4.0
+# SESSION CONTEXT - Poker Game Manager v4.4.6
 
-## 🚀 v4.4.0 POSITION INFORMATION API
+## 🚀 v4.4.6 CRITICAL FIXES & STABILITY
 
-**STATUS: FEATURE RELEASE - Enhanced Position Tracking** ✨
+**STATUS: CRITICAL RELEASE - Tournament Blocking Issues Resolved** ✨
 
-### **Current Release: v4.4.0**
-- **🎯 POSITION API**: Comprehensive position information in `hand:started` event
-- **📍 STRATEGIC PLAY**: Button, blinds, UTG, and all positions clearly identified
-- **🔄 BACKWARD COMPATIBLE**: Existing `dealerButton` field preserved
-- **✅ 301 TESTS PASSING**: Full test coverage including position scenarios
+### **Current Release: v4.4.6**
+- **🚨 CRITICAL FIX**: ALL_IN infinite loop bug resolved (v4.4.4) - tournament-grade stability
+- **🔧 PRE-COMMIT**: Fixed Husky pre-commit hooks and ESLint validation pipeline (v4.4.6)
+- **⚡ EVENT TIMING**: Atomic player elimination and improved action timing (v4.4.5)
+- **🎯 POSITION API**: Comprehensive position information in `hand:started` event (v4.4.0)
+- **✅ 308+ TESTS PASSING**: Full test coverage including ALL_IN bug scenarios
 
 ### **Recent v4.x Features**
 - **v4.3.0**: Integer validation for all monetary values (chips, bets, pots)
