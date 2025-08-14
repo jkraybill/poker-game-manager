@@ -688,14 +688,24 @@ export class Table extends WildcardEventEmitter {
       }
     }
 
-    // Emit elimination events BEFORE hand:ended (v3.0.2 fix for event ordering)
+    // Handle player eliminations BEFORE hand:ended (v3.0.2 fix for event ordering)
     if (playersToEliminate.length > 0) {
       // Sort players by starting chip count (smallest stack first = lower finishing position)
       // This follows tournament rules: players with smaller stacks finish lower
       playersToEliminate.sort((a, b) => a.startingChips - b.startingChips);
 
-      // Emit elimination events immediately (synchronously)
+      // Process eliminations atomically - remove player then emit elimination event
       playersToEliminate.forEach(({ playerId, startingChips }, index) => {
+        // Remove player from table first
+        this.players.delete(playerId);
+
+        // Add waiting player if available (same logic as removePlayer)
+        if (this.waitingList.length > 0) {
+          const nextPlayer = this.waitingList.shift();
+          this.addPlayer(nextPlayer);
+        }
+
+        // ATOMIC: Emit elimination event AFTER removal (table state is consistent)
         this.emit('player:eliminated', {
           playerId,
           tableId: this.id,
@@ -706,9 +716,13 @@ export class Table extends WildcardEventEmitter {
         });
       });
 
-      // Remove players immediately
-      for (const { playerId } of playersToEliminate) {
-        this.removePlayer(playerId);
+      // Check if game should end due to insufficient players (same logic as removePlayer)
+      // Note: This happens after eliminations, so table state is about to become WAITING anyway
+      if (
+        this.players.size < this.config.minPlayers &&
+        this.state === TableState.IN_PROGRESS
+      ) {
+        this.endGame('Not enough players after eliminations');
       }
     }
 
