@@ -252,16 +252,23 @@ export class GameEngine extends WildcardEventEmitter {
   async startBettingRound() {
     // Reset round state
     for (const player of this.players) {
-      if (
-        player.state === PlayerState.ACTIVE ||
-        player.state === PlayerState.ALL_IN
-      ) {
+      if (player.state === PlayerState.ACTIVE) {
+        // Only reset hasActed for ACTIVE players
+        // ALL_IN players should keep hasActed=true since they can't act anymore
         player.hasActed = false;
         player.lastAction = null; // Reset last action for new round
         // Only reset bets if not in pre-flop (blinds already posted)
         if (this.phase !== GamePhase.PRE_FLOP) {
           player.bet = 0;
         }
+      } else if (player.state === PlayerState.ALL_IN) {
+        // ALL_IN players: reset lastAction but keep hasActed=true
+        player.lastAction = null; // Reset last action for new round
+        // Only reset bets if not in pre-flop (blinds already posted)
+        if (this.phase !== GamePhase.PRE_FLOP) {
+          player.bet = 0;
+        }
+        // CRITICAL: Don't reset hasActed for ALL_IN players - they can't act!
       }
     }
 
