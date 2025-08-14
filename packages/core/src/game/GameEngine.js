@@ -800,7 +800,9 @@ export class GameEngine extends WildcardEventEmitter {
     // Store the player's last action
     player.lastAction = action.action;
 
-    // Emit the action event (amount already ensured to be integer above)
+    // CRITICAL FIX (v4.4.5): Emit action event BEFORE processing the action,
+    // but AFTER validation and state setup. This ensures the action is always emitted,
+    // even if the action ends the hand immediately (like a fold that wins the pot)
     this.emit('player:action', {
       playerId: player.id,
       action: action.action,
@@ -836,7 +838,7 @@ export class GameEngine extends WildcardEventEmitter {
         break;
     }
 
-    // If hand ended (e.g., all but one folded), don't continue
+    // If hand ended (e.g., all but one folded), don't continue betting
     if (handEnded) {
       endTimer();
       return;
