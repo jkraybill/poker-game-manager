@@ -5,6 +5,26 @@ All notable changes to the Poker Game Manager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.4.8] - 2025-08-15
+
+### Fixed 🎯
+- **CRITICAL: Preflop Stuck Bug** - Fixed game-breaking bug where hands would freeze when a player posts an all-in blind
+  - Root cause: `promptNextPlayer()` would return without continuing when encountering an all-in player
+  - Fix: Modified to properly continue game flow by recursively calling or ending betting round
+  - Impact: Resolved tournament hangs occurring in 5-10% of hands with short-stacked players
+  - Critical for late-tournament play when blinds exceed player stacks
+
+### Added 📚
+- **Comprehensive All-In Blind Tests** - Added extensive test coverage for all-in blind posting scenarios
+- **API Documentation** - Created `POT_ACCESS_GUIDE.md` documenting correct pot access methods
+  - Clarifies that `table.pot` does not exist
+  - Shows correct method: `table.gameEngine?.potManager?.getTotal()`
+
+### Enhanced 🚀
+- **Tournament Stability** - Games now properly handle players with insufficient chips for blinds
+- **Game Flow Reliability** - All players receive cards even when some are all-in from blind posts
+- **Test Coverage** - Added tests for multiple short-stack scenarios and edge cases
+
 ## [4.4.7] - 2025-08-14
 
 ### Fixed 🔧

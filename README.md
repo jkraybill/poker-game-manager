@@ -6,16 +6,23 @@ Championship-grade single-table Texas Hold'em engine for Node.js with comprehens
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
 [![GitHub Package](https://img.shields.io/badge/npm-GitHub%20Packages-blue)](https://github.com/jkraybill/poker-game-manager/packages)
 
-## 🚀 What's New in v4.4.7
+## 🚀 What's New in v4.4.8
 
-### CRITICAL: Infinite Loop Bug FIXED! 🚨
-**v4.4.7** resolves the devastating infinite loop bug reported in v4.4.6:
+### CRITICAL: Preflop Stuck Bug FIXED! 🎯
+**v4.4.8** resolves the critical bug where hands would get stuck when a player posts an all-in blind:
+
+- **✅ All-In Blind Posting FIXED** - Games no longer freeze when players have insufficient chips for blinds
+- **✅ Tournament Short Stacks** - Properly handles late-tournament scenarios with small stacks
+- **✅ Game Flow Continuity** - `promptNextPlayer()` correctly handles all-in players
+- **✅ Cards Dealt Properly** - All players receive cards even with all-in blind posts
+- **✅ Comprehensive Testing** - Added extensive test coverage for all-in blind scenarios
+
+### Previous: Infinite Loop Bug Fixed (v4.4.7)
+**v4.4.7** resolved the devastating infinite loop bug reported in v4.4.6:
 
 - **✅ CHECK-CHECK Infinite Loop ELIMINATED** - Fixed race condition causing tournament hangs 
 - **✅ Mutex Protection** - `endingBettingRound` mutex prevents duplicate betting round calls
 - **✅ Tournament Stability** - Memory exhaustion and infinite loops completely resolved
-- **✅ Regression Protection** - Comprehensive test prevents bug recurrence
-- **✅ Production Ready** - Tournament simulations run indefinitely without issues
 
 ### WildcardEventEmitter Fully Exported! 🎯 (v4.4.2)
 **v4.4.2** exposed the powerful `WildcardEventEmitter` class for client applications:
