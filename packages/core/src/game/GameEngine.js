@@ -393,7 +393,26 @@ export class GameEngine extends WildcardEventEmitter {
     const currentPlayer = this.players[this.currentPlayerIndex];
 
     if (!currentPlayer || currentPlayer.state !== PlayerState.ACTIVE) {
+      // Player is all-in, folded, or doesn't exist - try next player
       this.moveToNextActivePlayer();
+
+      // Check if we found a different player
+      if (
+        this.currentPlayerIndex !==
+        this.players.findIndex((p) => p === currentPlayer)
+      ) {
+        // We moved to a different player, continue prompting
+        // But only if the game is still active
+        if (this.phase && this.potManager) {
+          await this.promptNextPlayer();
+        }
+      } else {
+        // No other players to prompt - check if betting round is complete
+        const isComplete = this.isBettingRoundComplete();
+        if (isComplete) {
+          await this.endBettingRound();
+        }
+      }
       return;
     }
 
