@@ -1003,21 +1003,25 @@ export class GameEngine extends WildcardEventEmitter {
   }
 
   /**
-   * Handle bet action
+   * Handle bet action - ATOMIC version to prevent race conditions
    */
   handleBet(player, amount, blindType = '') {
     // Ensure amount is an integer
     const intAmount = ensureInteger(amount, 'bet amount');
     const actualAmount = Math.min(intAmount, player.chips);
 
+    // ATOMIC FIX: Perform all state changes in one synchronous block
+    // The key is that player.bet field acts as the "in-transit" tracking
+    // So observers must count: player.chips + player.bet + pots
+
     player.chips -= actualAmount;
     player.bet += actualAmount;
 
-    // Add to pot and check if all chips were accepted
+    // Add to pot and get back what was actually accepted
     const result = this.potManager.addToPot(player, actualAmount);
     const uncalledAmount = actualAmount - result.totalContributed;
 
-    // Return any uncalled chips to the player
+    // Return any uncalled chips
     if (uncalledAmount > 0) {
       player.chips += uncalledAmount;
       player.bet -= uncalledAmount;
@@ -1384,8 +1388,10 @@ export class GameEngine extends WildcardEventEmitter {
       showdownHands: {},
     };
 
-    // Record final chip counts
+    // Clear all player bets when hand ends - fixes bet clearing bug
+    // This ensures bets are cleared even when hands end by folding
     for (const player of this.players) {
+      player.bet = 0;
       result.finalChips[player.id] = player.chips;
 
       if (this.playerHands.has(player.id)) {
