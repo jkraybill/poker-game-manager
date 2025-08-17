@@ -34,6 +34,16 @@ describe('Multi-Table Chip Conservation Bug', () => {
       // Access players from the table's players Map
       for (const [playerId, playerInfo] of table.players) {
         total += playerInfo.player.chips;
+        // CRITICAL: Include chips that are in bet but not yet in pot (the "race condition" fix)
+        total += playerInfo.player.bet || 0;
+      }
+      
+      // Also count chips in pots
+      if (table.gameEngine && table.gameEngine.potManager) {
+        const pots = table.gameEngine.potManager.pots;
+        for (const pot of pots) {
+          total += pot.amount;
+        }
       }
     }
     return total;
@@ -164,12 +174,15 @@ describe('Multi-Table Chip Conservation Bug', () => {
 
     // Start all tables SIMULTANEOUSLY
     const handPromises = tables.map(async table => {
-      await table.tryStartGame();
-      return new Promise((resolve) => {
+      // Set up event listener BEFORE starting the game
+      const handEndPromise = new Promise((resolve) => {
         table.once('hand:ended', () => {
           setTimeout(resolve, 100);
         });
       });
+      
+      await table.tryStartGame();
+      return handEndPromise;
     });
 
     // Check chips DURING simultaneous execution
