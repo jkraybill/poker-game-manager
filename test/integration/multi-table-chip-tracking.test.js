@@ -23,7 +23,9 @@ describe('Multi-Table Chip Conservation - Continuous Monitoring', () => {
           }
           if (gameState.toCall === 0 && gameState.currentBet > 0) {
             // Use RAISE to increase an existing bet (like the big blind)
-            return { action: Action.RAISE, amount: gameState.currentBet + 20, timestamp: Date.now() };
+            // For RAISE, amount should be total bet amount, not increment
+            const minRaise = gameState.currentBet * 2;
+            return { action: Action.RAISE, amount: minRaise, timestamp: Date.now() };
           }
           if (gameState.toCall <= 40) {
             return { action: Action.CALL, timestamp: Date.now() };
