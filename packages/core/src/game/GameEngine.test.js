@@ -320,6 +320,7 @@ describe('GameEngine', () => {
         playerId: bbPlayer.id,
         action: Action.CHECK,
         amount: undefined,
+        potSize: expect.any(Number), // Added in v4.5.1 for tournament logging
       });
     });
   });

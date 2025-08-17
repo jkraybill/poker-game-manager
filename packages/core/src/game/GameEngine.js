@@ -845,6 +845,7 @@ export class GameEngine extends WildcardEventEmitter {
       playerId: player.id,
       action: action.action,
       amount: action.amount,
+      potSize: this.potManager.getTotal(), // Include pot size for tournament logging
     });
 
     // Mark player as having acted BEFORE processing the action
