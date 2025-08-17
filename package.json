@@ -1,6 +1,6 @@
 {
   "name": "@jkraybill/poker-game-manager",
-  "version": "4.4.9",
+  "version": "4.5.0",
   "description": "Championship-grade single-table Texas Hold'em engine for Node.js with comprehensive position information and integer-validated betting",
   "main": "dist/index.cjs",
   "module": "packages/core/src/index.js",

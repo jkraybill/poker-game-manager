@@ -1352,8 +1352,21 @@ export class GameEngine extends WildcardEventEmitter {
       }
     }
 
+    // Build showdown participants array - includes ALL players who reached showdown
+    const showdownParticipants = [];
+    for (const playerHandInfo of playerHands) {
+      const amount = payouts.get(playerHandInfo.player) || 0;
+      showdownParticipants.push({
+        playerId: playerHandInfo.player.id,
+        hand: playerHandInfo.hand,
+        cards: playerHandInfo.cards,
+        amount,
+      });
+    }
+
     this.emit('hand:complete', {
       winners: winnersWithAmounts,
+      showdownParticipants,
       board: this.board,
       sidePots: this.getSidePotInfo(),
     });
@@ -1362,6 +1375,7 @@ export class GameEngine extends WildcardEventEmitter {
       winnersWithAmounts.map((w) =>
         this.players.find((p) => p.id === w.playerId),
       ),
+      showdownParticipants,
     );
   }
 
@@ -1379,7 +1393,7 @@ export class GameEngine extends WildcardEventEmitter {
   /**
    * End the hand
    */
-  endHand(winners) {
+  endHand(winners, showdownParticipants = null) {
     this.phase = GamePhase.ENDED;
 
     const result = {
@@ -1387,6 +1401,11 @@ export class GameEngine extends WildcardEventEmitter {
       finalChips: {},
       showdownHands: {},
     };
+
+    // Include showdown participants if provided (from showdown scenarios)
+    if (showdownParticipants) {
+      result.showdownParticipants = showdownParticipants;
+    }
 
     // Clear all player bets when hand ends - fixes bet clearing bug
     // This ensures bets are cleared even when hands end by folding
