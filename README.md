@@ -6,22 +6,32 @@ Championship-grade single-table Texas Hold'em engine for Node.js with comprehens
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
 [![GitHub Package](https://img.shields.io/badge/npm-GitHub%20Packages-blue)](https://github.com/jkraybill/poker-game-manager/packages)
 
-## 🚀 What's New in v4.4.8
+## 🚀 What's New in v4.5.0
 
-### CRITICAL: Preflop Stuck Bug FIXED! 🎯
-**v4.4.8** resolves the critical bug where hands would get stuck when a player posts an all-in blind:
+### NEW: Showdown Participants Feature! 🎯
+**v4.5.0** adds comprehensive showdown tracking for tournament logging and analytics:
 
+- **✅ Complete Showdown Data** - `hand:ended` events now include ALL players who reached showdown
+- **✅ Tournament Logging Ready** - Perfect for comprehensive hand history and analytics
+- **✅ Backward Compatible** - Existing `winners` array unchanged, new `showdownParticipants` added
+- **✅ Detailed Information** - Each participant includes hand strength, cards, and amount won/lost
+- **✅ Client-Requested Feature** - Direct response to PokerSim client team requirements
+
+```javascript
+table.on('hand:ended', ({ winners, showdownParticipants }) => {
+  // Traditional winners array (unchanged)
+  console.log('Winners:', winners);
+  
+  // NEW: All showdown participants with complete data
+  showdownParticipants.forEach(participant => {
+    console.log(`${participant.playerId}: ${participant.hand.description} - ${participant.amount > 0 ? 'Won' : 'Lost'} $${Math.abs(participant.amount)}`);
+  });
+});
+```
+
+### Previous: Critical Stability Fixes (v4.4.8-4.4.9)
 - **✅ All-In Blind Posting FIXED** - Games no longer freeze when players have insufficient chips for blinds
-- **✅ Tournament Short Stacks** - Properly handles late-tournament scenarios with small stacks
-- **✅ Game Flow Continuity** - `promptNextPlayer()` correctly handles all-in players
-- **✅ Cards Dealt Properly** - All players receive cards even with all-in blind posts
-- **✅ Comprehensive Testing** - Added extensive test coverage for all-in blind scenarios
-
-### Previous: Infinite Loop Bug Fixed (v4.4.7)
-**v4.4.7** resolved the devastating infinite loop bug reported in v4.4.6:
-
-- **✅ CHECK-CHECK Infinite Loop ELIMINATED** - Fixed race condition causing tournament hangs 
-- **✅ Mutex Protection** - `endingBettingRound` mutex prevents duplicate betting round calls
+- **✅ Bet Clearing Bug FIXED** - Player bets properly cleared when hands end by folding
 - **✅ Tournament Stability** - Memory exhaustion and infinite loops completely resolved
 
 ### WildcardEventEmitter Fully Exported! 🎯 (v4.4.2)
