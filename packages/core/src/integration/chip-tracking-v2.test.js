@@ -234,8 +234,8 @@ describe('Chip Tracking (v2)', () => {
         const playerChips = player ? player.chips : 0;
 
         if (winner.amount > 0) {
-          // Only expect increase if they actually won money
-          expect(playerChips).toBeGreaterThan(initialChips);
+          // Only expect increase if they actually won money (might break even if they win back exactly what they bet)
+          expect(playerChips).toBeGreaterThanOrEqual(initialChips);
         } else {
           // If they won nothing, they should have same or fewer chips
           expect(playerChips).toBeLessThanOrEqual(initialChips);
