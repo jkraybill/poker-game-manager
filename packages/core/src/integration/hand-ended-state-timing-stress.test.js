@@ -39,10 +39,12 @@ describe('hand:ended Event State Timing Issue - Stress Test', () => {
         const toCall = gameState.currentBet - myState.bet;
         if (toCall > 0) {
           // Must call or fold when facing a bet
-          return { action: Math.random() < 0.7 ? Action.FOLD : Action.CALL };
+          return Math.random() < 0.7
+            ? { action: Action.FOLD, timestamp: Date.now() }
+            : { action: Action.CALL, amount: toCall, timestamp: Date.now() };
         } else {
           // Can check when no bet to call
-          return { action: Action.CHECK };
+          return { action: Action.CHECK, timestamp: Date.now() };
         }
       };
 
@@ -59,10 +61,10 @@ describe('hand:ended Event State Timing Issue - Stress Test', () => {
         const toCall = gameState.currentBet - myState.bet;
         if (toCall > 0) {
           // Always call when facing a bet
-          return { action: Action.CALL };
+          return { action: Action.CALL, amount: toCall, timestamp: Date.now() };
         } else {
           // Check when no bet to call
-          return { action: Action.CHECK };
+          return { action: Action.CHECK, timestamp: Date.now() };
         }
       };
 
