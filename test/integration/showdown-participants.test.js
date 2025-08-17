@@ -245,12 +245,25 @@ describe('Showdown Participants Feature', () => {
     // Both players should be in showdownParticipants (all-in forces showdown)
     expect(handEndedData.showdownParticipants).toHaveLength(2);
     
-    // One should be winner, one should be loser
-    const winnerCount = handEndedData.showdownParticipants.filter(p => p.amount > 0).length;
-    const loserCount = handEndedData.showdownParticipants.filter(p => p.amount === 0).length;
+    // One should be winner, one should be loser (unless split pot)
+    const winners = handEndedData.showdownParticipants.filter(p => p.amount > 0);
+    const losers = handEndedData.showdownParticipants.filter(p => p.amount === 0);
     
-    expect(winnerCount).toBe(1);
-    expect(loserCount).toBe(1);
+    // Check if it's a split pot (both players won money)
+    const isSplitPot = winners.length === 2;
+    
+    if (isSplitPot) {
+      // In a split pot, both players should win equal amounts
+      expect(winners.length).toBe(2);
+      expect(losers.length).toBe(0);
+      // Verify they have the same hand rank (true split pot)
+      expect(winners[0].hand.rank).toBe(winners[1].hand.rank);
+      expect(winners[0].amount).toBe(winners[1].amount);
+    } else {
+      // Normal case: one winner, one loser
+      expect(winners.length).toBe(1);
+      expect(losers.length).toBe(1);
+    }
   });
 
   it('should maintain backward compatibility with existing winners array', async () => {
