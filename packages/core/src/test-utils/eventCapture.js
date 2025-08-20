@@ -248,7 +248,46 @@ export function waitForConditions(eventState, conditions, timeout = 5000) {
  * @returns {Promise} Resolves when hand ends
  */
 export function waitForHandEnd(eventState, timeout = 5000) {
-  return waitForConditions(eventState, { handEnded: true }, timeout);
+  // Enhanced condition that ensures winners data is properly set
+  const conditions = {
+    handEnded: true,
+    // Ensure winners array exists and is properly populated
+    // This prevents race conditions in CI where hand:ended fires before showdown is complete
+    validWinners: (state) => {
+      // Must have handEnded flag set
+      if (!state.handEnded) {
+        return false;
+      }
+
+      // Winners array must exist
+      if (!Array.isArray(state.winners)) {
+        return false;
+      }
+
+      // For split pot tests, we need at least one winner with valid data
+      // Empty winners array is valid for fold-only scenarios
+      if (state.winners.length === 0) {
+        return true;
+      }
+
+      // If there are winners, ensure each has required properties
+      return state.winners.every(
+        (winner) =>
+          winner &&
+          typeof winner.playerId === 'string' &&
+          typeof winner.amount === 'number' &&
+          winner.amount >= 0,
+      );
+    },
+  };
+
+  return waitForConditions(eventState, conditions, timeout).then((result) => {
+    // Add small delay to ensure all async processing is complete
+    // This is especially important in CI environments with timing variations
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(result), 50);
+    });
+  });
 }
 
 /**
