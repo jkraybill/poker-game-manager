@@ -1059,4 +1059,153 @@ export class Table extends WildcardEventEmitter {
     this.emit('table:closed', { tableId: this.id });
     this.removeAllListeners();
   }
+
+  /**
+   * Static method to run multiple poker simulations efficiently
+   * Enables Monte Carlo analysis with parallel execution support
+   *
+   * @param {Object} options - Simulation configuration
+   * @param {number} options.count - Number of simulations to run
+   * @param {Object} options.config - Table configuration for each simulation
+   * @param {Array<Player>} options.players - Player instances to use in simulations
+   * @param {BaseDeck} [options.deck] - Optional custom deck (will be reset for each simulation)
+   * @param {number} [options.parallel=1] - Number of concurrent simulations (default: sequential)
+   * @returns {Promise<Object>} Results with simulations array and aggregated statistics
+   */
+  static async runSimulations(options) {
+    const { count, config, players, deck = null, parallel = 1 } = options;
+
+    // Validate inputs
+    if (!count || count <= 0) {
+      throw new Error('count must be a positive number');
+    }
+    if (!config) {
+      throw new Error('config is required');
+    }
+    if (!players || !Array.isArray(players) || players.length === 0) {
+      throw new Error('players array is required and must not be empty');
+    }
+
+    const results = {
+      simulations: [],
+      stats: {
+        totalSimulations: count,
+        successfulSimulations: 0,
+        successRate: 0,
+        averagePot: 0,
+        playerWins: {},
+      },
+    };
+
+    // Initialize player win counters
+    players.forEach((player) => {
+      results.stats.playerWins[player.id] = 0;
+    });
+
+    // Create simulation tasks
+    const tasks = [];
+    for (let i = 0; i < count; i++) {
+      tasks.push(() => Table._runSingleSimulation(config, players, deck));
+    }
+
+    // Execute simulations (sequential or parallel)
+    if (parallel <= 1) {
+      // Sequential execution
+      for (const task of tasks) {
+        const result = await task();
+        results.simulations.push(result);
+      }
+    } else {
+      // Parallel execution with controlled concurrency
+      const batches = [];
+      for (let i = 0; i < tasks.length; i += parallel) {
+        batches.push(tasks.slice(i, i + parallel));
+      }
+
+      for (const batch of batches) {
+        const batchPromises = batch.map((task) => task());
+        const batchResults = await Promise.all(batchPromises);
+        results.simulations.push(...batchResults);
+      }
+    }
+
+    // Calculate aggregated statistics
+    let totalPot = 0;
+    let successCount = 0;
+
+    results.simulations.forEach((simulation) => {
+      if (simulation.success) {
+        successCount++;
+        totalPot += simulation.pot || 0;
+
+        // Count wins for each player
+        if (simulation.winners) {
+          simulation.winners.forEach((winner) => {
+            if (results.stats.playerWins[winner.playerId] !== undefined) {
+              results.stats.playerWins[winner.playerId]++;
+            }
+          });
+        }
+      }
+    });
+
+    results.stats.successfulSimulations = successCount;
+    results.stats.successRate = count > 0 ? successCount / count : 0;
+    results.stats.averagePot = successCount > 0 ? totalPot / successCount : 0;
+
+    return results;
+  }
+
+  /**
+   * Run a single simulation (internal helper)
+   * @private
+   */
+  static _runSingleSimulation(config, players, customDeck) {
+    try {
+      // Create a temporary table for this simulation
+      const table = new Table({
+        ...config,
+        simulationMode: true, // Force simulation mode for performance
+      });
+
+      // Set custom deck if provided (create a fresh copy for each simulation)
+      if (customDeck) {
+        // Create a fresh deck with the same configuration
+        const DeckClass = customDeck.constructor;
+        const freshDeck = new DeckClass({
+          cards: customDeck.originalCards,
+          dealAlternating: customDeck.dealAlternating,
+        });
+        table.setDeck(freshDeck);
+      }
+
+      // Add players to the table (with fresh chip amounts)
+      players.forEach((player, index) => {
+        // Reset player chips from config if specified
+        if (config.chipAmounts && config.chipAmounts[index]) {
+          player.chips = config.chipAmounts[index];
+        } else {
+          // Default chip amount if not specified
+          player.chips = 1000;
+        }
+        table.addPlayer(player);
+      });
+
+      // Run the hand synchronously
+      const result = table.runHandToCompletion();
+
+      // Clean up
+      table.close();
+
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        winners: [],
+        pot: 0,
+        finalChips: {},
+      };
+    }
+  }
 }
