@@ -47,9 +47,9 @@ describe('Tournament Elimination Ordering (Issue #28) - v2', () => {
       .addFlop('Kh', 'Qd', 'Jc')
       .addTurn('Th')
       .addRiver('9s')
-      .build();
+      .buildRiggedDeck();
 
-    table.setCustomDeck(customDeck);
+    table.setDeck(customDeck);
 
     const eliminationOrder = [];
     const playerNames = new Map();
@@ -298,9 +298,9 @@ describe('Tournament Elimination Ordering (Issue #28) - v2', () => {
       .addFlop('As', 'Ah', 'Kc') // Quad aces for winner
       .addTurn('Kd')
       .addRiver('Ks')
-      .build();
+      .buildRiggedDeck();
 
-    table.setCustomDeck(customDeck);
+    table.setDeck(customDeck);
 
     // Start game
     table.tryStartGame();

@@ -5,6 +5,7 @@ export { Player } from './Player.js';
 export { GameEngine } from './game/GameEngine.js';
 export { Deck } from './game/Deck.js';
 export { BaseDeck } from './game/BaseDeck.js';
+export { RiggedDeck } from './game/RiggedDeck.js';
 export { HandEvaluator } from './game/HandEvaluator.js';
 export { WildcardEventEmitter } from './base/WildcardEventEmitter.js';
 export * from './types/index.js';

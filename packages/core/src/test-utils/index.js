@@ -81,6 +81,32 @@ import {
 // Import Action for convenience
 export { Action } from '../types/index.js';
 
+// Import RiggedDeck for conversions
+import { RiggedDeck } from '../game/RiggedDeck.js';
+
+// Helper to convert legacy array decks to RiggedDeck
+export function createRiggedDeckFromArray(cardArray) {
+  // Convert card objects to strings
+  const cardStrings = cardArray.map((card) => {
+    if (typeof card === 'string') {
+      return card;
+    }
+    if (card && typeof card.toString === 'function') {
+      return card.toString();
+    }
+    // Handle object with rank and suit
+    if (card && card.rank && card.suit) {
+      return `${card.rank}${card.suit}`;
+    }
+    throw new Error(`Invalid card format: ${JSON.stringify(card)}`);
+  });
+
+  return new RiggedDeck({
+    cards: cardStrings,
+    dealAlternating: false,
+  });
+}
+
 // Table helpers for new explicit start API
 export {
   createAutoStartTable,
@@ -113,7 +139,7 @@ export function createTestScenario(config = {}) {
 
   // Set custom deck if provided
   if (customDeck) {
-    table.setCustomDeck(customDeck);
+    table.setDeck(customDeck);
   }
 
   // Set up event capture

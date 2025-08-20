@@ -35,6 +35,7 @@ import {
   StrategicPlayer,
   Action,
   cleanupTables,
+  createRiggedDeckFromArray,
 } from '../test-utils/index.js';
 
 describe('5-Player Family Pot (v2)', () => {
@@ -109,7 +110,7 @@ describe('5-Player Family Pot (v2)', () => {
 
     // Set up custom deck to ensure exactly one winner (Player 1 gets the nuts)
     // Player 1 will have AA, others will have weaker hands
-    const customDeck = [
+    const customDeckArray = [
       // First card to each player (starting from dealer+1)
       {
         rank: 'A',
@@ -245,8 +246,9 @@ describe('5-Player Family Pot (v2)', () => {
         },
       },
     ];
+    const customDeck = createRiggedDeckFromArray(customDeckArray);
 
-    table.setCustomDeck(customDeck);
+    table.setDeck(customDeck);
 
     // Start game
     table.tryStartGame();

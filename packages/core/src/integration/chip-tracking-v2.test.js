@@ -14,6 +14,7 @@ import {
   StrategicPlayer,
   Action,
   cleanupTables,
+  createRiggedDeckFromArray,
 } from '../test-utils/index.js';
 
 describe('Chip Tracking (v2)', () => {
@@ -283,7 +284,7 @@ describe('Chip Tracking (v2)', () => {
 
     // Set up custom deck to ensure deterministic outcome
     // Short stack gets pocket Aces, big stack gets King-Queen
-    const customDeck = [
+    const customDeckArray = [
       // First card to each player (SB/shortStack first, then BB/bigStack)
       {
         rank: 'A',
@@ -377,8 +378,9 @@ describe('Chip Tracking (v2)', () => {
         },
       },
     ];
+    const customDeck = createRiggedDeckFromArray(customDeckArray);
 
-    table.setCustomDeck(customDeck);
+    table.setDeck(customDeck);
 
     table.tryStartGame();
 

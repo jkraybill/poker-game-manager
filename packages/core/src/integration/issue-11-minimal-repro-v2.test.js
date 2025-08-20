@@ -52,9 +52,9 @@ describe('Issue #11 - Minimal Pot Distribution Bug (v2)', () => {
       .addFlop('3d', '5s', '7h')
       .addTurn('9h')
       .addRiver('Jc')
-      .build();
+      .buildRiggedDeck();
 
-    table.setCustomDeck(customDeck);
+    table.setDeck(customDeck);
 
     // Strategy for each player based on original test
     const p1Strategy = ({ myState }) => {

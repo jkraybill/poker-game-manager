@@ -6,6 +6,7 @@ import {
   cleanupTables,
   waitForHandEnd,
   Action,
+  createRiggedDeckFromArray,
 } from '../test-utils/index.js';
 
 /**
@@ -43,7 +44,7 @@ describe('Issue #11 - Minimal Pot Distribution Bug', () => {
     const events = setupEventCapture(table);
 
     // Same deck as complex scenario
-    const customDeck = [
+    const customDeckArray = [
       {
         rank: 'A',
         suit: 's',
@@ -143,8 +144,9 @@ describe('Issue #11 - Minimal Pot Distribution Bug', () => {
         },
       },
     ];
+    const customDeck = createRiggedDeckFromArray(customDeckArray);
 
-    table.setCustomDeck(customDeck);
+    table.setDeck(customDeck);
 
     // Create action-based strategies
     const createActionStrategy = (actions) => {
@@ -302,7 +304,7 @@ describe('Issue #11 - Minimal Pot Distribution Bug', () => {
     });
 
     // Deterministic deck: P1 gets AA and wins
-    const customDeck = [
+    const customDeckArray = [
       // Deal to each player
       { rank: 'A', suit: 's', toString() { return 'As'; } }, // P1
       { rank: '2', suit: 'd', toString() { return '2d'; } }, // P2
@@ -321,8 +323,9 @@ describe('Issue #11 - Minimal Pot Distribution Bug', () => {
       { rank: 'T', suit: 's', toString() { return 'Ts'; } },
       { rank: 'J', suit: 'h', toString() { return 'Jh'; } },
     ];
+    const customDeck = createRiggedDeckFromArray(customDeckArray);
 
-    table.setCustomDeck(customDeck);
+    table.setDeck(customDeck);
 
     // Create players
     const p1 = new TestPlayer({

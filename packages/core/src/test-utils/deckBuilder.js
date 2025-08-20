@@ -5,6 +5,8 @@
  * and burn cards. Handles the complexity of poker dealing sequence automatically.
  */
 
+import { RiggedDeck } from '../game/RiggedDeck.js';
+
 /**
  * Builder class for creating custom poker decks
  */
@@ -37,9 +39,10 @@ export class DeckBuilder {
       }
     });
 
-    // Deal first card to each player, then second card to each player
-    for (let cardIndex = 0; cardIndex < 2; cardIndex++) {
-      for (let playerIndex = 0; playerIndex < this.playerCount; playerIndex++) {
+    // Deal cards in sequential order: P1C1, P1C2, P2C1, P2C2, etc.
+    // This matches how GameEngine calls dealHoleCards() for each player
+    for (let playerIndex = 0; playerIndex < this.playerCount; playerIndex++) {
+      for (let cardIndex = 0; cardIndex < 2; cardIndex++) {
         const cardStr = hands[playerIndex][cardIndex];
         this.cards.push(this.createCard(cardStr));
       }
@@ -180,6 +183,23 @@ export class DeckBuilder {
       throw new Error('Deck is empty. Add some cards before building.');
     }
     return [...this.cards]; // Return copy to prevent mutation
+  }
+
+  /**
+   * Build and return a RiggedDeck instance
+   * @returns {RiggedDeck} RiggedDeck instance ready for use with Table.setDeck()
+   */
+  buildRiggedDeck() {
+    if (this.cards.length === 0) {
+      throw new Error('Deck is empty. Add some cards before building.');
+    }
+
+    // Convert card objects to string array for RiggedDeck
+    const cardStrings = this.cards.map((card) => card.toString());
+    return new RiggedDeck({
+      cards: cardStrings,
+      dealAlternating: false, // Cards are already in proper dealing order
+    });
   }
 
   /**

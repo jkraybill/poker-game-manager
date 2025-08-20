@@ -3,6 +3,8 @@ import { WildcardEventEmitter } from './base/WildcardEventEmitter.js';
 import { GameEngine } from './game/GameEngine.js';
 import { TableState, PlayerState } from './types/index.js';
 import { validateIntegerAmount } from './utils/validation.js';
+import { Deck } from './game/Deck.js';
+import { BaseDeck } from './game/BaseDeck.js';
 
 /**
  * Represents a poker table that manages games and players
@@ -33,8 +35,15 @@ export class Table extends WildcardEventEmitter {
     this.state = TableState.WAITING;
     this.gameEngine = null;
     this.gameCount = 0;
-    this.customDeck = null;
+    this.deck = null; // Deck instance for custom implementations
     this.handStartingChips = new Map(); // Track chip counts at start of each hand
+
+    // Initialize deck from config or create default
+    if (config.deck) {
+      this.setDeck(config.deck);
+    } else {
+      this.deck = new Deck();
+    }
 
     // Dead button rule tracking
     this.playerOrder = []; // Ordered list of player IDs by seat
@@ -132,14 +141,20 @@ export class Table extends WildcardEventEmitter {
   }
 
   /**
-   * Set a custom deck for deterministic testing
-   * @param {Array} cards - Array of card objects
+   * Set a custom deck instance for the next game
+   * @param {BaseDeck} deck - Deck instance that extends BaseDeck
    */
-  setCustomDeck(cards) {
+  setDeck(deck) {
     if (this.state === TableState.IN_PROGRESS) {
-      throw new Error('Cannot set custom deck while game is in progress');
+      throw new Error('Cannot change deck while game is in progress');
     }
-    this.customDeck = cards;
+
+    // Validate deck extends BaseDeck
+    if (!(deck instanceof BaseDeck)) {
+      throw new Error('Provided deck must extend BaseDeck');
+    }
+
+    this.deck = deck;
   }
 
   /**
@@ -296,7 +311,7 @@ export class Table extends WildcardEventEmitter {
           blinds: this.config.blinds,
           timeout: this.config.timeout,
           dealerButton: this.currentDealerButton,
-          customDeck: this.customDeck,
+          deck: this.deck, // Deck instance
           buttonPlayerIndex,
           smallBlindPlayerIndex,
           bigBlindPlayerIndex,
@@ -358,9 +373,6 @@ export class Table extends WildcardEventEmitter {
 
         await this.gameEngine.start();
 
-        // Clear custom deck after use
-        this.customDeck = null;
-
         // Game started successfully
         return {
           success: true,
@@ -412,7 +424,6 @@ export class Table extends WildcardEventEmitter {
               maxPlayers: this.config.maxPlayers,
               variant: this.config.variant,
             },
-            customDeck: this.customDeck ? 'present' : 'null',
             activePlayersList: activePlayersList?.length || 0,
           },
         };

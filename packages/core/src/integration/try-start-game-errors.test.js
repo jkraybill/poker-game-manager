@@ -148,16 +148,16 @@ describe('Table tryStartGame Error Reporting', () => {
     table.addPlayer(player1);
     table.addPlayer(player2);
 
-    // Set a custom deck that's invalid to cause an engine error
-    table.setCustomDeck(['invalid', 'card', 'format']);
+    // Don't set an invalid deck - let the player error cause the ENGINE_ERROR
+    // The game will start but fail when player1.getAction throws
 
-    // Try to start - should fail with engine error
+    // Try to start - should fail with engine error when player throws
     const result = await table.tryStartGame();
+
+    // The game should fail due to the player error
     expect(result.success).toBe(false);
     expect(result.reason).toBe('ENGINE_ERROR');
-    expect(result.details.error).toBeDefined();
-    expect(result.details.stack).toBeDefined();
-    expect(result.details.tableId).toBe(table.id);
+    expect(result.details.error).toContain('Simulated player error');
     expect(result.details.message).toContain('Failed to start game engine');
 
     // Verify state reverted to WAITING

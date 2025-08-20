@@ -57,9 +57,9 @@ describe('All-In No Further Betting Bug', () => {
           ['Ah', 'Ad'], // Player 1 (BB) - Aces
         ])
         .addCommunityCards(['2c', '7d', '9s', '3h', '4c']) // No help for either
-        .build();
+        .buildRiggedDeck();
 
-      table.setCustomDeck(riggedDeck);
+      table.setDeck(riggedDeck);
 
       // Track all action requests to verify no post-all-in actions
       const actionRequests = [];
@@ -191,9 +191,9 @@ describe('All-In No Further Betting Bug', () => {
           ['Kh', 'Kd'], // Player 2 (BB) - Kings
         ])
         .addCommunityCards(['2c', '7d', '9s', '3h', '4c'])
-        .build();
+        .buildRiggedDeck();
 
-      table.setCustomDeck(riggedDeck);
+      table.setDeck(riggedDeck);
 
       // Track action requests
       const actionRequestsByPhase = {
@@ -320,9 +320,9 @@ describe('All-In No Further Betting Bug', () => {
           ['Ah', 'Ad'], // Player 3 (UTG) - Best hand
         ])
         .addCommunityCards(['2c', '7d', '8s', '3h', '4c'])
-        .build();
+        .buildRiggedDeck();
 
-      table.setCustomDeck(riggedDeck);
+      table.setDeck(riggedDeck);
 
       let postAllInActionRequests = 0;
       let allPlayersAllIn = false;

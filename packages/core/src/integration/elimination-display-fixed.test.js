@@ -6,6 +6,7 @@ import {
   cleanupTables,
   waitForHandEnd,
   Action,
+  createRiggedDeckFromArray,
 } from '../test-utils/index.js';
 
 /**
@@ -107,7 +108,7 @@ describe('Elimination Display Fixed', () => {
     });
 
     // Set up custom deck where A wins with AA
-    const customDeck = [
+    const customDeckArray = [
       // Deal order for 3 players
       {
         rank: 'A',
@@ -209,8 +210,9 @@ describe('Elimination Display Fixed', () => {
         },
       }, // river
     ];
+    const customDeck = createRiggedDeckFromArray(customDeckArray);
 
-    table.setCustomDeck(customDeck);
+    table.setDeck(customDeck);
 
     const eliminationEvents = [];
     let handsPlayed = 0;

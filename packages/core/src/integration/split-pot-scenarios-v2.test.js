@@ -20,6 +20,7 @@ import {
   StrategicPlayer,
   Action,
   cleanupTables,
+  createRiggedDeckFromArray,
 } from '../test-utils/index.js';
 
 describe('Split Pot Scenarios (v2)', () => {
@@ -53,7 +54,7 @@ describe('Split Pot Scenarios (v2)', () => {
     // deck.draw() uses shift(), deals 1 card at a time with burn cards
     // Player 1: 8h 9h, Player 2: 8d 9d
     // Board: 5c 6s 7h Tc Jc (making 5-9 straight for both)
-    const customDeck = [
+    const customDeckArray = [
       // First card to each player
       {
         rank: '8',
@@ -144,8 +145,9 @@ describe('Split Pot Scenarios (v2)', () => {
         },
       }, // River
     ];
+    const customDeck = createRiggedDeckFromArray(customDeckArray);
 
-    table.setCustomDeck(customDeck);
+    table.setDeck(customDeck);
 
     // Set up event capture
     events = setupEventCapture(table);
@@ -226,7 +228,7 @@ describe('Split Pot Scenarios (v2)', () => {
     // Set custom deck for board play scenario
     // All players get weak cards, board has royal flush
     // deck.draw() uses shift(), deals 1 card at a time with burn cards
-    const customDeck = [
+    const customDeckArray = [
       // First card to each player
       {
         rank: '2',
@@ -331,8 +333,9 @@ describe('Split Pot Scenarios (v2)', () => {
         },
       }, // River
     ];
+    const customDeck = createRiggedDeckFromArray(customDeckArray);
 
-    table.setCustomDeck(customDeck);
+    table.setDeck(customDeck);
 
     // Set up event capture
     events = setupEventCapture(table);
@@ -396,7 +399,7 @@ describe('Split Pot Scenarios (v2)', () => {
 
     // Set custom deck for 2-way split with player 3 losing
     // deck.draw() uses shift(), deals 1 card at a time with burn cards
-    const customDeck = [
+    const customDeckArray = [
       // First card to each player
       {
         rank: 'A',
@@ -501,8 +504,9 @@ describe('Split Pot Scenarios (v2)', () => {
         },
       }, // River
     ];
+    const customDeck = createRiggedDeckFromArray(customDeckArray);
 
-    table.setCustomDeck(customDeck);
+    table.setDeck(customDeck);
 
     // Set up event capture
     events = setupEventCapture(table);
@@ -584,7 +588,7 @@ describe('Split Pot Scenarios (v2)', () => {
 
     // Set custom deck for split main pot scenario
     // deck.draw() uses shift(), deals 1 card at a time with burn cards
-    const customDeck = [
+    const customDeckArray = [
       // First card to each player
       {
         rank: 'A',
@@ -689,8 +693,9 @@ describe('Split Pot Scenarios (v2)', () => {
         },
       }, // River
     ];
+    const customDeck = createRiggedDeckFromArray(customDeckArray);
 
-    table.setCustomDeck(customDeck);
+    table.setDeck(customDeck);
 
     // Set up event capture
     events = setupEventCapture(table);

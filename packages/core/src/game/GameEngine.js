@@ -57,7 +57,7 @@ export class GameEngine extends WildcardEventEmitter {
     this.roundBets = new Map();
     this.playerHands = new Map();
     this.lastBettor = null;
-    this.customDeck = config.customDeck || null;
+    this.deck = config.deck || null; // Deck instance
     this.raiseHistory = []; // Track raise increments in current round
     this.bettingRoundStarted = null; // v4.4.7: Track which phase started betting to prevent duplicates
     this.endingBettingRound = false; // v4.4.7: Prevent promptNextPlayer after endBettingRound starts
@@ -91,14 +91,12 @@ export class GameEngine extends WildcardEventEmitter {
     // Reset game state
     this.board = [];
 
-    // Use custom deck if provided, otherwise create new deck
-    if (this.customDeck && this.customDeck.length > 0) {
+    // Use provided deck instance or create new one
+    if (!this.deck) {
       this.deck = new Deck();
-      this.deck.cards = [...this.customDeck];
-    } else {
-      this.deck = new Deck();
-      this.deck.shuffle();
     }
+    this.deck.reset();
+    this.deck.shuffle();
 
     this.roundBets.clear();
     this.playerHands.clear();
@@ -145,16 +143,16 @@ export class GameEngine extends WildcardEventEmitter {
       (p) => p.state === PlayerState.ACTIVE,
     );
 
-    // Deal first card to each player
-    for (const player of activePlayers) {
-      const firstCard = this.deck.draw();
-      this.playerHands.set(player.id, [firstCard]);
+    // Use deck API to deal hole cards
+    for (let i = 0; i < activePlayers.length; i++) {
+      const player = activePlayers[i];
+      const cards = this.deck.dealHoleCards(player.id, i);
+      this.playerHands.set(player.id, cards);
     }
 
-    // Deal second card to each player
+    // Notify players of their cards
     for (const player of activePlayers) {
       const cards = this.playerHands.get(player.id);
-      cards.push(this.deck.draw());
 
       // Notify player of their cards - fail fast on any error
       try {
@@ -1210,9 +1208,8 @@ export class GameEngine extends WildcardEventEmitter {
 
     // Burn one card
     this.deck.draw();
-
     // Deal three flop cards
-    const flop = [this.deck.draw(), this.deck.draw(), this.deck.draw()];
+    const flop = this.deck.dealFlop();
     this.board.push(...flop);
 
     this.emit('cards:community', {
@@ -1247,9 +1244,8 @@ export class GameEngine extends WildcardEventEmitter {
 
     // Burn one card
     this.deck.draw();
-
     // Deal the turn card
-    const turn = this.deck.draw();
+    const turn = this.deck.dealTurn();
     this.board.push(turn);
 
     this.emit('cards:community', {
@@ -1283,9 +1279,8 @@ export class GameEngine extends WildcardEventEmitter {
 
     // Burn one card
     this.deck.draw();
-
     // Deal the river card
-    const river = this.deck.draw();
+    const river = this.deck.dealRiver();
     this.board.push(river);
 
     this.emit('cards:community', {

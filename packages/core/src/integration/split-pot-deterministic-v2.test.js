@@ -13,6 +13,7 @@ import {
   StrategicPlayer,
   Action,
   cleanupTables,
+  createRiggedDeckFromArray,
 } from '../test-utils/index.js';
 
 describe('Split Pot Deterministic Tests (v2)', () => {
@@ -44,7 +45,7 @@ describe('Split Pot Deterministic Tests (v2)', () => {
 
     // Set custom deck BEFORE adding players
     // Both players get AA, board has low cards
-    const customDeck = [
+    const customDeckArray = [
       // First card to each player
       {
         rank: 'A',
@@ -135,8 +136,9 @@ describe('Split Pot Deterministic Tests (v2)', () => {
         },
       }, // River
     ];
+    const customDeck = createRiggedDeckFromArray(customDeckArray);
 
-    table.setCustomDeck(customDeck);
+    table.setDeck(customDeck);
 
     // Set up event capture
     events = setupEventCapture(table);
@@ -204,7 +206,7 @@ describe('Split Pot Deterministic Tests (v2)', () => {
 
     // Set custom deck BEFORE adding players
     // All players get pocket pairs, board makes everyone play the board
-    const customDeck = [
+    const customDeckArray = [
       // First card to each player
       {
         rank: '2',
@@ -309,8 +311,9 @@ describe('Split Pot Deterministic Tests (v2)', () => {
         },
       }, // River
     ];
+    const customDeck = createRiggedDeckFromArray(customDeckArray);
 
-    table.setCustomDeck(customDeck);
+    table.setDeck(customDeck);
 
     // Set up event capture
     events = setupEventCapture(table);

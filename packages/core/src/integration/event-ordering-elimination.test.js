@@ -6,6 +6,7 @@ import {
   cleanupTables,
   waitForHandEnd,
   Action,
+  createRiggedDeckFromArray,
 } from '../test-utils/index.js';
 
 /**
@@ -48,7 +49,7 @@ describe('Event Ordering - Elimination (Issue #33)', () => {
     events = setupEventCapture(table);
 
     // Create a custom deck where player 1 gets better cards than player 2
-    const customDeck = [
+    const customDeckArray = [
       // Player 1 gets AA (will win)
       {
         rank: 'A',
@@ -139,8 +140,9 @@ describe('Event Ordering - Elimination (Issue #33)', () => {
         },
       }, // river
     ];
+    const customDeck = createRiggedDeckFromArray(customDeckArray);
 
-    table.setCustomDeck(customDeck);
+    table.setDeck(customDeck);
 
     const eventLog = [];
 

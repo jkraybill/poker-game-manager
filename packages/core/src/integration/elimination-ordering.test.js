@@ -7,6 +7,7 @@ import {
   cleanupTables,
   waitForHandEnd,
   Action,
+  createRiggedDeckFromArray,
 } from '../test-utils/index.js';
 
 /**
@@ -49,7 +50,7 @@ describe('Tournament Elimination Ordering (Issue #28)', () => {
     events = setupEventCapture(table);
 
     // Create a rigged deck - Big Stack gets the best hand, others get weak hands
-    const riggedDeck = [
+    const riggedDeckArray = [
       // Hole cards - dealing order is player 0, 1, 2, then player 0, 1, 2 again
       // Player 0 (Small Stack) gets 7-2 offsuit (worst hand)
       {
@@ -156,8 +157,9 @@ describe('Tournament Elimination Ordering (Issue #28)', () => {
         },
       }, // River
     ];
+    const riggedDeck = createRiggedDeckFromArray(riggedDeckArray);
 
-    table.setCustomDeck(riggedDeck);
+    table.setDeck(riggedDeck);
 
     const eliminationOrder = [];
     const playerNames = new Map();
@@ -243,7 +245,7 @@ describe('Tournament Elimination Ordering (Issue #28)', () => {
     });
 
     // Set custom deck on new table
-    table.setCustomDeck(riggedDeck);
+    table.setDeck(riggedDeck);
 
     // Add players in the order that matches chip amounts
     table.addPlayer(smallStack);
@@ -472,7 +474,7 @@ describe('Tournament Elimination Ordering (Issue #28)', () => {
     console.log('Expected elimination order: Small -> Medium -> Big');
 
     // Use a rigged deck that gives winner the best hand
-    const riggedDeck = [
+    const riggedDeckArray = [
       // Winner gets pocket aces
       {
         rank: 'A',
@@ -590,8 +592,9 @@ describe('Tournament Elimination Ordering (Issue #28)', () => {
         },
       }, // River
     ];
+    const riggedDeck = createRiggedDeckFromArray(riggedDeckArray);
 
-    table.setCustomDeck(riggedDeck);
+    table.setDeck(riggedDeck);
 
     table.tryStartGame();
     await waitForHandEnd(events);
@@ -691,7 +694,7 @@ describe('Tournament Elimination Ordering (Issue #28)', () => {
     table.addPlayer(player2);
 
     // Create custom deck to ensure Player 1 wins and Player 2 loses all chips
-    const customDeck = [
+    const customDeckArray = [
       // Player 1 gets pocket aces
       {
         rank: 'A',
@@ -784,8 +787,9 @@ describe('Tournament Elimination Ordering (Issue #28)', () => {
         },
       },
     ];
+    const customDeck = createRiggedDeckFromArray(customDeckArray);
 
-    table.setCustomDeck(customDeck);
+    table.setDeck(customDeck);
 
     table.tryStartGame();
     await waitForHandEnd(events);
