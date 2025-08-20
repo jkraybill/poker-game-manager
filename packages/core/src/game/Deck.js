@@ -1,8 +1,11 @@
+import { BaseDeck } from './BaseDeck.js';
+
 /**
  * Standard 52-card deck implementation
  */
-export class Deck {
+export class Deck extends BaseDeck {
   constructor() {
+    super();
     this.cards = [];
     this.reset();
   }
@@ -31,13 +34,7 @@ export class Deck {
 
     for (const suit of suits) {
       for (const rank of ranks) {
-        this.cards.push({
-          rank,
-          suit,
-          toString() {
-            return `${rank}${suit}`;
-          },
-        });
+        this.cards.push(this.createCard(rank, suit));
       }
     }
   }
@@ -67,5 +64,39 @@ export class Deck {
    */
   getRemaining() {
     return this.cards.length;
+  }
+
+  /**
+   * Deal hole cards to a player
+   * @param {string} _playerId - The player's ID
+   * @param {number} _seatPosition - The player's seat position
+   * @returns {Array} Array of 2 cards
+   */
+  dealHoleCards(_playerId, _seatPosition) {
+    return [this.draw(), this.draw()];
+  }
+
+  /**
+   * Deal the flop (3 community cards)
+   * @returns {Array} Array of 3 cards
+   */
+  dealFlop() {
+    return [this.draw(), this.draw(), this.draw()];
+  }
+
+  /**
+   * Deal the turn (1 community card)
+   * @returns {Object} Single card object
+   */
+  dealTurn() {
+    return this.draw();
+  }
+
+  /**
+   * Deal the river (1 community card)
+   * @returns {Object} Single card object
+   */
+  dealRiver() {
+    return this.draw();
   }
 }
