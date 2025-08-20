@@ -51,11 +51,11 @@ describe('Split Pot Scenarios (v2)', () => {
     table = result.table;
 
     // Set custom deck BEFORE adding players
-    // deck.draw() uses shift(), deals 1 card at a time with burn cards
+    // GameEngine deals sequentially: P1C1, P1C2, P2C1, P2C2
     // Player 1: 8h 9h, Player 2: 8d 9d
     // Board: 5c 6s 7h Tc Jc (making 5-9 straight for both)
     const customDeckArray = [
-      // First card to each player
+      // Player 1 cards
       {
         rank: '8',
         suit: 'h',
@@ -64,20 +64,20 @@ describe('Split Pot Scenarios (v2)', () => {
         },
       }, // P1 first card
       {
-        rank: '8',
-        suit: 'd',
-        toString() {
-          return '8d';
-        },
-      }, // P2 first card
-      // Second card to each player
-      {
         rank: '9',
         suit: 'h',
         toString() {
           return '9h';
         },
       }, // P1 second card
+      // Player 2 cards
+      {
+        rank: '8',
+        suit: 'd',
+        toString() {
+          return '8d';
+        },
+      }, // P2 first card
       {
         rank: '9',
         suit: 'd',
@@ -227,9 +227,9 @@ describe('Split Pot Scenarios (v2)', () => {
 
     // Set custom deck for board play scenario
     // All players get weak cards, board has royal flush
-    // deck.draw() uses shift(), deals 1 card at a time with burn cards
+    // GameEngine deals sequentially: P1C1, P1C2, P2C1, P2C2, P3C1, P3C2
     const customDeckArray = [
-      // First card to each player
+      // Player 1 cards
       {
         rank: '2',
         suit: 'h',
@@ -238,6 +238,14 @@ describe('Split Pot Scenarios (v2)', () => {
         },
       }, // P1 first card
       {
+        rank: '3',
+        suit: 'h',
+        toString() {
+          return '3h';
+        },
+      }, // P1 second card
+      // Player 2 cards
+      {
         rank: '2',
         suit: 'd',
         toString() {
@@ -245,27 +253,20 @@ describe('Split Pot Scenarios (v2)', () => {
         },
       }, // P2 first card
       {
-        rank: '2',
-        suit: 'c',
-        toString() {
-          return '2c';
-        },
-      }, // P3 first card
-      // Second card to each player
-      {
-        rank: '3',
-        suit: 'h',
-        toString() {
-          return '3h';
-        },
-      }, // P1 second card
-      {
         rank: '3',
         suit: 'd',
         toString() {
           return '3d';
         },
       }, // P2 second card
+      // Player 3 cards
+      {
+        rank: '2',
+        suit: 'c',
+        toString() {
+          return '2c';
+        },
+      }, // P3 first card
       {
         rank: '3',
         suit: 'c',
@@ -398,9 +399,9 @@ describe('Split Pot Scenarios (v2)', () => {
     table = result.table;
 
     // Set custom deck for 2-way split with player 3 losing
-    // deck.draw() uses shift(), deals 1 card at a time with burn cards
+    // GameEngine deals sequentially: P1C1, P1C2, P2C1, P2C2, P3C1, P3C2
     const customDeckArray = [
-      // First card to each player
+      // Player 1 cards (AA)
       {
         rank: 'A',
         suit: 's',
@@ -410,26 +411,19 @@ describe('Split Pot Scenarios (v2)', () => {
       }, // P1 first card
       {
         rank: 'A',
-        suit: 'c',
-        toString() {
-          return 'Ac';
-        },
-      }, // P2 first card
-      {
-        rank: '2',
-        suit: 'h',
-        toString() {
-          return '2h';
-        },
-      }, // P3 first card
-      // Second card to each player
-      {
-        rank: 'A',
         suit: 'h',
         toString() {
           return 'Ah';
         },
       }, // P1 second card
+      // Player 2 cards (AA)
+      {
+        rank: 'A',
+        suit: 'c',
+        toString() {
+          return 'Ac';
+        },
+      }, // P2 first card
       {
         rank: 'A',
         suit: 'd',
@@ -437,6 +431,14 @@ describe('Split Pot Scenarios (v2)', () => {
           return 'Ad';
         },
       }, // P2 second card
+      // Player 3 cards (23)
+      {
+        rank: '2',
+        suit: 'h',
+        toString() {
+          return '2h';
+        },
+      }, // P3 first card
       {
         rank: '3',
         suit: 'd',
@@ -587,9 +589,9 @@ describe('Split Pot Scenarios (v2)', () => {
     table = result.table;
 
     // Set custom deck for split main pot scenario
-    // deck.draw() uses shift(), deals 1 card at a time with burn cards
+    // GameEngine deals sequentially: P1C1, P1C2, P2C1, P2C2, P3C1, P3C2
     const customDeckArray = [
-      // First card to each player
+      // Short stack (P1) cards (AA)
       {
         rank: 'A',
         suit: 's',
@@ -599,26 +601,19 @@ describe('Split Pot Scenarios (v2)', () => {
       }, // Short stack first card
       {
         rank: 'A',
-        suit: 'c',
-        toString() {
-          return 'Ac';
-        },
-      }, // P2 first card
-      {
-        rank: 'K',
-        suit: 's',
-        toString() {
-          return 'Ks';
-        },
-      }, // P3 first card
-      // Second card to each player
-      {
-        rank: 'A',
         suit: 'h',
         toString() {
           return 'Ah';
         },
       }, // Short stack second card
+      // Player 2 cards (AA)
+      {
+        rank: 'A',
+        suit: 'c',
+        toString() {
+          return 'Ac';
+        },
+      }, // P2 first card
       {
         rank: 'A',
         suit: 'd',
@@ -626,6 +621,14 @@ describe('Split Pot Scenarios (v2)', () => {
           return 'Ad';
         },
       }, // P2 second card
+      // Player 3 cards (KK)
+      {
+        rank: 'K',
+        suit: 's',
+        toString() {
+          return 'Ks';
+        },
+      }, // P3 first card
       {
         rank: 'K',
         suit: 'h',

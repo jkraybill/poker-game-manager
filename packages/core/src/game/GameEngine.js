@@ -61,6 +61,7 @@ export class GameEngine extends WildcardEventEmitter {
     this.raiseHistory = []; // Track raise increments in current round
     this.bettingRoundStarted = null; // v4.4.7: Track which phase started betting to prevent duplicates
     this.endingBettingRound = false; // v4.4.7: Prevent promptNextPlayer after endBettingRound starts
+    this.simulationMode = config.simulationMode === true; // Fast mode for simulations
   }
 
   /**
@@ -456,39 +457,54 @@ export class GameEngine extends WildcardEventEmitter {
       bettingDetails,
     });
 
-    // Get action from player with timeout
-    let timeoutId;
-    const timeoutPromise = new Promise((_, reject) => {
-      timeoutId = setTimeout(
-        () =>
-          reject(
-            new Error(
-              `Player ${currentPlayer.id} action timeout after ${this.config.timeout}ms`,
-            ),
-          ),
-        this.config.timeout,
-      );
-    });
-
+    // Get action from player with timeout (skip timeout in simulation mode)
     let action;
-    try {
-      action = await Promise.race([
-        currentPlayer.getAction(gameState),
-        timeoutPromise,
-      ]);
-    } catch (error) {
-      // Clear timeout immediately
+    let timeoutId;
+
+    if (this.simulationMode) {
+      // In simulation mode, skip timeout entirely
+      try {
+        action = await currentPlayer.getAction(gameState);
+      } catch (error) {
+        // Player broke contract - fatal error, no retry
+        throw new Error(
+          `Fatal: Player ${currentPlayer.id} threw error in getAction(): ${error.message}. ` +
+            'This is a contract violation. Players must return valid actions or timeout gracefully.',
+        );
+      }
+    } else {
+      // Normal mode with timeout
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(
+          () =>
+            reject(
+              new Error(
+                `Player ${currentPlayer.id} action timeout after ${this.config.timeout}ms`,
+              ),
+            ),
+          this.config.timeout,
+        );
+      });
+
+      try {
+        action = await Promise.race([
+          currentPlayer.getAction(gameState),
+          timeoutPromise,
+        ]);
+      } catch (error) {
+        // Clear timeout immediately
+        clearTimeout(timeoutId);
+
+        // Player broke contract - fatal error, no retry
+        throw new Error(
+          `Fatal: Player ${currentPlayer.id} threw error in getAction(): ${error.message}. ` +
+            'This is a contract violation. Players must return valid actions or timeout gracefully.',
+        );
+      }
+
+      // Clear the timeout since action completed
       clearTimeout(timeoutId);
-
-      // Player broke contract - fatal error, no retry
-      throw new Error(
-        `Fatal: Player ${currentPlayer.id} threw error in getAction(): ${error.message}. ` +
-          'This is a contract violation. Players must return valid actions or timeout gracefully.',
-      );
     }
-
-    // Clear the timeout since action completed
-    clearTimeout(timeoutId);
 
     // Check if the player returned a valid action
     if (!action) {
@@ -1738,6 +1754,410 @@ export class GameEngine extends WildcardEventEmitter {
     this.phase = GamePhase.ENDED;
     this.emit('game:aborted');
     this.removeAllListeners();
+  }
+
+  /**
+   * Run the hand to completion synchronously
+   * Used for Monte Carlo simulations and fast hand resolution
+   * @returns {Object} Complete hand results
+   */
+  runToCompletion() {
+    try {
+      // Validate we have players
+      if (!this.players || this.players.length === 0) {
+        throw new Error('No players in game');
+      }
+
+      // Initialize if not started
+      if (this.phase === GamePhase.WAITING) {
+        // Initialize hand synchronously (initializeHand already does everything)
+        this.initializeHand();
+        // Note: initializeHand already deals cards, posts blinds, and sets phase to PRE_FLOP
+
+        // Make sure dealerButton is set for betting round logic
+        this.dealerButton = this.dealerButtonIndex || 0;
+      }
+
+      // Run through all phases (with safety check)
+      let phaseIterations = 0;
+      const maxPhaseIterations = 20; // Safety limit
+
+      while (
+        this.phase !== GamePhase.ENDED &&
+        phaseIterations < maxPhaseIterations
+      ) {
+        phaseIterations++;
+        switch (this.phase) {
+          case GamePhase.PRE_FLOP:
+          case GamePhase.FLOP:
+          case GamePhase.TURN:
+          case GamePhase.RIVER:
+            // Process betting round synchronously
+            this.processBettingRoundSync();
+            break;
+
+          case GamePhase.SHOWDOWN:
+            // Process showdown
+            this.processShowdownSync();
+            break;
+
+          default:
+            // Safety check to prevent infinite loop
+            throw new Error(`Unexpected phase: ${this.phase}`);
+        }
+
+        // Check if we should end early
+        if (this.shouldEndHand()) {
+          this.endHandSync();
+          break;
+        }
+
+        // Progress to next phase if needed
+        if (
+          this.phase !== GamePhase.ENDED &&
+          this.phase !== GamePhase.SHOWDOWN
+        ) {
+          this.progressToNextPhaseSync();
+        }
+      }
+
+      // Build final result
+      const winners = this.lastHandWinners || [];
+      const pot = this.potManager.getTotal();
+      const board = [...this.board];
+      const sidePots = this.potManager.getSidePots
+        ? this.potManager.getSidePots()
+        : undefined;
+      const showdownParticipants = this.lastShowdownParticipants || undefined;
+
+      return {
+        success: true,
+        winners,
+        pot,
+        board,
+        sidePots,
+        showdownParticipants,
+        handHistory: this.buildHandHistory
+          ? this.buildHandHistory()
+          : undefined,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message || 'Failed to complete hand',
+      };
+    }
+  }
+
+  /**
+   * Process betting round synchronously
+   */
+  processBettingRoundSync() {
+    // Set up betting round - but don't call async methods
+    // Reset betting states manually
+    for (const player of this.players) {
+      if (
+        player.state !== PlayerState.FOLDED &&
+        player.state !== PlayerState.ALL_IN
+      ) {
+        player.hasActed = false;
+        player.bet = 0;
+      }
+    }
+
+    this.currentBet = 0;
+    this.lastRaiseAmount = 0;
+
+    // Find first active player after button
+    if (this.players.length > 0) {
+      this.currentPlayerIndex = (this.dealerButton + 1) % this.players.length;
+      let attempts = 0;
+      while (
+        attempts < this.players.length &&
+        (this.players[this.currentPlayerIndex].state === PlayerState.FOLDED ||
+          this.players[this.currentPlayerIndex].state === PlayerState.ALL_IN)
+      ) {
+        this.currentPlayerIndex =
+          (this.currentPlayerIndex + 1) % this.players.length;
+        attempts++;
+      }
+    }
+
+    // Continue until betting is complete (with safety check)
+    let iterations = 0;
+    const maxIterations = this.players.length * 10; // Safety limit
+
+    while (!this.isBettingRoundComplete() && iterations < maxIterations) {
+      iterations++;
+      const currentPlayer = this.players[this.currentPlayerIndex];
+
+      // Skip folded/all-in players
+      if (
+        currentPlayer.state === PlayerState.FOLDED ||
+        currentPlayer.state === PlayerState.ALL_IN
+      ) {
+        this.moveToNextActivePlayer();
+        continue;
+      }
+
+      // Get player action synchronously
+      const gameState = this.buildGameState();
+      gameState.toCall = this.currentBet - currentPlayer.bet;
+
+      let action;
+      try {
+        // Call player's getAction synchronously
+        action = currentPlayer.player.getAction(gameState);
+
+        // Validate action has proper timestamp
+        if (!action.timestamp) {
+          action.timestamp = Date.now();
+        }
+      } catch (error) {
+        // Player error - fold them
+        action = { action: Action.FOLD, timestamp: Date.now() };
+      }
+
+      // Process the action synchronously (don't call async handlePlayerAction)
+      this.processActionSync(currentPlayer, action);
+
+      // Move to next player
+      this.moveToNextActivePlayer();
+    }
+
+    // Collect bets into pot
+    this.potManager.endBettingRound();
+  }
+
+  /**
+   * Check if hand should end (only one player remaining)
+   */
+  shouldEndHand() {
+    const activePlayers = this.players.filter(
+      (p) => p.state === PlayerState.ACTIVE || p.state === PlayerState.ALL_IN,
+    );
+    return activePlayers.length <= 1;
+  }
+
+  /**
+   * Process action synchronously
+   */
+  processActionSync(player, action) {
+    // Mark player as having acted
+    player.hasActed = true;
+    player.lastAction = action.action;
+
+    // Process based on action type
+    switch (action.action) {
+      case Action.FOLD:
+        player.state = PlayerState.FOLDED;
+        break;
+
+      case Action.CHECK:
+        // Nothing to do for check
+        break;
+
+      case Action.CALL: {
+        const toCall = this.currentBet - player.bet;
+        const callAmount = Math.min(toCall, player.chips);
+        player.chips -= callAmount;
+        player.bet += callAmount;
+        this.potManager.addToPot(player, callAmount);
+        if (player.chips === 0) {
+          player.state = PlayerState.ALL_IN;
+        }
+        break;
+      }
+
+      case Action.RAISE: {
+        const raiseAmount = action.amount - player.bet;
+        const actualRaise = Math.min(raiseAmount, player.chips);
+        player.chips -= actualRaise;
+        player.bet += actualRaise;
+        this.potManager.addToPot(player, actualRaise);
+        this.currentBet = player.bet;
+        this.lastRaiseAmount = actualRaise;
+        if (player.chips === 0) {
+          player.state = PlayerState.ALL_IN;
+        }
+        // Reset hasActed for other players since there's a new bet to match
+        for (const p of this.players) {
+          if (p !== player && p.state === PlayerState.ACTIVE) {
+            p.hasActed = false;
+          }
+        }
+        break;
+      }
+
+      case Action.ALL_IN: {
+        const allInAmount = player.chips;
+        player.bet += allInAmount;
+        player.chips = 0;
+        this.potManager.addToPot(player, allInAmount);
+        player.state = PlayerState.ALL_IN;
+        if (player.bet > this.currentBet) {
+          this.currentBet = player.bet;
+          // Reset hasActed for other players
+          for (const p of this.players) {
+            if (p !== player && p.state === PlayerState.ACTIVE) {
+              p.hasActed = false;
+            }
+          }
+        }
+        break;
+      }
+    }
+
+    // Emit action event
+    this.emit('player:action', {
+      player: player.id,
+      action: action.action,
+      amount: player.bet,
+    });
+  }
+
+  /**
+   * Progress to next phase synchronously
+   */
+  progressToNextPhaseSync() {
+    // Determine next phase
+    let nextPhase;
+    switch (this.phase) {
+      case GamePhase.PRE_FLOP:
+        nextPhase = GamePhase.FLOP;
+        this.dealCommunityCards(3);
+        break;
+      case GamePhase.FLOP:
+        nextPhase = GamePhase.TURN;
+        this.dealCommunityCards(1);
+        break;
+      case GamePhase.TURN:
+        nextPhase = GamePhase.RIVER;
+        this.dealCommunityCards(1);
+        break;
+      case GamePhase.RIVER:
+        nextPhase = GamePhase.SHOWDOWN;
+        break;
+      default:
+        return;
+    }
+
+    this.phase = nextPhase;
+    this.emit('phase:change', { phase: nextPhase });
+
+    // Reset for new betting round if not showdown
+    if (nextPhase !== GamePhase.SHOWDOWN) {
+      // Reset betting round state without calling async method
+      this.currentBet = 0;
+      this.lastRaiseAmount = 0;
+      for (const player of this.players) {
+        if (
+          player.state !== PlayerState.FOLDED &&
+          player.state !== PlayerState.ALL_IN
+        ) {
+          player.hasActed = false;
+          player.bet = 0;
+        }
+      }
+    }
+  }
+
+  /**
+   * Process showdown synchronously
+   */
+  processShowdownSync() {
+    const activePlayers = this.players.filter(
+      (p) => p.state !== PlayerState.FOLDED,
+    );
+
+    // Get hand strengths
+    const playerHands = [];
+    for (const player of activePlayers) {
+      const cards = [...player.holeCards, ...this.board];
+      const hand = HandEvaluator.evaluate(cards);
+      playerHands.push({
+        player: player.player,
+        hand,
+        cards: player.holeCards,
+      });
+    }
+
+    // Calculate payouts
+    const payouts = this.potManager.calculatePayouts(playerHands);
+
+    // Distribute winnings
+    const winners = [];
+    for (const payout of payouts) {
+      payout.player.chips += payout.amount;
+      winners.push({
+        playerId: payout.player.id,
+        amount: payout.amount,
+        handStrength: payout.hand.descr,
+        cards: payout.cards,
+      });
+    }
+
+    // Store for result
+    this.lastHandWinners = winners;
+    this.lastShowdownParticipants = playerHands.map((ph) => ({
+      playerId: ph.player.id,
+      handStrength: ph.hand.descr,
+      cards: ph.cards,
+      payout: payouts.find((p) => p.player.id === ph.player.id)?.amount || 0,
+    }));
+
+    // Emit showdown event
+    this.emit('hand:showdown', {
+      winners,
+      showdownParticipants: this.lastShowdownParticipants,
+      board: [...this.board],
+      pot: this.potManager.getTotal(),
+    });
+
+    // End the hand
+    this.endHandSync();
+  }
+
+  /**
+   * End hand synchronously
+   */
+  endHandSync() {
+    this.phase = GamePhase.ENDED;
+
+    const winners = this.lastHandWinners || this.determineWinnersSync();
+
+    this.emit('hand:complete', {
+      winners,
+      pot: this.potManager.getTotal(),
+      board: [...this.board],
+      showdownParticipants: this.lastShowdownParticipants,
+    });
+  }
+
+  /**
+   * Determine winners synchronously (when everyone folds except one)
+   */
+  determineWinnersSync() {
+    const activePlayers = this.players.filter(
+      (p) => p.state !== PlayerState.FOLDED,
+    );
+
+    if (activePlayers.length === 1) {
+      const winner = activePlayers[0];
+      const pot = this.potManager.getTotal();
+      winner.player.chips += pot;
+
+      return [
+        {
+          playerId: winner.player.id,
+          amount: pot,
+          handStrength: 'Won by default',
+          cards: winner.holeCards,
+        },
+      ];
+    }
+
+    return [];
   }
 
   /**

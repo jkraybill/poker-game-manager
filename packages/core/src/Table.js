@@ -30,6 +30,9 @@ export class Table extends WildcardEventEmitter {
       timeout: config.timeout || 30000,
     };
 
+    // Simulation mode for fast execution without delays
+    this.simulationMode = config.simulationMode === true;
+
     this.players = new Map();
     this.waitingList = [];
     this.state = TableState.WAITING;
@@ -317,6 +320,7 @@ export class Table extends WildcardEventEmitter {
           bigBlindPlayerIndex,
           isDeadButton: positions.isDeadButton,
           isDeadSmallBlind: positions.isDeadSmallBlind,
+          simulationMode: this.simulationMode,
         });
 
         // Forward specific game events we care about
@@ -819,6 +823,228 @@ export class Table extends WildcardEventEmitter {
       gameCount: this.gameCount,
       waitingList: this.waitingList.length,
     };
+  }
+
+  /**
+   * Remove all players from the table
+   */
+  removeAllPlayers() {
+    // Create a copy of player IDs to avoid modifying while iterating
+    const playerIds = Array.from(this.players.keys());
+
+    for (const playerId of playerIds) {
+      this.removePlayer(playerId);
+    }
+
+    // Clear waiting list as well
+    this.waitingList = [];
+  }
+
+  /**
+   * Run a complete hand synchronously without events
+   * Used for Monte Carlo simulations and fast hand resolution
+   * @returns {Object} Hand results including winners, pot, and final chips
+   */
+  runHandToCompletion() {
+    // Check if we have enough players
+    if (this.players.size < this.config.minPlayers) {
+      return {
+        success: false,
+        error: `Not enough players. Need ${this.config.minPlayers}, have ${this.players.size}`,
+      };
+    }
+
+    // Check if game is already in progress
+    if (this.state === TableState.IN_PROGRESS) {
+      return {
+        success: false,
+        error: 'Game already in progress',
+      };
+    }
+
+    // Save current state for restoration
+    const savedState = this.state;
+    const savedListeners = this.listeners('hand:ended');
+
+    try {
+      // Remove event listeners to prevent external notifications
+      this.removeAllListeners('hand:ended');
+
+      // Track the result
+      let handResult = null;
+
+      // Add internal listener to capture result
+      this.once('hand:ended', (data) => {
+        handResult = data;
+      });
+
+      // Start the game synchronously
+      const startResult = this.tryStartGameSync();
+      if (!startResult.success) {
+        return {
+          success: false,
+          error: startResult.reason || 'Failed to start game',
+        };
+      }
+
+      // Run the game engine synchronously
+      if (!this.gameEngine) {
+        return {
+          success: false,
+          error: 'Game engine not initialized',
+        };
+      }
+
+      // Temporarily disable async events
+      const originalEmit = this.gameEngine.emit;
+      this.gameEngine.emit = () => {}; // Disable events temporarily
+
+      // Run the hand to completion
+      const engineResult = this.gameEngine.runToCompletion();
+
+      // Restore emit
+      this.gameEngine.emit = originalEmit;
+
+      // Process the result
+      if (!engineResult.success) {
+        return {
+          success: false,
+          error: engineResult.error || 'Hand failed to complete',
+        };
+      }
+
+      // Build the final result
+      const finalChips = {};
+      for (const [playerId, playerData] of this.players) {
+        finalChips[playerId] = playerData.player.chips;
+      }
+
+      return {
+        success: true,
+        winners: engineResult.winners || handResult?.winners || [],
+        pot: engineResult.pot || handResult?.pot || 0,
+        finalChips,
+        board: engineResult.board || handResult?.board,
+        sidePots: engineResult.sidePots,
+        showdownParticipants:
+          engineResult.showdownParticipants || handResult?.showdownParticipants,
+        handHistory: engineResult.handHistory,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message || 'Unexpected error during hand execution',
+      };
+    } finally {
+      // Restore state
+      this.state = savedState;
+
+      // Restore listeners
+      for (const listener of savedListeners) {
+        this.on('hand:ended', listener);
+      }
+
+      // Clean up game engine
+      if (this.gameEngine) {
+        this.gameEngine.removeAllListeners();
+        this.gameEngine = null;
+      }
+    }
+  }
+
+  /**
+   * Try to start a game synchronously (without async/await)
+   * Internal method for runHandToCompletion
+   */
+  tryStartGameSync() {
+    // Check minimum players
+    const activePlayers = Array.from(this.players.values()).filter(
+      (p) => p.player.chips > 0,
+    );
+
+    if (activePlayers.length < this.config.minPlayers) {
+      return {
+        success: false,
+        reason: 'Not enough active players',
+        details: {
+          required: this.config.minPlayers,
+          active: activePlayers.length,
+          total: this.players.size,
+        },
+      };
+    }
+
+    // Check if game is already in progress
+    if (this.state === TableState.IN_PROGRESS) {
+      return {
+        success: false,
+        reason: 'Game already in progress',
+        details: {
+          state: this.state,
+        },
+      };
+    }
+
+    // Start the game
+    this.startGameSync();
+
+    return {
+      success: true,
+    };
+  }
+
+  /**
+   * Start a game synchronously (internal method)
+   */
+  startGameSync() {
+    // Store starting chip counts for comparison
+    this.handStartingChips.clear();
+    for (const [playerId, playerData] of this.players) {
+      this.handStartingChips.set(playerId, playerData.player.chips);
+    }
+
+    // Get all players sorted by seat
+    const sortedPlayers = Array.from(this.players.values()).sort(
+      (a, b) => a.seatNumber - b.seatNumber,
+    );
+
+    const positions = this.calculateDeadButtonPositions();
+
+    // Get active players list
+    const activePlayersList = sortedPlayers
+      .filter((pd) => pd.player.chips > 0)
+      .map((pd) => pd.player);
+
+    this.state = TableState.IN_PROGRESS;
+    this.gameCount++;
+
+    // Create game engine with proper configuration
+    this.gameEngine = new GameEngine({
+      variant: this.config.variant,
+      players: activePlayersList,
+      blinds: this.config.blinds,
+      timeout: this.config.timeout,
+      dealerButton: this.currentDealerButton,
+      deck: this.deck,
+      buttonPlayerIndex: positions.buttonIndex,
+      smallBlindPlayerIndex: positions.smallBlindIndex,
+      bigBlindPlayerIndex: positions.bigBlindIndex,
+      isDeadButton: positions.isDeadButton,
+      isDeadSmallBlind: positions.isDeadSmallBlind,
+      simulationMode: this.simulationMode,
+    });
+
+    // No event listeners in sync mode - we'll handle everything internally
+    // Don't call start() as that triggers async flow
+
+    this.emit('game:started', {
+      tableId: this.id,
+      gameCount: this.gameCount,
+      players: activePlayersList.length,
+      dealerButton: positions.buttonIndex,
+      isDeadButton: positions.isDeadButton,
+      isDeadSmallBlind: positions.isDeadSmallBlind,
+    });
   }
 
   /**

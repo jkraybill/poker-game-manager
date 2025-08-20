@@ -694,21 +694,14 @@ describe('Tournament Elimination Ordering (Issue #28)', () => {
     table.addPlayer(player2);
 
     // Create custom deck to ensure Player 1 wins and Player 2 loses all chips
+    // GameEngine deals sequentially: P1C1, P1C2, P2C1, P2C2
     const customDeckArray = [
-      // Player 1 gets pocket aces
+      // Player 1 first card
       {
         rank: 'A',
         suit: 's',
         toString() {
           return 'As';
-        },
-      },
-      // Player 2 gets 7-2 offsuit (worst hand)
-      {
-        rank: '7',
-        suit: 'd',
-        toString() {
-          return '7d';
         },
       },
       // Player 1 second card
@@ -717,6 +710,14 @@ describe('Tournament Elimination Ordering (Issue #28)', () => {
         suit: 'h',
         toString() {
           return 'Ah';
+        },
+      },
+      // Player 2 first card (7-2 offsuit, worst hand)
+      {
+        rank: '7',
+        suit: 'd',
+        toString() {
+          return '7d';
         },
       },
       // Player 2 second card

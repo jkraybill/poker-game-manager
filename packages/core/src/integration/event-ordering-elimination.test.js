@@ -49,21 +49,14 @@ describe('Event Ordering - Elimination (Issue #33)', () => {
     events = setupEventCapture(table);
 
     // Create a custom deck where player 1 gets better cards than player 2
+    // GameEngine deals sequentially: P1C1, P1C2, P2C1, P2C2
     const customDeckArray = [
-      // Player 1 gets AA (will win)
+      // Player 1 first card (AA will win)
       {
         rank: 'A',
         suit: 's',
         toString() {
           return 'As';
-        },
-      },
-      // Player 2 gets 72 (will lose)
-      {
-        rank: '7',
-        suit: 'd',
-        toString() {
-          return '7d';
         },
       },
       // Player 1 second card
@@ -72,6 +65,14 @@ describe('Event Ordering - Elimination (Issue #33)', () => {
         suit: 'h',
         toString() {
           return 'Ah';
+        },
+      },
+      // Player 2 first card (72 will lose)
+      {
+        rank: '7',
+        suit: 'd',
+        toString() {
+          return '7d';
         },
       },
       // Player 2 second card
