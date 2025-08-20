@@ -154,6 +154,8 @@ export function setupEventCapture(table, options = {}) {
           state.handEnded = true;
           state.winners = data.winners || [];
           state.sidePots = data.sidePots || [];
+          state.showdownParticipants = data.showdownParticipants || [];
+          state.showdownHands = data.showdownHands || [];
           state.currentPhase = 'COMPLETE';
           break;
 

@@ -968,6 +968,7 @@ export class GameEngine extends WildcardEventEmitter {
 
       this.emit('hand:complete', {
         winners: enhancedWinners,
+        showdownHands: [], // No showdown occurred (fold win)
         board: this.board,
         sidePots: this.getSidePotInfo(),
       });
@@ -1394,6 +1395,7 @@ export class GameEngine extends WildcardEventEmitter {
     this.emit('hand:complete', {
       winners: enhancedWinners,
       showdownParticipants: enhancedShowdownParticipants,
+      showdownHands: this.createShowdownHands(enhancedShowdownParticipants),
       board: this.board,
       sidePots: this.getSidePotInfo(),
     });
@@ -1415,6 +1417,27 @@ export class GameEngine extends WildcardEventEmitter {
     }
 
     return this.potManager.getPotsInfo();
+  }
+
+  /**
+   * Create simplified showdownHands array from showdown participants
+   * @param {Array} showdownParticipants - Enhanced showdown participants
+   * @returns {Array} Simplified hand information for UI display
+   */
+  createShowdownHands(showdownParticipants) {
+    if (!showdownParticipants || showdownParticipants.length === 0) {
+      return [];
+    }
+
+    return showdownParticipants.map((participant) => ({
+      playerId: participant.playerId,
+      cards: participant.holeCards || [], // Player's 2 hole cards
+      hand: participant.cards || [], // Best 5-card hand
+      handDescription:
+        participant.handDescription ||
+        participant.hand?.description ||
+        'Unknown',
+    }));
   }
 
   /**
@@ -2282,11 +2305,17 @@ export class GameEngine extends WildcardEventEmitter {
       this.enhanceWinnerData(winner),
     );
 
+    // Enhance showdown participants if they exist
+    const enhancedShowdownParticipants = this.lastShowdownParticipants
+      ? this.lastShowdownParticipants.map((p) => this.enhanceWinnerData(p))
+      : [];
+
     this.emit('hand:complete', {
       winners: enhancedWinners,
       pot: this.potManager.getTotal(),
       board: [...this.board],
       showdownParticipants: this.lastShowdownParticipants,
+      showdownHands: this.createShowdownHands(enhancedShowdownParticipants),
     });
   }
 
