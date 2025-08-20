@@ -1778,6 +1778,9 @@ export class GameEngine extends WildcardEventEmitter {
         this.dealerButton = this.dealerButtonIndex || 0;
       }
 
+      // Capture pot total before any distribution for result reporting
+      let potTotal = 0;
+
       // Run through all phases (with safety check)
       let phaseIterations = 0;
       const maxPhaseIterations = 20; // Safety limit
@@ -1797,6 +1800,8 @@ export class GameEngine extends WildcardEventEmitter {
             break;
 
           case GamePhase.SHOWDOWN:
+            // Capture pot total before distribution
+            potTotal = this.potManager.getTotal();
             // Process showdown
             this.processShowdownSync();
             break;
@@ -1808,6 +1813,10 @@ export class GameEngine extends WildcardEventEmitter {
 
         // Check if we should end early
         if (this.shouldEndHand()) {
+          // Capture pot total before any distribution (for fold scenarios)
+          if (potTotal === 0) {
+            potTotal = this.potManager.getTotal();
+          }
           this.endHandSync();
           break;
         }
@@ -1823,7 +1832,7 @@ export class GameEngine extends WildcardEventEmitter {
 
       // Build final result
       const winners = this.lastHandWinners || [];
-      const pot = this.potManager.getTotal();
+      const pot = potTotal; // Use captured pot total before distribution
       const board = [...this.board];
       const sidePots = this.potManager.getSidePots
         ? this.potManager.getSidePots()
@@ -1891,6 +1900,12 @@ export class GameEngine extends WildcardEventEmitter {
       iterations++;
       const currentPlayer = this.players[this.currentPlayerIndex];
 
+      // Check if currentPlayer is undefined
+      if (!currentPlayer) {
+        // No valid player found, break out
+        break;
+      }
+
       // Skip folded/all-in players
       if (
         currentPlayer.state === PlayerState.FOLDED ||
@@ -1902,12 +1917,14 @@ export class GameEngine extends WildcardEventEmitter {
 
       // Get player action synchronously
       const gameState = this.buildGameState();
-      gameState.toCall = this.currentBet - currentPlayer.bet;
+      // currentPlayer is the Player instance, so we need to check bet differently
+      const currentBet = currentPlayer.bet || 0;
+      gameState.toCall = this.currentBet - currentBet;
 
       let action;
       try {
-        // Call player's getAction synchronously
-        action = currentPlayer.player.getAction(gameState);
+        // Call player's getAction synchronously (currentPlayer IS the player)
+        action = currentPlayer.getAction(gameState);
 
         // Validate action has proper timestamp
         if (!action.timestamp) {
@@ -2020,20 +2037,20 @@ export class GameEngine extends WildcardEventEmitter {
    * Progress to next phase synchronously
    */
   progressToNextPhaseSync() {
-    // Determine next phase
+    // Determine next phase and deal cards
     let nextPhase;
     switch (this.phase) {
       case GamePhase.PRE_FLOP:
         nextPhase = GamePhase.FLOP;
-        this.dealCommunityCards(3);
+        this.dealFlopSync();
         break;
       case GamePhase.FLOP:
         nextPhase = GamePhase.TURN;
-        this.dealCommunityCards(1);
+        this.dealTurnSync();
         break;
       case GamePhase.TURN:
         nextPhase = GamePhase.RIVER;
-        this.dealCommunityCards(1);
+        this.dealRiverSync();
         break;
       case GamePhase.RIVER:
         nextPhase = GamePhase.SHOWDOWN;
@@ -2063,6 +2080,60 @@ export class GameEngine extends WildcardEventEmitter {
   }
 
   /**
+   * Deal the flop synchronously
+   */
+  dealFlopSync() {
+    this.phase = GamePhase.FLOP;
+
+    // Burn one card
+    this.deck.draw();
+    // Deal three flop cards
+    const flop = this.deck.dealFlop();
+    this.board.push(...flop);
+
+    this.emit('cards:community', {
+      cards: this.board,
+      phase: this.phase,
+    });
+  }
+
+  /**
+   * Deal the turn synchronously
+   */
+  dealTurnSync() {
+    this.phase = GamePhase.TURN;
+
+    // Burn one card
+    this.deck.draw();
+    // Deal the turn card
+    const turn = this.deck.dealTurn();
+    this.board.push(turn);
+
+    this.emit('cards:community', {
+      cards: this.board,
+      phase: this.phase,
+    });
+  }
+
+  /**
+   * Deal the river synchronously
+   */
+  dealRiverSync() {
+    this.phase = GamePhase.RIVER;
+
+    // Burn one card
+    this.deck.draw();
+    // Deal the river card
+    const river = this.deck.dealRiver();
+    this.board.push(river);
+
+    this.emit('cards:community', {
+      cards: this.board,
+      phase: this.phase,
+    });
+  }
+
+  /**
    * Process showdown synchronously
    */
   processShowdownSync() {
@@ -2073,12 +2144,14 @@ export class GameEngine extends WildcardEventEmitter {
     // Get hand strengths
     const playerHands = [];
     for (const player of activePlayers) {
-      const cards = [...player.holeCards, ...this.board];
+      // Get hole cards from playerHands map
+      const holeCards = this.playerHands.get(player.id) || [];
+      const cards = [...holeCards, ...this.board];
       const hand = HandEvaluator.evaluate(cards);
       playerHands.push({
-        player: player.player,
+        player, // player IS the Player instance
         hand,
-        cards: player.holeCards,
+        cards: holeCards,
       });
     }
 
@@ -2087,13 +2160,21 @@ export class GameEngine extends WildcardEventEmitter {
 
     // Distribute winnings
     const winners = [];
-    for (const payout of payouts) {
-      payout.player.chips += payout.amount;
+    for (const [player, amount] of payouts) {
+      player.chips += amount;
+      // Find the hand info for this player
+      const playerHandInfo = playerHands.find(
+        (ph) => ph.player.id === player.id,
+      );
       winners.push({
-        playerId: payout.player.id,
-        amount: payout.amount,
-        handStrength: payout.hand.descr,
-        cards: payout.cards,
+        playerId: player.id,
+        amount,
+        handStrength: playerHandInfo
+          ? playerHandInfo.hand.description ||
+            playerHandInfo.hand.descr ||
+            'Unknown'
+          : 'Unknown',
+        cards: playerHandInfo ? playerHandInfo.cards : [],
       });
     }
 
@@ -2101,9 +2182,9 @@ export class GameEngine extends WildcardEventEmitter {
     this.lastHandWinners = winners;
     this.lastShowdownParticipants = playerHands.map((ph) => ({
       playerId: ph.player.id,
-      handStrength: ph.hand.descr,
+      handStrength: ph.hand.description || ph.hand.descr || 'Unknown',
       cards: ph.cards,
-      payout: payouts.find((p) => p.player.id === ph.player.id)?.amount || 0,
+      payout: payouts.get(ph.player) || 0,
     }));
 
     // Emit showdown event
@@ -2145,14 +2226,15 @@ export class GameEngine extends WildcardEventEmitter {
     if (activePlayers.length === 1) {
       const winner = activePlayers[0];
       const pot = this.potManager.getTotal();
-      winner.player.chips += pot;
+
+      winner.chips += pot; // winner IS the Player instance
 
       return [
         {
-          playerId: winner.player.id,
+          playerId: winner.id, // winner IS the Player instance
           amount: pot,
           handStrength: 'Won by default',
-          cards: winner.holeCards,
+          cards: this.playerHands.get(winner.id) || [],
         },
       ];
     }
