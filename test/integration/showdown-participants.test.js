@@ -67,20 +67,33 @@ describe('Showdown Participants Feature', () => {
     expect(Array.isArray(handEndedData.showdownParticipants)).toBe(true);
     expect(handEndedData.showdownParticipants).toHaveLength(3); // All 3 players should be included
 
-    // Each participant should have the required properties
+    // Each participant should have the enhanced structure
     for (const participant of handEndedData.showdownParticipants) {
       expect(participant).toHaveProperty('playerId');
       expect(participant).toHaveProperty('cards');
+      expect(participant).toHaveProperty('holeCards');
       expect(participant).toHaveProperty('hand');
+      expect(participant).toHaveProperty('handRank');
+      expect(participant).toHaveProperty('handDescription');
       expect(participant).toHaveProperty('amount');
+      expect(participant).toHaveProperty('wonAmount');
       expect(typeof participant.amount).toBe('number');
       expect(participant.amount).toBeGreaterThanOrEqual(0);
       
-      // Cards should be an array of 2 hole cards
+      // Cards should be best 5-card hand
       expect(Array.isArray(participant.cards)).toBe(true);
-      expect(participant.cards).toHaveLength(2);
+      expect(participant.cards).toHaveLength(5);
       
-      // Hand should have evaluation properties
+      // Hole cards should be player's 2 hole cards
+      expect(Array.isArray(participant.holeCards)).toBe(true);
+      expect(participant.holeCards).toHaveLength(2);
+      
+      // Enhanced hand ranking fields
+      expect(typeof participant.handRank).toBe('number');
+      expect(typeof participant.handDescription).toBe('string');
+      expect(participant.wonAmount).toBe(participant.amount);
+      
+      // Legacy hand should have evaluation properties
       expect(participant.hand).toHaveProperty('rank');
       expect(participant.hand).toHaveProperty('description');
     }

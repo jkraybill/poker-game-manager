@@ -961,8 +961,13 @@ export class GameEngine extends WildcardEventEmitter {
         });
       }
 
+      // Enhance winners with detailed ranking data
+      const enhancedWinners = winnersArray.map((winner) =>
+        this.enhanceWinnerData(winner),
+      );
+
       this.emit('hand:complete', {
-        winners: winnersArray,
+        winners: enhancedWinners,
         board: this.board,
         sidePots: this.getSidePotInfo(),
       });
@@ -1376,9 +1381,19 @@ export class GameEngine extends WildcardEventEmitter {
       });
     }
 
+    // Enhance winners with detailed ranking data
+    const enhancedWinners = winnersWithAmounts.map((winner) =>
+      this.enhanceWinnerData(winner),
+    );
+
+    // Enhance showdown participants too with the same detailed ranking data
+    const enhancedShowdownParticipants = showdownParticipants.map(
+      (participant) => this.enhanceWinnerData(participant),
+    );
+
     this.emit('hand:complete', {
-      winners: winnersWithAmounts,
-      showdownParticipants,
+      winners: enhancedWinners,
+      showdownParticipants: enhancedShowdownParticipants,
       board: this.board,
       sidePots: this.getSidePotInfo(),
     });
@@ -1400,6 +1415,61 @@ export class GameEngine extends WildcardEventEmitter {
     }
 
     return this.potManager.getPotsInfo();
+  }
+
+  /**
+   * Enhance winner data with detailed hand ranking information
+   * @param {Object} winner - Basic winner structure
+   * @param {string[]} playerHoleCards - Player's hole cards
+   * @returns {Object} Enhanced winner with ranking details
+   */
+  enhanceWinnerData(winner, playerHoleCards = null) {
+    const enhanced = {
+      ...winner,
+      wonAmount: winner.amount, // Backward compatible naming
+    };
+
+    // Handle fold wins or default wins (no hand evaluation)
+    if (
+      winner.hand === 'Won by fold' ||
+      winner.handStrength === 'Won by default' ||
+      winner.handStrength === 'Won by fold'
+    ) {
+      enhanced.handRank = null;
+      enhanced.handDescription =
+        winner.hand || winner.handStrength || 'Won by fold';
+      enhanced.cards = []; // No best hand for fold wins
+      enhanced.holeCards = playerHoleCards || winner.cards || [];
+      return enhanced;
+    }
+
+    // Handle evaluated hands from showdown
+    if (winner.hand && typeof winner.hand === 'object' && winner.hand.rank) {
+      enhanced.handRank = winner.hand.rank;
+      enhanced.handDescription = winner.hand.description;
+      enhanced.cards = winner.hand.cards || [];
+      enhanced.holeCards =
+        playerHoleCards || this.playerHands.get(winner.playerId) || [];
+      return enhanced;
+    }
+
+    // Handle string hand descriptions (fallback)
+    if (typeof winner.hand === 'string') {
+      enhanced.handRank = null;
+      enhanced.handDescription = winner.hand;
+      enhanced.cards = [];
+      enhanced.holeCards =
+        playerHoleCards || this.playerHands.get(winner.playerId) || [];
+      return enhanced;
+    }
+
+    // Default case
+    enhanced.handRank = null;
+    enhanced.handDescription = 'Unknown';
+    enhanced.cards = [];
+    enhanced.holeCards =
+      playerHoleCards || this.playerHands.get(winner.playerId) || [];
+    return enhanced;
   }
 
   /**
@@ -2207,8 +2277,13 @@ export class GameEngine extends WildcardEventEmitter {
 
     const winners = this.lastHandWinners || this.determineWinnersSync();
 
+    // Enhance winners with detailed ranking data
+    const enhancedWinners = winners.map((winner) =>
+      this.enhanceWinnerData(winner),
+    );
+
     this.emit('hand:complete', {
-      winners,
+      winners: enhancedWinners,
       pot: this.potManager.getTotal(),
       board: [...this.board],
       showdownParticipants: this.lastShowdownParticipants,
